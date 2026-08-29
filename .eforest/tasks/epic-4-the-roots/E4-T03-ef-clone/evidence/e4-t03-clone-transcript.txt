@@ -1,0 +1,152 @@
+E4-T03 builder verification transcript
+Date: 2026-08-04
+Workspace: .eforest/tasks/epic-4-the-roots/E4-T03-ef-clone/work/builder
+Branch: codex/e4-t03-ef-clone
+
+Provider boundary recheck — 2026-08-04
+
+$ npm view @durable-streams/server version versions --json
+Latest release: 0.3.8
+
+$ npm pack @durable-streams/server@0.3.8; unpack; rg -n
+  "compact|discard|retention|410|snapshot" package/src package/README.md package/dist/index.d.ts
+Result: the shipped source has no compact/discard/physical-retention operation;
+the observed 410 branches are soft-deleted-stream handling only.
+
+Conclusion: the latest released provider does not resolve the E4-T03 physical
+compaction requirement. No provider bump was applied.
+
+Rework transcript — commit 5ac5b449
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/durable-streams.integration.test.ts packages/cli/src/clone.test.ts
+Test Files  2 passed (2)
+Tests       13 passed (13)
+
+$ node tools/verify/e4_t03_clone.mjs
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=not-observed status=200 logical=0000000000000000_0000000000000030
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+
+$ node tools/verify/e4_t03_auth.mjs
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7
+
+$ bash tools/verify/clone.sh
+Result: blocked after the two verifiers completed.
+E4_T03_BLOCKED: the configured Durable Streams provider did not expose physical compaction with a 410 discarded-offset response.
+
+The independent expected values below come from the committed E3-T01 corpus
+manifest and dumps under
+.eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/evidence/.
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/clone.test.ts
+Test Files  1 passed (1)
+Tests       5 passed (5)
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/official.integration.test.ts packages/cli/src/clone.test.ts
+Test Files  2 passed (2)
+Tests       6 passed (6)
+
+$ node tools/verify/e4_t03_clone.mjs
+E4_T03_CLONE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+
+$ make verify-E4-clone
+Result: OK
+The target ran the repository gates, the E4-T01 prerequisite, the five-test
+clone suite, tools/verify/clone.sh, self_check, and the corpus-backed verifier.
+
+$ bash tools/verify/cold_clone.sh verify-E4-clone
+Result: PASSED from a pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44
+The scrubbed cold target completed the root gates twice, E4-T01's sensitivity
+and self-check machinery, the five-test clone suite, and the corpus verifier.
+It emitted `verify-E4-clone: OK` and no `SKIPPED:` lines.
+
+$ bash tools/verify/cold_clone.sh verify-E4-T03
+Result: PASSED from a pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44
+The registered E4-T03 marker target completed with `verify-E4-T03: OK` and no
+`SKIPPED:` lines. The same run reported 49 test files / 513 tests, 5 clone
+tests, `E4_T03_CLONE_OK`, `CANOPY_SENSITIVITY_SPINE_OK`, and `verify self-check OK`.
+
+Verifier scope note: this committed final run uses a fresh official Durable
+Streams test server seeded from the committed E3-T01 corpus, plus a deterministic
+refusal fetcher for the authorization-negative path. It proves the CLI and
+stream-layer clone contract, but does not claim a separate E2 emulator/browser
+authorization session; Replay is N/A for this CLI + stream-layer change.
+
+Final provider-retention rework — 2026-08-06 — working tree before final commit
+
+$ pnpm install --frozen-lockfile
+Lockfile is up to date, resolution step is skipped; install completed.
+
+$ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/cli/src/clone.test.ts packages/cli/src/official.integration.test.ts
+Test Files  2 passed (2)
+Tests       9 passed (9)
+
+$ CI=true pnpm exec vitest run packages/streamfs/test/durable-streams.integration.test.ts
+Test Files  1 passed (1)
+Tests       5 passed (5)
+
+$ node tools/verify/e4_t03_provider.mjs
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=409/400
+
+$ node tools/verify/e4_t03_clone.mjs
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=observed=0000000000000000_0000000000000030
+post-compaction-metadata-events=1/32
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+
+$ bash tools/verify/clone.sh
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=observed=0000000000000000_0000000000000030
+post-compaction-metadata-events=1/32
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=409/400
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7
+
+$ CI=true pnpm exec vitest run
+Test Files  49 passed (49)
+Tests       516 passed (516)
+
+$ CI=true pnpm format:check; CI=true pnpm lint; CI=true pnpm typecheck; CI=true pnpm build
+All four commands passed. The Vite build emitted only its existing chunk-size advisory.
+
+$ bash tools/verify/self_check.sh
+CANOPY_SENSITIVITY_SPINE_OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+
+$ node tools/verify/e4_t01_evidence.mjs
+E4-T01 evidence: OK
+
+The failed official integration was a real file-backed provider regression: the
+first patched version capped a fork's own segment read at the fork boundary, so
+the provider persisted the fork event but hid it from /dump and rejected the next
+application sequence. Removing only that accidental cap restored upstream fork
+semantics. The provider verifier still exercises the patched package directly,
+including memory, file restart, stale fork creation, active fork creation, and
+opaque /dump transport cursors; the official process integration exercises the
+same patched provider through the @eforest/server binary. Replay: N/A (CLI +
+stream-layer change; no browser-reaching surface) + mitigation: direct provider
+probe, official file-backed process test, physical-compaction clone transcript,
+corpus digest checks, and the full root suite.
+
+Final fresh rerun — 2026-08-06
+
+$ node tools/verify/e4_t03_clone.mjs
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=observed=0000000000000000_0000000000000030
+post-compaction-metadata-events=1/32
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+
+$ bash tools/verify/clone.sh
+PASS — clone corpus, direct provider memory/file fork guards, and auth matrix:
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=memory:409/409/400,file:409/409/400
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7.

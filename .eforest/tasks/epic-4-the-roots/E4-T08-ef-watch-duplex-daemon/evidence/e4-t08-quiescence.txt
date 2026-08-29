@@ -1,0 +1,7 @@
+# E4-T08 measured quiescence
+head before: 0000000000000000_0000000000000008
+head after: 0000000000000000_0000000000000008
+head byte-identical: true
+measured idle window ms: 65053
+uploaded lines before: 5
+uploaded lines after: 5

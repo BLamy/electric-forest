@@ -1,0 +1,17 @@
+# E4-T08 lifecycle golden
+second start: exit=3 code=cli/watch-already-running
+second start stdout bytes: 0
+second start stderr: error: cli/watch-already-running: watcher is already running with pid <pid>
+first daemon: still live after refusal
+stop without daemon: exit=3 code=cli/watch-not-running
+stop without daemon stdout bytes: 0
+stop without daemon stderr: error: cli/watch-not-running: no watcher is running
+stale pidfile: exit=0 warning-count=1
+stale pidfile stderr prefix: warning: reclaimed stale watcher pidfile
+stale pidfile: authenticated watcher reached ready state
+concurrent starts: exits=0,3 live-winner-count=1
+SIGKILL restart: before-kill.txt types=fs.file.create,fs.file.write duplicates=0
+graceful stop burst: edits=3 accounted=3 missing=0
+graceful stop offset: burst-a.txt=0000000000000000_0000000000000004,0000000000000000_0000000000000007
+graceful stop offset: burst-b.txt=0000000000000000_0000000000000005,0000000000000000_0000000000000008
+graceful stop offset: burst-c.txt=0000000000000000_0000000000000006,0000000000000000_0000000000000009

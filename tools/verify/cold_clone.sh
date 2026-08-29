@@ -206,13 +206,68 @@ env "${unset_args[@]}" \
       exit 1
     fi
     hydrate_dependencies "$2"
+    dependency_manifest=""
+    if [ -f package.json ] && [ ! -d node_modules ]; then
+      CI=true pnpm install --frozen-lockfile
+    fi
+    if [ -f package.json ] && [ -d node_modules/.pnpm ]; then
+      dependency_manifest="$(mktemp)"
+      node tools/verify/dependency_integrity.mjs write --root "$PWD" --output "$dependency_manifest"
+    fi
+    target_output_file="$(mktemp)"
+    heartbeat_pid=""
+    cleanup_target_output() {
+      if [ -n "$heartbeat_pid" ]; then
+        if kill "$heartbeat_pid" 2>/dev/null; then :; fi
+      fi
+      rm -f "$target_output_file"
+      if [ -n "$dependency_manifest" ]; then
+        rm -f "$dependency_manifest"
+      fi
+    }
+    trap cleanup_target_output EXIT
     set +e
-    target_output="$("$make_command" -- "$3" 2>&1)"
+    if [ -n "$dependency_manifest" ]; then
+      export EFOREST_DEPENDENCY_INTEGRITY_MANIFEST="$dependency_manifest"
+    else
+      unset EFOREST_DEPENDENCY_INTEGRITY_MANIFEST
+    fi
+    "$make_command" -- "$3" >"$target_output_file" 2>&1 &
+    make_pid=$!
+    (
+      while kill -0 "$make_pid" 2>/dev/null; do
+        sleep 30
+        if kill -0 "$make_pid" 2>/dev/null; then
+          echo "cold_clone: make $3 still running; output remains file-backed"
+        fi
+      done
+    ) &
+    heartbeat_pid=$!
+    wait "$make_pid"
     target_rc=$?
     set -e
-    printf "%s\n" "$target_output"
+    if kill "$heartbeat_pid" 2>/dev/null; then :; fi
+    if wait "$heartbeat_pid" 2>/dev/null; then :; fi
+    heartbeat_pid=""
+    cat "$target_output_file"
+    integrity_rc=0
+    if [ -n "$dependency_manifest" ]; then
+      set +e
+      node tools/verify/dependency_integrity.mjs compare \
+        --root "$PWD" --manifest "$dependency_manifest"
+      integrity_rc=$?
+      set -e
+    fi
+    if [ "$target_rc" -ne 0 ] && [ "$integrity_rc" -ne 0 ]; then
+      echo "cold_clone: FAIL — target exited ${target_rc} and installed dependencies drifted" >&2
+      exit "$target_rc"
+    fi
     if [ "$target_rc" -ne 0 ]; then
       exit "$target_rc"
+    fi
+    if [ "$integrity_rc" -ne 0 ]; then
+      echo "cold_clone: FAIL — target exited zero but installed dependencies drifted" >&2
+      exit "$integrity_rc"
     fi
     marker_emitted=0
     while IFS= read -r output_line || [ -n "$output_line" ]; do
@@ -220,7 +275,7 @@ env "${unset_args[@]}" \
         marker_emitted=1
         break
       fi
-    done <<< "$target_output"
+    done < "$target_output_file"
     if [ "$marker_emitted" -ne 1 ]; then
       echo "cold_clone: FAIL — make target $3 exited zero without its registered success marker" >&2
       exit 1

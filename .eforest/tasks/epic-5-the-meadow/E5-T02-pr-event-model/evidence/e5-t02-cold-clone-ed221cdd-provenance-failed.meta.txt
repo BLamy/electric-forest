@@ -1,0 +1,16 @@
+task=E5-T02
+result=downstream-provenance-failed
+head=ed221cdd3d98a1308bb1a6a1339892c02354d171
+command=tools/verify/cold_clone.sh verify-E5-T02
+exit=2
+lines=360
+bytes=70632
+sha256=448016c6d695d602375d61e8689fa72bfcba9c527f7466f160e18f70eec5fc7e
+first_root_cause=E1 capstone transport-provenance.json drifted because the timeout repair intentionally changed a CLI source file included in the frozen runtime closure
+first_root_cause_line=343
+upstream_timeout_test=passed in the first full suite
+skipped_marker_count=0
+verify_ok_marker_count=0
+cold_clone_pass_marker_count=0
+retry_count=0
+disposition=preserved verbatim; regenerate E1 capstone evidence through --update-evidence, verify the exact artifact diff, then rerun the capstone before a new exact-head cold clone

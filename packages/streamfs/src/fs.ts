@@ -16,7 +16,6 @@ import {
   isDurableConflict,
   isDurableExistsConflict,
   isDurableNotFound,
-  readDurableJson,
   type StreamRecord,
 } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
@@ -56,8 +55,10 @@ import { fsInitialState, fsReducer } from "./reducer.js";
 import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./watch.js";
 import {
   bootstrapRead as bootstrapSnapshotRead,
-  compactSnapshot,
+  bootstrapReadAt as bootstrapSnapshotReadAt,
   createSnapshot as createSnapshotForRoot,
+  readStreamDump,
+  readStreamDumpWithTransportOffsets,
   type BootstrapReadResult,
   type SnapshotReceipt,
 } from "./snapshot.js";
@@ -66,6 +67,7 @@ import { expandThreeWayMergeRecords } from "./merge-records.js";
 export interface StreamFsOptions {
   readonly baseUrl: string;
   readonly fetch?: typeof fetch;
+  readonly now?: () => number;
 }
 
 export class StreamFsError extends Error {
@@ -201,6 +203,23 @@ function metadataStreamId(name: string): string {
 
 function streamUrl(baseUrl: string, streamId: string): string {
   return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
+}
+
+function retainedCompactionOffset(records: readonly StreamRecord[]): Offset | undefined {
+  const first = records[0];
+  if (first === undefined) return undefined;
+  const event = { type: first.type, payload: first.payload, ts: first.ts };
+  return isSnapshotEvent(event) ? event.payload.snapshotOffset : undefined;
+}
+
+function assertHistoryAvailable(records: readonly StreamRecord[], until?: Offset): void {
+  const boundary = retainedCompactionOffset(records);
+  if (until !== undefined && boundary !== undefined && compareOffsets(until, boundary) < 0) {
+    throw new StreamFsError(
+      "history_discarded",
+      `history before compaction point ${boundary} is unavailable`,
+    );
+  }
 }
 
 function ensurePath(path: string): void {
@@ -363,10 +382,12 @@ function movePathMap<T>(values: Map<string, T>, from: string, to: string): void 
 export class StreamFs {
   readonly baseUrl: string;
   private readonly fetcher: typeof fetch;
+  private readonly clock: () => number;
 
   constructor(options: StreamFsOptions) {
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
     this.fetcher = options.fetch ?? fetch;
+    this.clock = options.now ?? Date.now;
   }
 
   async createRepo(name: string): Promise<StreamFsRepo> {
@@ -386,7 +407,7 @@ export class StreamFs {
       if (isDurableExistsConflict(error)) throw new RepoExistsError(normalizedName);
       throw error;
     }
-    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName, "main", this.clock);
   }
 
   async openRepo(name: string): Promise<StreamFsRepo> {
@@ -402,7 +423,7 @@ export class StreamFs {
       if (isDurableNotFound(error)) throw new RepoNotFoundError(normalizedName);
       throw error;
     }
-    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName, "main", this.clock);
   }
 }
 
@@ -413,17 +434,58 @@ export class StreamFsRepo {
   readonly baseUrl: string;
   readonly fetcher: typeof fetch;
   private nextFileId = 0;
+  private readonly clock: () => number;
 
-  constructor(baseUrl: string, fetcher: typeof fetch, name: string, branchName = "main") {
+  constructor(
+    baseUrl: string,
+    fetcher: typeof fetch,
+    name: string,
+    branchName = "main",
+    now: () => number = Date.now,
+  ) {
     this.baseUrl = baseUrl;
     this.fetcher = fetcher;
     this.name = name;
     this.branchName = branchName;
+    this.clock = now;
     this.metadataStreamId =
       branchName === "main" ? metadataStreamId(name) : branchMetadataStreamId(name, branchName);
   }
 
   async treeAt(until?: Offset): Promise<FsTree> {
+    return this.treeAtInternal(until);
+  }
+
+  private async treeForAppend(): Promise<FsTree> {
+    return this.treeAtInternal(undefined, { validateContent: false });
+  }
+
+  private async treeAtInternal(
+    until?: Offset,
+    options: { readonly validateContent?: boolean } = {},
+  ): Promise<FsTree> {
+    const metadata = await this.dump();
+    assertHistoryAvailable(metadata, until);
+    const hasUsableSnapshot = metadata.some((record) => {
+      const event = { type: record.type, payload: record.payload, ts: record.ts };
+      return isSnapshotEvent(event);
+    });
+    if (hasUsableSnapshot) {
+      try {
+        return (await bootstrapSnapshotReadAt(this, until, options)).state;
+      } catch (error) {
+        if (
+          until !== undefined &&
+          error instanceof Error &&
+          error.message === "stream has no snapshot event"
+        ) {
+          // A historical cut before the first snapshot is still a valid full
+          // replay when the uncompacted prefix is present.
+        } else {
+          throw error;
+        }
+      }
+    }
     if (this.branchName !== "main" || until !== undefined) {
       const records = await this.resolvedDump(until);
       let state = fsInitialState;
@@ -438,7 +500,6 @@ export class StreamFsRepo {
       assertCompleteMergeStage(state);
       return state;
     }
-    const metadata = await this.dump();
     let state = fsInitialState;
     const records = metadata.some((record) => isBranchMergeRecord(record))
       ? await this.resolvedDump()
@@ -461,7 +522,7 @@ export class StreamFsRepo {
   }
 
   now(): number {
-    return Date.now();
+    return this.clock();
   }
 
   async writeContent(streamId: string, bytes: Uint8Array): Promise<void> {
@@ -473,28 +534,82 @@ export class StreamFsRepo {
     return bootstrapSnapshotRead(this);
   }
 
+  async bootstrapReadAt(until?: Offset): Promise<BootstrapReadResult> {
+    return bootstrapSnapshotReadAt(this, until);
+  }
+
   async compactSnapshot(): Promise<{
     readonly snapshotOffset: import("@eforest/protocol").Offset;
   }> {
-    return compactSnapshot(this);
+    return this.compact();
   }
 
   async compact(): Promise<{
     readonly snapshotOffset: import("@eforest/protocol").Offset;
   }> {
-    for (const record of [...(await this.dump())].reverse()) {
+    const dump = await readStreamDumpWithTransportOffsets(this);
+    for (let index = dump.records.length - 1; index >= 0; index -= 1) {
+      const record = dump.records[index]!;
       const event = { ...record } as Record<string, unknown>;
       delete event.offset;
-      if (isSnapshotEvent(event)) return { snapshotOffset: event.payload.snapshotOffset };
+      if (isSnapshotEvent(event)) {
+        const boundaryIndex = dump.records.findIndex(
+          (candidate) => candidate.offset === event.payload.snapshotOffset,
+        );
+        const transportOffset = dump.transportOffsets?.[boundaryIndex];
+        if (transportOffset === undefined) {
+          throw new StreamFsError(
+            "compaction_transport_offset_unavailable",
+            "provider dump did not expose an opaque cursor for the snapshot boundary",
+          );
+        }
+        const response = await this.fetcher(
+          `${streamUrl(this.baseUrl, this.metadataStreamId)}/compact`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              snapshotOffset: event.payload.snapshotOffset,
+              transportOffset,
+            }),
+          },
+        );
+        const text = await response.text();
+        let body: unknown = text;
+        try {
+          body = text.length === 0 ? null : JSON.parse(text);
+        } catch {
+          // Preserve the provider's raw body in FsHttpError below.
+        }
+        if (!response.ok) throw new FsHttpError(response.status, body);
+        const returnedSnapshotOffset =
+          body !== null &&
+          typeof body === "object" &&
+          typeof (body as { snapshotOffset?: unknown }).snapshotOffset === "string"
+            ? (body as { snapshotOffset: string }).snapshotOffset
+            : undefined;
+        if (returnedSnapshotOffset === undefined) {
+          throw new StreamFsError(
+            "invalid_compaction",
+            "provider compaction omitted snapshotOffset",
+          );
+        }
+        if (returnedSnapshotOffset !== event.payload.snapshotOffset) {
+          throw new StreamFsError(
+            "invalid_compaction",
+            `provider compaction returned ${returnedSnapshotOffset}, expected ${event.payload.snapshotOffset}`,
+          );
+        }
+        return {
+          snapshotOffset: returnedSnapshotOffset as import("@eforest/protocol").Offset,
+        };
+      }
     }
     throw new StreamFsError("no_snapshot", "stream has no snapshot event");
   }
 
   async dump(): Promise<readonly StreamRecord[]> {
-    return readDurableJson<StreamRecord>({
-      url: streamUrl(this.baseUrl, this.metadataStreamId),
-      fetch: this.fetcher,
-    });
+    return readStreamDump(this);
   }
 
   /** Read the raw metadata stream, including the fork directive when present. */
@@ -505,6 +620,7 @@ export class StreamFsRepo {
   /** Resolve this branch against its parent chain without touching a server reducer. */
   async resolvedDump(until?: Offset): Promise<readonly StreamRecord[]> {
     const records = await this.dump();
+    assertHistoryAvailable(records, until);
     const resolved: StreamRecord[] = [];
     for (const record of records) {
       if (until !== undefined && compareOffsets(record.offset, until) > 0) break;
@@ -552,7 +668,7 @@ export class StreamFsRepo {
       fetch: this.fetcher,
     });
     if (!head.exists) throw new RepoNotFoundError(`${this.name}:${branch}`);
-    return new StreamFsRepo(this.baseUrl, this.fetcher, this.name, branch);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, this.name, branch, this.clock);
   }
 
   async createStream(streamId: string, _config: unknown): Promise<void> {
@@ -648,10 +764,7 @@ export class StreamFsRepo {
   }
 
   private async fetchDump(streamId: string): Promise<readonly StreamRecord[]> {
-    return readDurableJson<StreamRecord>({
-      url: streamUrl(this.baseUrl, streamId),
-      fetch: this.fetcher,
-    });
+    return readStreamDump(this, streamId);
   }
 
   async createFile(path: string, bytes: Uint8Array): Promise<void> {
@@ -667,7 +780,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.file.create",
       payload: { v: FS_EVENT_VERSION, path, contentStreamId },
-      ts: Date.now(),
+      ts: this.now(),
     });
     await this.dispatch({
       type: "fs.file.write",
@@ -678,7 +791,7 @@ export class StreamFsRepo {
         contentSha256: sha256(content),
         size: content.byteLength,
       },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -710,7 +823,7 @@ export class StreamFsRepo {
       if (choice.type === "fs.file.write") {
         await this.appendContent(file.contentStreamId, content);
       }
-      await this.dispatch({ ...choice, ts: Date.now() });
+      await this.dispatch({ ...choice, ts: this.now() });
       return;
     }
 
@@ -720,11 +833,11 @@ export class StreamFsRepo {
     const contentStreamId = this.newContentStreamId(path);
     await this.createContentStream(contentStreamId);
     await this.appendContent(contentStreamId, content);
-    await this.dispatch({ ...choice, ts: Date.now() });
+    await this.dispatch({ ...choice, ts: this.now() });
     await this.dispatch({
       type: "fs.file.create",
       payload: { v: FS_EVENT_VERSION, path, contentStreamId },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -767,10 +880,7 @@ export class StreamFsRepo {
       return bytesOf(snapshotContent);
     }
     const metadata = expandThreeWayMergeRecords(await this.resolvedDump(until));
-    const body = await readDurableJson<unknown>({
-      url: streamUrl(this.baseUrl, file.contentStreamId),
-      fetch: this.fetcher,
-    });
+    const body = await readStreamDump(this, file.contentStreamId);
     const encodedContentByStream = new Map<string, ContentEvent[]>();
     for (const candidate of body) {
       if (!isContentEvent(candidate)) {
@@ -908,7 +1018,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.file.delete",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -921,7 +1031,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.dir.create",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -933,7 +1043,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.dir.remove",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -953,7 +1063,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.rename",
       payload: { v: FS_EVENT_VERSION, from, to },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -994,7 +1104,7 @@ export class StreamFsRepo {
         contentStreamId: streamId,
         contentBase64: Buffer.from(bytes).toString("base64"),
       },
-      ts: Date.now(),
+      ts: this.now(),
     };
     await this.appendDurable(streamId, event);
   }
@@ -1017,7 +1127,7 @@ export class StreamFsRepo {
         ts: event.ts,
       };
       if (streamId === this.metadataStreamId) {
-        const state = await this.tree();
+        const state = await this.treeForAppend();
         const payload =
           event.payload !== null &&
           typeof event.payload === "object" &&

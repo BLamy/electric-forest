@@ -1,0 +1,15 @@
+# E4-T08 sync-journal audit
+journal records:
+{"disposition":"applied","offset":"0000000000000000_0000000000000002","path":"remote.txt","v":1,"writerId":"remote-writer"}
+{"disposition":"applied","offset":"0000000000000000_0000000000000003","path":"remote.txt","v":1,"writerId":"remote-writer"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000004","path":"remote.txt","v":1,"writerId":"local-writer"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000004","path":"remote.txt","v":1,"writerId":"local-writer"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000005","path":"remote.txt","v":1,"writerId":"local-writer"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000005","path":"remote.txt","v":1,"writerId":"local-writer"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000006","path":"same-content.txt","v":1,"writerId":"local-writer"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000006","path":"same-content.txt","v":1,"writerId":"local-writer"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000007","path":"same-content.txt","v":1,"writerId":"local-writer"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000007","path":"same-content.txt","v":1,"writerId":"local-writer"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000008","path":"base.txt","v":1,"writerId":"local-writer"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000008","path":"base.txt","v":1,"writerId":"local-writer"}
+audit: every fs mutation offset classified; own offsets uploaded then suppressed; foreign offsets applied

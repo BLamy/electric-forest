@@ -1,0 +1,92 @@
+E5-T02 FRESH ADVERSARIAL CRITIC EVIDENCE
+date=2026-08-25
+claim_head=ebb5d17a65b3fa4267cd550998690419260d0474
+candidate_head=99f7e010d9438cd8199872bc203324f12cf8e756
+evidence_preservation=e9952f318e98d8a337f75a0381ab1f0653bdc8d8
+scratch_worktree=/tmp/eforest-e5-t02-critic.zJAYH2
+scratch_head=99f7e010d9438cd8199872bc203324f12cf8e756
+cold_clone_rerun=NO
+
+BUILDER TRANSCRIPT INTEGRITY
+path=.eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-99f7e010-passed.txt
+sha256=f6f8e5b91c6315c7a06fe86c5e27918d106a7a78fa6c7616312e809ded319307
+lines=23020
+bytes=1656526
+verify-E5-T02_OK=1
+cold_clone_pass=1
+SKIPPED=0
+first_line=cold_clone: cloning HEAD 99f7e010d9438cd8199872bc203324f12cf8e756
+last_lines=verify-E5-T02: OK | cold_clone: verify-E5-T02 PASSED from a pristine clone
+blob=e9952f31:aa76a8d6e2879218171a44539c3c608414bd3365
+preservation_parent=99f7e010d9438cd8199872bc203324f12cf8e756
+
+REFUTATION 1: SCHEMA-VALID __proto__ REVIEWER IS ACCEPTED BUT LOST BY REDUCER
+prediction=after accepted pr.approved by __proto__, status is approved and approvals is ["__proto__"]
+command=pnpm exec vitest run --maxWorkers=1 packages/pr/test/critic-adversarial.test.ts -t "counts every schema-valid reviewer name"
+exit=1
+observed_approval_status=202
+observed_state={"approvals":[],"author":"dana","body":"Independent lifecycle arithmetic","forkOffset":"0000000000000000_0000000000000000","openedAtOffset":"0000000000000000_0000000000000000","resolvedAtOffset":"-1","reviews":[{"id":"0000000000000000_0000000000000001","kind":"approved","reviewer":"__proto__"}],"sourceBranch":"fs:maple/reading-room:critic-source:meta","status":"open","targetBranch":"fs:maple/reading-room:critic-target:meta","threads":[],"title":"Critic negotiated state","v":1}
+observed_duplicate=409 {"error":{"class":"validator-rejected","reason":"pr/duplicate-verdict"}}
+observed_merge=409 {"error":{"class":"validator-rejected","reason":"pr/merge-without-approval"}}
+cause=packages/pr/src/reducer.ts:16-20 uses a normal object as an arbitrary reviewer-key dictionary; __proto__ assignment invokes the inherited setter instead of creating an own verdict entry
+schema=packages/pr/src/events.ts:114-116 accepts every nonempty reviewer string
+
+REFUTATION 2: COMPACTED TARGET FRONTIER RETURNS 502 FOR ABSENT AND RETAINED OFFSETS
+prediction=compacted-away offset 0 returns 409 pr/fork-offset-out-of-range; retained offset 1 opens with 202
+command=pnpm exec vitest run --maxWorkers=1 packages/pr/test/critic-adversarial.test.ts -t "probes target frontier"
+exit=1
+retained_dump=[{"offset":"0000000000000000_0000000000000001","payload":{"path":"retained","v":2},"ts":402,"type":"fs.dir.create"}]
+observed_compacted_away=502 {"error":{"code":"dispatch_failed","reason":"official_stream_append_failed"}}
+observed_retained=502 {"error":{"code":"dispatch_failed","reason":"official_stream_append_failed"}}
+pr_log_neutral=true
+cause=packages/platform/src/gateway.ts:333-337 resolves branches through readExistingNativeBranchRecords; packages/platform/src/repo-home.ts:57-70 uses OfficialStreamAdapter.read and handles 404 only, while a pre-compaction read is 410 rather than the retained /dump view
+
+REFUTATION 3: WATCH DEADLINE RENEWS ON MTIME-ONLY CHURN
+prediction=touching journal metadata without adding bytes or records does not renew a 150ms graceful-stop deadline
+command=pnpm exec vitest run --maxWorkers=1 packages/cli/test/critic-watch-stop.test.ts
+exit=1
+plain_stall=PASS; returned 3 with cli/watch-stop-timeout inside the bounded window
+metadata_only_stall=FAIL; observed_elapsed_ms=654; expected_less_than_ms=400
+cause=packages/cli/src/sync/watch-command.ts:287-316 treats size:mtimeMs inequality as progress, so utimes-only churn repeatedly renews the deadline
+
+SURVIVING FRESH PROBES
+command=pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-lifecycle.test.ts packages/pr/test/pr-refusals.test.ts packages/pr/test/pr-races.test.ts
+result=PASS files=3 tests=13
+command=pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-property.fuzz.test.ts
+result=PASS files=1 tests=1 sequences=1024
+fresh_seed_sha256=e74304d7e4c82dc4d7edf9b3ac6e16b8143acf0b08ddb37fe4dbd41b36ea60ae
+fresh_seeds=0x0badf00d,0x13579bdf,0x2468ace0,0x31415926,0x6a09e667,0x7f4a7c15,0xdeadbeef,0xf00dcafe
+custom_lifecycle=PASS exact state at every offset and terminal 409/404/422 log freeze
+custom_ten_refusals=PASS exact class/reason plus head/dump/digest/projection neutrality
+custom_races=PASS 24 merge-vs-revoke and 24 merge-vs-close iterations across two gateways
+custom_reducer_totality=PASS 1024 sequences x 20 arbitrary door-illegal events, duplicate digest/state
+command=pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/critic-retry.test.ts
+result=PASS files=1 tests=4
+snapshot_retry=ECONNRESET,EPIPE,UND_ERR_SOCKET each attempted exactly twice and propagated the second error object
+snapshot_nonretryable=EACCES attempted exactly once and propagated unchanged
+
+INDEPENDENT OFFLINE REPLAY
+closed_cli=5666e248950732f75e4beed24894639ca27dae7161431d481365f4203e81d0ed
+closed_worker=5666e248950732f75e4beed24894639ca27dae7161431d481365f4203e81d0ed
+merged_cli=c8b98bfd0f2024a222afd22eee6112d1c201501311c014368daf2453f6d5de01
+merged_worker=c8b98bfd0f2024a222afd22eee6112d1c201501311c014368daf2453f6d5de01
+closed_golden_sha256=ec5ebb15d0139071fec933d4bc8805ee869af9c4d2614b3c3529719345175783
+merged_golden_sha256=7059a482ec054582b711e01c827c444c272af72866c6f02188803576a2241071
+digest_file_sha256=da1c56302e6b87cb35c5b776141fe3de0fadb9d77188b527396944a10ee8eab0
+refusal_file_sha256=2be315ece3c6c41e26c34d494ebf8ab1f3139777b44f5740069d21a9f9242c3d
+
+SABOTAGE SENSITIVITY
+merge_check_deleted=EXPECTED FAIL; refusal test observed 202 instead of 409 at packages/pr/test/pr-refusals.test.ts:371
+revocation_disabled=EXPECTED FAIL; lifecycle test observed approved instead of open at packages/pr/test/pr-lifecycle.test.ts:183
+golden_byte_flipped=EXPECTED FAIL; all five replay processes changed merged digest from c8b98bfd... to 092f48b...
+source_existence_bypassed=EXPECTED FAIL; refusal test observed 202 instead of 409 at packages/pr/test/pr-refusals.test.ts:356
+
+DIFF COVERAGE CLASSIFICATION
+covered=packages/pr lifecycle/reducer/schema/validation; platform PR dispatch/serialization; reducer registry and CLI replay; committed goldens/refusals/seeds; Make verification/evidence/sensitivity; snapshot retry; root build and dependency registration
+needs-evidence=reviewer-name prototype-key domain; compacted target resolved-log lookup; watcher renewal on actual durable monotonic journal records
+waived=task/readme/queue control text, historical failed transcripts and metadata, lockfile/tsconfig/package manifests, provenance/no-database inventories; these are non-runtime artifacts or were structurally exercised by the exact-head root/cold gate
+dead=none found
+suite=n/a until refutations clear
+
+REPLAY
+Replay: N/A (non-browser server/package task) + mitigation: exact-head pristine-clone transcript, deterministic stream artifacts, independent HTTP/CAS/frontier probes, fresh-seed fuzz, offline reducer processes, and sabotage sensitivity. The inherited E4-T12 browser run is regression coverage only.

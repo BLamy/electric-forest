@@ -1,0 +1,10 @@
+E5-T02 exact-head composed failure
+head=3d60c4a05f24d99a59f0b39e2850313867130a19
+tree=clean-at-launch
+command=make --no-print-directory verify-E5-T02
+exit=2
+duration=approximately-62m
+transcript=e5-t02-composed-3d60c4a0-failed.txt
+sha256=49a2c9e19afc48992fb458c15eda0d2f4f3bb9e25a944ea2e19abcaeaf108ef3
+terminal=make: *** [_v-e2-t08] Error 1
+cause=three intentional E5-T02 workspace dependencies lacked committed E2-T08 no-database waivers

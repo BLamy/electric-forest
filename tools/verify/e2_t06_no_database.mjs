@@ -522,6 +522,11 @@ const allowlist = readFileSync(allowlistPath, "utf8")
 assert.equal(new Set(allowlist).size, allowlist.length, "duplicate no-database allowlist entry");
 const candidateSet = new Set(sortedCandidates);
 const allowSet = new Set(allowlist);
+const pathPrefixEntries = allowlist.filter((entry) => entry.startsWith("path-prefix:"));
+const pathPrefixes = pathPrefixEntries.map((entry) => entry.slice("path-prefix:".length));
+const candidatePath = (entry) => entry.match(/^(.*?):[0-9]+:[^:]+$/)?.[1] ?? entry;
+const allowedByPathPrefix = (entry) =>
+  pathPrefixes.some((prefix) => candidatePath(entry).startsWith(prefix));
 const fingerprintEntries = allowlist.filter((entry) => entry.startsWith("fingerprint:"));
 const fingerprintMatches = fingerprintEntries.map((entry) => {
   const matches = sortedCandidates.filter(
@@ -534,12 +539,17 @@ const allowedByFingerprint = fingerprintMatches
   .map(([, candidate]) => candidate)
   .filter((candidate) => candidate !== undefined);
 const stale = allowlist.filter((entry) =>
-  entry.startsWith("fingerprint:")
-    ? !fingerprintMatches.some(([fingerprint, candidate]) => fingerprint === entry && candidate)
-    : !candidateSet.has(entry),
+  entry.startsWith("path-prefix:")
+    ? !sortedCandidates.some((candidate) => allowedByPathPrefix(candidate))
+    : entry.startsWith("fingerprint:")
+      ? !fingerprintMatches.some(([fingerprint, candidate]) => fingerprint === entry && candidate)
+      : allowedByPathPrefix(entry)
+        ? false
+        : !candidateSet.has(entry),
 );
 const unallowed = sortedCandidates.filter(
-  (entry) => !allowSet.has(entry) && !allowedByFingerprint.includes(entry),
+  (entry) =>
+    !allowSet.has(entry) && !allowedByFingerprint.includes(entry) && !allowedByPathPrefix(entry),
 );
 
 const lines = [
@@ -562,7 +572,7 @@ const lines = [
   `structural-files=${paths.filter((path) => path.startsWith("packages/platform/src/") && path.endsWith(".ts")).length}`,
   ...sortedCandidates.map(
     (candidate) =>
-      `${allowSet.has(candidate) || allowedByFingerprint.includes(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
+      `${allowSet.has(candidate) || allowedByFingerprint.includes(candidate) || allowedByPathPrefix(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
   ),
   ...stale.map((entry) => `STALE ${entry}`),
   `unallowlisted=${unallowed.length}`,

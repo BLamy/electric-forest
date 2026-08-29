@@ -1,0 +1,17 @@
+task=E5-T02
+result=downstream-provenance-guard-failed
+head=3832f737
+command=tools/verify/cold_clone.sh verify-E5-T02
+exit=2
+lines=771
+bytes=68653
+sha256=8288cff562876f9a90771ac825d982a939e93557c64a580964725164c47cc0dc
+first_root_cause=verify-provenance-refresh.mjs still pinned packages/cli/src/official.integration.test.ts to its pre-timeout digest after the exact E1 provenance artifact was legitimately refreshed
+first_root_cause_line=750
+upstream_full_suite=passed
+work_queue_policy=passed scenarios=148
+skipped_marker_count=0
+verify_ok_marker_count=0
+cold_clone_pass_marker_count=0
+retry_count=0
+disposition=preserved verbatim; extend the exact approved provenance input set by this one repaired test path, run the flagless sensor and its sensitivity harness, then rerun from a new committed head

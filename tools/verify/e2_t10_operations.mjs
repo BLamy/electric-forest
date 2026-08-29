@@ -380,7 +380,7 @@ async function runScenario(modules) {
     ].join("\n");
   } finally {
     globalThis.fetch = originalFetch;
-    await Promise.allSettled([runtime.registry.stop(), closePlatform(), official.stop()]);
+    await stopScenario(runtime, closePlatform, official);
   }
 }
 
@@ -398,3 +398,15 @@ if (writeGolden) {
 const summary = /E2_T10_HTTP_OPERATIONS_OK rows=(\d+) refused=(\d+) operations=6/.exec(first);
 assert.ok(summary);
 console.log(`E2_T10_HTTP_OPERATIONS_OK rows=${summary[1]} refused=${summary[2]} runs=2`);
+
+async function stopScenario(runtime, closePlatform, official) {
+  // Finish the projector read before stopping its upstream transport; doing
+  // these concurrently leaves the durable client retrying without a bound.
+  await runtime.registry.stop();
+  const platformClosed = closePlatform();
+  runtime.server.closeAllConnections();
+  await platformClosed;
+  runtime.gateway.terminate();
+  runtime.namespaces.terminate();
+  await official.stop();
+}

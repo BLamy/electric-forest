@@ -526,6 +526,8 @@ project hosted on electric-forest runs the same builder/critic gauntlet out of i
   `@durable-streams/server` packages define transport behavior locally; Electric Cloud
   defines it in deployment. `@eforest/streamfs`, reducers, validation, digests, and
   merge semantics are application layers above that boundary. This repository never
-  implements another Durable Streams transport. If `blamy/emulate` adds Durable Streams
-  support, it wraps the published reference server without a fork. Full rationale and
-  current limits are in `ARCHITECTURE.md`.
+  implements another Durable Streams transport. The explicitly authorized E4-T03
+  provider-retention patch is a task-scoped exception: it stays pinned to the published
+  server and adds no second transport. If `blamy/emulate` adds Durable Streams support,
+  it wraps the published reference server without a fork. Full rationale and current
+  limits are in `ARCHITECTURE.md`.

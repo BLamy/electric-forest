@@ -1,12 +1,23 @@
 import { createHash } from "node:crypto";
 import {
   checkpoint as applicationCheckpoint,
+  isDurableExistsConflict,
   isDurableNotFound,
   type StreamBatch,
   type StreamCheckpoint,
   type StreamRecord,
 } from "@eforest/client";
 import { emptyView } from "@eforest/identity";
+import {
+  isPrActionType,
+  isPrEvent,
+  isPrStreamId,
+  prInitialStateForStream,
+  prReducer,
+  PrRefusalError,
+  PrSchemaError,
+  PrUnknownActionError,
+} from "@eforest/pr";
 import {
   compareOffsets,
   isEvent,
@@ -19,6 +30,7 @@ import {
   isFsFileContentEvent,
   isFsEvent,
   isFsBranchForkEvent,
+  isBranchName,
   isValidFsPath,
   patchResultSize,
   resolveBranchLog,
@@ -44,7 +56,11 @@ import {
 } from "./authz/decide.js";
 import { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js";
 import type { NamespaceView } from "./ns/reducer.js";
-import type { StreamAdapter } from "./official.js";
+import {
+  StreamForkExistsError,
+  StreamForkValidationError,
+  type StreamAdapter,
+} from "./official.js";
 import {
   NamespaceContentionError,
   NamespaceDispatcher,
@@ -83,11 +99,26 @@ import {
 } from "./rate-limit.js";
 import { decideTenantAccess } from "./tenant-isolation.js";
 import {
+  nativeBranchOffsets,
+  readExistingNativeBranchRecords,
   RepositoryHomeCorruptError,
   RepositoryHomeNativeForkError,
   RepositoryHomeStore,
   type RepositoryHomeRegion,
 } from "./repo-home.js";
+import { isIssueActionType, isIssueStreamId } from "@eforest/reducers";
+import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
+import {
+  isIssueEnvelopeSourceValid,
+  parseJsonWithIssueEnvelopeSource,
+  type IssueEnvelopeSource,
+} from "./issues/envelope.js";
+import {
+  IssueRefusalError,
+  IssueSchemaError,
+  IssueUnknownActionError,
+} from "./issues/validators.js";
+import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -102,6 +133,7 @@ export interface PlatformGatewayOptions {
   /** Deterministic test seam; production always constructs the isolated replay reader. */
   readonly namespaceViewReader?: Pick<NamespaceViewReader, "viewFor">;
   readonly repositoryHomes?: RepositoryHomeStore;
+  readonly actionValidators?: ActionValidatorRegistry;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -117,6 +149,194 @@ class ApplicationProjectionError extends Error {
     this.name = "ApplicationProjectionError";
     this.offset = offset;
   }
+}
+
+class BranchForkRefusalError extends GrantTargetUnavailableError {
+  constructor(
+    readonly reason: string,
+    message = reason,
+  ) {
+    super();
+    this.message = message;
+    this.name = "BranchForkRefusalError";
+  }
+}
+
+class FsStaleBaseError extends Error {
+  constructor(
+    readonly conflict: {
+      readonly path: string;
+      readonly expectedBase: string;
+      readonly actualBase: string;
+    },
+  ) {
+    super("stale-base");
+    this.name = "FsStaleBaseError";
+  }
+}
+
+function moveBasePaths(values: Map<string, string>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, base] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, base);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, base);
+    }
+  }
+}
+
+function validateFsBase(records: readonly unknown[], event: Event): void {
+  if (event.type !== "fs.file.write" && event.type !== "fs.file.patch") return;
+  const payload = event.payload as Record<string, unknown>;
+  if (typeof payload.path !== "string" || typeof payload.base !== "string") return;
+  const bases = new Map<string, string>();
+  for (const [index, candidate] of records.entries()) {
+    if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const record = candidate as {
+      readonly type?: unknown;
+      readonly payload?: unknown;
+      readonly offset?: unknown;
+    };
+    if (
+      record.payload === null ||
+      typeof record.payload !== "object" ||
+      Array.isArray(record.payload)
+    ) {
+      continue;
+    }
+    const recordPayload = record.payload as Record<string, unknown>;
+    if (record.type === "fs.rename") {
+      const from = recordPayload.from;
+      const to = recordPayload.to;
+      if (typeof from === "string" && typeof to === "string") moveBasePaths(bases, from, to);
+      continue;
+    }
+    const path = recordPayload.path;
+    if (typeof path !== "string") continue;
+    const offset = typeof record.offset === "string" ? record.offset : offsetForOrdinal(index);
+    if (record.type === "fs.file.create") {
+      if (!bases.has(path)) bases.set(path, "BASE_NONE");
+    } else if (record.type === "fs.file.write" || record.type === "fs.file.patch") {
+      bases.set(path, offset);
+    } else if (record.type === "fs.file.delete") {
+      bases.delete(path);
+    }
+  }
+  const expectedBase = bases.get(payload.path) ?? "BASE_NONE";
+  if (payload.base !== expectedBase) {
+    throw new FsStaleBaseError({
+      path: payload.path,
+      expectedBase,
+      actualBase: payload.base,
+    });
+  }
+}
+
+function issueEventWithoutServerMetadata(value: unknown): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new IssueSchemaError();
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.type !== "string" || typeof record.ts !== "number") {
+    throw new IssueSchemaError();
+  }
+  if (
+    record.payload === null ||
+    typeof record.payload !== "object" ||
+    Array.isArray(record.payload)
+  ) {
+    throw new IssueSchemaError();
+  }
+  const payload = Object.fromEntries(
+    Object.entries(record.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+  );
+  return { type: record.type, payload, ts: record.ts };
+}
+
+function validateIssueDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  issueSource?: IssueEnvelopeSource,
+): Promise<void> {
+  const issueRecords = records.map(issueEventWithoutServerMetadata);
+  const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
+  const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
+  const action = issueEventWithoutServerMetadata(event);
+  return actionValidators.validate(action, {
+    streamId,
+    state,
+    headOffset:
+      issueRecords.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(issueRecords.length - 1),
+    nextOffset: offsetForOrdinal(issueRecords.length),
+    records: issueRecords,
+    ...(issueSource === undefined ? {} : { issueSource }),
+  });
+}
+
+function prEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new PrSchemaError();
+  }
+  const record = value as Record<string, unknown>;
+  const base = { type: record.type, payload: record.payload, ts: record.ts };
+  if (!isEvent(base)) throw new PrSchemaError();
+  if (base.payload === null || typeof base.payload !== "object" || Array.isArray(base.payload)) {
+    throw new PrSchemaError();
+  }
+  const rawOffset = record.offset;
+  if (
+    rawOffset !== undefined &&
+    (typeof rawOffset !== "string" ||
+      rawOffset === OFFSET_BEFORE_FIRST ||
+      !isWellFormedOffset(rawOffset))
+  ) {
+    throw new PrSchemaError();
+  }
+  const payload = Object.fromEntries(
+    Object.entries(base.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+  );
+  const event = {
+    ...base,
+    payload,
+    offset: (rawOffset ?? fallbackOffset) as Offset,
+  } as Event;
+  if (!isPrEvent(event)) throw new PrSchemaError();
+  return event;
+}
+
+async function validatePrDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+): Promise<void> {
+  const prRecords = records.map((record, index) =>
+    prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const state = prRecords.reduce(prReducer, prInitialStateForStream(streamId));
+  const nextOffset = offsetForOrdinal(prRecords.length);
+  const action = prEventWithoutServerMetadata(event, nextOffset);
+  await actionValidators.validate(action, {
+    streamId,
+    state,
+    headOffset: prRecords.at(-1)
+      ? ((prRecords.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: prRecords,
+    resolveBranch: async (branchStreamId) => {
+      const branchRecords = await readExistingNativeBranchRecords(streams, branchStreamId);
+      return branchRecords === undefined
+        ? undefined
+        : { streamId: branchStreamId, offsets: nativeBranchOffsets(branchRecords) };
+    },
+  });
 }
 
 interface BranchProjectionMetadata {
@@ -151,6 +371,39 @@ function branchFork(record: StreamRecord | undefined) {
   if (record === undefined) return undefined;
   const event = { type: record.type, payload: record.payload, ts: record.ts };
   return isFsBranchForkEvent(event) ? event : undefined;
+}
+
+/**
+ * The official Durable Streams fork read includes the inherited transport
+ * prefix. StreamFS resolution, however, consumes a leaf segment beginning at
+ * that leaf's own fork directive. Rebase that child-owned segment to its local
+ * application offsets while leaving parentless/main streams untouched.
+ */
+function branchLocalSegment(records: readonly StreamRecord[]): readonly StreamRecord[] {
+  let firstForkIndex = -1;
+  let lastForkIndex = -1;
+  let repeatedParentForkIndex = -1;
+  let previousParentStreamId: string | undefined;
+  for (let index = 0; index < records.length; index += 1) {
+    const fork = branchFork(records[index]);
+    if (fork === undefined) continue;
+    if (firstForkIndex < 0) firstForkIndex = index;
+    if (
+      repeatedParentForkIndex < 0 &&
+      previousParentStreamId !== undefined &&
+      previousParentStreamId === fork.payload.parentStreamId
+    ) {
+      repeatedParentForkIndex = firstForkIndex;
+    }
+    previousParentStreamId = fork.payload.parentStreamId;
+    lastForkIndex = index;
+  }
+  const forkIndex = repeatedParentForkIndex >= 0 ? repeatedParentForkIndex : lastForkIndex;
+  if (forkIndex < 0) return records;
+  return records.slice(forkIndex).map((record, index) => ({
+    ...record,
+    offset: offsetForOrdinal(index),
+  }));
 }
 
 function stripWriterMetadata(record: StreamRecord): StreamRecord {
@@ -267,8 +520,12 @@ function projectionRecords(values: readonly unknown[], from: Offset): readonly S
 function validateProjectionReducer(
   definition: ReducerDefinition,
   events: readonly StreamRecord[],
+  streamId?: string,
 ): void {
-  let state = definition.initialState;
+  let state =
+    streamId !== undefined && definition.initialStateForStream !== undefined
+      ? definition.initialStateForStream(streamId)
+      : definition.initialState;
   for (const event of events) {
     try {
       state = definition.reduce(state, event);
@@ -434,6 +691,27 @@ function namespaceTenant(streamId: string): string {
   return isAuthzName(tenant) ? tenant : "control";
 }
 
+function branchForkTarget(streamId: string): Extract<AuthzTarget, { kind: "repo" }> | undefined {
+  const match = /^fs:([^/]+)\/([^:]+):([^:]+):meta$/.exec(streamId);
+  if (match === null) return undefined;
+  const [, org, repo, branch] = match as unknown as [string, string, string, string];
+  if (!isAuthzName(org) || !isAuthzName(repo)) return undefined;
+  // The branch grammar is validated by the fork validator below. Keeping the
+  // parsed value here lets the server return fs/invalid-branch-name instead of
+  // making the CLI invent that refusal before the authenticated door.
+  return { kind: "repo", org, repo, branch, streamId };
+}
+
+function branchForkParentMatches(
+  target: Extract<AuthzTarget, { kind: "repo" }>,
+  parentStreamId: string,
+): boolean {
+  const match = /^fs:([^/]+)\/([^:]+):([^:]+):meta$/.exec(parentStreamId);
+  if (match === null) return false;
+  const [, org, repo, branch] = match as unknown as [string, string, string, string];
+  return org === target.org && repo === target.repo && (branch === "main" || isBranchName(branch));
+}
+
 function parseDispatch(value: unknown): {
   readonly streamId: string;
   readonly event: Event;
@@ -478,6 +756,7 @@ export class PlatformGateway {
   private readonly decideAuthorization: typeof decideStreamAuthorization;
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly repositoryHomes: RepositoryHomeStore;
+  private readonly actionValidators: ActionValidatorRegistry;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
     | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
@@ -493,6 +772,7 @@ export class PlatformGateway {
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
+    this.actionValidators = options.actionValidators ?? registerApplicationValidators();
     this.views = options.namespaceViewReader;
   }
 
@@ -750,7 +1030,15 @@ export class PlatformGateway {
 
     let parsed;
     try {
-      parsed = parseDispatch(await request.json());
+      const body = await request.arrayBuffer();
+      let bodySource: string;
+      try {
+        bodySource = new TextDecoder("utf-8", { fatal: true }).decode(body);
+      } catch {
+        throw new SyntaxError("dispatch body is not valid UTF-8");
+      }
+      const source = parseJsonWithIssueEnvelopeSource(bodySource, body.byteLength);
+      parsed = { ...parseDispatch(source.value), issueSource: source.issueSource };
     } catch (error) {
       if (revokedCredential !== undefined) {
         return json(401, { error: { class: "token-revoked" } });
@@ -759,10 +1047,34 @@ export class PlatformGateway {
       return failure(400, "invalid_request", reason);
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
-    const target = classifyDispatchTarget(
-      parsed.streamId,
-      namespaceEvent ? "namespace" : "application",
-    );
+    const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
+    const target =
+      branchForkEvent === undefined
+        ? classifyDispatchTarget(parsed.streamId, namespaceEvent ? "namespace" : "application")
+        : (branchForkTarget(parsed.streamId) ?? {
+            kind: "malformed" as const,
+            input: parsed.streamId,
+          });
+    if (branchForkEvent !== undefined && target.kind === "repo") {
+      if (!isBranchName(target.branch)) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "fs/invalid-branch-name",
+            message: `invalid branch name ${JSON.stringify(target.branch)}`,
+          },
+        });
+      }
+      if (!branchForkParentMatches(target, branchForkEvent.payload.parentStreamId)) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "fs/parent-not-found",
+            message: "parent stream does not exist",
+          },
+        });
+      }
+    }
     if (revokedCredential !== undefined) {
       if (target.kind === "repo" || target.kind === "malformed") {
         return authzRefusalResponse({
@@ -782,6 +1094,16 @@ export class PlatformGateway {
     }
 
     try {
+      if (
+        !namespaceEvent &&
+        isIssueActionType(parsed.event.type) &&
+        !isIssueStreamId(parsed.streamId)
+      ) {
+        throw new IssueUnknownActionError();
+      }
+      if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
+        throw new PrUnknownActionError();
+      }
       // E2-T07: every dispatch is decided before any official-stream
       // operation. Repo targets replay both views; control and sandbox
       // targets are decided purely (no reads) and keep their frozen door
@@ -814,10 +1136,24 @@ export class PlatformGateway {
         if (!decision.allowed) return authzRefusalResponse(decision);
       }
 
+      // Writer-lane recovery may return an existing idempotency receipt before
+      // invoking options.validate. Keep static source-shape validation outside
+      // that recovery shortcut, after authz and unknown-action classification;
+      // the lane still owns full envelope and workflow validation before append.
+      if (isIssueStreamId(parsed.streamId)) {
+        if (!isIssueActionType(parsed.event.type)) throw new IssueUnknownActionError();
+        if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
+      }
+      if (isPrStreamId(parsed.streamId)) {
+        if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
+        if (!isPrEvent(parsed.event)) throw new PrSchemaError();
+      }
+
       const eventFor = async (
         identity: { readonly sub: string },
         _operationId?: string,
       ): Promise<Event> => {
+        if (branchForkEvent !== undefined) return branchForkEvent;
         if (namespaceEvent) {
           return this.namespaces.stampEvent(parsed.event, identity.sub);
         }
@@ -835,6 +1171,46 @@ export class PlatformGateway {
         assertActive?: () => Promise<void>,
         decidedAt?: string,
       ): Promise<Response> => {
+        if (branchForkEvent !== undefined) {
+          if (target.kind !== "repo" || this.streams.fork === undefined) {
+            throw new GrantTargetCommitError("native branch fork is unavailable");
+          }
+          try {
+            if (assertActive !== undefined) await assertActive();
+            await this.streams.fork(
+              parsed.streamId,
+              branchForkEvent.payload.parentStreamId,
+              branchForkEvent.payload.forkOffset,
+              branchForkEvent,
+              operationId === undefined ? {} : { idempotencyKey: operationId },
+            );
+          } catch (error) {
+            if (error instanceof StreamForkValidationError) {
+              throw new BranchForkRefusalError(error.reason, error.message);
+            }
+            if (error instanceof StreamForkExistsError) {
+              throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+            }
+            if (isDurableExistsConflict(error)) {
+              throw new BranchForkRefusalError("fs/branch-exists");
+            }
+            if (isDurableNotFound(error)) {
+              throw new BranchForkRefusalError(
+                "fs/parent-not-found",
+                "parent stream does not exist",
+              );
+            }
+            throw new GrantTargetCommitError(error);
+          }
+          return json(202, {
+            ok: true,
+            streamId: parsed.streamId,
+            forkOffset: branchForkEvent.payload.forkOffset,
+            ...(repoDecision === undefined
+              ? {}
+              : { identityOffset: decidedAt ?? repoDecision.identityOffset }),
+          });
+        }
         if (namespaceEvent) {
           await this.namespaces.dispatch(
             parsed.streamId,
@@ -848,24 +1224,86 @@ export class PlatformGateway {
           this.registry?.poke();
           return json(202, { ok: true, actor: identity.sub });
         }
+        let dispatchOffset: Offset | undefined;
         try {
           if (operationId === undefined) {
-            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
-              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-            });
+            const receipt = await this.writers.dispatch(
+              parsed.streamId,
+              parsed.event,
+              identity.sub,
+              {
+                ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
+                validate: async (records, stamped) => {
+                  validateFsBase(records, stamped);
+                  if (isIssueStreamId(parsed.streamId)) {
+                    await validateIssueDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      parsed.issueSource,
+                    );
+                  }
+                  if (isPrStreamId(parsed.streamId)) {
+                    await validatePrDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      this.streams,
+                    );
+                  }
+                },
+              },
+            );
+            dispatchOffset = receipt.globalSequence;
           } else {
-            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
-              operationId,
-              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-              ...(assertActive === undefined ? {} : { assertActive }),
-            });
+            const receipt = await this.writers.dispatch(
+              parsed.streamId,
+              parsed.event,
+              identity.sub,
+              {
+                operationId,
+                ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
+                ...(assertActive === undefined ? {} : { assertActive }),
+                validate: async (records, stamped) => {
+                  validateFsBase(records, stamped);
+                  if (isIssueStreamId(parsed.streamId)) {
+                    await validateIssueDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      parsed.issueSource,
+                    );
+                  }
+                  if (isPrStreamId(parsed.streamId)) {
+                    await validatePrDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      this.streams,
+                    );
+                  }
+                },
+              },
+            );
+            dispatchOffset = receipt.globalSequence;
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
-            error instanceof WriterLaneContentionError
+            error instanceof WriterLaneContentionError ||
+            error instanceof FsStaleBaseError ||
+            error instanceof IssueUnknownActionError ||
+            error instanceof IssueSchemaError ||
+            error instanceof IssueRefusalError ||
+            error instanceof PrUnknownActionError ||
+            error instanceof PrSchemaError ||
+            error instanceof PrRefusalError
           ) {
             throw error;
           }
@@ -877,6 +1315,10 @@ export class PlatformGateway {
             ok: true,
             actor: identity.sub,
             identityOffset: decidedAt ?? repoDecision!.identityOffset,
+            ...(request.headers.get("x-eforest-dispatch-receipt") === "offset" &&
+            dispatchOffset !== undefined
+              ? { offset: dispatchOffset }
+              : {}),
           });
         }
         return json(202, { ok: true, actor: identity.sub });
@@ -893,6 +1335,20 @@ export class PlatformGateway {
       }
       return await mutate(preliminaryIdentity!);
     } catch (error) {
+      if (error instanceof BranchForkRefusalError) {
+        return json(409, {
+          error: { class: "validator-rejected", reason: error.reason, message: error.message },
+        });
+      }
+      if (error instanceof StreamForkValidationError) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: error.reason,
+            message: error.message,
+          },
+        });
+      }
       if (error instanceof TokenRevokedError) {
         if (target.kind === "repo") {
           return authzRefusalResponse({
@@ -908,6 +1364,18 @@ export class PlatformGateway {
         return failure(401, "unauthorized", error.reason);
       }
       if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      if (error instanceof IssueUnknownActionError || error instanceof PrUnknownActionError) {
+        return json(404, { error: { class: "unknown-action-type" } });
+      }
+      if (error instanceof IssueSchemaError || error instanceof PrSchemaError) {
+        return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof IssueRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof PrRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
         return json(422, { error: { class: "schema-violation" } });
       }
@@ -923,6 +1391,15 @@ export class PlatformGateway {
             reason: error.reason,
             expected: error.expected,
             provided: error.provided,
+          },
+        });
+      }
+      if (error instanceof FsStaleBaseError) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "stale-base",
+            conflict: error.conflict,
           },
         });
       }
@@ -1206,7 +1683,7 @@ export class PlatformGateway {
             const history = await this.historyProjection(decision.streamId, decoded[2]!);
             const events = history.records.map(publicHistoryRecord);
             const checkpoint = applicationCheckpoint(events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST);
-            validateProjectionReducer(reducer!, events);
+            validateProjectionReducer(reducer!, events, decision.streamId);
             return json(200, {
               ok: true,
               events,
@@ -1241,7 +1718,7 @@ export class PlatformGateway {
               repository.records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST,
             ),
           };
-          validateProjectionReducer(reducer!, batch.events);
+          validateProjectionReducer(reducer!, batch.events, decision.streamId);
           return json(200, {
             ok: true,
             events: batch.events,
@@ -1901,7 +2378,7 @@ export class PlatformGateway {
     streamId: string,
     branch: string,
   ): Promise<RepositoryProjection> {
-    const leaf = (await this.readTarget(streamId)) as readonly StreamRecord[];
+    const leaf = branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]);
     const initialFork = branchFork(leaf[0]);
     const baseMetadata = {
       parentStreamId: null,
@@ -1950,7 +2427,9 @@ export class PlatformGateway {
         forkCheckpoint: fork.payload.forkOffset,
       });
       currentStreamId = fork.payload.parentStreamId;
-      currentRecords = (await this.readTarget(currentStreamId)) as readonly StreamRecord[];
+      currentRecords = branchLocalSegment(
+        (await this.readTarget(currentStreamId)) as readonly StreamRecord[],
+      );
     }
 
     let resolved: readonly StreamRecord[];
@@ -1998,7 +2477,10 @@ export class PlatformGateway {
     }
     const nextVisited = new Set(visited);
     nextVisited.add(streamId);
-    const raw = this.historyRecords(streamId, await this.readTarget(streamId));
+    const raw = this.historyRecords(
+      streamId,
+      branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]),
+    );
     const repeatedFork = raw.slice(1).find((record) => branchFork(record) !== undefined);
     if (repeatedFork !== undefined) {
       throw new ApplicationProjectionError(

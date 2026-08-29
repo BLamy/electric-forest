@@ -168,7 +168,7 @@ assert.doesNotMatch(
 );
 assert.doesNotMatch(platformPackage, /@durable-streams\/server/);
 assert.match(clientPackage, /"@durable-streams\/client": "\^0\.2\.6"/);
-assert.match(serverPackage, /"@durable-streams\/server": "\^0\.3\.7"/);
+assert.match(serverPackage, /"@durable-streams\/server": "\^0\.3\.8"/);
 
 const productPaths = ["packages/platform/src", "packages/client/src", "packages/server/src"];
 const emulatorSearch = await run("git", [
@@ -197,7 +197,7 @@ const evidence = {
   },
   boundaries: {
     client: "@durable-streams/client@^0.2.6",
-    localServer: "@durable-streams/server@^0.3.7",
+    localServer: "@durable-streams/server@^0.3.8",
     emulatorProductImports: 0,
     customPlatformTransport: 0,
     copiedProtocol: 0,

@@ -1,0 +1,11 @@
+Command: `node tools/verify/e5_t01_matrix.mjs`
+
+Output:
+
+```text
+E5_T01_MATRIX_OK cells=35 forbidden-matches=0
+```
+
+The README matrix parser compared all 35 state/action cells with the built
+`WORKFLOW_TRANSITIONS` table. The forbidden-token scan over issue and server
+wiring source produced no matches; the count is reported as zero above.

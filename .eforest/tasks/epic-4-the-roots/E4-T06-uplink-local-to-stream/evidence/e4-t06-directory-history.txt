@@ -1,0 +1,30 @@
+E4-T06 directory-history evidence
+HEAD: 65a5a256cd237423da5a5f41068bf8096c172d9e
+server: published @durable-streams/server 0.3.8 via createDurableStreamTestServer and OfficialStreamAdapter
+
+Focused command:
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+result: 3 files, 18 tests passed
+
+Committed attacks:
+- accepted empty-directory create, restart, remove, and restart: clean=true, refusals=0
+- empty-directory rename history on restart: clean=true, no duplicate dispatch
+- nested directory rename history with a descendant directory: clean=true, no duplicate dispatch
+- recursive deletion: clean=true, refusals=0; accepted metadata order is
+  fs.file.delete a/b/payload.txt
+  fs.dir.remove a/b
+  fs.dir.remove a
+- official replay of the recursive-deletion stream: tree files={} and dirs={}
+- pure coalescer plan: delete file, rmdir a/b, rmdir a
+
+Full gate:
+make --no-print-directory verify-E4-T06
+result: 54 files, 552 tests, build/dependency gates, verifier, and five sensitivities passed
+
+Cold clone:
+bash tools/verify/cold_clone.sh verify-E4-T06
+result: cold_clone: verify-E4-T06 PASSED from a pristine clone
+
+Replay:
+N/A (local replayio preflight reports unknown command 'mcp') + committed official-server
+integration tests and stream-layer verifier; the directory fix has no new browser surface.

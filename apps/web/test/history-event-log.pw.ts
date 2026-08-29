@@ -132,7 +132,7 @@ const main = await world.seedPublicRepo({
     { type: "future.event", payload: { v: 99, path: "unknown.txt" }, ts: 100 },
     {
       type: "fs.file.create",
-      payload: { v: 2, path: "docs/readme.md", contentStreamId: "fs:history:file" },
+      payload: { v: 2, path: "base.txt", contentStreamId: "fs:history:file" },
       ts: 100,
     },
   ],
@@ -140,6 +140,17 @@ const main = await world.seedPublicRepo({
 await world.appendApplication(main, {
   type: "future.actor-spoof",
   payload: { v: 99, actor: "mallory", path: "actor-spoof.txt" },
+  ts: 100,
+});
+await world.appendApplication(main, {
+  type: "sync/conflict",
+  payload: {
+    v: 1,
+    path: "base.txt",
+    conflictFile: "base.txt.conflict-0000000000000000_0000000000000002",
+    winningOffset: offsetForOrdinal(2),
+    loserSha256: "a".repeat(64),
+  },
   ts: 100,
 });
 const repositoryEventTime = { value: 100 };
@@ -287,6 +298,12 @@ try {
       record.type === "fs.file.create" && (record.payload as { readonly v?: unknown }).v === 99,
   )!;
   assert.equal(unknownKnownType?.raw, canonicalJson(unknownKnownTypeRecord.payload));
+  assert.equal(rows.find((row) => row.kind === "sync/conflict")?.known, "true");
+  await guarded.page
+    .getByTestId("history-row")
+    .filter({ hasText: "preserved local conflict for base.txt" })
+    .waitFor();
+  transcript.push("sync-conflict-known=true humanized-summary-visible=true");
   const spoof = rows.find((row) => row.kind === "future.actor-spoof@v99");
   const spoofRecord = expectedMain.find((record) => record.type === "future.actor-spoof")!;
   assert.equal((spoofRecord.payload as { readonly actor?: unknown }).actor, `auth0|${subject.id}`);

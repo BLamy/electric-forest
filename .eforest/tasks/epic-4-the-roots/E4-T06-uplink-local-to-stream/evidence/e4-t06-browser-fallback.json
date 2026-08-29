@@ -1,0 +1,160 @@
+{
+  "replay": "N/A: preflight failed; direct Replay Chromium via Playwright fallback",
+  "platformUrl": "http://127.0.0.1:61953",
+  "streamUrl": "http://127.0.0.1:61952",
+  "treeUrl": "http://127.0.0.1:61953/maple/reading-room/tree/main/docs",
+  "streamId": "fs:maple/reading-room:main:meta",
+  "browserExecutable": "/Users/brettlamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
+  "navigations": [
+    "http://127.0.0.1:61953/maple/reading-room/tree/main/docs"
+  ],
+  "consoleErrors": [],
+  "initial": {
+    "region": {
+      "offset": "-1",
+      "digest": "d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6",
+      "status": "live"
+    },
+    "rows": []
+  },
+  "phaseOne": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "bc4c4c0bcd31ca29482863767044db7ee412b46c34fce14eda676e16ec89852d"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "564c3f13e1c4944d70d897491965aa81e97052c0ce47cc0cfac12e87f759d754",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs/old.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "phaseTwo": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "a29f05478bf3ea2eea9530634ff8bf98d2a3810672d4cddd165e6e49f010fea7"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000004",
+      "digest": "768baa344da58eca56e3e544f5ba29f3918188bc3ea99247d78ea051bfdd8bee",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs/old.txt",
+        "kind": "file"
+      },
+      {
+        "path": "docs/triple.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "phaseThree": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000007",
+      "digest": "5ea2e1be843020c19bfef79b8b33619377facddae333dd305b838962f0d6658a",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs/renamed.txt",
+        "kind": "file"
+      },
+      {
+        "path": "docs/triple.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "acceptedOffsets": [
+    "0000000000000000_0000000000000000",
+    "0000000000000000_0000000000000001",
+    "0000000000000000_0000000000000002",
+    "0000000000000000_0000000000000003",
+    "0000000000000000_0000000000000004",
+    "0000000000000000_0000000000000005",
+    "0000000000000000_0000000000000006",
+    "0000000000000000_0000000000000007"
+  ],
+  "journal": [
+    {
+      "seq": 1,
+      "kind": "accepted",
+      "action": "fs.dir.create",
+      "path": "docs",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000000"
+    },
+    {
+      "seq": 2,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/old.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000001"
+    },
+    {
+      "seq": 3,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/old.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000002"
+    },
+    {
+      "seq": 4,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/triple.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000003"
+    },
+    {
+      "seq": 5,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/triple.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000004"
+    },
+    {
+      "seq": 6,
+      "kind": "accepted",
+      "action": "fs.file.delete",
+      "path": "docs/old.txt",
+      "base": "0000000000000000_0000000000000002",
+      "offset": "0000000000000000_0000000000000005"
+    },
+    {
+      "seq": 7,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/renamed.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000006"
+    },
+    {
+      "seq": 8,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/renamed.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000007"
+    }
+  ],
+  "journalRecords": 8,
+  "workspaceHead": "0000000000000000_0000000000000007"
+}

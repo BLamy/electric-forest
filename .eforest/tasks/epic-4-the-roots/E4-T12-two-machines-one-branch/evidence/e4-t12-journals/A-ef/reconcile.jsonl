@@ -1,0 +1,10 @@
+{"action":"confirmed","offset":"0000000000000000_0000000000000014","path":"docs/mixed-local.txt","phase":"repair"}
+{"action":"confirmed","offset":"0000000000000000_0000000000000015","path":"docs/mixed-conflict.bin","phase":"repair"}
+{"action":"confirmed","offset":"0000000000000000_0000000000000016","path":"docs/mixed-local.txt","phase":"repair"}
+{"action":"confirmed","offset":"0000000000000000_0000000000000017","path":"docs/mixed-after-b.txt","phase":"repair"}
+{"action":"confirmed","offset":"0000000000000000_0000000000000018","path":"docs/mixed-after-b.txt","phase":"repair"}
+{"action":"applied","offset":"0000000000000000_0000000000000019","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","phase":"downlink"}
+{"action":"applied","offset":"0000000000000000_0000000000000020","path":"docs/mixed-remote.txt","phase":"downlink"}
+{"action":"applied","offset":"0000000000000000_0000000000000021","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","phase":"downlink"}
+{"action":"applied","offset":"0000000000000000_0000000000000022","path":"docs/mixed-remote.txt","phase":"downlink"}
+{"action":"applied","offset":"0000000000000000_0000000000000023","path":"-","phase":"downlink"}

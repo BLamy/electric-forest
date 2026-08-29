@@ -925,19 +925,20 @@ describe("event-backed CLI grants", () => {
     const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
     const bodyEntered = deferred();
     const releaseBody = deferred();
+    const requestBody = JSON.stringify({
+      streamId: "target",
+      event: { type: "test.created", payload: { value: 3 }, ts: NOW + 2 },
+    });
     const request = new Request("https://platform.example.test/api/dispatch", {
       method: "POST",
       headers: { authorization: `Bearer ${mint.token}`, "content-type": "application/json" },
-      body: "{}",
+      body: requestBody,
     });
-    Object.defineProperty(request, "json", {
+    Object.defineProperty(request, "arrayBuffer", {
       value: async () => {
         bodyEntered.resolve();
         await releaseBody.promise;
-        return {
-          streamId: "target",
-          event: { type: "test.created", payload: { value: 3 }, ts: NOW + 2 },
-        };
+        return new TextEncoder().encode(requestBody).buffer;
       },
     });
 

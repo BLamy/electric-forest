@@ -1,0 +1,11 @@
+E4-T05 checkout digest parity
+fresh-fork separate-process-tree-digest=4e81fafba3f5a5f51b16bc232102e0928b9eb55ca3972a239e66b32e1aed3ec7
+fresh-fork separate-process-replay=4e81fafba3f5a5f51b16bc232102e0928b9eb55ca3972a239e66b32e1aed3ec7
+fresh-fork digest-equality=PASS
+post-fork-head separate-process-tree-digest=0c510856933cdd473a8269caf806351aa72ac66077d97c12cef2177da238d16f
+post-fork-head separate-process-replay=0c510856933cdd473a8269caf806351aa72ac66077d97c12cef2177da238d16f
+post-fork-head digest-equality=PASS
+post-fork-head deleted-path=absent
+post-fork-head renamed-old-path=absent
+post-fork-head renamed-new-path=present
+Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official-server replay and worktree digest parity

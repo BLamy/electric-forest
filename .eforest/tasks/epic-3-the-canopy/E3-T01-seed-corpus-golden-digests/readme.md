@@ -673,3 +673,18 @@ evidence-digest=d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612
   logs, raw hashes, reducer digests, live per-stream auth observations, nine localized
   mutations, atomic failure injection, exact-head root gates, and the pristine
   cold-clone proof above.
+
+### 2026-08-19 — maintenance — refresh current-head seed evidence
+
+- The current stacked head kept the seed generator deterministic across its hostile
+  environment pair, but later platform changes shifted the deterministic logical event
+  timestamps and identity offset. The committed corpus was refreshed through
+  `make regen-E3-seed` at commit `b479e28f`; no generator or runtime behavior was
+  changed by the refresh.
+- `node tools/verify/canopy_verify.mjs` passed with
+  `E3_T01_VERIFY_OK streams=22 evidence-digest=96944a6a01f68eed316690fdb481e791ee5448fd1f09db38a342e443088e1edd`.
+  The complete workspace test initially caught the stale hard-coded corpus digest;
+  `packages/platform/test/canopy-corpus.test.ts` now pins the refreshed digest.
+- Replay: N/A (non-browser seed and verification evidence only) + mitigation: the
+  regenerated canonical dumps, manifest hashes, reducer digests, privacy transcript,
+  sensitivity suite, and focused verifier output.

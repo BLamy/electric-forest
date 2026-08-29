@@ -2,7 +2,9 @@ import {
   appendDurableJson,
   checkpoint,
   createDurableJsonStream,
+  forkDurableJsonStream,
   followDurableJson,
+  headDurableJsonStream,
   isDurableNotFound,
   readDurableJson,
   StreamReader,
@@ -11,6 +13,8 @@ import {
   type StreamCheckpoint,
 } from "@eforest/client";
 import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import { readStreamDumpWithTransportOffsets } from "@eforest/streamfs";
 
 export interface StreamAdapter {
   create(streamId: string): Promise<void>;
@@ -21,7 +25,17 @@ export interface StreamAdapter {
     event: Event,
     options?: StreamAppendOptions,
   ): Promise<void | StreamAppendResult>;
+  /** Native fork plus the child-owned fork directive, behind the dispatch door. */
+  fork?(
+    streamId: string,
+    sourceStreamId: string,
+    forkOffset: Offset,
+    event: Event,
+    options?: StreamForkOptions,
+  ): Promise<void>;
   read(streamId: string): Promise<readonly unknown[]>;
+  /** Retained, resolved records when the backing store exposes a compaction-safe dump. */
+  readResolved?(streamId: string): Promise<readonly unknown[]>;
   follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown>;
   applicationBootstrap?(streamId: string): Promise<StreamBatch>;
   applicationFollow?(
@@ -36,6 +50,27 @@ export interface StreamAppendOptions {
   readonly sequence?: string;
   /** Product-owned checkpoint persisted in the application event body. */
   readonly applicationOffset?: Offset;
+}
+
+export interface StreamForkOptions {
+  readonly idempotencyKey?: string;
+}
+
+export class StreamForkValidationError extends Error {
+  constructor(
+    readonly reason: "fs/fork-offset-out-of-range",
+    message: string,
+  ) {
+    super(message);
+    this.name = "StreamForkValidationError";
+  }
+}
+
+export class StreamForkExistsError extends Error {
+  constructor() {
+    super("branch stream already exists");
+    this.name = "StreamForkExistsError";
+  }
 }
 
 export type StreamAppendResult = "appended" | "producer-duplicate-closed";
@@ -69,7 +104,7 @@ export class OfficialStreamAdapter implements StreamAdapter {
 
   async exists(streamId: string): Promise<boolean> {
     try {
-      await this.read(streamId);
+      await this.readResolved(streamId);
       return true;
     } catch (error) {
       if (isDurableNotFound(error)) return false;
@@ -112,8 +147,70 @@ export class OfficialStreamAdapter implements StreamAdapter {
     return producerDuplicateClosed ? "producer-duplicate-closed" : "appended";
   }
 
+  async fork(
+    streamId: string,
+    sourceStreamId: string,
+    forkOffset: Offset,
+    event: Event,
+    options: StreamForkOptions = {},
+  ): Promise<void> {
+    const source = await readStreamDumpWithTransportOffsets(
+      {
+        baseUrl: this.baseUrl,
+        metadataStreamId: sourceStreamId,
+        fetcher: this.fetchWithHeaders,
+      },
+      sourceStreamId,
+    );
+    const sourceIndex = source.records.findIndex((record) => record.offset === forkOffset);
+    if (sourceIndex < 0) {
+      throw new StreamForkValidationError(
+        "fs/fork-offset-out-of-range",
+        `fork offset ${forkOffset} is not present in the parent stream`,
+      );
+    }
+    const sourceOffset = source.transportOffsets?.[sourceIndex] ?? forkOffset;
+    const target = await headDurableJsonStream(this.options(streamId));
+    if (target.exists) throw new StreamForkExistsError();
+    await forkDurableJsonStream({
+      ...this.options(streamId),
+      sourceUrl: this.options(sourceStreamId).url,
+      sourceOffset,
+    });
+    const child = await readStreamDumpWithTransportOffsets(
+      {
+        baseUrl: this.baseUrl,
+        metadataStreamId: streamId,
+        fetcher: this.fetchWithHeaders,
+      },
+      streamId,
+    );
+    const record = {
+      ...event,
+      offset: nextApplicationOffset(child.records),
+    } as Event & { readonly offset: Offset };
+    await this.append(streamId, record, {
+      sequence: record.offset,
+      applicationOffset: record.offset,
+      ...(options.idempotencyKey === undefined ? {} : { idempotencyKey: options.idempotencyKey }),
+    });
+  }
+
   async read(streamId: string): Promise<readonly unknown[]> {
     return readDurableJson(this.options(streamId));
+  }
+
+  async readResolved(streamId: string): Promise<readonly unknown[]> {
+    return (
+      await readStreamDumpWithTransportOffsets(
+        {
+          baseUrl: this.baseUrl,
+          metadataStreamId: streamId,
+          fetcher: this.fetchWithHeaders,
+        },
+        streamId,
+      )
+    ).records;
   }
 
   async applicationBootstrap(streamId: string): Promise<StreamBatch> {
@@ -188,4 +285,20 @@ export class OfficialStreamAdapter implements StreamAdapter {
       ...(this.headers === undefined ? {} : { headers: this.headers }),
     };
   }
+
+  private readonly fetchWithHeaders = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const headers = new Headers(this.headers);
+    new Headers(init?.headers).forEach((value, name) => headers.set(name, value));
+    return (this.fetcher ?? fetch)(input, { ...init, headers });
+  };
+}
+
+function nextApplicationOffset(records: readonly { readonly offset: Offset }[]): Offset {
+  let ordinal = -1;
+  for (const record of records) {
+    const suffix = record.offset.slice(record.offset.lastIndexOf("_") + 1);
+    const candidate = Number(suffix);
+    if (Number.isSafeInteger(candidate) && candidate >= 0) ordinal = Math.max(ordinal, candidate);
+  }
+  return offsetForOrdinal(ordinal + 1);
 }

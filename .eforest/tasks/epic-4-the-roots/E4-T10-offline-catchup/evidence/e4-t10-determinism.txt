@@ -1,0 +1,4 @@
+cmp transcript: exit 0
+cmp branch-log-run1/run2: exit 0
+cmp decision-log-A-run1/run2: exit 0
+cmp decision-log-B-run1/run2: exit 0

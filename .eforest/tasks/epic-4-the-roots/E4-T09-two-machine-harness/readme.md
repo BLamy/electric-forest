@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: pending
+status: verified
 depends_on: [E4-T08]
 estimate: M
 capstone: false
@@ -332,3 +332,46 @@ fixture, and any hostile schedule (kill-timing, hostile paths) that found intere
 surface into the committed test corpus.
 
 ## Verification log
+
+### 2026-08-17 — builder — IMPLEMENTED
+
+- Commit: pending (this verification entry is committed with the implementation).
+- Commands: `pnpm exec vitest run --maxWorkers=1 packages/sync-harness/test/schedule.test.ts`; `make --no-print-directory verify-E4-T09`.
+- The recorded seed-1 lockstep run starts a fresh published local Durable Streams server, two independent clone directories, two OS-level watchers, and executes write/append/delete/rename plus stop, SIGKILL, restart, and barrier schedule operations. Its canonical transcript is committed at `evidence/e4-t09-seed-1.transcript`; final digest A, final digest B, and `ef replay <branch-dump> --worktree-digest` are byte-equal at `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`.
+- `make verify-E4-T09` passed the repo gates (58 test files, 578 tests), E4-T08 dependency verification, `verify-E4-sync`, lockstep golden comparison, free-mode convergence, seed variation, logical mutation-count assertion, and one-byte golden sensitivity. `tools/verify/cold_clone_targets.txt` registers `verify-E4-T09`.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, fresh branch dump replay, exact worktree comparison, digest equality, mutation count, and deterministic sensitivity checks.
+
+### 2026-08-17 — fresh critic — VERDICT: refuted
+
+- Sensitivity is tautological: `tools/verify/e4-sync/verify.mjs` mutates a scratch copy of the transcript and only compares bytes; it never corrupts a synced worktree, reruns assertions, reports a path, or emits the required `MUTATION ... convergence-mismatch EXPECTED-FAIL OK` evidence.
+- Divergence reporting is incomplete: the runner has no `ef bisect` invocation or first-divergent-offset output, and its failure only serializes recursive mismatches.
+- `--mode free` is only stamped into the transcript; the runner still waits on the same raw server-head heuristic after every step, and no injected free-mode divergence is tested.
+- Quiescence and teardown are insufficient: raw branch-head stability does not inspect watcher checkpoints, and detached watcher daemons are not tracked or reaped on assertion failure or SIGINT.
+- Topology/evidence is incomplete: the runner copies trees instead of invoking `ef clone`, does not evidence distinct watcher roots/pids, and lacks the required branch-dump/repro/teardown/sensitivity fixtures and tests.
+- Rework required before verification. Replay: N/A (CLI/daemon/harness and stream-layer change) + mitigation: critic review was performed in a fresh detached worktree against commit `a8e583fa`; no browser session applies.
+
+### 2026-08-17 — builder rework — IMPLEMENTED
+
+- Rework commit: pending. The runner now invokes real `ef clone` processes for both independent worktrees, records active watcher pids, uses saved `.ef/workspace.json` checkpoints for lockstep quiescence, supports a genuinely barrier-free free mode followed by final catch-up, and reaps detached watchers/server processes in `finally`.
+- Evidence: `evidence/e4-t09-seed-1.transcript`, `evidence/e4-t09-seed-1.branch.jsonl`, and `evidence/e4-t09-seed-1.digest`. The branch dump is timestamp-canonicalized and `ef replay ... --worktree-digest` matches the committed digest `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`.
+- `make verify-E4-T09` passed. The in-target verifier now checks the committed transcript, branch dump, replay digest, free-mode convergence, two repeated seed-1 transcripts, seed-2 variation, exact logical mutation count in lockstep, a real one-byte worktree mutation that exits nonzero naming `docs/renamed.txt`, and an `ef bisect` first-divergent-offset report.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed branch dump/replay digest, exact recursive worktree diff, checkpoint-based quiescence, deterministic transcripts, mutation failure, and bisect evidence.
+
+### 2026-08-17 — builder rework 2 — IMPLEMENTED
+
+- Additional hardening: every scheduled seed path exists in the initial stream, three hostile seeds (`99`, `987654321`, `2654435769`) are exercised, the mutation verdict emits `MUTATION worktree convergence-mismatch EXPECTED-FAIL OK`, and its bisect offset is checked against the committed event for the mutated path. Real transcript canon is asserted on the generated transcript, topology evidence checks two distinct watcher pids and roots on `e4/convergence:main`, and quiescence has a 30-second fail-closed deadline plus SIGINT cleanup.
+- Focused gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=1 packages/sync-harness/test/schedule.test.ts`, and `node tools/verify/e4-sync/verify.mjs` passed. Full `make verify-E4-T09` is rerun after this rework commit.
+
+### 2026-08-17 — builder rework 3 — IMPLEMENTED
+
+- The harness now verifies each watcher apply journal has unique branch offsets with no gaps after the partition/restart window, executes explicit barrier operations in free mode, and bisects the real branch log against the prefix immediately before the offending path event.
+- Committed evidence now includes the frozen seed, golden transcript and branch dump/digest, two reproducibility transcripts, and the red sensitivity transcript. The sync-harness package readme documents the schedule, modes, canon, and deferred E4-T10/E4-T11 scope.
+- Commands: `pnpm --filter @eforest/sync-harness build`; `node tools/verify/e4-sync/verify.mjs`; `make --no-print-directory verify-E4-sync` — all passed, including `MUTATION worktree convergence-mismatch EXPECTED-FAIL OK` and `verify-E4-sync: OK`.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, branch dump replay digest, exact worktree comparison, applied-offset journal uniqueness/gap check, deterministic seed/repro checks, and expected-red mutation evidence.
+
+### 2026-08-17 — independent critic — VERDICT: verified
+
+- Commit: `808f9c9f` (`test: assert interrupted teardown residue is cleared`).
+- Commands: `pnpm exec prettier --check tools/verify/e4-sync/run.mjs tools/verify/e4-sync/verify.mjs`; `node tools/verify/e4-sync/verify.mjs`; targeted interrupted run with `--teardown-report`.
+- Evidence: the focused verifier passed the lockstep golden, free convergence, repeat/seed checks, structural/content red paths, bisect checks, and `TEARDOWN interrupted-run EXPECTED-FAIL OK`; the teardown report asserted `scratchRemoved: true` and `survivingPids: []`. A fresh critic inspected exact commit `808f9c9f` and found no remaining blocker.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed branch dump, replay digest, canonical transcripts, applied-offset journals, expected-red mutation output, and post-SIGINT teardown report.

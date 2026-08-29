@@ -29,15 +29,25 @@ const expectedChangedInputs = [
   "packages/cli/dist/src/materialize-command.d.ts.map",
   "packages/cli/dist/src/materialize-command.js",
   "packages/cli/dist/src/materialize-command.js.map",
+  // E5-T01 extends custom replay reducers with explicit stream-aware
+  // initialization. Keep the source, its direct regression test, and the
+  // executed worker bytes inside the exact provenance refresh boundary.
+  "packages/cli/dist/src/reducer-worker.js",
+  "packages/cli/dist/src/reducer-worker.js.map",
   "packages/cli/dist/src/replay-command.d.ts",
   "packages/cli/dist/src/replay-command.d.ts.map",
   "packages/cli/dist/src/replay-command.js",
   "packages/cli/dist/src/replay-command.js.map",
   "packages/cli/dist/tsconfig.build.tsbuildinfo",
   "packages/cli/src/bin.ts",
+  "packages/cli/src/cli.test.ts",
   "packages/cli/src/cli.ts",
   "packages/cli/src/index.ts",
   "packages/cli/src/materialize-command.ts",
+  // E5-T02 standing-gate repair: this process-level transport integration
+  // inherits the repository's 120-second contended-host timeout.
+  "packages/cli/src/official.integration.test.ts",
+  "packages/cli/src/reducer-worker.ts",
   "packages/cli/src/replay-command.ts",
   "packages/client/dist/src/durable.d.ts",
   "packages/client/dist/src/durable.d.ts.map",
@@ -68,9 +78,15 @@ const expectedChangedInputs = [
   "packages/protocol/src/offset-allocation.test.ts",
   "packages/protocol/src/offset-allocation.ts",
   "packages/server/dist/tsconfig.build.tsbuildinfo",
+  "packages/server/package.json",
   "packages/streamfs/dist/src/fs.d.ts.map",
+  "packages/streamfs/dist/src/events.d.ts",
+  "packages/streamfs/dist/src/events.d.ts.map",
+  "packages/streamfs/dist/src/events.js",
+  "packages/streamfs/dist/src/events.js.map",
   "packages/streamfs/dist/src/fs.js",
   "packages/streamfs/dist/src/fs.js.map",
+  "packages/streamfs/dist/src/fs.d.ts",
   "packages/streamfs/dist/src/index.d.ts",
   "packages/streamfs/dist/src/index.d.ts.map",
   "packages/streamfs/dist/src/index.js",
@@ -81,19 +97,45 @@ const expectedChangedInputs = [
   "packages/streamfs/dist/src/patch/ops.js",
   "packages/streamfs/dist/src/patch/ops.js.map",
   "packages/streamfs/dist/src/snapshot.d.ts.map",
+  "packages/streamfs/dist/src/snapshot.d.ts",
   "packages/streamfs/dist/src/snapshot.js",
   "packages/streamfs/dist/src/snapshot.js.map",
+  "packages/streamfs/dist/src/reducer.d.ts.map",
+  "packages/streamfs/dist/src/reducer.js",
+  "packages/streamfs/dist/src/reducer.js.map",
+  "packages/streamfs/dist/src/watch.d.ts.map",
+  "packages/streamfs/dist/src/watch.js",
+  "packages/streamfs/dist/src/watch.js.map",
   "packages/streamfs/dist/tsconfig.build.tsbuildinfo",
   "packages/streamfs/package.json",
   "packages/streamfs/src/fs.ts",
+  "packages/streamfs/src/events.ts",
   "packages/streamfs/src/index.ts",
   "packages/streamfs/src/merge-integrity.ts",
   "packages/streamfs/src/patch/ops.ts",
   "packages/streamfs/src/snapshot.ts",
+  "packages/streamfs/src/reducer.ts",
+  "packages/streamfs/src/watch.ts",
   "pnpm-lock.yaml",
 ].sort();
 const expectedE1Changes = [manifestPath, provenancePath].sort();
 const expectedPostE1ClosureAdditions = [
+  "packages/cli/dist/src/branch-checkout-command.d.ts",
+  "packages/cli/dist/src/branch-checkout-command.d.ts.map",
+  "packages/cli/dist/src/branch-checkout-command.js",
+  "packages/cli/dist/src/branch-checkout-command.js.map",
+  "packages/cli/dist/src/checkout-marker.d.ts",
+  "packages/cli/dist/src/checkout-marker.d.ts.map",
+  "packages/cli/dist/src/checkout-marker.js",
+  "packages/cli/dist/src/checkout-marker.js.map",
+  "packages/cli/dist/src/classify.d.ts",
+  "packages/cli/dist/src/classify.d.ts.map",
+  "packages/cli/dist/src/classify.js",
+  "packages/cli/dist/src/classify.js.map",
+  "packages/cli/dist/src/clone-command.d.ts",
+  "packages/cli/dist/src/clone-command.d.ts.map",
+  "packages/cli/dist/src/clone-command.js",
+  "packages/cli/dist/src/clone-command.js.map",
   "packages/cli/dist/src/commands/login.d.ts",
   "packages/cli/dist/src/commands/login.d.ts.map",
   "packages/cli/dist/src/commands/login.js",
@@ -106,15 +148,102 @@ const expectedPostE1ClosureAdditions = [
   "packages/cli/dist/src/dispatch-command.d.ts.map",
   "packages/cli/dist/src/dispatch-command.js",
   "packages/cli/dist/src/dispatch-command.js.map",
+  "packages/cli/dist/src/init-command.d.ts",
+  "packages/cli/dist/src/init-command.d.ts.map",
+  "packages/cli/dist/src/init-command.js",
+  "packages/cli/dist/src/init-command.js.map",
+  "packages/cli/dist/src/status.d.ts",
+  "packages/cli/dist/src/status.d.ts.map",
+  "packages/cli/dist/src/status.js",
+  "packages/cli/dist/src/status.js.map",
+  "packages/cli/dist/src/sync/apply-journal.d.ts",
+  "packages/cli/dist/src/sync/apply-journal.d.ts.map",
+  "packages/cli/dist/src/sync/apply-journal.js",
+  "packages/cli/dist/src/sync/apply-journal.js.map",
+  "packages/cli/dist/src/sync/apply-observed.d.ts",
+  "packages/cli/dist/src/sync/apply-observed.d.ts.map",
+  "packages/cli/dist/src/sync/apply-observed.js",
+  "packages/cli/dist/src/sync/apply-observed.js.map",
+  "packages/cli/dist/src/sync/coalesce.d.ts",
+  "packages/cli/dist/src/sync/coalesce.d.ts.map",
+  "packages/cli/dist/src/sync/coalesce.js",
+  "packages/cli/dist/src/sync/coalesce.js.map",
+  "packages/cli/dist/src/sync/conflict.d.ts",
+  "packages/cli/dist/src/sync/conflict.d.ts.map",
+  "packages/cli/dist/src/sync/conflict.js",
+  "packages/cli/dist/src/sync/conflict.js.map",
+  "packages/cli/dist/src/sync/downlink.d.ts",
+  "packages/cli/dist/src/sync/downlink.d.ts.map",
+  "packages/cli/dist/src/sync/downlink.js",
+  "packages/cli/dist/src/sync/downlink.js.map",
+  "packages/cli/dist/src/sync/duplex.d.ts",
+  "packages/cli/dist/src/sync/duplex.d.ts.map",
+  "packages/cli/dist/src/sync/duplex.js",
+  "packages/cli/dist/src/sync/duplex.js.map",
+  "packages/cli/dist/src/sync/journal.d.ts",
+  "packages/cli/dist/src/sync/journal.d.ts.map",
+  "packages/cli/dist/src/sync/journal.js",
+  "packages/cli/dist/src/sync/journal.js.map",
+  "packages/cli/dist/src/sync/reconcile.d.ts",
+  "packages/cli/dist/src/sync/reconcile.d.ts.map",
+  "packages/cli/dist/src/sync/reconcile.js",
+  "packages/cli/dist/src/sync/reconcile.js.map",
+  "packages/cli/dist/src/sync/sync-journal.d.ts",
+  "packages/cli/dist/src/sync/sync-journal.d.ts.map",
+  "packages/cli/dist/src/sync/sync-journal.js",
+  "packages/cli/dist/src/sync/sync-journal.js.map",
+  "packages/cli/dist/src/sync/tree-upload.d.ts",
+  "packages/cli/dist/src/sync/tree-upload.d.ts.map",
+  "packages/cli/dist/src/sync/tree-upload.js",
+  "packages/cli/dist/src/sync/tree-upload.js.map",
+  "packages/cli/dist/src/sync/uplink.d.ts",
+  "packages/cli/dist/src/sync/uplink.d.ts.map",
+  "packages/cli/dist/src/sync/uplink.js",
+  "packages/cli/dist/src/sync/uplink.js.map",
+  "packages/cli/dist/src/sync/watch-command.d.ts",
+  "packages/cli/dist/src/sync/watch-command.d.ts.map",
+  "packages/cli/dist/src/sync/watch-command.js",
+  "packages/cli/dist/src/sync/watch-command.js.map",
+  "packages/cli/dist/src/sync/watch-state.d.ts",
+  "packages/cli/dist/src/sync/watch-state.d.ts.map",
+  "packages/cli/dist/src/sync/watch-state.js",
+  "packages/cli/dist/src/sync/watch-state.js.map",
+  "packages/cli/dist/src/tree-materializer.d.ts",
+  "packages/cli/dist/src/tree-materializer.d.ts.map",
+  "packages/cli/dist/src/tree-materializer.js",
+  "packages/cli/dist/src/tree-materializer.js.map",
   "packages/cli/src/commands/login.ts",
   "packages/cli/src/credentials.ts",
   "packages/cli/src/dispatch-command.ts",
+  "packages/cli/src/branch-checkout-command.ts",
+  "packages/cli/src/checkout-marker.ts",
+  "packages/cli/src/classify.ts",
+  "packages/cli/src/clone-command.ts",
+  "packages/cli/src/clone.test.ts",
+  "packages/cli/src/init-command.ts",
+  "packages/cli/src/init.test.ts",
   // E2-T08: `ef registry rebuild` — the registry-derived-index CLI door.
   "packages/cli/dist/src/registry-command.d.ts",
   "packages/cli/dist/src/registry-command.d.ts.map",
   "packages/cli/dist/src/registry-command.js",
   "packages/cli/dist/src/registry-command.js.map",
   "packages/cli/src/registry-command.ts",
+  "packages/cli/src/status.test.ts",
+  "packages/cli/src/status.ts",
+  "packages/cli/src/sync/apply-journal.ts",
+  "packages/cli/src/sync/apply-observed.ts",
+  "packages/cli/src/sync/coalesce.ts",
+  "packages/cli/src/sync/conflict.ts",
+  "packages/cli/src/sync/downlink.ts",
+  "packages/cli/src/sync/duplex.ts",
+  "packages/cli/src/sync/journal.ts",
+  "packages/cli/src/sync/reconcile.ts",
+  "packages/cli/src/sync/sync-journal.ts",
+  "packages/cli/src/sync/tree-upload.ts",
+  "packages/cli/src/sync/uplink.ts",
+  "packages/cli/src/sync/watch-command.ts",
+  "packages/cli/src/sync/watch-state.ts",
+  "packages/cli/src/tree-materializer.ts",
   // E4-T01: worktree digest CLI and its StreamFS projection implementation.
   "packages/cli/dist/src/worktree-command.d.ts",
   "packages/cli/dist/src/worktree-command.d.ts.map",
@@ -231,7 +360,7 @@ function repoPathsBelow(directory) {
     .sort();
 }
 
-function installedPackageRoot(packageRoot, installedPackage) {
+function installedPackageRoot(packageRoot, installedPackage, allowPatchedSlot = false) {
   const { name: packageName, version } = installedPackage;
   assert.match(
     packageName,
@@ -268,8 +397,12 @@ function installedPackageRoot(packageRoot, installedPackage) {
       ...packageName.split("/"),
     );
     assert.equal(
-      storeRelative,
-      expectedStoreRelative,
+      allowPatchedSlot
+        ? storeRelative.startsWith(
+            `${packageName.replaceAll("/", "+")}@${version}_patch_hash=${""}`,
+          ) && storeRelative.endsWith(join("node_modules", ...packageName.split("/")))
+        : storeRelative === expectedStoreRelative,
+      true,
       `installed package symlink must resolve to the frozen pnpm slot ${packageName}@${version}: ${packageRoot}`,
     );
   }
@@ -377,7 +510,16 @@ assertUnique(
   "current E1 installed package closure",
 );
 for (const installedPackage of baseProvenance.installedPackages) {
-  const workspacePackage = installedPackage.name.split("/").at(-1);
+  const approvedInstalledPackage =
+    installedPackage.name === "@durable-streams/server" &&
+    approvedChanges.has("packages/server/package.json")
+      ? currentProvenance.installedPackages.find(({ name }) => name === installedPackage.name)
+      : installedPackage;
+  assert.ok(
+    approvedInstalledPackage,
+    `missing approved installed package: ${installedPackage.name}`,
+  );
+  const workspacePackage = approvedInstalledPackage.name.split("/").at(-1);
   assert.ok(workspacePackage, `invalid installed package name ${installedPackage.name}`);
   const packageRoot = join(
     root,
@@ -386,8 +528,12 @@ for (const installedPackage of baseProvenance.installedPackages) {
     "node_modules",
     installedPackage.name,
   );
-  const resolvedPackageRoot = installedPackageRoot(packageRoot, installedPackage);
-  const expectedPaths = installedPackage.files.map(({ path }) => path);
+  const resolvedPackageRoot = installedPackageRoot(
+    packageRoot,
+    approvedInstalledPackage,
+    approvedInstalledPackage !== installedPackage,
+  );
+  const expectedPaths = approvedInstalledPackage.files.map(({ path }) => path);
   assertUnique(expectedPaths, `${installedPackage.name} provenance`);
   const actualPaths = filesBelow(resolvedPackageRoot)
     .map((path) => relative(resolvedPackageRoot, path).split("\\").join("/"))
@@ -399,7 +545,7 @@ for (const installedPackage of baseProvenance.installedPackages) {
     [...expectedPaths].sort(),
     `${installedPackage.name} file set drifted`,
   );
-  for (const file of installedPackage.files) {
+  for (const file of approvedInstalledPackage.files) {
     assert.equal(
       digest(readFileSync(join(resolvedPackageRoot, file.path))),
       file.sha256,
@@ -410,6 +556,13 @@ for (const installedPackage of baseProvenance.installedPackages) {
 
 const expectedProvenance = structuredClone(baseProvenance);
 expectedProvenance.files = expectedFiles;
+expectedProvenance.installedPackages = expectedProvenance.installedPackages.map(
+  (installedPackage) =>
+    installedPackage.name === "@durable-streams/server" &&
+    approvedChanges.has("packages/server/package.json")
+      ? currentProvenance.installedPackages.find(({ name }) => name === installedPackage.name)
+      : installedPackage,
+);
 const expectedProvenanceBytes = Buffer.from(`${JSON.stringify(expectedProvenance)}\n`);
 if (refreshApprovedE2) writeFileSync(join(root, provenancePath), expectedProvenanceBytes);
 assert.ok(

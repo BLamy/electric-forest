@@ -9,7 +9,13 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import { readDurableJson, type StreamRecord } from "@eforest/client";
-import { isFsFileContentEvent, isFsEvent, isFsMergeConflictPayload } from "./events.js";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import {
+  isFsFileContentEvent,
+  isFsEvent,
+  isFsMergeChangeEvent,
+  isFsMergeConflictPayload,
+} from "./events.js";
 import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
 import {
@@ -55,6 +61,22 @@ export interface BootstrapReadResult {
   readonly tail: readonly StreamRecord[];
 }
 
+export interface BootstrapReadOptions {
+  /**
+   * Metadata writes and content writes are committed to separate streams. A
+   * branch handoff briefly exposes the metadata write before its new stream is
+   * attached, so the append validator may need the structural state without
+   * requiring the final bytes. Public readers remain strict by default.
+   */
+  readonly validateContent?: boolean;
+}
+
+export interface StreamDumpResult {
+  readonly records: readonly StreamRecord[];
+  /** Opaque provider cursors aligned one-to-one with records when advertised. */
+  readonly transportOffsets?: readonly Offset[];
+}
+
 export class SnapshotIntegrityError extends Error {
   readonly expected: string;
   readonly actual: string;
@@ -94,10 +116,7 @@ async function fetchRecords(
   streamId: string,
   path = "?offset=-1",
 ): Promise<readonly StreamRecord[]> {
-  const records = await readDurableJson<StreamRecord>({
-    url: streamUrl(root, streamId),
-    fetch: root.fetcher,
-  });
+  const records = await readStreamDump(root, streamId);
   if (!path.startsWith("?")) return records;
   const params = new URLSearchParams(path.slice(1));
   const offset = params.get("offset") as Offset | null;
@@ -110,6 +129,108 @@ async function fetchRecords(
   );
 }
 
+/**
+ * Providers that physically compact a stream may expose the retained prefix via
+ * `/dump`; the published client route remains the fallback for providers that
+ * only implement the Durable Streams read surface. Keeping this discovery in
+ * the snapshot path lets a retained snapshot bootstrap without asking for the
+ * discarded prefix at `?offset=-1`.
+ */
+function parseDumpRecords(text: string): readonly StreamRecord[] {
+  if (text.trim().length === 0) return [];
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed as StreamRecord[];
+  } catch {
+    // The retained dump endpoint is newline-delimited JSON on the original
+    // provider contract; fall through to that parser below.
+  }
+  return text
+    .split("\n")
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as StreamRecord);
+}
+
+function parseTransportOffsets(
+  response: Response,
+  recordCount: number,
+): readonly Offset[] | undefined {
+  const header = response.headers.get("stream-dump-offsets");
+  if (header === null) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(header);
+  } catch {
+    throw new Error("stream dump advertised invalid transport offsets");
+  }
+  if (
+    !Array.isArray(parsed) ||
+    parsed.length !== recordCount ||
+    parsed.some((offset) => typeof offset !== "string" || !isWellFormedOffset(offset))
+  ) {
+    throw new Error("stream dump transport offsets do not align with records");
+  }
+  return parsed as Offset[];
+}
+
+const RETRYABLE_DUMP_ERROR_CODES = new Set(["ECONNRESET", "EPIPE", "UND_ERR_SOCKET"]);
+
+function transportErrorCode(error: unknown): string | undefined {
+  let current = error;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current === null || typeof current !== "object") return undefined;
+    const code = (current as { readonly code?: unknown }).code;
+    if (typeof code === "string") return code;
+    current = (current as { readonly cause?: unknown }).cause;
+  }
+  return undefined;
+}
+
+async function fetchRetainedDump(root: SnapshotRoot, url: string): Promise<Response> {
+  try {
+    return await root.fetcher(url);
+  } catch (error) {
+    if (!RETRYABLE_DUMP_ERROR_CODES.has(transportErrorCode(error) ?? "")) throw error;
+    // `/dump` is a side-effect-free retained-prefix read. One new event-loop
+    // turn lets the transport retire a reset keep-alive socket before the only
+    // retry; a second failure remains loud and unchanged.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    return root.fetcher(url);
+  }
+}
+
+export async function readStreamDumpWithTransportOffsets(
+  root: SnapshotRoot,
+  streamId = root.metadataStreamId,
+): Promise<StreamDumpResult> {
+  const response = await fetchRetainedDump(root, `${streamUrl(root, streamId)}/dump`);
+  if (response.ok) {
+    const records = parseDumpRecords(await response.text());
+    const transportOffsets = parseTransportOffsets(response, records.length);
+    return transportOffsets === undefined ? { records } : { records, transportOffsets };
+  }
+  if (response.status !== 404) {
+    const error = new Error(`stream dump failed with HTTP ${response.status}`) as Error & {
+      readonly status?: number;
+    };
+    Object.defineProperty(error, "status", { value: response.status });
+    throw error;
+  }
+  return {
+    records: await readDurableJson<StreamRecord>({
+      url: streamUrl(root, streamId),
+      fetch: root.fetcher,
+    }),
+  };
+}
+
+export async function readStreamDump(
+  root: SnapshotRoot,
+  streamId = root.metadataStreamId,
+): Promise<readonly StreamRecord[]> {
+  return (await readStreamDumpWithTransportOffsets(root, streamId)).records;
+}
+
 function reduceMetadata(records: readonly StreamRecord[]): FsTree {
   let state = fsInitialState;
   for (const record of records) {
@@ -120,16 +241,6 @@ function reduceMetadata(records: readonly StreamRecord[]): FsTree {
   }
   assertCompleteMergeStage(state);
   return state;
-}
-
-function snapshotRecord(
-  records: readonly StreamRecord[],
-): { readonly record: StreamRecord } | undefined {
-  for (const record of [...records].reverse()) {
-    const event = eventWithoutOffset(record);
-    if (isSnapshotEvent(event)) return { record };
-  }
-  return undefined;
 }
 
 function assertTree(value: unknown): asserts value is FsTree {
@@ -492,9 +603,35 @@ export function reduceSnapshotPlusTail(
 }
 
 export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadResult> {
+  return bootstrapReadAt(root);
+}
+
+/**
+ * Read the newest usable snapshot and only the metadata tail through `until`.
+ *
+ * `until` is an application offset, not a Durable Streams transport cursor.
+ * Keeping the cut here (rather than asking the transport for a second live
+ * read) is what makes a clone's sampled checkpoint an honest boundary when a
+ * writer appends while the materialization is in flight.
+ */
+export async function bootstrapReadAt(
+  root: SnapshotRoot,
+  until?: Offset,
+  options: BootstrapReadOptions = {},
+): Promise<BootstrapReadResult> {
   const records = await fetchRecords(root, root.metadataStreamId);
-  const found = snapshotRecord(records);
-  if (found === undefined) throw new Error("stream has no snapshot event");
+  const target = until ?? records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
+  const foundRecord = [...records].reverse().find((record) => {
+    const event = eventWithoutOffset(record);
+    return (
+      isSnapshotEvent(event) &&
+      (compareOffsets(record.offset, target) <= 0 ||
+        compareOffsets(event.payload.snapshotOffset, target) <= 0) &&
+      compareOffsets(event.payload.snapshotOffset, target) <= 0
+    );
+  });
+  if (foundRecord === undefined) throw new Error("stream has no snapshot event");
+  const found = { record: foundRecord };
   const event = eventWithoutOffset(found.record);
   if (!isSnapshotEvent(event)) throw new Error("invalid snapshot event");
   let artifact: FsTree;
@@ -563,15 +700,33 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
     );
   }
   if (root.resolvedDump !== undefined) {
-    const conflictState = reduceMetadata(await root.resolvedDump(event.payload.snapshotOffset));
-    withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
+    const conflictRecords = await root.resolvedDump(event.payload.snapshotOffset);
+    const firstConflictRecord = conflictRecords[0];
+    if (
+      firstConflictRecord === undefined ||
+      compareOffsets(firstConflictRecord.offset, event.payload.snapshotOffset) < 0
+    ) {
+      const conflictState = reduceMetadata(conflictRecords);
+      withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
+    }
   }
-  const tail = await fetchRecords(
+  const resolved =
+    root.resolvedDump === undefined
+      ? await fetchRecords(
+          root,
+          root.metadataStreamId,
+          `?offset=${encodeURIComponent(found.record.offset)}&inclusive=1`,
+        )
+      : await root.resolvedDump(target);
+  const tail = resolved.filter((record) => compareOffsets(record.offset, found.record.offset) > 0);
+  const hydrated = await hydrateTailContent(
     root,
-    root.metadataStreamId,
-    `?offset=${encodeURIComponent(found.record.offset)}&inclusive=1`,
+    state,
+    tail,
+    event.payload.snapshotOffset,
+    options.validateContent ?? true,
   );
-  const reduced = reduceSnapshotPlusTail(state, tail);
+  const reduced = hydrated;
   return {
     snapshotOffset: event.payload.snapshotOffset,
     snapshotEventOffset: found.record.offset,
@@ -579,4 +734,225 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
     state: reduced,
     tail,
   };
+}
+
+async function contentGeneration(
+  root: SnapshotRoot,
+  streamId: string,
+  expected: ExpectedContent,
+  snapshotOffset: Offset,
+): Promise<Uint8Array> {
+  const records = await fetchRecords(root, streamId);
+  for (const record of records) {
+    const event = eventWithoutOffset(record) as unknown as Event;
+    if (!isFsFileContentEvent(event) || event.payload.contentStreamId !== streamId) {
+      throw new SnapshotIntegrityError("content-event", "invalid", snapshotOffset);
+    }
+    const bytes = snapshotContentRecord(record, streamId, snapshotOffset);
+    if (bytes.byteLength === expected.size && sha256(bytes) === expected.digest) return bytes;
+  }
+  throw new SnapshotIntegrityError(expected.digest, "content-generation-missing", snapshotOffset);
+}
+
+async function optionalContentGeneration(
+  root: SnapshotRoot,
+  streamId: string,
+  expected: ExpectedContent,
+  snapshotOffset: Offset,
+): Promise<Uint8Array | undefined> {
+  try {
+    return await contentGeneration(root, streamId, expected, snapshotOffset);
+  } catch (error) {
+    if (error instanceof SnapshotIntegrityError && error.actual === "content-generation-missing") {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+/** Hydrate writes and patch chains that occur after the snapshot artifact. */
+async function hydrateTailContent(
+  root: SnapshotRoot,
+  artifact: FsTree,
+  tail: readonly StreamRecord[],
+  snapshotOffset: Offset,
+  validateContent: boolean,
+): Promise<FsTree> {
+  const contents = contentMap(artifact);
+  const expectedContents = new Map<string, ExpectedContent>();
+  for (const [path, file] of Object.entries(artifact.files)) {
+    expectedContents.set(path, { digest: file.contentSha256, size: file.size });
+  }
+  let state = withContentMap(artifact, contents);
+  for (const record of tail) {
+    const event = eventWithoutOffset(record) as unknown as Event;
+    if (isSnapshotEvent(event)) {
+      continue;
+    }
+    if (isFsFileContentEvent(event)) {
+      state = fsReducer(state, record);
+      contents.clear();
+      for (const [streamId, bytes] of contentMap(state)) contents.set(streamId, bytes);
+      continue;
+    }
+    if (!isFsEvent(event)) {
+      throw new SnapshotIntegrityError("fs-event", "invalid", snapshotOffset);
+    }
+    if (isFsMergeChangeEvent(event)) {
+      const change = event.payload.change;
+      if (change.type === "fs.file.write") {
+        expectedContents.set(change.payload.path, {
+          digest: change.payload.contentSha256,
+          size: change.payload.size,
+        });
+      } else if (change.type === "fs.file.patch") {
+        const file = state.files[change.payload.path];
+        if (file === undefined) {
+          throw new SnapshotIntegrityError("file-state", "missing", snapshotOffset);
+        }
+        const previous = expectedContents.get(change.payload.path) ?? {
+          digest: file.contentSha256,
+          size: file.size,
+        };
+        if (previous.digest !== change.payload.baseDigest) {
+          throw new SnapshotIntegrityError(
+            change.payload.baseDigest,
+            previous.digest,
+            snapshotOffset,
+          );
+        }
+        expectedContents.set(change.payload.path, {
+          digest: change.payload.resultDigest,
+          size: patchResultSize(previous.size, change.payload.ops),
+        });
+      } else if (change.type === "fs.file.create") {
+        if (state.files[change.payload.path] === undefined) {
+          expectedContents.delete(change.payload.path);
+        }
+      } else if (change.type === "fs.file.delete") {
+        expectedContents.delete(change.payload.path);
+      } else if (change.type === "fs.rename") {
+        moveSnapshotPaths(expectedContents, change.payload.from, change.payload.to);
+      }
+      const next = fsReducer(withContentMap(state, contents), record);
+      contents.clear();
+      for (const [streamId, bytes] of contentMap(next)) contents.set(streamId, bytes);
+      state = withContentMap(next, contents);
+      continue;
+    }
+    if (event.type === "fs.file.write") {
+      const file = state.files[event.payload.path];
+      if (file === undefined)
+        throw new SnapshotIntegrityError("file-state", "missing", snapshotOffset);
+      const expected = { digest: event.payload.contentSha256, size: event.payload.size };
+      expectedContents.set(event.payload.path, expected);
+      const bytes = await optionalContentGeneration(
+        root,
+        file.contentStreamId,
+        expected,
+        snapshotOffset,
+      );
+      if (bytes !== undefined) contents.set(file.contentStreamId, bytes);
+    } else if (event.type === "fs.file.patch") {
+      const file = state.files[event.payload.path];
+      if (file === undefined)
+        throw new SnapshotIntegrityError("file-state", "missing", snapshotOffset);
+      const previous = expectedContents.get(event.payload.path) ?? {
+        digest: file.contentSha256,
+        size: file.size,
+      };
+      if (previous.digest !== event.payload.baseDigest) {
+        throw new SnapshotIntegrityError(event.payload.baseDigest, previous.digest, snapshotOffset);
+      }
+      let base = contents.get(file.contentStreamId);
+      if (base === undefined) {
+        base = await optionalContentGeneration(
+          root,
+          file.contentStreamId,
+          previous,
+          snapshotOffset,
+        );
+      }
+      const resultSize = patchResultSize(previous.size, event.payload.ops);
+      expectedContents.set(event.payload.path, {
+        digest: event.payload.resultDigest,
+        size: resultSize,
+      });
+      if (base !== undefined) {
+        if (sha256(base) !== event.payload.baseDigest) {
+          throw new SnapshotIntegrityError(event.payload.baseDigest, sha256(base), snapshotOffset);
+        }
+        let result: Uint8Array;
+        try {
+          result = applyPatch(base, event.payload.ops);
+        } catch (error) {
+          throw new SnapshotIntegrityError(
+            "patchable-content",
+            "invalid",
+            snapshotOffset,
+            error instanceof Error ? error.message : "invalid file patch",
+          );
+        }
+        if (sha256(result) !== event.payload.resultDigest) {
+          throw new SnapshotIntegrityError(
+            event.payload.resultDigest,
+            sha256(result),
+            snapshotOffset,
+          );
+        }
+      }
+    } else if (event.type === "fs.file.create") {
+      const previous = state.files[event.payload.path];
+      if (previous !== undefined && previous.contentStreamId !== event.payload.contentStreamId) {
+        const expected = expectedContents.get(event.payload.path);
+        if (expected !== undefined) {
+          const bytes = await optionalContentGeneration(
+            root,
+            event.payload.contentStreamId,
+            expected,
+            snapshotOffset,
+          );
+          if (bytes !== undefined) contents.set(event.payload.contentStreamId, bytes);
+        }
+      } else if (previous === undefined) {
+        expectedContents.delete(event.payload.path);
+      }
+    } else if (event.type === "fs.file.delete") {
+      expectedContents.delete(event.payload.path);
+    } else if (event.type === "fs.rename") {
+      moveSnapshotPaths(expectedContents, event.payload.from, event.payload.to);
+    }
+    const next = fsReducer(withContentMap(state, contents), record);
+    contents.clear();
+    for (const [streamId, bytes] of contentMap(next)) contents.set(streamId, bytes);
+    state = withContentMap(next, contents);
+  }
+  if (!validateContent) return withContentMap(state, contents);
+  for (const [path, file] of Object.entries(state.files)) {
+    const expected = expectedContents.get(path) ?? {
+      digest: file.contentSha256,
+      size: file.size,
+    };
+    let bytes = contents.get(file.contentStreamId);
+    if (
+      bytes === undefined ||
+      bytes.byteLength !== expected.size ||
+      sha256(bytes) !== expected.digest
+    ) {
+      bytes = await contentGeneration(root, file.contentStreamId, expected, snapshotOffset);
+      contents.set(file.contentStreamId, bytes);
+    }
+    if (
+      bytes === undefined ||
+      bytes.byteLength !== file.size ||
+      sha256(bytes) !== file.contentSha256
+    ) {
+      throw new SnapshotIntegrityError(
+        file.contentSha256,
+        bytes === undefined ? "missing" : sha256(bytes),
+        snapshotOffset,
+      );
+    }
+  }
+  return withContentMap(state, contents);
 }

@@ -62,6 +62,59 @@ const WAIVERS = [
   },
   {
     file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:@eforest/client",
+    reason:
+      "E4 branch and sync commands use the existing official stream client; no database is introduced",
+  },
+  {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:@eforest/workspace",
+    reason:
+      "E4 branch and sync commands use the existing stream-backed workspace ledger; no database is introduced",
+  },
+  {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:chokidar",
+    reason:
+      "E4 watch command uses filesystem notifications for the caller-owned workspace; no database is introduced",
+  },
+  {
+    file: "packages/sync-harness/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason: "E4 sync harness compares canonical stream envelopes and digests; it adds no database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/client",
+    reason:
+      "E3 browser shell reads official identity stream state; the client package is stream transport, not a storage engine",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "E3 browser shell uses the existing reducer library for derived stream projections; it introduces no database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/streamfs",
+    reason:
+      "E3 browser file views consume StreamFS event projections; the package is the stream-backed filesystem, not a database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/web-hooks",
+    reason:
+      "E3 browser interactions use the existing typed web hooks; they dispatch through official streams and add no persistence layer",
+  },
+  {
+    file: "package.json",
+    tell: "new-workspace-dependency:replayio",
+    reason:
+      "Replay evidence CLI used by the browser harness; it uploads recordings and is not application storage",
+  },
+  {
+    file: "packages/cli/package.json",
     tell: "new-workspace-dependency:@eforest/platform",
     reason:
       "ef registry rebuild consumes the projector/reducer library; streams-only code, not a storage engine",
@@ -106,6 +159,12 @@ const WAIVERS = [
   },
   {
     file: "packages/platform/package.json",
+    tell: "new-workspace-dependency:@eforest/pr",
+    reason:
+      "the platform wires PR validation and reducer registration over official streams; @eforest/pr adds no database",
+  },
+  {
+    file: "packages/platform/package.json",
     tell: "new-workspace-dependency:@eforest/reducers",
     reason:
       "the platform composes the existing reducer library over official streams; it adds no database",
@@ -115,6 +174,18 @@ const WAIVERS = [
     tell: "new-workspace-dependency:@eforest/streamfs",
     reason:
       "the platform exposes the existing stream-backed filesystem reducer; it adds no database",
+  },
+  {
+    file: "packages/pr/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason:
+      "the PR package defines canonical event schemas, offsets, and a pure reducer over protocol envelopes; it adds no database",
+  },
+  {
+    file: "packages/reducers/package.json",
+    tell: "new-workspace-dependency:@eforest/pr",
+    reason:
+      "reducers register the pure PR reducer over official stream events; they add no database",
   },
   {
     file: "packages/reducers/package.json",
@@ -163,6 +234,14 @@ const FS_WRITE_TELLS =
 
 /** Frozen allowed categories for filesystem-write tells. */
 function allowedCategory(path) {
+  if (path.startsWith(".eforest/tasks/epic-4-the-roots/"))
+    return "E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)";
+  if (path.startsWith("packages/cli/"))
+    return "E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)";
+  if (path.startsWith("packages/sync-harness/"))
+    return "E4 sync harness (writes gitignored test scratch, not application storage)";
+  if (path === "patches/@durable-streams__server@0.3.8.patch")
+    return "published Durable Streams server file-backed stream store implementation";
   if (path === ".agents/skills/replayio/scripts/browser-open.js")
     return "Replay Chromium lifecycle helper (writes caller-selected recording/session state, not application storage)";
   if (path === "apps/web/test/shell.pw.ts")
@@ -216,13 +295,20 @@ const lines = [
   "",
 ];
 
-// E2-T02's Playwright trace is a binary browser artifact that its own gate
-// rewrites asynchronously. It is independently validated by E2-T02 and never
-// represents application storage, so keep it out of this text tell sweep to
-// make the transcript stable when the aggregate runs concurrently.
+// Generated gate evidence is independently validated by the gate that owns it
+// and never represents application storage. Keep it out of this text tell
+// sweep so the transcript stays stable while an aggregate gate is writing its
+// own evidence concurrently. In particular, composed-gate.txt is recursive:
+// scanning it can change this attestation merely because an earlier invocation
+// of this attestation has just been appended to that same file.
 const GENERATED_EVIDENCE = new Set([
   ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/evidence/e2-t02-playwright-trace.zip",
 ]);
+const COMPOSED_GATE_EVIDENCE = /^\.eforest\/tasks\/[^/]+\/[^/]+\/evidence\/composed-gate\.txt$/;
+
+function isGeneratedEvidence(path) {
+  return GENERATED_EVIDENCE.has(path) || COMPOSED_GATE_EVIDENCE.test(path);
+}
 
 // Every file this task touched: committed diff plus working tree.
 const changed = new Set(
@@ -240,7 +326,7 @@ const files = [...changed]
       !path.startsWith(".pnpm-store/") &&
       !path.includes("node_modules/") &&
       !/(^|\/)dist\//.test(path) &&
-      !GENERATED_EVIDENCE.has(path),
+      !isGeneratedEvidence(path),
   )
   .filter((path) => existsSync(resolve(root, path)))
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));

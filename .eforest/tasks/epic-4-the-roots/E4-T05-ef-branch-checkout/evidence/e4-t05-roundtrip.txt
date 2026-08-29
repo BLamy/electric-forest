@@ -1,0 +1,8 @@
+E4-T05 roundtrip
+before-worktree-sha256=b3e1cd973a296c5a8a995d3f84d7506b61b19116b222526065228c80852a711f
+after-worktree-sha256=b3e1cd973a296c5a8a995d3f84d7506b61b19116b222526065228c80852a711f
+before-tree-digest=368eb73f8683b8b05052dda30e7822861131067e427d9e8c6b4e9c568f552889
+after-tree-digest=368eb73f8683b8b05052dda30e7822861131067e427d9e8c6b4e9c568f552889
+main-feature-main-recursive-byte-diff=empty
+current-branch-no-op=tree-control-and-both-dumps-byte-identical
+Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: independent recursive hash and official-server dump comparisons

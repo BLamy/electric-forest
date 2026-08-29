@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/seed/tsconfig.build.json" },
     { "path": "./packages/protocol/tsconfig.build.json" },
+    { "path": "./packages/pr/tsconfig.build.json" },
     { "path": "./packages/cli/tsconfig.build.json" },
     { "path": "./packages/server/tsconfig.build.json" },
     { "path": "./packages/client/tsconfig.build.json" },
@@ -11,6 +12,7 @@
     { "path": "./packages/reducers/tsconfig.build.json" },
     { "path": "./packages/streamfs/tsconfig.build.json" },
     { "path": "./packages/workspace/tsconfig.build.json" },
-    { "path": "./packages/web-hooks/tsconfig.build.json" }
+    { "path": "./packages/web-hooks/tsconfig.build.json" },
+    { "path": "./packages/sync-harness/tsconfig.build.json" }
   ]
 }

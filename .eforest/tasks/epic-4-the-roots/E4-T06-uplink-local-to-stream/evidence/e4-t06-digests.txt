@@ -1,0 +1,5 @@
+local ef tree-digest: dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef
+server ef replay --worktree-digest: dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef
+server ef replay --digest --reducer: d96d668869cb16455f43165d27151258cda0e609bc5baffb6dd43d9e5fe16d65
+dump sha256: 954e4acbbbd9dd91d6f73cd815b344e0e9f0c4889cd417dc164886c5eb42c68c
+worktree-byte-equal: true

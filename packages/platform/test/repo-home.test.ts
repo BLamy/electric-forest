@@ -140,8 +140,9 @@ describe("repository home canonical projections", () => {
       })),
     );
     streams.values.set("fs:acme/forest:feature:meta", [
+      ...streams.values.get("fs:acme/forest:main:meta")!,
       {
-        offset: offsetForOrdinal(0),
+        offset: offsetForOrdinal(5),
         type: "fs.branch.fork",
         ts: 2,
         payload: {

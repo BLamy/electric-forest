@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: pending
+status: verified
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -290,3 +290,294 @@ refutation → promote your independent materialization diff into a committed te
 your nastiest dirt case into the dirty-matrix fixture set.
 
 ## Verification log
+
+### 2026-08-06 — builder — IMPLEMENTED
+
+- Commit: `de82d040` (`feat: implement E4-T05 branch checkout`).
+- Latest-provider check: `@durable-streams/server@0.3.8` is the current `latest` tag and is the package exercised by the tests; no emulator is used by the E4-T05 integration or evidence harness. The checked-in `@durable-streams/server@0.3.8` patch remains necessary for `/dump`, aligned opaque transport offsets, and historical fork source-offset mapping. The official provider exposes an inherited parent prefix in a forked child dump; the fork event is asserted as the single child-owned fork event, and the repository-home validator now handles that official shape.
+- Commands: `make --no-print-directory verify-E4-T05`; `node tools/verify/e4_t05_branch_checkout.mjs`; `node tools/verify/e4_t05_sensitivity.mjs`; `node node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; targeted ESLint and Prettier checks.
+- Stream-layer evidence: `evidence/e4-t05-fork-offset.txt`, `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`, `evidence/e4-t05-dirty-refusal.txt`, and `evidence/e4-t05-sensitivity.md`. The official-server harness exercises the real `ef` binary for branch and checkout, stale-checkpoint forks, post-fork write/delete/rename materialization, independent replay/tree digest equality, main→feature→main byte identity, no-op checkout, the five dirty-tree classes, journal interruption, typed refusals, and hostile raw paths. It also proves E4-T01 and E4-T04 regressions and requires each of the three implementation mutations to turn the focused suite red.
+- Full gate result: 51 test files and 532 tests passed; `verify-E4-T01`, `verify-E4-T04`, and `verify-E4-T05` all passed with zero `SKIPPED:` lines.
+- Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official Durable Streams HTTP dumps, fork transport-offset evidence, independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks, and frozen refusal transcript.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **Authenticated dispatch contract — REFUTED.** The builder path directly called the
+  official native fork endpoint and then appended the fork event, while the task requires
+  one authenticated `POST /api/dispatch` through the E2-T05 token door. The changed path
+  is `packages/cli/src/branch-checkout-command.ts:305-313`; the focused test used only the
+  official Durable Streams server at `packages/cli/test/branch-checkout.test.ts:33-45`.
+  Rework must move the branch mutation behind the authenticated dispatch door and prove
+  the request through real HTTP.
+- **Invalid-name pass-through — REFUTED.** `createNativeBranch` rejected names locally
+  at `packages/cli/src/branch-checkout-command.ts:268-272`, but the frozen contract requires
+  the server's `fs/invalid-branch-name` reason to pass through verbatim. Rework must let
+  the dispatch door validate the name and preserve that reason.
+- **Fork immutability evidence — NEEDS-EVIDENCE.** The focused test compared raw parent
+  dumps, but did not explicitly record parent head and replay/dump digest before and after
+  the command as required by the acceptance criterion. Rework must add those exact checks
+  and cite them in the evidence artifact.
+- **Sensitivity transcript — NEEDS-EVIDENCE.** The committed sensitivity artifact only
+  summarized mutation names; it did not preserve the expected-red command transcripts.
+  Rework must record the failure outputs while retaining the frozen target behavior.
+- **Provider finding.** The critic independently confirmed `@durable-streams/server@0.3.8`
+  is latest and that E4-T05 uses its official test server, not the emulator. The checked-in
+  provider patch remains a separate current-provider compatibility question and must be
+  closed with direct control evidence before final verification.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch HTTP evidence, official-provider dumps, digest comparisons, and
+  the committed sensitivity transcript.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `7aba51ac` (`fix: route E4-T05 forks through authenticated dispatch`).
+- Rework: `ef branch` now sends exactly one bearer-authenticated `POST /api/dispatch`; the
+  platform gateway performs server-owned branch-name, parent, and fork-offset validation,
+  invokes the official adapter's native fork plus child-owned `fs.branch.fork` append, and
+  settles duplicate/out-of-range fork refusals through the authorized-mutation lifecycle.
+  Client-side branch-name and checkpoint normalization was removed. The platform projections
+  now normalize the inherited prefix shape returned by the official provider, with tree and
+  history regression fixtures.
+- Provider boundary: `@durable-streams/server@0.3.8` remains the current `latest` package;
+  the integration and evidence runs use `createDurableStreamTestServer` from the official
+  package and never `vendor/emulate`. The checked-in provider patch remains necessary for
+  `/dump`, aligned opaque transport offsets, compaction, and historical source-offset mapping.
+- Commands: `make --no-print-directory verify-E4-T05`; `node tools/verify/e4_t05_branch_checkout.mjs`;
+  `node tools/verify/e4_t05_sensitivity.mjs`; `node node_modules/typescript/bin/tsc -b
+  tsconfig.build.json --pretty false`; `pnpm --silent exec vitest run --maxWorkers=1
+  packages/cli/test/branch-checkout.test.ts packages/platform/test/branch-projection.test.ts
+  packages/platform/test/history.test.ts packages/platform/test/gateway.test.ts`.
+- Results: full root gates passed twice at 51 test files / 534 tests; the E4-T05 focused
+  suite passed 4 files / 27 tests; the official-server harness passed parent head and replay
+  digest equality before/after fork, fresh and post-fork digest parity, round-trip byte
+  identity, dirty neutrality, typed refusals, and journal/hostile-path checks. The sensitivity
+  harness passed its green baseline and turned all three real mutations red with committed
+  transcripts in `evidence/e4-t05-sensitivity.md`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E4-T05` from committed HEAD
+  `e2d80d7b7c8b0c3371ce67116686953c4130f552` passed from a pristine clone with scrubbed
+  environment; the temporary clone was removed after the run.
+- Stream-layer evidence: `evidence/e4-t05-fork-offset.txt` now records the checkpoint, fork
+  payload, parent head pair, parent replay digest pair, and byte-identical dump result;
+  `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`,
+  `evidence/e4-t05-dirty-refusal.txt`, and `evidence/e4-t05-sensitivity.md` remain checked
+  artifacts compared by the target.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch HTTP assertions, official-server dumps, transport-offset evidence,
+  independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks,
+  and sabotage transcripts.
+
+### 2026-08-06 — builder — REWORK EVIDENCE COMPLETE
+
+- Working tree: the follow-up proof changes are in the next commit after `dfc14130`; the
+  branch remains `implemented` pending a fresh critic.
+- Additional proof: `packages/cli/test/branch-checkout.test.ts` and
+  `tools/verify/e4_t05_branch_checkout.mjs` now exercise the authenticated mutation wrapper
+  on success, duplicate, invalid-offset, and missing-parent paths. The tests assert the grant
+  fence, successful completion, refusal settlement, exact `fs/fork-offset-out-of-range` and
+  `fs/parent-not-found` responses, and 404 absence of refused child streams. The official
+  harness records those values in `evidence/e4-t05-fork-offset.txt`.
+- Sensitivity proof: `tools/verify/e4_t05_sensitivity.mjs` now derives normalized failure
+  transcripts from each disposable mutation run and checks every emitted line against the
+  committed `evidence/e4-t05-sensitivity.md`; the baseline remains green and all three real
+  mutations remain red.
+- Commands: `pnpm exec prettier --check packages/cli/test/branch-checkout.test.ts
+  tools/verify/e4_t05_branch_checkout.mjs tools/verify/e4_t05_sensitivity.mjs`; `node
+  node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; the focused
+  4-file suite (33 tests); `node tools/verify/e4_t05_branch_checkout.mjs`; `node
+  tools/verify/e4_t05_sensitivity.mjs`; `make --no-print-directory verify-E4-T05`.
+- Results: focused 4-file suite 33/33 passed; full task gate passed twice at 51 test files /
+  534 tests, both builds, E4-T01, E4-T04, the official-server branch/checkout harness, and
+  live sensitivity verification. No emulator is used by the E4-T05 integration or evidence
+  harness; `@durable-streams/server@0.3.8` remains the current latest package and the
+  checked-in provider patch remains needed for the dump/transport-offset compatibility layer.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle counters, official-provider refusal and immutability
+  evidence, independent digest checks, and live-checked sabotage transcripts.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **Empty-directory dirty/clobber attack — REFUTED.** Prediction: an untracked empty
+  directory must make checkout refuse with exit 3 and leave the directory intact.
+  Observed against the official HTTP harness: checkout exited 0, printed `Switched to
+  branch feature.`, and deleted the directory. The gap is in `packages/cli/src/classify.ts`,
+  `packages/streamfs/src/worktree-node.ts`, and `packages/cli/src/tree-materializer.ts`;
+  add directory-aware dirty detection and re-record neutrality/clobber evidence. This
+  violates the dirty matrix and clobber-hunt criteria in this readme.
+- **Scope of existing proof.** The official provider harness still proves fork offset
+  `...0005`, unchanged parent head `...0007`, replay-digest equality, authenticated
+  mutation lifecycle, and the three sensitivity mutations, but it does not cover the
+  empty-directory case. Provider: published `@durable-streams/server@0.3.8`; no emulator.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  official-server HTTP harness, raw stream evidence, independent digest checks, and the
+  new directory-neutrality regression to be added during rework.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `30c29b78` (`fix: preserve nested directory classification`). The empty-directory
+  refutation is fixed in `packages/cli/src/classify.ts`: directories that are parents of
+  base or current files remain structural, while genuinely untracked empty directories
+  classify as added and block checkout. This preserves the frozen E4-T04 nested Unicode
+  transcript while preventing checkout from deleting an empty untracked directory.
+- Commands: `make --no-print-directory verify-E4-T05`; `bash
+  .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.sh`;
+  `pnpm exec prettier --check packages/cli/src/classify.ts`; `node
+  node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; the focused
+  4-file suite (33 tests); `node tools/verify/e4_t05_branch_checkout.mjs`; `node
+  tools/verify/e4_t05_sensitivity.mjs`; and `tools/verify/cold_clone.sh --keep
+  verify-E4-T05` from committed HEAD `30c29b78`.
+- Results: the final task gate passed serially with 51 test files / 534 tests, both builds,
+  E4-T01, E4-T03, E4-T04, and E4-T05; the E4-T04 seven-step golden passed; the focused
+  suite passed 4 files / 33 tests; the official-server branch harness and all three live
+  sensitivity mutations passed. The pristine cold clone also passed the complete target
+  with scrubbed environment and emitted `cold_clone: verify-E4-T05 PASSED from a pristine
+  clone`. The committed `evidence/e4-t05-dirty-refusal.txt` records both modified-file and
+  empty-directory exit-3 refusals, hash neutrality, raw official-server dump neutrality,
+  and empty-directory preservation.
+- Provider boundary: `@durable-streams/server@0.3.8` is still the current latest package;
+  every E4-T05 integration/evidence run uses its official test server, never the emulator.
+  The checked-in provider patch remains needed for `/dump`, aligned opaque transport
+  offsets, compaction, and historical source-offset mapping.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle evidence, official-provider dumps, independent digest
+  and recursive-hash comparisons, frozen E4-T04 output, and live-checked sabotage
+  transcripts.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **P1 frozen dirty-refusal evidence — REFUTED.** Prediction: the committed golden must
+  show the independent working-tree hash unchanged across each refused checkout. The
+  live `node tools/verify/e4_t05_branch_checkout.mjs --emit` transcript and committed
+  `evidence/e4-t05-dirty-refusal.txt` instead report modified
+  `worktree-before-sha256=e46a788cb8da5fd09956166ccadd46678eb31eda7b60a6a64c299c6c6f25461f`
+  versus `worktree-after-sha256=a7ad4d706110b860e132d108c5b093d822a8fdd9b82d07dabafbdf70fd3a48bb`,
+  and empty-directory
+  `worktree-before-sha256=1d15402a52bde647e94274c44a15bd5b5f034d56521a9eb7cdcc983b6923b92e`
+  versus the same `worktree-after-sha256=a7ad4d706110b860e132d108c5b093d822a8fdd9b82d07dabafbdf70fd3a48bb`;
+  the control hashes happen to match. The apparatus
+  computes those after values at `tools/verify/e4_t05_branch_checkout.mjs:547-560`,
+  after the loop has restored the dirt cases at `:484-485`, not immediately after each
+  refusal. Thus `make --no-print-directory verify-E4-T05` passes by comparing a
+  self-generated stale transcript to itself (`:593-595`), while the required frozen
+  byte-neutrality artifact is false/inadequate. Capture each post-refusal hash before
+  restoring the case, regenerate the golden, and rerun the full target and cold clone.
+- **Runtime attacks that survived.** `make --no-print-directory verify-E4-T05` passed
+  (51 files/534 tests, zero `SKIPPED:`); the focused official HTTP suite passed 33/33
+  and `node tools/verify/e4_t05_branch_checkout.mjs` passed. The independent empty
+  directory attack returned exit 3, empty stdout, preserved the directory, and matched
+  the full recursive hash before/after; the focused dirty matrix covered modified,
+  added, deleted, renamed, untracked, and empty-directory cases. A separate dist-level
+  symlink attack returned exit 3 with empty stdout and preserved the symlink, while the
+  hostile `../escape.txt` replay test refused before mutation. The E4-T04 seven-step
+  Unicode/nested-directory golden passed. Fork evidence showed one bearer-authenticated
+  dispatch, checkpoint offset `...0005`, unchanged parent head `...0007` and replay
+  digest, fresh/post-fork parity, round-trip equality, invalid-name pass-through,
+  duplicate/out-of-range/missing-parent settlement, and 404 refused child streams.
+- **Provider and cold proof.** `pnpm list` resolved official `@durable-streams/server
+  0.3.8`; source tests use `createDurableStreamTestServer` and no production source
+  references `vendor/emulate`. `ARCHITECTURE.md:16-22,39-59` and
+  `pnpm-workspace.yaml:5-6` provide the checked-in patch rationale. The sensitivity
+  harness turned status-gate, deletion, and fork-at-head mutations red with committed
+  transcripts. `bash tools/verify/cold_clone.sh --keep verify-E4-T05` passed from
+  pristine HEAD `7b94930e1ee1c7485f9a81ec1b2d17af9bdd49e6` with scrubbed environment.
+- **COVERAGE.** Executed: checkout/branch success and refusal paths, directory-aware
+  classification, official fork adapter, gateway lifecycle/refusals, materialization,
+  journal marker, raw-path validation, provider HTTP harness, focused tests, E4-T04
+  golden, root gates, sensitivity mutations, and cold clone. Independently exercised:
+  empty-directory and symlink dirty attacks. Waived as defensive fallback-only code:
+  network/remote-unavailable and non-404 projection registration errors at
+  `packages/cli/src/branch-checkout-command.ts:181-223,234-252`; no changed acceptance
+  behavior depends on them. No other changed implementation hunk was found unexecuted.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  official Durable Streams HTTP recordings through committed dumps, independent
+  recursive hashes, digest comparisons, refusal counters, sabotage transcripts, and
+  cold-clone output.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `ca379e05` (`fix: capture dirty refusal evidence before restore`). The harness
+  now snapshots worktree, `.ef/`, and both raw official-server dumps immediately after
+  each refusal, asserts all four before/after values byte-identical, and only then restores
+  the dirty fixture. The frozen artifact keeps the stable worktree and control hashes plus
+  explicit raw-dump equality; provider dump timestamps are intentionally not hashed because
+  they vary between otherwise identical runs.
+- Commands: `make --no-print-directory verify-E4-T05`; `node
+  tools/verify/e4_t05_branch_checkout.mjs` twice; `node
+  tools/verify/e4_t05_branch_checkout.mjs --emit`; `pnpm exec prettier --check
+  tools/verify/e4_t05_branch_checkout.mjs`; and `tools/verify/cold_clone.sh --keep
+  verify-E4-T05` from committed HEAD `ca379e05`.
+- Results: the final task gate passed serially with 51 test files / 534 tests, both builds,
+  E4-T01, E4-T03, E4-T04, and E4-T05; the E4-T04 seven-step golden passed; the focused
+  suite passed 4 files / 33 tests; the official-server branch harness and all three live
+  sensitivity mutations passed. The corrected artifact now records equal modified-file
+  hashes (`e46a...`), equal empty-directory hashes (`1d15...`), and immediate raw-dump
+  byte equality for both refusals. The pristine cold clone passed the complete target with
+  scrubbed environment and emitted `cold_clone: verify-E4-T05 PASSED from a pristine
+  clone`.
+- Provider boundary: `@durable-streams/server@0.3.8` remains npm `latest`; all E4-T05
+  integration/evidence runs use its official test server, never the emulator. The checked-in
+  provider patch remains needed for `/dump`, aligned opaque transport offsets, compaction,
+  and historical source-offset mapping.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle evidence, official-provider dumps, immediate byte
+  neutrality assertions, independent digest/hash comparisons, and live-checked sabotage
+  transcripts.
+
+### 2026-08-06 — independent critic — VERDICT: verified
+
+- **Prediction: the corrected refusal apparatus must capture the refusal state before any
+  fixture restore.** Confirmed at `tools/verify/e4_t05_branch_checkout.mjs:444-503`: each
+  modified and empty-directory case captures the worktree, `.ef/`, and both official-server
+  dump byte strings, runs the refusal, asserts all four equalities immediately, captures a
+  second post-refusal snapshot, asserts the same equalities again, and only then restores
+  the fixture. The generated frozen artifact uses those post-refusal values at
+  `:559-584`; it does not hash provider dumps because provider timestamps are
+  nondeterministic, while the raw serialized dump bytes are still compared. Repeated
+  `node tools/verify/e4_t05_branch_checkout.mjs --emit` runs were byte-identical
+  (`E4-T05_EMIT_REPEAT_STABLE bytes=4881`), and the non-emit harness rejected stale
+  artifacts only by exact file equality at `:606-613`.
+- **Prediction: the official HTTP substrate and branch protocol must survive independent
+  re-execution.** `node tools/verify/e4_t05_branch_checkout.mjs` passed with
+  `E4_T05_BRANCH_CHECKOUT_OK`; the focused official-server suite passed 33/33. The
+  evidence pins one bearer-authenticated dispatch, checkpoint/fork offset equality at
+  `...0005`, unchanged parent head/dump/replay digest at `...0007`, fresh and post-fork
+  digest parity, deleted/renamed path removal, round-trip equality, no-op equality,
+  server-owned invalid-name pass-through, duplicate/out-of-range/missing-parent refusal
+  settlement, and 404 absence of refused child streams
+  (`evidence/e4-t05-fork-offset.txt`, `e4-t05-checkout-digest.txt`, and
+  `e4-t05-roundtrip.txt`). The full target also passed 51 files/534 tests, both builds,
+  `verify-E4-T01`, `verify-E4-T03`, and `verify-E4-T04`, with zero `SKIPPED:` output;
+  the committed verification log records the pristine scrubbed cold-clone pass at
+  lines 506-515 above, and no implementation changed after that candidate.
+- **Prediction: dirty and hostile paths must refuse without clobbering bytes.** The
+  official harness and focused matrix passed modified, added, deleted, renamed,
+  untracked, and empty-directory cases with exit 3, zero stdout, frozen
+  `cli/dirty-working-tree`, recursive worktree/control equality, and raw dump equality.
+  A fresh independent symlink attack against the official server returned exit 3, zero
+  stdout, `cli/checkout-integrity`, and preserved the symlink and target. A fresh
+  independent run of the real `ef checkout` binary against an official-server branch
+  containing a hand-appended `../escape.txt` event returned exit 3, zero stdout,
+  `cli/unsafe-path`, left the worktree byte-identical, and created no escape file.
+  The committed hostile-path seam is `packages/cli/src/branch-checkout-command.ts:307-345`;
+  the dirty gate is `:399-410`; directory-aware classification is
+  `packages/cli/src/classify.ts:22-61`.
+- **Prediction: materialization and journal boundaries must cover the changed runtime.**
+  The official harness, focused tests, and three live sensitivity mutations exercised
+  staged materialization, digest verification, deletion/rename cleanup, unsafe path
+  validation, marker refusal/status/branch behavior, and fork-at-head detection. The
+  materialization/atomic commit sequence is visible at
+  `packages/cli/src/branch-checkout-command.ts:349-385`, with path and content checks in
+  `packages/cli/src/tree-materializer.ts:35-153`; all changed implementation hunks were
+  covered by these runs or are defensive remote-unavailable/projection-error fallbacks
+  at `branch-checkout-command.ts:181-223,234-252`, which are waived because no acceptance
+  behavior depends on them. The corrected harness hunk itself was executed by the
+  official target and repeated emit runs.
+- **Suite and provider boundary.** `@durable-streams/server@0.3.8` was used through
+  `createDurableStreamTestServer`; no emulator was used by the E4-T05 HTTP/evidence path.
+  `evidence/e4-t05-sensitivity.md` and the live sensitivity run show the status-gate,
+  deletion, and fork-at-head mutations all turn red. The E4-T04 golden script was rerun
+  independently and reported all seven steps verified, including `nested/é.txt`
+  (`E4-T04 evidence/golden-status/step-04-unicode-added.json`).
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  official Durable Streams HTTP runs, independent recursive hashes, raw dump equality,
+  replay/tree digest parity, refusal settlement counters, sabotage transcripts, Unicode
+  golden, and committed cold-clone evidence.

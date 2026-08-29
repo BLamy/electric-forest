@@ -19,7 +19,8 @@
     "@eforest/server": "workspace:*",
     "@eforest/streamfs": "workspace:*",
     "@eforest/workspace": "workspace:*",
-    "@eforest/client": "workspace:*"
+    "@eforest/client": "workspace:*",
+    "chokidar": "^4.0.3"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"

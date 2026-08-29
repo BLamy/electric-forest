@@ -18,7 +18,17 @@ function invalidName(path: string): never {
   );
 }
 
-function walk(root: string, current: string, files: Record<string, WorktreeFileState>): void {
+export interface WorktreeEntries {
+  readonly files: Readonly<Record<string, WorktreeFileState>>;
+  readonly directories: readonly string[];
+}
+
+function walk(
+  root: string,
+  current: string,
+  files: Record<string, WorktreeFileState>,
+  directories: string[],
+): void {
   let entries;
   try {
     entries = readdirSync(current, { withFileTypes: true }).sort((left, right) =>
@@ -57,7 +67,8 @@ function walk(root: string, current: string, files: Record<string, WorktreeFileS
       throw new WorktreeDigestError("symlink", `symlink is not allowed in worktree: ${path}`, path);
     }
     if (stat.isDirectory()) {
-      walk(root, target, files);
+      directories.push(path);
+      walk(root, target, files, directories);
       continue;
     }
     if (!stat.isFile()) {
@@ -77,8 +88,8 @@ function walk(root: string, current: string, files: Record<string, WorktreeFileS
   }
 }
 
-/** Read a local directory using the frozen deterministic worktree walk. */
-export function readWorktree(rootPath: string): WorktreeProjection {
+/** Read files and on-disk directories using the frozen deterministic worktree walk. */
+export function readWorktreeEntries(rootPath: string): WorktreeEntries {
   const root = resolve(rootPath);
   let stat;
   try {
@@ -95,8 +106,14 @@ export function readWorktree(rootPath: string): WorktreeProjection {
   }
   // Keep every valid on-disk name as data, including prototype-looking names.
   const files = Object.create(null) as Record<string, WorktreeFileState>;
-  walk(root, root, files);
-  return worktreeProjection({ files });
+  const directories: string[] = [];
+  walk(root, root, files, directories);
+  return { files: worktreeProjection({ files }).files, directories };
+}
+
+/** Read a local directory using the frozen deterministic worktree walk. */
+export function readWorktree(rootPath: string): WorktreeProjection {
+  return { files: readWorktreeEntries(rootPath).files };
 }
 
 export function worktreeDigestDirectory(rootPath: string): string {

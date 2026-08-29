@@ -1,0 +1,2 @@
+diff -r -x .ef machine-a machine-b
+(empty)

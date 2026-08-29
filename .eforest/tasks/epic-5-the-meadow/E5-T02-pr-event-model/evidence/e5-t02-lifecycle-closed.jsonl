@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"author":"alice","body":"A replayable proposal","forkOffset":"0000000000000000_0000000000000000","sourceBranch":"fs:maple/reading-room:feature:meta","targetBranch":"fs:maple/reading-room:main:meta","title":"Add the meadow","v":1},"ts":20,"type":"pr.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"reviewer":"carol","v":1},"ts":21,"type":"pr.approved"}
+{"offset":"0000000000000000_0000000000000002","payload":{"body":"One more test","reviewer":"carol","v":1},"ts":22,"type":"pr.changes-requested"}
+{"offset":"0000000000000000_0000000000000003","payload":{"reviewer":"carol","v":1},"ts":23,"type":"pr.approved"}
+{"offset":"0000000000000000_0000000000000004","payload":{"closedBy":"alice","reason":"superseded","v":1},"ts":24,"type":"pr.closed"}

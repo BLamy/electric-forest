@@ -25,6 +25,12 @@ import {
 } from "@eforest/streamfs";
 import { streamFsReducerDefinition } from "@eforest/reducers";
 import {
+  reducerById,
+  reducerForStream,
+  streamFsReducerDefinition,
+  type ReducerDefinition,
+} from "@eforest/reducers";
+import {
   fixtureInitialState,
   fixtureReducer,
   type FixtureState,
@@ -38,6 +44,24 @@ export interface DumpRecord extends Event {
 export interface ReducerModule {
   readonly reducer: (state: unknown, event: Event) => unknown;
   readonly initialState: unknown;
+  readonly initialStateForStream?: (streamId: string) => unknown;
+}
+
+export type DigestKind = "tree" | "worktree";
+
+const STREAMFS_REDUCER: ReducerModule = {
+  reducer: streamFsReducerDefinition.reduce,
+  initialState: streamFsReducerDefinition.initialState,
+};
+
+function registeredReducer(definition: ReducerDefinition): ReducerModule {
+  return {
+    reducer: definition.reduce,
+    initialState: definition.initialState,
+    ...(definition.initialStateForStream === undefined
+      ? {}
+      : { initialStateForStream: definition.initialStateForStream }),
+  };
 }
 
 export type DigestKind = "tree" | "worktree";
@@ -171,19 +195,30 @@ export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
       initialState: fixtureInitialState,
     };
   }
+  const definition = reducerById(modulePath);
+  if (definition !== undefined) return registeredReducer(definition);
   try {
     const loaded = (await import(pathToFileURL(modulePath).href)) as {
       reducer?: unknown;
       default?: unknown;
       initialState?: unknown;
+      initialStateForStream?: unknown;
     };
     const reducer = loaded.reducer ?? loaded.default;
     if (typeof reducer !== "function" || !("initialState" in loaded)) {
       fail("reducer module must export reducer (or default) and initialState");
     }
+    if ("initialStateForStream" in loaded && typeof loaded.initialStateForStream !== "function") {
+      fail("reducer module initialStateForStream export must be a function");
+    }
     return {
       reducer: reducer as (state: unknown, event: Event) => unknown,
       initialState: loaded.initialState,
+      ...(typeof loaded.initialStateForStream === "function"
+        ? {
+            initialStateForStream: loaded.initialStateForStream as (streamId: string) => unknown,
+          }
+        : {}),
     };
   } catch (error) {
     if (error instanceof ReplayCliError) throw error;
@@ -228,12 +263,39 @@ export async function replayDigestLocal(
   path: string,
   reducerPath?: string,
   digestKind: DigestKind = "tree",
+  streamId?: string,
 ): Promise<string> {
   const records = await readDump(path);
-  const reducerModule =
-    reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
-      ? STREAMFS_REDUCER
-      : await loadReducer(reducerPath);
+  const streamDefinition = streamId === undefined ? undefined : reducerForStream(streamId);
+  const inferredPr =
+    reducerPath === undefined &&
+    streamId === undefined &&
+    records.length > 0 &&
+    records.every((record) => record.type.startsWith("pr."))
+      ? reducerById("pr")
+      : undefined;
+  let reducerModule =
+    reducerPath === undefined && streamDefinition !== undefined
+      ? registeredReducer(streamDefinition)
+      : reducerPath === undefined && inferredPr !== undefined
+        ? registeredReducer(inferredPr)
+        : reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
+          ? STREAMFS_REDUCER
+          : await loadReducer(reducerPath);
+  if (streamId !== undefined) {
+    if (reducerModule.initialStateForStream === undefined) {
+      fail("reducer module must export initialStateForStream to use a stream identity");
+    }
+    let initialState: unknown;
+    try {
+      initialState = reducerModule.initialStateForStream(streamId);
+    } catch (error) {
+      fail(
+        `reducer initialStateForStream failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    reducerModule = { ...reducerModule, initialState };
+  }
   return digestRecords(records, reducerModule, records.length, digestKind);
 }
 
@@ -404,14 +466,15 @@ export async function replayDigest(
   path: string,
   reducerPath?: string,
   digestKind: DigestKind = "tree",
+  streamId?: string,
 ): Promise<string> {
   if (!reducerPath || digestKind === "worktree") {
-    return replayDigestLocal(path, reducerPath, digestKind);
+    return replayDigestLocal(path, reducerPath, digestKind, streamId);
   }
   return new Promise<string>((resolve, reject) => {
     const worker = fork(
       fileURLToPath(new URL("./reducer-worker.js", import.meta.url)),
-      [path, reducerPath],
+      streamId === undefined ? [path, reducerPath] : [path, reducerPath, streamId],
       {
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       },

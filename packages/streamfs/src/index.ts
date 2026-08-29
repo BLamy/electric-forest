@@ -20,6 +20,8 @@ export {
   isFsMergeConflictPayload,
   isFsMergeResolveEvent,
   isFsMergeResolvePayload,
+  isFsSyncConflictEvent,
+  isFsSyncConflictPayload,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
   isFsFilePatchPayload,
@@ -52,6 +54,8 @@ export {
   type FsMergeNodeRef,
   type FsMergeResolveEvent,
   type FsMergeResolvePayload,
+  type FsSyncConflictEvent,
+  type FsSyncConflictPayload,
   type FsMergeRevisionRef,
   type FsMergeSideRef,
   type FsFileCreateEvent,
@@ -95,6 +99,7 @@ export {
   type Dump,
   type MergeDump,
 } from "./resolve.js";
+export { readStreamDumpWithTransportOffsets, type StreamDumpResult } from "./snapshot.js";
 export { diffText } from "./patch/diff.js";
 export { mergeTextBytes, type TextMergeResult } from "./patch/merge.js";
 export {
@@ -169,10 +174,13 @@ export {
 } from "./watch.js";
 export {
   bootstrapRead,
+  bootstrapReadAt,
   compactSnapshot,
   createSnapshot,
+  readStreamDump,
   reduceSnapshotPlusTail,
   SnapshotIntegrityError,
+  type BootstrapReadOptions,
   type BootstrapReadResult,
   type SnapshotReceipt,
   type SnapshotRoot,

@@ -1,0 +1,143 @@
+E4-T03 root-gate transcript
+Date: 2026-08-04
+
+Rework gate status — commit 5ac5b449
+
+$ CI=true pnpm lint
+PASS
+
+$ CI=true pnpm typecheck
+PASS
+
+$ CI=true pnpm build
+PASS — TypeScript and Vite builds completed; Vite emitted only the existing
+chunk-size advisory.
+
+$ CI=true pnpm test
+PASS — 49 test files, 516 tests; the command also completed the production
+build. Vite emitted only the existing chunk-size advisory.
+
+$ bash tools/verify/clone.sh
+BLOCKED — the shipped-binary corpus verifier reported
+physical-compaction=not-observed status=200 logical=0000000000000000_0000000000000030;
+the real Auth0/platform matrix passed before the explicit E4_T03_BLOCKED exit.
+
+The provider boundary is the only remaining blocker recorded by this rework:
+the checked-in official Durable Streams server has no physical compaction
+operation for StreamFS to invoke, so the required below-compaction HTTP 410
+cannot be observed without changing the provider layer.
+
+$ pnpm format:check
+PASS — All matched files use Prettier code style.
+
+$ pnpm lint
+PASS
+
+$ pnpm typecheck
+PASS
+
+$ CI=true pnpm test
+PASS — 49 test files, 513 tests.
+The command also completed the repository pretest package builds and the root
+production build.
+
+$ pnpm build
+PASS — TypeScript build and Vite web build completed. Vite emitted only the
+existing chunk-size advisory.
+
+$ bash tools/verify/self_check.sh
+PASS — CANOPY_SENSITIVITY_SPINE_OK; verify self-check OK.
+
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+mitigation: the committed test suite, E3 corpus digest replay, deterministic
+clone transcript, typed refusal/corruption checks, and Makefile standing gates.
+
+$ bash tools/verify/cold_clone.sh verify-E4-clone
+PASS — pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44;
+verify-E4-clone: OK; no SKIPPED lines.
+
+$ bash tools/verify/cold_clone.sh verify-E4-T03
+PASS — pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44;
+verify-E4-T03: OK; no SKIPPED lines; 49 test files / 513 tests and 5 clone
+tests passed.
+
+Final provider-retention rework — 2026-08-06 — working tree before final commit
+
+$ pnpm install --frozen-lockfile
+PASS — lockfile up to date; patched @durable-streams/server@0.3.8 installed.
+
+$ CI=true pnpm format:check
+PASS — All matched files use Prettier code style.
+
+$ CI=true pnpm lint
+PASS
+
+$ CI=true pnpm typecheck
+PASS
+
+$ CI=true pnpm test
+PASS — process exited 0 after the repository pretest builds.
+
+$ CI=true pnpm exec vitest run
+PASS — 49 test files, 516 tests.
+
+$ CI=true pnpm build
+PASS — TypeScript and Vite builds completed; Vite emitted only the existing
+chunk-size advisory.
+
+$ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/cli/src/clone.test.ts packages/cli/src/official.integration.test.ts
+PASS — 2 test files, 9 tests. This includes the real file-backed published-process entrypoint.
+
+$ CI=true pnpm exec vitest run packages/streamfs/test/durable-streams.integration.test.ts
+PASS — 1 test file, 5 tests.
+
+$ node tools/verify/e4_t03_provider.mjs
+PASS — E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=409/400.
+
+$ bash tools/verify/clone.sh
+PASS — E4_T03_CLONE_CORE_OK with physical-compaction observed at
+0000000000000000_0000000000000030; E4_T03_PROVIDER_OK; and
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7.
+
+$ bash tools/verify/self_check.sh && node tools/verify/e4_t01_evidence.mjs
+PASS — CANOPY_SENSITIVITY_SPINE_OK, verify self-check OK, and E4-T01 evidence OK.
+
+The full suite initially exposed a provider-fork read regression after the
+retention patch. The patch now leaves the upstream file-backed fork read cap
+unchanged for the fork's own segment while applying the new compaction base only
+where needed. The official integration and direct provider verifier both pass,
+which distinguishes the fix from an emulator-only behavior. Replay: N/A (CLI +
+stream-layer change; no browser-reaching surface) + mitigation: direct provider
+memory/file restart probe, official file-backed process integration, corpus
+clone transcript, and root gates.
+
+Final fresh rerun — 2026-08-06
+
+$ pnpm install --frozen-lockfile
+PASS — patched @durable-streams/server@0.3.8 installed.
+
+$ CI=true pnpm format:check
+PASS — All matched files use Prettier code style.
+
+$ CI=true pnpm lint
+PASS
+
+$ CI=true pnpm typecheck
+PASS
+
+$ CI=true pnpm test
+PASS — 49 test files, 517 tests.
+
+$ CI=true pnpm build
+PASS — TypeScript and Vite builds completed; Vite emitted only the existing
+chunk-size advisory.
+
+$ bash tools/verify/self_check.sh
+PASS — CANOPY_SENSITIVITY_SPINE_OK and verify self-check OK.
+
+$ node tools/verify/e4_t01_evidence.mjs
+PASS — E4-T01 evidence OK.
+
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+the direct provider verifier, official file-backed integration, clone/auth
+transcript, malformed cursor/ack tests, full suite, and standing gates.

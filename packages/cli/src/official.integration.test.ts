@@ -246,5 +246,5 @@ describe("published Durable Streams process entrypoints", () => {
       expect(exited).toEqual({ code: 0, signal: null });
       rmSync(workDir, { recursive: true, force: true });
     }
-  }, 20_000);
+  });
 });

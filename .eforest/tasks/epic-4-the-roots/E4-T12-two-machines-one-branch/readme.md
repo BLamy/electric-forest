@@ -3,7 +3,7 @@ id: E4-T12
 epic: 4
 title: "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
 priority: 412
-status: pending
+status: verified
 depends_on: [E4-T11]
 estimate: L
 capstone: true
@@ -287,3 +287,291 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 "Convergence felt slow but passed the bound" is a note, not a finding.
 
 ## Verification log
+
+### 2026-08-18 — builder — implemented, evidence incomplete
+
+- Local `node tools/verify/e4_t12_capstone.mjs` passed for the composed live and mixed
+  scenarios. Both machine digests and replay digests matched; the mixed scenario emitted
+  exactly one conflict event and the recorded loser/conflict bytes matched byte-for-byte
+  with SHA-256 `782541010298d382ccf73ea85014c3e59e1da1508c20514b1904690ee8029592`.
+- `tools/verify/cold_clone.sh verify-E4-capstone` was started from commit `77e06142` with
+  scrubbed environment and lockfile-hydrated dependencies, but the nested runner stopped
+  producing a result and was terminated after the wrapper remained waiting. This is not a
+  cold-clone pass.
+- Replay: N/A (local `tools/replay/preflight.sh` found authenticated Replay Chromium but
+  the installed `replayio` package rejected `mcp` with `unknown command 'mcp'`) + mitigation:
+  stream evidence is committed above; the mandatory fresh-profile browser recording was not
+  claimed.
+- Status remains `in-progress`; no critic verification or queue advancement is claimed.
+
+### 2026-08-18 — builder — rework, evidence still under critic review
+
+- `node tools/verify/e4_t12_capstone.mjs --write-evidence` regenerated the committed
+  stream fixtures intentionally; the normal verifier now runs in scratch and compares
+  its generated stable evidence against the committed files without rewriting them.
+- The capstone now records a real head offset (`0000000000000000_0000000000000020`),
+  both worktree and reducer-tree digests, and four disposable sabotage runs. Byte,
+  delete, stray-file, and swap mutations each failed with a named convergence mismatch;
+  the captured failures are in `evidence/e4-t12-sensitivity.md`.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from a pristine clone at
+  `8ee7d85a` after the full build, 64 test files / 609 tests, E4-T09/T10/T11 gates, and
+  the T12 capstone. The preserved clone was `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.XPXsFdPihr`.
+- The committed-branch browser harness passed with final checkpoint
+  `0000000000000000_0000000000000020`, reducer-tree digest
+  `03ca5c547f72c97acb5ed50ba4adfdcf591e189fec427076f80ecde3541396c1`, visible offset-named
+  conflict file, zero browser console errors, and zero document navigations. Replay MCP
+  remains unavailable because the installed CLI rejects `replayio mcp`; this run is
+  therefore recorded as `Replay: N/A (local MCP command unavailable) + mitigation: fresh
+  Replay Chromium Playwright run, committed transcript, stream dump, materialize digest,
+  exact byte diffs, and cold-clone gate`.
+- A fresh independent critic found the prior evidence refuted; this rework is not yet
+  marked `verified`, and the queue is intentionally not advanced.
+- Targeted `node tools/verify/e4_t12_capstone.mjs` and the branch-matched browser harness
+  pass. A subsequent broader `make verify-E4-capstone` attempt was stopped upstream by
+  `packages/cli/test/uplink.fencing.test.ts` timing out after 608/609 tests passed; no
+  T12 verification claim is made from that partial gate.
+
+### 2026-08-18 — builder — fresh Replay recording captured
+
+- The branch-matched browser harness was rerun with Replay Chromium and a fresh profile;
+  the uploaded recording is [a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b](https://app.replay.io/recording/a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b).
+  It covers the live, partition, and reunion barriers in one continuous run and produced
+  the committed browser transcript above.
+- The local Replay MCP proxy currently rejects the authenticated session with `401
+  invalid_token`; this is reported as an interrogation-tool failure, not as a claim that
+  the recording was independently verified. The fresh recording remains available for
+  the critic, alongside the stream dump, materialized digest, byte comparisons, and
+  cold-clone evidence.
+
+### 2026-08-18 — builder — recorder rework
+
+- Fixed the browser harness to launch Replay Chromium with an explicit fresh profile,
+  recording directory, metadata, and DevTools connection; the prior direct launch was
+  not a valid recording session. The rerun passed `make verify-E4-T12-browser`, preserved
+  the live/partition/reunion transcript, and uploaded [the latest continuous recording](https://app.replay.io/recording/26bb8188-1182-483c-b4a1-96e68d8b4542)
+  (a second root-process recording is
+  [here](https://app.replay.io/recording/81110407-bdba-44ba-a38b-42868d2b2636)).
+- Replay MCP interrogation is still blocked by the connector's `401 invalid_token`;
+  the recording links are supplied for the fresh critic and no verification status change
+  is claimed yet.
+
+### 2026-08-18 — builder — phase-barrier rework
+
+- The browser harness now holds the harness in `phase=partition` while it samples the
+  stopped-side checkpoint, explicitly acknowledges those samples before reunion, asserts
+  a strictly larger reunion offset, and compares the DOM tree digest to the harness's
+  final materialized tree digest. The verifier now requires named sabotage failures.
+- Focused `make verify-E4-T12-browser` passed after this change. The new uploaded
+  recording is [5f63be33-4aec-4ca8-b31c-aa3e8d27c4de](https://app.replay.io/recording/5f63be33-4aec-4ca8-b31c-aa3e8d27c4de)
+  (secondary root process:
+  [e2b0997e-ab7a-4f55-8327-818baa07d9a7](https://app.replay.io/recording/e2b0997e-ab7a-4f55-8327-818baa07d9a7)).
+
+### 2026-08-18 — builder — latest browser evidence
+
+- Reran `make verify-E4-T12-browser` against the current branch and uploaded the
+  recording cited in `evidence/e4-t12-browser.txt`:
+  [357569c7-8f89-4396-8f1c-913b874be73f](https://app.replay.io/recording/357569c7-8f89-4396-8f1c-913b874be73f).
+
+### 2026-08-18 — builder — current-head rework evidence
+
+- Commit `a4ad8f04` regenerates the stream evidence, rejects warning-only sabotage
+  receipts, bounds corrupted watcher startup, and records the Replay URL returned by
+  the browser test's own upload command. `node tools/verify/e4_t12_capstone.mjs` passed.
+- `make verify-E4-T12-browser` passed with live/partition/reunion barriers, five stable
+  partition samples, final DOM digest equality, zero console errors, and zero document
+  navigations. The current recording is
+  [9d212f5f-5f85-4215-abea-c5935c0674ad](https://app.replay.io/recording/9d212f5f-5f85-4215-abea-c5935c0674ad),
+  matching `evidence/e4-t12-browser.txt`.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` reached the full build, 609-test
+  suite, and earlier E4 gates, but failed in the inherited T11 duplex test
+  `retires superseded coalesced apply notices before a later local revert` with
+  `condition did not become true`; this is not a cold-clone pass. Replay MCP remains
+  unavailable with `401 invalid_token`, so no critic verification or queue advancement
+  is claimed.
+
+### 2026-08-18 — builder — corrected-head cold-clone result
+
+- Commit `0b372084` fixes the two lint failures found by the clean clone (`no-unsafe-finally`
+  in the browser uploader and `clearTimeout` in the harness). The exact-head cold clone
+  then reached T12; its browser assertions passed, but the required Replay upload failed
+  with `getaddrinfo ENOTFOUND dispatch.replay.io`. Because the recording URL could not be
+  produced in that pristine run, this is not a cold-clone pass and T12 remains
+  `in-progress`.
+
+### 2026-08-19 — builder — current browser and gate rerun
+
+- The attempted 250ms registry heartbeat change was reverted as out of scope; the focused
+  registry suite and local full suite pass (64 files, 609 tests) on the original transport.
+- `node tools/verify/e4_t12_capstone.mjs` passed again. `make verify-E4-T12-browser`
+  passed with zero console errors and zero document navigations, and its upload-generated
+  recording is [cdb737ba-3894-48b2-8ebe-7e1f18e3d6b1](https://app.replay.io/recording/cdb737ba-3894-48b2-8ebe-7e1f18e3d6b1),
+  now recorded in `evidence/e4-t12-browser.txt`.
+- A fresh exact-head cold clone still failed before T12 at the platform registry suite
+  (`608/609`, alternating `ECONNRESET` and the held-SSE liveness assertion). No queue
+  advancement or verification claim is made.
+
+### 2026-08-19 — builder — sabotage-proof rework
+
+- Commit `4f0dcebe` removes synthetic T12 sabotage receipts. The conflict-byte sabotage
+  now completes the scenario and reddens the real `mixed capstone conflict bytes mismatch`
+  assertion; the catch-up sabotage now reddens the real `journal bijection duplicate offset`
+  assertion. Machine B's partition-time conflict bytes are captured from its actual file.
+- `node tools/verify/e4_t12_capstone.mjs` passes with regenerated evidence. T12 remains
+  `in-progress` pending a clean cold clone and Replay MCP interrogation.
+
+### 2026-08-19 — builder — honest sabotage rework at `1e2f9bc1`
+
+- `node tools/verify/e4_t12_capstone.mjs --write-evidence` passed after replacing the
+  stale catch-up mutation with a genuine pre-start checkpoint reset to `-1`; the probe
+  now reddens the real `scenario mixed conflict-event count=0` invariant after replaying
+  offsets `0..18`. Conflict-byte sabotage reddens the persisted dossier SHA-256 assertion,
+  and the inherited conflict-file mutation now produces a real `ENOENT` receipt.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` reached the full clean build and
+  609-test suite, then failed the inherited platform registry liveness test at 608/609:
+  `anonymous tail not alive at the held instant`. Preserved clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6mqJ0NvDAb`.
+- T12 remains `in-progress`; no critic verification or queue advancement is claimed.
+
+### 2026-08-19 — builder — cold-clone retry
+
+- A second exact-head `tools/verify/cold_clone.sh --keep verify-E4-capstone` reproduced
+  the same inherited platform liveness failure at 608/609, this time in the
+  `public→private flip` registry test (`anonymous tail not alive at the held instant`).
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.yrArDnuemy`.
+- The failure is not being bypassed or used to claim T12 verification; the queue remains
+  gated at E4-T12.
+
+### 2026-08-19 — builder — exact-head browser refresh
+
+- `make verify-E4-T12-browser` passed at the clean T12 head with live, partition, and
+  reunion barriers, five stable partition samples, final DOM digest equality, zero
+  console errors, and zero document navigations. The fresh continuous recording is
+  [07904067-c11a-4a46-a7ac-72806d9e3ca1](https://app.replay.io/recording/07904067-c11a-4a46-a7ac-72806d9e3ca1).
+- T12 remains `in-progress` pending the cold-clone gate and independent Replay critic
+  interrogation.
+
+### 2026-08-19 — builder — registry SSE transport rejoin fix
+
+- Reproduced the inherited registry liveness failure in focused runs, then fixed the
+  underlying SSE wrapper: a normal long-poll completion now reconnects from the preserved
+  reducer cursor instead of closing the logical live tail. No test assertion was changed.
+- `pnpm exec prettier --write packages/platform/src/registry/doors.ts`, targeted ESLint,
+  platform build, and three consecutive `pnpm vitest run packages/platform/test/registry.test.ts`
+  runs passed, 19/19 each. The exact cold-clone gate is next.
+
+### 2026-08-19 — builder — cold clone after SSE fix
+
+- Exact-head `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed the first full
+  workspace suite, 64 files / 609 tests, including the registry liveness tests. During the
+  same required gate closure, its second full-suite invocation failed at 608/609 with
+  `getDoor: fetch failed / read ECONNRESET` in the registry public-to-private flip test.
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.fbl2WK0VQl`.
+- This is recorded as a failed cold-clone gate, not a verification claim; T12 remains
+  `in-progress`.
+
+### 2026-08-19 — builder — cold clone after bounded T08 repair
+
+- The next exact-head cold clone failed at the first full workspace suite’s registry
+  liveness test (`anonymous tail not alive at the held instant`, 608/609). The bounded
+  T08 sensitivity was not reached in this attempt. Preserved clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.rVS1UDoTym`.
+- T12 remains `in-progress`; no gate bypass or verification claim is made.
+
+### 2026-08-19 — builder — hidden-event SSE liveness
+
+- Registry SSE now emits a comment heartbeat whenever it processes a followed event,
+  including events hidden by authorization. The comment carries no registry data and
+  preserves the no-leak filter, while making held anonymous tails observably live.
+- Targeted formatting, lint, platform build, and five consecutive registry-suite runs
+  passed, 19/19 tests each. The next exact cold clone exercises this change.
+
+### 2026-08-19 — builder — pristine capstone gate passed
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from a pristine clone of
+  `9038235f`: full format/lint/typecheck/build gates, 64 test files / 609 tests, all E4
+  T01-T11 verification targets, the browser capstone, and the T12 capstone all passed.
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.r0IzftkEww`.
+- T12 remains `in-progress` until the fresh critic interrogates the exact-head evidence;
+  no queue advancement is claimed yet.
+
+### 2026-08-19 — builder — exact-head browser refresh after cold pass
+
+- `make verify-E4-T12-browser` passed on the current branch with live/partition/reunion
+  barriers, stable partition samples, final DOM digest equality, zero console errors, and
+  zero document navigations. The fresh continuous Replay recording is
+  [cbe3f98b-315c-4155-b2ba-dd6423e034c3](https://app.replay.io/recording/cbe3f98b-315c-4155-b2ba-dd6423e034c3).
+
+### 2026-08-19 — builder — bounded T08 sensitivity repair
+
+- The E4-T08 sensitivity driver’s delayed-echo sabotage now fires after 5 seconds inside
+  the 10.05-second idle window, rather than stranding the mutated watcher behind a
+  60-second timer. The named behavioral assertion remains required; only the harness
+  timeout is bounded.
+- `node tools/verify/e4_t08_sensitivity.mjs` passed all four sabotage legs, including
+  `one echo per idle minute: EXPECTED-FAIL OK`.
+
+### 2026-08-19 — builder — exact-head cold-clone transcript
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from pristine HEAD
+  `1f26f639a177e2f3fbb56c9f5b4f251a7c6a8a0a`. The committed full transcript is
+  `evidence/e4-t12-cold-clone-transcript.txt`; it records clean dependency hydration,
+  format/lint/typecheck/build gates, 64 test files / 609 tests, E4-T01 through T11
+  verification targets, the browser capstone, and the T12 capstone. Terminal evidence:
+  `verify-E4-capstone: OK`, live digest `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`,
+  mixed digest `d8fa9871e2fb696b128041b1f5353a2919ab4aef0264a98bc24da79c1734822c`,
+  `conflict-events=1`, and branch SHA-256
+  `3f35967ab2d06d56bcd5f71a8854faffdb4fec8e8e8f91f65189458c2e402856`.
+- Replay recording remains `https://app.replay.io/recording/cbe3f98b-315c-4155-b2ba-dd6423e034c3`;
+  independent MCP interrogation is pending because the current Replay token returns
+  `401 invalid_token`.
+
+### 2026-08-19 — builder — browser proof markers and fresh recording
+
+- Added browser-context proof markers to the branch-matched capstone run. The markers
+  are emitted by the recorded page (not the Node test process) and expose the live-before,
+  live-after, partition-stable samples, and reunion-final checkpoint/digest/conflict
+  state through both `console.info("E4-T12 browser proof", ...)` and
+  `window.__e4T12Proof` for Replay inspection. This makes the viewer assertions directly
+  citable in the browser recording while leaving production code unchanged.
+- `make verify-E4-T12-browser` passed with live `0000000000000000_0000000000000012` →
+  `0000000000000000_0000000000000013`, stable partition checkpoint
+  `0000000000000000_0000000000000019` across five samples, and reunion checkpoint
+  `0000000000000000_0000000000000023` with digest
+  `05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f`, conflict visible,
+  zero console errors, and zero document navigations. Fresh recording from exact HEAD
+  `741f6ee94414495c12af6511d3a9241444a9020e`:
+  [8e80b047-7344-4847-b42a-b865481e1d36](https://app.replay.io/recording/8e80b047-7344-4847-b42a-b865481e1d36).
+- The run holds the page open for 1.5 seconds after the final proof marker so the
+  browser's current long-poll can complete normally before teardown; teardown is no
+  longer the event that aborts the live request.
+- The two watcher processes remain the stream-layer scenario; the browser layer is the
+  E3-T07 viewer tailing that same live stream, as required by the task contract.
+
+### 2026-08-19 — builder — final current-source cold-clone transcript
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from pristine HEAD
+  `d5ee21dea0011f9677ec6a69fc3b8cf0bf23cb5d`; the complete committed transcript is
+  `evidence/e4-t12-cold-clone-transcript.txt`. It records the preserved clone
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1`, format/lint/typecheck/build,
+  64 test files / 609 tests, E4-T01 through T11, the browser capstone with the browser
+  proof markers, T12 capstone digests, and `verify-E4-capstone: OK`.
+- The subsequent evidence-pointer commit only records the generated Replay URL and
+  transcript; the tested implementation/test source is unchanged from the recorded
+  source HEAD. This provenance is intentional because the Replay URL and full transcript
+  are produced only after the run completes.
+
+### 2026-08-19 — critic — VERDICT: verified
+
+- Exact checkout `29feb436` is clean. The independent audit confirmed the current-source
+  cold transcript begins from `d5ee21de`, records 64/609 tests, all E4-T01 through T11
+  gates, the browser capstone, T12 capstone, and `verify-E4-capstone: OK` with no
+  `SKIPPED:` lines. Stream evidence proves the convergence bound, partition offsets,
+  one byte-exact conflict, empty tree diffs, matching digests, and named sensitivity
+  failures.
+- Replay recording
+  [8e80b047-7344-4847-b42a-b865481e1d36](https://app.replay.io/recording/8e80b047-7344-4847-b42a-b865481e1d36)
+  contains all four browser proof markers, zero runtime/console errors, zero document
+  navigations, final digest/offset equality, conflict visibility, and completed live
+  requests with HTTP 200. No acceptance criterion remains unproven.
+- Commands: `git diff --check`; `node tools/verify/e4_t12_capstone.mjs`;
+  `make verify-E4-T12-browser`; `tools/verify/cold_clone.sh --keep verify-E4-capstone`.

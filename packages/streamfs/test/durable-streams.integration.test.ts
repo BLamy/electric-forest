@@ -98,6 +98,50 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     await watcher.close();
   });
 
+  it("uses the injected clock for mutations and carries it across opened branches", async () => {
+    const baseUrl = await startOfficialServer();
+    const timestamp = 1_700_000_000_000;
+    const repo = await new StreamFs({ baseUrl, now: () => timestamp }).createRepo("clocked");
+
+    await repo.mkdir("docs");
+    await repo.mkdir("empty");
+    await repo.rmdir("empty");
+    await repo.createFile("docs/readme.md", new TextEncoder().encode("first"));
+    await repo.writeFile("docs/readme.md", new TextEncoder().encode("second"));
+    await repo.rename("docs/readme.md", "docs/renamed.md");
+    await repo.deleteFile("docs/renamed.md");
+    await repo.createFile("branch.txt", new TextEncoder().encode("main"));
+    await repo.createBranch("feature");
+    const branch = await repo.openBranch("feature");
+    await branch.writeFile("branch.txt", new TextEncoder().encode("feature"));
+
+    const metadata = [...(await repo.rawDump()), ...(await branch.rawDump())];
+    const contentStreamIds = new Set(
+      metadata.flatMap((record) => {
+        const contentStreamId =
+          record.payload !== null &&
+          typeof record.payload === "object" &&
+          "contentStreamId" in record.payload
+            ? record.payload.contentStreamId
+            : undefined;
+        return typeof contentStreamId === "string" ? [contentStreamId] : [];
+      }),
+    );
+    const contentRecords = (
+      await Promise.all(
+        [...contentStreamIds].map((streamId) =>
+          readDurableJson<StreamRecord>({
+            url: `${baseUrl}/streams/${encodeURIComponent(streamId)}`,
+          }),
+        ),
+      )
+    ).flat();
+
+    expect(metadata.length).toBeGreaterThan(0);
+    expect(contentRecords.length).toBeGreaterThan(0);
+    expect([...metadata, ...contentRecords].every((record) => record.ts === timestamp)).toBe(true);
+  });
+
   it("creates, bootstraps, and compacts a logical snapshot", async () => {
     const baseUrl = await startOfficialServer();
     const repo = await new StreamFs({ baseUrl }).createRepo("snapshot-bootstrap");
@@ -109,6 +153,96 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     expect(bootstrapped.snapshotEventOffset).toBe(snapshot.snapshotEventOffset);
     expect(treeDigest(bootstrapped.state)).toBe(await repo.digest());
     expect((await repo.compact()).snapshotOffset).toBe(snapshot.snapshotOffset);
+  });
+
+  it("retries one transient retained-dump connection reset", async () => {
+    const baseUrl = await startOfficialServer();
+    const repo = await new StreamFs({ baseUrl }).createRepo("snapshot-reset-retry");
+    await repo.createFile("readme.md", new TextEncoder().encode("retry once\n"));
+    const dumpUrl = `${baseUrl}/streams/${encodeURIComponent(repo.metadataStreamId)}/dump`;
+    let dumpAttempts = 0;
+    const resetOnce: typeof fetch = async (input, init) => {
+      if (requestMethod(input, init) === "GET" && requestUrl(input) === dumpUrl) {
+        dumpAttempts += 1;
+        if (dumpAttempts === 1) {
+          const cause = Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" });
+          throw Object.assign(new TypeError("fetch failed"), { cause });
+        }
+      }
+      return fetch(input, init);
+    };
+
+    const receipt = await createSnapshot({
+      baseUrl: repo.baseUrl,
+      metadataStreamId: repo.metadataStreamId,
+      fetcher: resetOnce,
+      now: () => 0,
+      writeContent: (streamId, bytes) => repo.writeContent(streamId, bytes),
+      dispatchSnapshot: (event) => repo.dispatchSnapshot(event),
+    });
+
+    expect(dumpAttempts).toBe(2);
+    expect(receipt.snapshotOffset).not.toBe("-1");
+  });
+
+  it("fails closed on malformed retention cursors and acknowledgements", async () => {
+    const baseUrl = await startOfficialServer();
+    const seed = await new StreamFs({ baseUrl }).createRepo("snapshot-contract");
+    await seed.mkdir("docs");
+    await seed.createFile("docs/readme.md", new TextEncoder().encode("second"));
+    const snapshot = await seed.createSnapshot();
+    const dumpUrl = `${baseUrl}/streams/${encodeURIComponent(seed.metadataStreamId)}/dump`;
+
+    const withDumpHeader =
+      (value: string | undefined): typeof fetch =>
+      async (input, init) => {
+        const response = await fetch(input, init);
+        if (requestMethod(input, init) !== "GET" || requestUrl(input) !== dumpUrl) return response;
+        const headers = new Headers(response.headers);
+        headers.delete("stream-dump-offsets");
+        if (value !== undefined) headers.set("stream-dump-offsets", value);
+        return new Response(await response.arrayBuffer(), {
+          status: response.status,
+          statusText: response.statusText,
+          headers,
+        });
+      };
+
+    const noCursor = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader(undefined),
+    }).openRepo("snapshot-contract");
+    await expect(noCursor.compact()).rejects.toMatchObject({
+      code: "compaction_transport_offset_unavailable",
+    });
+
+    const invalidJson = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader("{"),
+    }).openRepo("snapshot-contract");
+    await expect(invalidJson.compact()).rejects.toThrow(
+      "stream dump advertised invalid transport offsets",
+    );
+
+    const misaligned = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader("[]"),
+    }).openRepo("snapshot-contract");
+    await expect(misaligned.compact()).rejects.toThrow(
+      "stream dump transport offsets do not align with records",
+    );
+
+    const mismatchFetch: typeof fetch = async (input, init) => {
+      if (requestMethod(input, init) === "POST" && requestUrl(input).endsWith("/compact")) {
+        return Response.json({ snapshotOffset: "0000000000000000_9999999999999999" });
+      }
+      return fetch(input, init);
+    };
+    const mismatch = await new StreamFs({ baseUrl, fetch: mismatchFetch }).openRepo(
+      "snapshot-contract",
+    );
+    await expect(mismatch.compact()).rejects.toMatchObject({ code: "invalid_compaction" });
+    expect(snapshot.snapshotOffset).not.toBe("0000000000000000_9999999999999999");
   });
 
   it("runs native branch isolation, fast-forward merge, and advanced-target refusal", async () => {

@@ -2,10 +2,12 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
+.PHONY: verify-E5-T01 verify-E5-T02 _verify-E5-T02-inner _v-dependency-integrity-sensitivity
+
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02
+.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-T12 verify-E4-capstone verify-E4-T12-browser verify-E4-sync _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t04 _v-e4-t05 _v-e4-t06 _v-e4-t07 _v-e4-t08 _v-e4-t09 _v-e4-t03-auth0
 
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
@@ -15,10 +17,14 @@ REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E2-capstone verify-E3-seed verify-E3-T01 verify-E3-T02a verify-E3-T02b verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09 verify-E3-shell verify-E4-T01 verify-E4-T02 seed-canopy regen-E3-seed _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _verify-E2-T08-inner _verify-E2-T09-inner _verify-E2-T12-inner _verify-E3-T02a-inner _verify-E3-T02b-inner _verify-E3-T03-inner _verify-E3-T04-inner _verify-E3-T05-inner _verify-E3-T06-inner _verify-E3-T07-inner _verify-E3-T08-inner _verify-E3-T09-inner _verify-E3-shell-inner _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
-	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-e2-t12 _v-e3-seed-prep _v-e3-seed _v-e3-shell _v-e3-t03 _v-e3-t04 _v-e3-t05 _v-e3-t06 _v-e3-t07 _v-e3-t08 _v-e3-t09 _v-e4-t02 _v-meta verify-task-board
+	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-e2-t12 _v-e3-seed-prep _v-e3-seed _v-e3-shell _v-e3-t03 _v-e3-t04 _v-e3-t05 _v-e3-t06 _v-e3-t07 _v-e3-t08 _v-e3-t09 _v-e4-t02 _v-e4-t03 _v-e4-t07 _v-e4-t08 _v-e4-t09 _v-meta verify-task-board
 
 _v-install:
+	@if [ -n "$${EFOREST_DEPENDENCY_INTEGRITY_MANIFEST:-}" ]; then node tools/verify/dependency_integrity.mjs compare --root "$(REPO_ROOT)" --manifest "$${EFOREST_DEPENDENCY_INTEGRITY_MANIFEST}"; fi
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
+
+_v-dependency-integrity-sensitivity:
+	@node tools/verify/dependency_integrity_sensitivity.mjs
 
 _v-fmt: _v-install
 	@CI=true pnpm format:check
@@ -131,7 +137,7 @@ _v-e2-t02-browser: _v-e2-t02-auth0
 _v-e2-t03-gateway: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t03_gateway.mjs
 	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 4df852d341bae1147f0d3fe985c6baa78a8ffe57..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t04-auth: _v-build _v-e2-t02-auth0
 	@CI=true pnpm exec vitest run packages/platform/test/auth.test.ts
@@ -173,7 +179,7 @@ _v-e2-t07: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t07_matrix.mjs
 	@node tools/verify/e2_t07_sensitivity.mjs
 	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 4df852d341bae1147f0d3fe985c6baa78a8ffe57..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t08: _v-build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/registry.test.ts packages/platform/test/registry.rebuild.test.ts
@@ -192,7 +198,7 @@ _v-e2-t09: _v-build
 	@node tools/verify/e2_t09_evidence.mjs
 	@node tools/verify/e2_t09_sensitivity.mjs
 	@! git grep -n -E 'Producer-(Id|Epoch|Seq).*auth|writer.*header' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 145853d..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-authz: _v-e2-t07 _v-e2-t08 _v-e2-t09
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/cli-tokens.test.ts packages/platform/test/authz.gateway.test.ts packages/platform/test/ns.test.ts
@@ -208,7 +214,7 @@ _v-e2-t11: _v-build
 	@node tools/verify/e2_t11_evidence.mjs
 	@node tools/verify/e2_t11_sensitivity.mjs
 	@! git grep -n -E 'FixedWindowRateLimiter|decideTenantAccess|rate_limited' -- 'packages/server'
-	@test -z "$$(git diff --name-only 3dbbb7696577b001870989ad5180219315beaec9..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t12: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t12_portability.mjs
@@ -295,12 +301,29 @@ _v-e4-t02: _v-gates verify-E4-T01
 	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/init.test.ts
 	@node tools/verify/e4_t02_transcript.mjs
 
+_v-e4-t03-auth0:
+	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
+	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "82eb835947c97fcf6e0596a4377acbb01ca13ede"
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate --filter @emulators/core build
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate --filter @emulators/auth0 build
+
+_v-e4-t03: _v-gates verify-E4-T01 _v-e4-t03-auth0
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/clone.test.ts
+	@bash tools/verify/clone.sh
+
+_v-e4-t04: _v-gates verify-E4-T03
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/status.test.ts
+	@bash $(REPO_ROOT)/.eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.sh
+	@bash $(REPO_ROOT)/.eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/sensitivity.sh
+	@bash $(REPO_ROOT)/.eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.sh
+
 _v-meta:
 	@bash tools/verify/self_check.sh
 
 verify-E0-T01: _v-gates
 	@echo "verify-E0-T01: OK"
-verify-E0-T02: _v-meta verify-list verify-task-board
+verify-E0-T02: _v-dependency-integrity-sensitivity _v-meta verify-list verify-task-board
 	@echo "verify-E0-T02: OK"
 verify-E0-T03: _v-gates _v-meta verify-list
 	@echo "verify-E0-T03: OK"
@@ -477,6 +500,87 @@ verify-E4-T01:
 verify-E4-T02: _v-e4-t02 _v-meta verify-list
 	@echo "verify-E4-T02: OK"
 
+verify-E4-clone: _v-e4-t03
+	@echo "verify-E4-clone: OK"
+
+verify-E4-T03: verify-E4-clone _v-meta verify-list
+	@echo "verify-E4-T03: OK"
+
+verify-E4-T04: _v-e4-t04 _v-meta verify-list
+	@echo "verify-E4-T04: OK"
+
+_v-e4-t05: _v-gates verify-E4-T01 verify-E4-T04
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/branch-checkout.test.ts packages/platform/test/repo-home.test.ts packages/platform/test/branch-projection.test.ts packages/platform/test/history.test.ts
+	@node tools/verify/e4_t05_branch_checkout.mjs
+	@node tools/verify/e4_t05_sensitivity.mjs
+
+verify-E4-T05: _v-e4-t05 _v-meta verify-list
+	@echo "verify-E4-T05: OK"
+
+_v-e4-t06: _v-gates verify-E4-T01 verify-E4-T04
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+	@node tools/verify/e4_t06_uplink.mjs
+	@node tools/verify/e4_t06_sensitivity.mjs
+	@test "$$(node tools/verify/e4_t06_sensitivity.mjs | grep -c 'EXPECTED-FAIL OK')" -ge 5
+
+verify-E4-T06: _v-e4-t06 _v-meta verify-list
+	@echo "verify-E4-T06: OK"
+
+_v-e4-t07: _v-build _v-gates verify-E4-T06
+	@bash tools/verify/watch_down.sh
+
+_v-e4-t08: _v-gates verify-E4-T01 verify-E4-T04 verify-E4-T06 verify-E4-T07
+	@node tools/verify/e4_t08_duplex.mjs
+	@node tools/verify/e4_t08_sensitivity.mjs
+
+_v-e4-t09: _v-build verify-E4-T08
+	@node tools/verify/e4-sync/verify.mjs
+
+verify-E4-watch-down: _v-e4-t07 _v-meta verify-list
+	@echo "verify-E4-watch-down: OK"
+
+verify-E4-T07: verify-E4-watch-down
+	@echo "verify-E4-T07: OK"
+
+verify-E4-T08: _v-e4-t08 _v-meta verify-list
+	@echo "verify-E4-T08: OK"
+
+verify-E4-sync: _v-e4-t09
+	@echo "verify-E4-sync: OK"
+
+verify-E4-T09: verify-E4-sync _v-meta verify-list
+	@echo "verify-E4-T09: OK"
+
+verify-E4-T10: _v-build verify-E4-T09
+	@pnpm exec vitest run --maxWorkers=1 packages/cli/test/reconcile.test.ts packages/cli/test/reconcile.crash.test.ts packages/cli/test/reconcile.overlap.test.ts
+	@node tools/verify/e4-sync/run.mjs --seed 1 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed1.json"
+	@node tools/verify/e4-sync/run.mjs --seed 2 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed2.json"
+	@node tools/verify/e4-sync/run.mjs --seed 3 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed3.json"
+	@node tools/verify/e4-sync/run.mjs --seed 4 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed4.json"
+	@node tools/verify/e4-sync/run.mjs --seed 5 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed5.json"
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-branch-log-run1.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-branch-log-run2.jsonl
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-A.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-A-run2.jsonl
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-B.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-B-run2.jsonl
+	@echo "verify-E4-T10: OK"
+
+verify-E4-T11: _v-build verify-E4-T10
+	@pnpm exec vitest run --maxWorkers=1 packages/cli/test/conflict.test.ts packages/cli/test/conflict.integration.test.ts packages/cli/test/downlink.test.ts packages/cli/test/watch-duplex.test.ts packages/cli/src/status.test.ts packages/streamfs/test/conflict-event.test.ts
+	@node tools/verify/e4_t11_evidence.mjs
+	@output="$$(node tools/verify/e4_t11_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -ge 6
+	@echo "verify-E4-T11: OK"
+
+verify-E4-capstone: _v-build verify-E4-sync verify-E4-T11 verify-E4-T12-browser
+	@node tools/verify/e4_t12_capstone.mjs
+	@echo "verify-E4-capstone: OK"
+
+verify-E4-T12: verify-E4-capstone
+	@echo "verify-E4-T12: OK"
+
+verify-E4-T12-browser: _v-build
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate
+	@node --experimental-strip-types apps/web/test/e4-t12-capstone.pw.ts
+	@echo "verify-E4-T12-browser: OK"
+
 verify-E3-capstone:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
 	@echo "verify-E3-capstone: OK"
@@ -506,7 +610,28 @@ _verify-E3-shell-inner: _v-gates _v-e2-t02-auth0 _v-e3-shell _v-meta verify-list
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E3-seed verify-E3-T01 verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09
 	@echo "verify-all: every defined verify target passed"
 
-verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02
+verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-capstone
+
+verify-E5-T01: verify-all _v-fmt _v-lint _v-typecheck _v-test _v-build
+	@run_file="$$(mktemp)"; CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts >"$$run_file" 2>&1; run_code=$$?; cat "$$run_file"; if test "$$run_code" -ne 0; then rm -f "$$run_file"; exit "$$run_code"; fi; node tools/verify/e5_t01_evidence.mjs "$$run_file"; verify_code=$$?; rm -f "$$run_file"; exit "$$verify_code"
+	@node tools/verify/e5_t01_matrix.mjs
+	@digest="$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl --digest --reducer packages/platform/issues-reducer.mjs --stream-id issue:maple/reading-room/golden-online)"; test "$$digest" = "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"
+	@! rg -n "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http" packages/platform/src/issues
+	@root="$$(pwd)"; expected="$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"; one="$$(cd /tmp && TZ=Pacific/Kiritimati LANG=C node "$$root/packages/cli/dist/src/bin.js" replay "$$root/.eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl" --digest --reducer "$$root/packages/platform/issues-reducer.mjs" --stream-id issue:maple/reading-room/golden-online)"; two="$$(cd "$$root/packages/platform" && TZ=UTC LANG=C node "$$root/packages/cli/dist/src/bin.js" replay "$$root/.eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl" --digest --reducer "$$root/packages/platform/issues-reducer.mjs" --stream-id issue:maple/reading-room/golden-online)"; test "$$one" = "$$expected"; test "$$two" = "$$expected"
+	@tmp="$$(mktemp)"; cp .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl "$$tmp"; perl -0pi -e 's/Details/Detailx/' "$$tmp"; mutated="$$(node packages/cli/dist/src/bin.js replay "$$tmp" --digest --reducer packages/platform/issues-reducer.mjs --stream-id issue:maple/reading-room/golden-online)"; test "$$mutated" != "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"; rm -f "$$tmp"; echo "MUTATION fixture=golden-issue byte=payload digest-mismatch EXPECTED-FAIL OK"
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E5-T01"
+	@echo "verify-E5-T01: OK"
+
+_verify-E5-T02-inner:
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/pr/test/pr-lifecycle.test.ts packages/pr/test/pr-refusals.test.ts packages/pr/test/pr-races.test.ts packages/pr/test/pr-property.fuzz.test.ts
+	@node tools/verify/e5_t02_evidence.mjs
+
+verify-E5-T02: verify-E5-T01 verify-E0-T11 _v-fmt _v-lint _v-typecheck _v-test _v-build _verify-E5-T02-inner
+	@output="$$(node tools/verify/e5_t02_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 3
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E5-T02"
+	@echo "verify-E5-T02: OK"
 
 verify-list:
 	@bash tools/verify/list.sh

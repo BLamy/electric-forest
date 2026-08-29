@@ -1,0 +1,19 @@
+# E5-T01 real Durable Stream integration
+
+Command: `CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts`
+
+The focused suite starts a real `createDurableStreamTestServer`, dispatches the
+two-event issue lifecycle and the seven-event `golden-issue.jsonl` sequence through
+`PlatformGateway` and `OfficialStreamAdapter`, bootstraps both durable streams, checks
+server writer metadata normalization, and reduces the registered issue definition.
+The stream-aware projection retains `issueId=golden-online`; offline replay receives the
+same explicit `issue:maple/reading-room/golden-online` identity through `--stream-id`,
+uses the reducer module's `initialStateForStream`, and matches the registered projection's
+frozen state digest. An `issue.opened` action aimed at an `fs:` stream returns the frozen
+`unknown-action-type` 404 and appends nothing.
+
+Observed result:
+
+Test Files 1 passed (1)
+Tests 13 passed (13)
+E5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=0000000000000000_0000000000000001 digest=aa2705cdef253a9a41747a50da43ef9a214b415c5740e6ac87847ac48149f423 online-offline-digest=e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105 cross-type=404 untouched=0

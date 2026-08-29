@@ -1,6 +1,6 @@
 import { replayDigestLocal, ReplayCliError } from "./replay-command.js";
 
-const [path, reducerPath] = process.argv.slice(2);
+const [path, reducerPath, streamId] = process.argv.slice(2);
 if (!path || !reducerPath || !process.send) process.exit(2);
 
 // Reducer modules execute in this process, so they must never inherit the wrapper's
@@ -14,7 +14,7 @@ process.exit = ((code?: number | string | null): never => {
 }) as typeof process.exit;
 
 try {
-  const digest = await replayDigestLocal(path, reducerPath);
+  const digest = await replayDigestLocal(path, reducerPath, "tree", streamId);
   sendResult({ ok: true, digest }, undefined, undefined, (error) => {
     exitProcess(error ? 2 : 0);
   });

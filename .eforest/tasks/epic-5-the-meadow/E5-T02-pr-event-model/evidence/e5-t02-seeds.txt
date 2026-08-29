@@ -1,0 +1,5 @@
+# E5-T02 v1 property seeds; verify-E5-T02 runs 128 sequences per seed.
+0x1a2b3c4d
+0x5eedc0de
+0x9e3779b9
+0xc001d00d

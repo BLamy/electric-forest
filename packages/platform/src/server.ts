@@ -23,7 +23,7 @@ async function handleNodeRequest(
     ),
     ...((request.method === "GET" || request.method === "HEAD") && body.length === 0
       ? {}
-      : { body: body.toString("utf8") }),
+      : { body: new Uint8Array(body) }),
   });
   const result = await handler(web);
   response.statusCode = result.status;

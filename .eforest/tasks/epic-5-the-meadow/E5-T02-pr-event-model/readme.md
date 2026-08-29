@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: pending
+status: verified
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -260,3 +260,216 @@ list lacks.
    state, env, or wall clock to reproduce them — refutes replay determinism.
 
 ## Verification log
+
+### 2026-08-24 — Sol builder checkpoint — composed proof passed; cold clone environment-failed
+
+- The single composed run at exact implementation HEAD
+  `5a13630847e0a249290067f8cec91aff3fcf842a` passed
+  `make --no-print-directory verify-E5-T02`. Its 22,698-line transcript is preserved
+  as `evidence/e5-t02-composed-5a136308-passed.txt` with SHA-256
+  `b680456da64ab29b3ab48069074c9743ef6ea21e5da36f20591b1a591666b5d6`;
+  it ends in the unique `verify-E5-T02: OK` marker with zero `SKIPPED:` markers.
+- Exactly one pristine-clone run was then launched from preservation commit
+  `797c92bff3b3d6acc596be512265354b3bbb020d`. It exited `2` after the managed
+  execution sandbox denied loopback listeners with
+  `listen EPERM: operation not permitted 127.0.0.1` (first at transcript lines 353
+  and 625), cascading through the live HTTP/Durable Streams tests. The full transcript
+  and audit metadata are preserved as
+  `evidence/e5-t02-cold-clone-797c92bf-environment-failed.txt` and its
+  `.meta.txt` companion (SHA-256
+  `6c30beafa23adfda36dcf9a7e906bfa2d21b0c42ca84c5ef05f9891d260b9006`).
+- No duplicate gate or cold-clone retry was launched, no test was weakened, and the
+  task remains `in-progress`. The next admissible proof action is one cold-clone run
+  on an execution host that permits binding `127.0.0.1`; E5-T03 remains queued behind
+  E5-T02. Replay: N/A (server/package task; committed stream-layer transcripts and
+  digest artifacts are the mitigation).
+
+### 2026-08-25 — builder — exact-head cold clone passed; submitted to fresh Sol critic
+
+- The pristine-clone attempt at `292b7482` exposed two inherited contention lifecycle
+  defects after `646/648` root tests passed: an idempotent snapshot dump could lose a
+  reset local connection, and graceful watcher shutdown could time out while durable
+  journals were still advancing. The failed run remains frozen at
+  `evidence/e5-t02-cold-clone-292b7482-contention-lifecycle-failed.txt` (SHA-256
+  `9918f1ecc7ea9bf6e96f78537d1a1c66b473ceca9d7b2f46bf5e4e74114bee4e`).
+- Commit `9c978705` adds one bounded retry only to the idempotent snapshot dump request
+  for connection-reset/socket-close failures, while a second failure remains loud. It
+  also renews the graceful-stop deadline only when a durable journal makes progress,
+  so a draining watcher can cross the original deadline but a stalled drain still
+  fails. Both regressions were reproduced red before the repair and pass afterward;
+  commit `99f7e010d9438cd8199872bc203324f12cf8e756` is the exact code and provenance
+  candidate tested below.
+- Exactly one `tools/verify/cold_clone.sh verify-E5-T02` run was launched from
+  `99f7e010d9438cd8199872bc203324f12cf8e756`. It exited `0` from a pristine clone.
+  The verbatim transcript is
+  `evidence/e5-t02-cold-clone-99f7e010-passed.txt`: SHA-256
+  `f6f8e5b91c6315c7a06fe86c5e27918d106a7a78fa6c7616312e809ded319307`,
+  `23,020` lines, `1,656,526` bytes. It contains one `verify-E5-T02: OK`, one
+  `cold_clone: verify-E5-T02 PASSED from a pristine clone`, and zero `SKIPPED:`
+  markers. The audit metadata is committed beside it in the `.meta.txt` companion;
+  preservation commit `e9952f31` changes only that proof and the two inherited
+  no-database inventories it necessarily extends.
+- The same exact-head transcript records all root gates green (`69/69` test files,
+  `650/650` tests), E5-T02's four focused files green (`14/14` tests), both lifecycle
+  goldens replaying through separate processes, all ten refusal blocks remaining
+  byte-neutral, `512` seeded property sequences, and all three named sabotages going
+  red with `EXPECTED-FAIL OK`. It also re-earns the serialized E2-E4 dependency gates,
+  including E4-T12's live/partition/reunion browser capstone with zero console errors
+  and the contention-sensitive E4 watcher/snapshot paths repaired here.
+- Replay: N/A (non-browser PR event/reducer/server validation) + mitigation: the
+  committed pristine-clone transcript, deterministic lifecycle logs and digests,
+  byte-neutral refusal transcript, seeded property suite, mutation sensitivities, and
+  exact-head inherited gate evidence above. Browser behavior itself is unchanged; the
+  inherited E4-T12 browser run is regression coverage, not the evidence layer claimed
+  for this task.
+
+VERDICT: refuted
+
+### 2026-08-25 — fresh adversarial critic
+
+- **P1 schema-valid reviewer disappears from derived approval — FAILED.** Predicted an
+  accepted pr.approved with reviewer "__proto__" would produce status approved and
+  approvals ["__proto__"]; observed HTTP 202 and a persisted approved review, but
+  reduced state remained open with approvals []. A repeat was then refused
+  pr/duplicate-verdict, and merge was refused pr/merge-without-approval.
+  packages/pr/src/reducer.ts:16-20 uses a normal object as an arbitrary reviewer-key
+  dictionary, so __proto__ invokes the inherited setter; packages/pr/src/events.ts:114-116
+  admits the value. Evidence: evidence/e5-t02-critic-2026-08-25.txt REFUTATION 1.
+  Demand: use a prototype-free dictionary or Map and add a real-door regression.
+- **P1 compacted target frontier is misclassified and retained offsets are unusable —
+  FAILED.** Predicted a compacted-away target offset would return frozen 409
+  pr/fork-offset-out-of-range while an offset still present in retained /dump would
+  open. The target dump contained offset ...0001; both absent ...0000 and retained
+  ...0001 returned 502 dispatch_failed/official_stream_append_failed while the PR log
+  stayed neutral. packages/platform/src/gateway.ts:333-337 routes validation through
+  readExistingNativeBranchRecords; packages/platform/src/repo-home.ts:57-70 uses the
+  ordinary pre-compaction read path instead of the retained resolved dump. Evidence:
+  evidence/e5-t02-critic-2026-08-25.txt REFUTATION 2. Demand: use the retained/resolved
+  store lookup and pin both outcomes.
+- **P2 watcher renewal is not limited to durable journal progress — FAILED.** Predicted
+  repeated mtime changes with byte-identical journal contents would not renew a 150 ms
+  graceful-stop deadline. The plain no-progress stall correctly returned exit 3, but
+  metadata-only churn extended the same deadline to 654 ms before exit 3.
+  packages/cli/src/sync/watch-command.ts:287-316 treats any size:mtimeMs signature
+  change as progress. Evidence: evidence/e5-t02-critic-2026-08-25.txt REFUTATION 3.
+  Demand: renew only on monotonic validated journal-record progress and pin stalled and
+  chattering-stall paths.
+- **Surviving attacks.** The builder transcript independently matched SHA-256
+  f6f8e5b91c6315c7a06fe86c5e27918d106a7a78fa6c7616312e809ded319307,
+  23,020 lines / 1,656,526 bytes, exact source HEAD 99f7e010, one verify marker, one
+  cold-clone pass marker, and zero skips. Fresh probes passed the 13 deterministic
+  lifecycle/refusal/race tests, 1,024 fresh-seed property sequences, 24 review races plus
+  24 terminal races across two gateways, 1,024 arbitrary illegal reducer streams, four
+  snapshot retry/error cases, both offline golden digests in independent processes, and
+  four focused sabotage oracles. Exact commands, inputs, hashes, outputs, and coverage
+  classification are in evidence/e5-t02-critic-2026-08-25.txt.
+- **COVERAGE:** no dead hunks found. Core PR/platform/replay/snapshot behavior was
+  exercised; the three failed domains above are needs-evidence. Types, manifests,
+  generated queue/provenance inventories, and historical proof transcripts are waived
+  as non-runtime artifacts or exact-head gate inputs. **SUITE:** n/a until refutations
+  clear.
+- Replay: N/A (non-browser server/package task) + mitigation: exact-head pristine-clone
+  stream evidence, independent HTTP/CAS/frontier probes, fresh-seed fuzz, offline reducer
+  processes, and sabotage sensitivity. The inherited E4-T12 browser run remains
+  regression coverage only.
+
+### 2026-08-25 — Sol builder rework — exact-head proof passed; resubmitted to fresh critic
+
+- Commit `7034f2c7` closes all three critic refutations without weakening the frozen
+  contract: reviewer verdict state now uses prototype-free key storage and has a real
+  dispatch-door regression for `__proto__`; PR frontier validation reads the retained,
+  resolved target-branch dump so compacted-away offsets are frozen 409 refusals while
+  retained offsets remain usable; graceful watcher shutdown renews only for validated,
+  monotonic journal-record progress, with both stalled and metadata-churn regressions
+  pinned. The critic's original probes remain preserved in
+  `evidence/e5-t02-critic-2026-08-25.txt`.
+- The serialized inherited gates then exposed and preserved three additional regression
+  classes rather than routing around them: browser-emulator startup port contention
+  (`e5-t02-cold-clone-187019c1-port-race-failed.txt`, repaired by `528a35e5` plus
+  retry-port coverage in `fab0c95a`); a cold-start fixture that accidentally depended on
+  a prebuilt `vendor/emulate` artifact (`e5-t02-cold-clone-e3db4283-unbuilt-emulate-failed.txt`,
+  repaired by the source-independent fixture in `06354786`); and nested E2-T04
+  dependency disappearance/Vitest churn
+  (`e5-t02-cold-clone-cce84a23-node-modules-corruption-failed.txt` plus the process
+  sample, guarded by the immutable dependency manifest and eight-case sensitivity
+  apparatus in `f5a433d9`). The first integrity-sensor retry then correctly remained
+  red on its own over-broad boundary
+  (`e5-t02-cold-clone-efe351a9-integrity-sensor-failed.txt`); `a3cf2f63` narrows only
+  exact Vite/Vitest cache roots, preserves no-package synthetic fixtures, executes each
+  target once, and keeps neighboring files, missing/changed/added bytes, and retargeted
+  symlinks red.
+- Exact implementation candidate `6ea2cd5d85d74781efc0482c6cec69d7f2e19022`
+  was fetched and sealed against `origin/main`
+  `6c016988a1829d497cd9cf73b6469ce1912e7434`: merge-base identical, `0` commits
+  behind. Ordered builder commands passed: `pnpm format:check && pnpm lint`;
+  `pnpm typecheck`; `pnpm test` (`72/72` files, `655/655` tests); `pnpm build`;
+  provenance refresh plus its 13 attacks; both no-database checks and sensitivities;
+  `make --no-print-directory _v-dependency-integrity-sensitivity` (8 cases);
+  `make --no-print-directory _verify-E5-T02-inner`; and
+  `node tools/verify/e5_t02_sensitivity.mjs`. The composed proof also records
+  `WORK_QUEUE_POLICY_OK` for 148 scenarios.
+- Exactly one `tools/verify/cold_clone.sh verify-E5-T02` run was launched from that
+  candidate. It exited `0` from a pristine clone. The verbatim transcript is
+  `evidence/e5-t02-cold-clone-6ea2cd5d-passed.txt`: SHA-256
+  `90abc34a9ca60399831ff9da7535864acc0d321473f5b9275e0f36c87453ea8b`,
+  `23,199` lines, `1,668,575` bytes. It contains one exact source-head marker, one
+  `verify-E5-T02: OK`, one
+  `cold_clone: verify-E5-T02 PASSED from a pristine clone`, 19
+  `DEPENDENCY_INTEGRITY_OK` boundaries, and zero `SKIPPED:` markers. The `.meta.txt`
+  companion binds those facts; `e41b1ba3` preserves the proof verbatim and `dc3571fb`
+  refreshes only the two generated no-database inventories it extends.
+- Stream-layer claim: the exact-head run demonstrates both frozen lifecycle goldens
+  replay to their committed digests in independent processes; all ten illegal
+  transition classes return the exact 409 reason without moving head or dump digest;
+  512 seeded generated sequences preserve the state-machine invariants; all three
+  named mutations fail causally; the critic regressions and inherited startup,
+  retained-frontier, watcher-progress, dependency-integrity, and queue-policy paths all
+  execute within the same pristine proof closure.
+- Replay: N/A (server/package event-model task; no E5-T02 browser behavior changed) +
+  mitigation: exact-head pristine-clone transcript, deterministic event logs and
+  digests, 512 property sequences, ten immutable refusal proofs, three causal sabotage
+  failures, and the serialized inherited browser regression gates recorded in that
+  transcript.
+
+VERDICT: verified
+
+### 2026-08-25 — fresh Sol adversarial critic
+
+- **P1 prior refutations repaired — PASSED.** Predicted schema-valid reviewer
+  `"__proto__"` would reduce to `approved` and permit merge, a compacted-away target
+  offset would return exact 409 `pr/fork-offset-out-of-range` while a retained sparse
+  offset would open, and byte-identical journal churn would not renew a 150 ms stop
+  deadline. Independent real-door probes observed all outcomes exactly; hostile
+  dictionary/Unicode reviewer strings also merged legally, and atomic byte-identical
+  inode replacement timed out in 163 ms. Evidence:
+  `evidence/e5-t02-sol-critic-verified-2026-08-25.txt` sections INDEPENDENT PR ATTACKS
+  and INDEPENDENT WATCHER ATTACK.
+- **P1 exact-head proof integrity — PASSED.** The preserved transcript is SHA-256
+  `90abc34a9ca60399831ff9da7535864acc0d321473f5b9275e0f36c87453ea8b`, 23,199
+  lines / 1,668,575 bytes, begins at candidate `6ea2cd5d85d74781efc0482c6cec69d7f2e19022`,
+  and contains one verify marker, one pristine-clone pass marker, zero skips, 19
+  dependency-integrity boundaries, root `72/72 + 655/655`, focused E5-T02
+  `4/4 + 14/14`, 512 property sequences, ten neutral refusal blocks, and three causal
+  E5 mutations. The proof blob is the sole runtime-evidence child of the candidate.
+  Evidence: `evidence/e5-t02-cold-clone-6ea2cd5d-passed.meta.txt:1-25` and transcript
+  lines 23173-23199.
+- **P1 fresh falsification — PASSED.** 1,024 critic-seed sequences admitted 97 merges
+  without an invariant failure; 12 revoke-vs-merge and 12 close-vs-merge races across
+  independent gateways produced only legal histories; both lifecycle goldens matched
+  their committed digests in separate CLI/worker processes; lifecycle/refusal/snapshot
+  tests, emulator startup cleanup, and all eight dependency-integrity sensitivity cases
+  passed. Deleting target-offset membership made both frontier oracles expected-red
+  with 202 instead of 409. Evidence:
+  `evidence/e5-t02-sol-critic-verified-2026-08-25.txt` sections INDEPENDENT LIFECYCLE
+  AND INFRASTRUCTURE ATTACKS, INDEPENDENT OFFLINE REPLAY, and FRESH SABOTAGE.
+- **COVERAGE:** no dead or needs-evidence hunks. PR schema/reducer/validation, platform
+  dispatch/CAS/resolved-target lookup, reducer/CLI replay registration, snapshot retry,
+  watcher progress, emulator startup, and dependency-integrity paths executed. Types,
+  manifests, lockfile, generated queue/provenance/no-database inventories, and historical
+  verbatim transcripts are waived as non-runtime artifacts or exact-head gate inputs.
+- **SUITE:** promoted atomic byte-identical journal replacement into
+  `packages/cli/test/watch-command.test.ts`; focused Prettier and Vitest checks pass.
+- Replay: N/A (non-browser server/package task) + mitigation: exact-head pristine-clone
+  stream transcript, deterministic lifecycle digests, independent HTTP/CAS/frontier
+  probes, fresh-seed fuzz, race stress, offline reducer processes, and sabotage
+  sensitivity. The inherited browser gate is regression coverage only.

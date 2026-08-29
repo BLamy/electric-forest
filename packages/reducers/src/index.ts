@@ -1,4 +1,11 @@
 import { stateDigest, type Event } from "@eforest/protocol";
+import {
+  isPrStreamId,
+  prInitialState,
+  prInitialStateForStream,
+  prReducerVersion,
+  reducePrApplicationEvent,
+} from "@eforest/pr";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { fileContentReducerDefinition } from "./file-content.js";
 import { historyInitialState, historyReducer, historyStateDigest } from "./history.js";
@@ -12,16 +19,19 @@ import {
   repositoryStatusInitialState,
   repositoryStatusReducer,
 } from "./repo-home.js";
+import { issueReducerDefinition } from "./issues.js";
 
 export * from "./registry.js";
 export * from "./repo-home.js";
 export * from "./file-content.js";
 export * from "./history.js";
+export * from "./issues.js";
 
 export interface ReducerDefinition {
   readonly id: string;
   readonly version: number;
   readonly initialState: unknown;
+  readonly initialStateForStream?: (streamId: string) => unknown;
   readonly reduce: (state: unknown, event: Event) => unknown;
   readonly digest: (state: unknown) => string;
   readonly matchesStream: (streamId: string) => boolean;
@@ -99,6 +109,16 @@ export const repositoryStatusReducerDefinition: ReducerDefinition = Object.freez
   matchesStream: (streamId: string) => REPO_HOME_STATUS.test(streamId),
 });
 
+export const prReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "pr",
+  version: prReducerVersion,
+  initialState: prInitialState,
+  initialStateForStream: prInitialStateForStream,
+  reduce: reducePrApplicationEvent,
+  digest: stateDigest,
+  matchesStream: isPrStreamId,
+});
+
 const definitions: readonly ReducerDefinition[] = [
   streamFsReducerDefinition,
   registryReducerDefinition,
@@ -107,6 +127,8 @@ const definitions: readonly ReducerDefinition[] = [
   repositoryStatusReducerDefinition,
   fileContentReducerDefinition,
   historyReducerDefinition,
+  issueReducerDefinition,
+  prReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {
@@ -128,10 +150,13 @@ export function requireReducer(id: string, streamId: string): ReducerDefinition 
 export function replayWithReducer(
   definition: ReducerDefinition,
   events: readonly Event[],
+  streamId?: string,
 ): { readonly state: unknown; readonly digest: string } {
   const state = events.reduce<unknown>(
     (current, event) => definition.reduce(current, event),
-    definition.initialState,
+    streamId !== undefined && definition.initialStateForStream !== undefined
+      ? definition.initialStateForStream(streamId)
+      : definition.initialState,
   );
   return { state, digest: definition.digest(state) };
 }

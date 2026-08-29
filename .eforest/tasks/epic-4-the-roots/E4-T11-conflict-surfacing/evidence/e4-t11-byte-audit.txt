@@ -1,0 +1,5 @@
+versionSha256=base.txt:f34848ca92665c342abd5816c9e3eda0e82180671195362bcd0080544a3bc2ac outcome=superseded-by-stream-offset-0000000000000000_0000000000000002
+versionSha256=base.txt:c9259175689e91ea0195006479573e86c9507b16c0ed3020d48a5c44176ad473 outcome=working-path
+versionSha256=base.txt:782541010298d382ccf73ea85014c3e59e1da1508c20514b1904690ee8029592 outcome=conflict-file
+loser bytes accounted=conflict-file cmp=true
+byte-audit=3-versions accounted=3 lost=0

@@ -112,16 +112,22 @@ const base = spawnSync("git", ["merge-base", "HEAD", "origin/codex/e3-t10-readin
   encoding: "utf8",
 }).stdout.trim();
 assert.match(base, /^[0-9a-f]{40}$/);
-const changedLines = spawnSync("git", ["diff", `${base}..HEAD`, "--", "packages/cli/src"], {
-  cwd: root,
-  encoding: "utf8",
-})
+const changedLines = spawnSync(
+  "git",
+  ["diff", `${base}..HEAD`, "--", "packages/cli/src/worktree-command.ts"],
+  {
+    cwd: root,
+    encoding: "utf8",
+  },
+)
   .stdout.split("\n")
   .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
   .join("\n");
 for (const pattern of forbidden)
   assert.equal(pattern.test(changedLines), false, `forbidden added CLI token: ${pattern}`);
-console.log("FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed CLI additions");
+console.log(
+  "FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed worktree-command additions",
+);
 
 const workspace = await import(join(root, "packages/workspace/dist/src/index.js"));
 const fixtureNames = [

@@ -174,6 +174,50 @@ describe("canonical history projection", () => {
     });
   });
 
+  it("normalizes an official inherited prefix before projecting branch history", async () => {
+    const response = await gateway(undefined, [
+      record(
+        0,
+        stamped({ type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 1 }, "alice", 1),
+      ),
+      record(1, {
+        type: "fs.branch.fork",
+        payload: { v: 1, parentStreamId: mainStream, forkOffset: offsetForOrdinal(0) },
+        ts: 3,
+      }),
+      record(
+        2,
+        stamped(
+          {
+            type: "fs.file.create",
+            payload: { v: 2, path: "docs/feature.md", contentStreamId: "fs:feature:file" },
+            ts: 4,
+          },
+          "carol",
+          1,
+        ),
+      ),
+    ]).handle(
+      new Request(
+        "https://platform.test/api/repos/maple/reading-room/feature/events?projection=1&reducer=history",
+      ),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      readonly events: readonly { readonly type: string; readonly sourceStreamId: string }[];
+    };
+    expect(body.events.map((event) => event.type)).toEqual([
+      "fs.dir.create",
+      "fs.branch.fork",
+      "fs.file.create",
+    ]);
+    expect(body.events.map((event) => event.sourceStreamId)).toEqual([
+      mainStream,
+      featureStream,
+      featureStream,
+    ]);
+  });
+
   it.each([
     ["native offset", [{ offset: "garbage", type: "future.event", payload: { v: 99 }, ts: 1 }]],
     ["event type", [{ offset: offsetForOrdinal(0), type: 42, payload: { v: 99 }, ts: 1 }]],

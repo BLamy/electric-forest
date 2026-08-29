@@ -315,16 +315,15 @@ async function run() {
   let platformServer;
   let namespaces;
   let projector;
-  const originalDateNow = Date.now;
   let logicalTime = LOGICAL_START;
-  Date.now = () => logicalTime++;
   try {
     const officialUrl = await official.start();
     const adapter = new modules.platform.OfficialStreamAdapter({ baseUrl: officialUrl });
     namespaces = new modules.platform.NamespaceDispatcher(adapter);
+    const now = () => logicalTime++;
     const identity = new modules.platform.IdentityStore({
       baseUrl: officialUrl,
-      now: () => logicalTime++,
+      now,
       recoverNamespaceOperation: (operationId, operation) =>
         namespaces.recover(operationId, operation.streamId, operation.event),
     });
@@ -474,7 +473,7 @@ async function run() {
       await modules.client.createDurableJsonStream({
         url: streamUrl(officialUrl, `fs:${name}:main:meta`),
       });
-      return new modules.streamfs.StreamFsRepo(officialUrl, fetch, name);
+      return new modules.streamfs.StreamFsRepo(officialUrl, fetch, name, "main", now);
     }
     const reading = await createRepo("maple/reading-room");
     const secret = await createRepo("maple/secret-garden");
@@ -671,7 +670,6 @@ async function run() {
       `E3_T01_SEED_OK out=${path.resolve(output)} streams=${allStreams.length} main-head=${mainPostFork.offset} branch-head=${branchPostFork.offset} fork-event=${forkEvent.offset}\n`,
     );
   } finally {
-    Date.now = originalDateNow;
     if (projector) await projector.stop();
     namespaces?.terminate();
     if (platformServer) {
