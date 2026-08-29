@@ -1,0 +1,6 @@
+E3-T04 two-client live registry projection
+bootstrap clients=2 checkpoint=0000000000000000_0000000000000002 digest=6c10136fddb63581ca7a169b755e34fb83623dc940095983f9f228b7d1e6097e reconnect=true
+live checkpoint=0000000000000000_0000000000000003 digest=e553794824d8e921f588e9e951745fbb34a8cdfe091e784a7ca4866d5fdfdb05 cli=equal reloads=0 clients=2
+concurrent public=maple/new-leaf private=oak/hidden-vault org-sort=new-leaf,reading-room
+states loading=true empty=organizations/oak refusal=invalid-authorized-projection private-leak hidden-vault=false fs:oak=false outsider=false
+console-errors=0 page-errors=0 request-failures=0

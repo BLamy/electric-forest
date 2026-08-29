@@ -1,0 +1,29 @@
+E3-T04 registry reducer mutation sensitivity
+candidate=f25aede
+disposable-worktree=/tmp/e3-t04-sensitivity
+mutation=packages/reducers/src/registry.ts registryStateDigest adds sensitivityMutation
+command=make --no-print-directory verify-E3-T04
+expected=nonzero
+observed=exit-2
+
+Test Files  2 failed | 36 passed (38)
+Tests       2 failed | 435 passed (437)
+
+FAIL packages/platform/test/registry.rebuild.test.ts
+registry dump digest instrument > ef replay --digest over a __registry__ dump equals registryStateDigest
+Expected: 18ebeba18d1a9c55e31e0c6a8e91ad2d51d93c9a6b922c37a29a58e890a261f3
+Received: 9e1a49ac763bea8c2b7f6452cb1b6eca4af9150f8b94808db6224653e04f54e4
+Assertion: packages/platform/test/registry.rebuild.test.ts:464
+
+FAIL packages/platform/test/registry.test.ts
+authenticated registry application projection > replays through the shared reducer with contiguous private-safe offsets
+Expected: 687a18ffcc724cf64100f45f0894e5158b82a63a3d33b20b26c33b7c36e779ea
+Received: e53a0b42d9732b19fa5aa26a3c57086facd0f2224832010659c38e19cba59712
+Assertion: packages/platform/test/registry.test.ts:223
+
+make[1]: *** [_v-test] Error 1
+make: *** [verify-E3-T04] Error 2
+
+RESULT: expected-red. The cheap deterministic suite rejected the registry digest
+mutation before the browser stage, so the acceptance target could not falsely publish
+the mutated reducer as verified.

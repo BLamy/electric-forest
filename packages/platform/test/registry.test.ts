@@ -8,6 +8,7 @@ import {
   RegistryProjector,
   registryInitialState,
   registryReducer,
+  registryStateDigest,
   RegistryStreamCorruptError,
   replayRegistryStream,
 } from "../src/index.js";
@@ -196,6 +197,89 @@ describe("registry read doors (snapshot)", () => {
     // Unknown org and all-private org are indistinguishable.
     const unknownOrg = await getDoor(fixture, "/registry/org/nonesuch", DAVE);
     expect(unknownOrg).toEqual({ status: 200, body: { asOf: offsetForOrdinal(10), entries: [] } });
+  });
+});
+
+describe("authenticated registry application projection", () => {
+  it("replays through the shared reducer with contiguous private-safe offsets", async () => {
+    const fixture = await setup();
+    await buildLifecycleTree(fixture);
+    const response = await fetch(`${fixture.baseUrl}/registry/me?projection=1&reducer=registry`, {
+      headers: { authorization: `Bearer ${await fixture.token(ALICE)}` },
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      readonly events: readonly (Event & { readonly offset: string })[];
+      readonly checkpoint: string;
+      readonly reducer: { readonly id: string; readonly version: number };
+    };
+    expect(body.reducer).toEqual({ id: "registry", version: 1 });
+    expect(body.events.map((event) => event.offset)).toEqual(
+      body.events.map((_, index) => offsetForOrdinal(index)),
+    );
+    const state = replayRegistryStream(body.events);
+    expect(Object.keys(state.orgs.acme!.repos).sort()).toEqual(["grove", "secret"]);
+    expect(Object.keys(state.orgs.beta?.repos ?? {})).toEqual([]);
+    expect(registryStateDigest(state)).toBe(stateDigest(state));
+    expect(body.checkpoint).toBe(body.events.at(-1)!.offset);
+    const wire = JSON.stringify(body);
+    expect(wire).not.toContain('"edge"');
+    expect(wire).not.toContain('"open"');
+    expect(wire).not.toContain("fs:beta/");
+  });
+
+  it("follows from the projected checkpoint without exposing hidden-event gaps", async () => {
+    const fixture = await setup();
+    await buildLifecycleTree(fixture);
+    const token = await fixture.token(ALICE);
+    const initial = await fetch(`${fixture.baseUrl}/registry/me?projection=1&reducer=registry`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const bootstrap = (await initial.json()) as {
+      readonly events: readonly unknown[];
+      readonly checkpoint: string;
+    };
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:beta",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "beta-private", project: "api", visibility: "private" },
+          20,
+        ),
+        BOB,
+      ),
+    );
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "sprout", project: "web", visibility: "private" },
+          21,
+        ),
+        ALICE,
+      ),
+    );
+    await awaitRegistryLength(fixture, 13);
+    const followed = await fetch(
+      `${fixture.baseUrl}/registry/me?projection=1&reducer=registry&live=1&checkpoint=${encodeURIComponent(bootstrap.checkpoint)}&waitMs=0`,
+      { headers: { authorization: `Bearer ${token}` } },
+    );
+    expect(followed.status).toBe(200);
+    const body = (await followed.json()) as {
+      readonly events: readonly {
+        readonly offset: string;
+        readonly payload: { readonly repo?: string };
+      }[];
+      readonly checkpoint: string;
+    };
+    expect(body.events).toHaveLength(1);
+    expect(body.events[0]!.payload.repo).toBe("sprout");
+    expect(body.events[0]!.offset).toBe(offsetForOrdinal(bootstrap.events.length));
+    expect(JSON.stringify(body)).not.toContain("beta-private");
   });
 });
 

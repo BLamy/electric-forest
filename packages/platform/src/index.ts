@@ -189,8 +189,10 @@ export {
   type RegistryEntry,
 } from "./registry/filter.js";
 export {
+  authorizedRegistryProjection,
   frameVisible,
   parseRegistryRecord,
+  registryApplicationProjectionResponse,
   registryLongPollResponse,
   registrySnapshotResponse,
   registrySseResponse,

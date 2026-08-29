@@ -44,6 +44,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eforest/reducers':
+        specifier: workspace:*
+        version: link:../../packages/reducers
       '@eforest/web-hooks':
         specifier: workspace:*
         version: link:../../packages/web-hooks
