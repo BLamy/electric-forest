@@ -1,0 +1,7 @@
+race-runs=16
+chunk-vs-chunk accepted=16 refused=16
+seal-vs-chunk accepted=16 refused=16
+seal-vs-seal accepted=16 refused=16
+accepted-total=48
+refused-total=48
+illegal-logs=0

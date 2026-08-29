@@ -1,4 +1,5 @@
 import { roleOf, type AuthorizationView, type IdentityGrantView } from "@eforest/identity";
+import { parseEvidenceContentStreamId, parseEvidenceStreamIdentity } from "@eforest/evidence";
 import { isRepoIssuesStreamId } from "@eforest/issues";
 import { parsePrStreamId } from "@eforest/pr";
 import type { NamespaceView } from "../ns/reducer.js";
@@ -158,11 +159,11 @@ export function repoTargetFromPath(
  * Classify a dispatch stream id. Namespace-admin events always target the
  * namespace control plane (the E2-T06 dispatcher enforces the exact stream
  * shape and refuses with its frozen taxonomy). Application events resolve:
- * `fs:<org>/<repo>:<branch>:<meta|file:…>` is a repo/branch stream, dunder
- * ids (`__identity__`, …), the gateway-maintained `repo-issues:` catalogs,
- * and every other `ns:`-prefixed id are internal and never exist for
- * applications; anything else is a legacy sandbox stream (the frozen E2-T03
- * dispatch surface).
+ * `fs:<org>/<repo>:<branch>:<meta|file:…>` is a repo/branch stream; issue, PR,
+ * and evidence ids are repo-scoped application streams on `main`; dunder ids
+ * (`__identity__`, …), the gateway-maintained `repo-issues:` catalogs, and
+ * every other `ns:`-prefixed id are internal and never exist for applications;
+ * anything else is a legacy sandbox stream (the frozen E2-T03 dispatch surface).
  */
 export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKind): AuthzTarget {
   if (eventKind === "namespace") return { kind: "control", streamId };
@@ -212,6 +213,18 @@ export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKi
       branch: "main",
       streamId,
     };
+  }
+  if (streamId.startsWith("evidence-content:")) {
+    const identity = parseEvidenceContentStreamId(streamId);
+    return identity === undefined
+      ? { kind: "malformed", input: streamId }
+      : { kind: "repo", org: identity.org, repo: identity.repo, branch: "main", streamId };
+  }
+  if (streamId.startsWith("evidence:")) {
+    const identity = parseEvidenceStreamIdentity(streamId);
+    return identity === undefined
+      ? { kind: "malformed", input: streamId }
+      : { kind: "repo", org: identity.org, repo: identity.repo, branch: "main", streamId };
   }
   if (streamId.startsWith("ns:") || INTERNAL_PATTERN.test(streamId)) {
     return { kind: "internal", streamId };

@@ -14,10 +14,12 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "start": "node dist/src/bin.js"
+    "start": "node dist/src/bin.js",
+    "test:e5-t10": "cd ../.. && vitest run --maxWorkers=1 packages/platform/test/evidence-live-read.test.ts packages/platform/test/evidence-contract.test.ts && vitest run --maxWorkers=1 packages/platform/test/authz.gateway.test.ts -t 'applies Epic-2 credential and write-grant refusals to both evidence stream families'"
   },
   "dependencies": {
     "@eforest/client": "workspace:*",
+    "@eforest/evidence": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/issues": "workspace:*",
     "@eforest/pr": "workspace:*",

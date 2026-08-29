@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"bytes":"AQID","seq":0,"v":1},"ts":1,"type":"content.chunk"}
+{"offset":"0000000000000000_0000000000000001","payload":{"chunks":1,"sha256":"0000000000000000000000000000000000000000000000000000000000000000","size":3,"v":1},"ts":2,"type":"content.sealed"}
+{"offset":"0000000000000000_0000000000000002","payload":{"chunks":1,"sha256":"039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81","size":3,"v":1},"ts":3,"type":"content.sealed"}
+{"offset":"0000000000000000_0000000000000003","payload":{"bytes":"BA==","seq":1,"v":1},"ts":4,"type":"content.chunk"}

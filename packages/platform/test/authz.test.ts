@@ -410,6 +410,20 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
     expect(
       classifyDispatchTarget("fs:acme/forest:main:file:src/index.ts", "application").kind,
     ).toBe("repo");
+    expect(classifyDispatchTarget("evidence:acme/forest/issue/17", "application")).toEqual({
+      kind: "repo",
+      org: "acme",
+      repo: "forest",
+      branch: "main",
+      streamId: "evidence:acme/forest/issue/17",
+    });
+    expect(classifyDispatchTarget("evidence-content:acme/forest/run-17", "application")).toEqual({
+      kind: "repo",
+      org: "acme",
+      repo: "forest",
+      branch: "main",
+      streamId: "evidence-content:acme/forest/run-17",
+    });
     for (const malformed of [
       "fs:acme:main:meta",
       "fs:acme/forest:main",
@@ -420,6 +434,11 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
       "fs:ACME/forest:main:meta",
       "fs:",
       "fs::x:meta",
+      "evidence:acme/forest/issue",
+      "evidence:acme/forest/issue/bad/id",
+      "evidence:ACME/forest/issue/17",
+      "evidence-content:acme/forest",
+      "evidence-content:acme/forest/bad/id",
     ]) {
       expect(classifyDispatchTarget(malformed, "application").kind, malformed).toBe("malformed");
     }

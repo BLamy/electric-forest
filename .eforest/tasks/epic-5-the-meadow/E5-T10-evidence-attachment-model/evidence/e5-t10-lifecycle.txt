@@ -1,0 +1,7 @@
+issue-source=issue:maple/reading-room/e5-t10-golden lifecycle=opened head=0000000000000000_0000000000000000 dump-sha256=8be88a9b5b98e8d9a5d05aeff13c737281d9bb514df2fbf701cd807d2a04c53c unchanged=true
+pr-source=pr:maple/reading-room/contract-pr lifecycle=opened,approved,merged status=merged head=0000000000000000_0000000000000002 digest=8f0934a64c8e74683958286627167eec14ec2d20b91d7f514fec73feb0cee617 dump-sha256=93650df65df48bc01ea7a030eee8aa94987a58382b510a71cb310af4d054f63a unchanged=true
+issue-evidence=evidence:maple/reading-room/issue/e5-t10-golden entries=2 content=1 references=1 downloaded-bytes=802 byte-parity=true
+pr-evidence=evidence:maple/reading-room/pr/contract-pr entries=2 content=1 references=1 downloaded-bytes=29 byte-parity=true
+reference-events=2 exact-roundtrip=true bytes-fields=absent
+committed-issue-goldens=fresh-dispatch-byte-equal
+source-entity-logs-moved=0

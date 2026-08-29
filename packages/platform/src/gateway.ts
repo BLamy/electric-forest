@@ -1,5 +1,24 @@
 import { createHash } from "node:crypto";
 import {
+  attachmentInitialState,
+  attachmentInitialStateForStream,
+  attachmentReducer,
+  contentInitialStateForStream,
+  contentReducer,
+  evidenceContentStreamId,
+  evidenceStreamId,
+  EvidenceRefusalError,
+  EvidenceSchemaError,
+  EvidenceUnknownActionError,
+  isEvidenceActionType,
+  isEvidenceContentActionType,
+  isEvidenceContentStreamId,
+  isEvidenceEntityType,
+  isEvidenceStreamId,
+  parseEvidenceStreamIdentity,
+  type EvidenceResolvedStream,
+} from "@eforest/evidence";
+import {
   isLabelActionType,
   isRepoLabelsStreamId,
   labelInitialState,
@@ -536,6 +555,92 @@ async function validatePrDispatch(
       return branchRecords === undefined
         ? undefined
         : { streamId: branchStreamId, offsets: nativeBranchOffsets(branchRecords) };
+    },
+  });
+}
+
+function isLooseEvidenceStreamId(streamId: string): boolean {
+  return parseEvidenceStreamIdentity(streamId) !== undefined;
+}
+
+function evidenceEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new EvidenceSchemaError();
+  }
+  const record = value as Record<string, unknown>;
+  const base = { type: record.type, payload: record.payload, ts: record.ts };
+  if (
+    !isEvent(base) ||
+    base.payload === null ||
+    typeof base.payload !== "object" ||
+    Array.isArray(base.payload)
+  ) {
+    throw new EvidenceSchemaError();
+  }
+  const payload = Object.fromEntries(
+    Object.entries(base.payload as Record<string, unknown>).filter(
+      ([key]) => key !== "actor" && key !== "writer",
+    ),
+  );
+  const offset =
+    typeof record.offset === "string" &&
+    record.offset !== OFFSET_BEFORE_FIRST &&
+    isWellFormedOffset(record.offset)
+      ? (record.offset as Offset)
+      : fallbackOffset;
+  return { ...base, payload, offset } as Event;
+}
+
+function reduceEvidenceState(streamId: string, records: readonly Event[]): unknown {
+  if (isEvidenceContentStreamId(streamId)) {
+    return records.reduce(contentReducer, contentInitialStateForStream(streamId));
+  }
+  if (isEvidenceStreamId(streamId)) {
+    return records.reduce(attachmentReducer, attachmentInitialStateForStream(streamId));
+  }
+  if (isLooseEvidenceStreamId(streamId)) return attachmentInitialState;
+  throw new EvidenceUnknownActionError();
+}
+
+async function validateEvidenceDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+): Promise<void> {
+  const normalized = records.map((record, index) =>
+    evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const nextOffset = offsetForOrdinal(normalized.length);
+  const action = evidenceEventWithoutServerMetadata(event, nextOffset);
+  await actionValidators.validate(action, {
+    streamId,
+    state: reduceEvidenceState(streamId, normalized),
+    headOffset: normalized.at(-1)
+      ? ((normalized.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: normalized,
+    resolveStream: async (targetStreamId): Promise<EvidenceResolvedStream | undefined> => {
+      let values: readonly unknown[];
+      try {
+        values = await streams.read(targetStreamId);
+      } catch (error) {
+        if (isDurableNotFound(error)) return undefined;
+        throw error;
+      }
+      const targetRecords = values.map((record, index) =>
+        evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+      );
+      const state =
+        isEvidenceStreamId(targetStreamId) || isEvidenceContentStreamId(targetStreamId)
+          ? reduceEvidenceState(targetStreamId, targetRecords)
+          : undefined;
+      return {
+        records: targetRecords,
+        ...(state === undefined ? {} : { state }),
+      };
     },
   });
 }
@@ -1351,6 +1456,9 @@ export class PlatformGateway {
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
     const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
     const branchGenesisEvent = isFsBranchGenesisEvent(parsed.event) ? parsed.event : undefined;
+    const evidenceStream =
+      isEvidenceStreamId(parsed.streamId) || isLooseEvidenceStreamId(parsed.streamId);
+    const evidenceContentStream = isEvidenceContentStreamId(parsed.streamId);
     const target = parsed.streamId.startsWith("issue-board:")
       ? ({ kind: "internal" as const, streamId: parsed.streamId } satisfies AuthzTarget)
       : branchForkEvent === undefined
@@ -1440,6 +1548,15 @@ export class PlatformGateway {
       if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
         throw new PrUnknownActionError();
       }
+      if (
+        !namespaceEvent &&
+        ((isEvidenceActionType(parsed.event.type) && !evidenceStream) ||
+          (isEvidenceContentActionType(parsed.event.type) && !evidenceContentStream) ||
+          (evidenceStream && !isEvidenceActionType(parsed.event.type)) ||
+          (evidenceContentStream && !isEvidenceContentActionType(parsed.event.type)))
+      ) {
+        throw new EvidenceUnknownActionError();
+      }
       // E2-T07: every dispatch is decided before any official-stream
       // operation. Repo targets replay both views; control and sandbox
       // targets are decided purely (no reads) and keep their frozen door
@@ -1485,6 +1602,12 @@ export class PlatformGateway {
       if (isPrStreamId(parsed.streamId)) {
         if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
         if (!isPrEvent(parsed.event)) throw new PrSchemaError();
+      }
+      if (evidenceStream && !isEvidenceActionType(parsed.event.type)) {
+        throw new EvidenceUnknownActionError();
+      }
+      if (evidenceContentStream && !isEvidenceContentActionType(parsed.event.type)) {
+        throw new EvidenceUnknownActionError();
       }
 
       const eventFor = async (
@@ -1590,6 +1713,13 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
+          if (evidenceStream || evidenceContentStream) {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
           let fullWriteContentStaged = false;
           const validateApplication = async (
             records: readonly unknown[],
@@ -1616,6 +1746,15 @@ export class PlatformGateway {
             }
             if (isPrStreamId(parsed.streamId)) {
               await validatePrDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.streams,
+              );
+            }
+            if (evidenceStream || evidenceContentStream) {
+              await validateEvidenceDispatch(
                 records,
                 stamped,
                 parsed.streamId,
@@ -1679,7 +1818,10 @@ export class PlatformGateway {
             error instanceof LabelRefusalError ||
             error instanceof PrUnknownActionError ||
             error instanceof PrSchemaError ||
-            error instanceof PrRefusalError
+            error instanceof PrRefusalError ||
+            error instanceof EvidenceUnknownActionError ||
+            error instanceof EvidenceSchemaError ||
+            error instanceof EvidenceRefusalError
           ) {
             throw error;
           }
@@ -1760,14 +1902,16 @@ export class PlatformGateway {
       if (
         error instanceof IssueUnknownActionError ||
         error instanceof PrUnknownActionError ||
-        error instanceof LabelUnknownActionError
+        error instanceof LabelUnknownActionError ||
+        error instanceof EvidenceUnknownActionError
       ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
       if (
         error instanceof IssueSchemaError ||
         error instanceof PrSchemaError ||
-        error instanceof LabelSchemaError
+        error instanceof LabelSchemaError ||
+        error instanceof EvidenceSchemaError
       ) {
         return json(422, { error: { class: "schema-violation" } });
       }
@@ -1778,6 +1922,9 @@ export class PlatformGateway {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof PrRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof EvidenceRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
@@ -2055,17 +2202,35 @@ export class PlatformGateway {
     }
     const selectedStream = url.searchParams.get("stream");
     const selectedIssueId = url.searchParams.get("issueId");
-    if (selectedStream !== null && selectedStream !== "repo-labels" && selectedStream !== "issue") {
+    const selectedEntityType = url.searchParams.get("entityType");
+    const selectedEntityId = url.searchParams.get("entityId");
+    const selectedAttachmentId = url.searchParams.get("attachmentId");
+    if (
+      selectedStream !== null &&
+      selectedStream !== "repo-labels" &&
+      selectedStream !== "issue" &&
+      selectedStream !== "evidence" &&
+      selectedStream !== "evidence-content"
+    ) {
       return failure(400, "invalid_request", "invalid_stream_selector");
     }
     if (
-      ((selectedStream === "repo-labels" || selectedStream === "issue") && decoded[2] !== "main") ||
+      (selectedStream !== null && decoded[2] !== "main") ||
       (selectedStream === "issue" && selectedIssueId === null) ||
-      (selectedStream !== "issue" && selectedIssueId !== null)
+      (selectedStream !== "issue" && selectedIssueId !== null) ||
+      (selectedStream === "evidence" &&
+        (selectedEntityType === null ||
+          !isEvidenceEntityType(selectedEntityType) ||
+          selectedEntityId === null)) ||
+      (selectedStream !== "evidence" &&
+        (selectedEntityType !== null || selectedEntityId !== null)) ||
+      (selectedStream === "evidence-content" && selectedAttachmentId === null) ||
+      (selectedStream !== "evidence-content" && selectedAttachmentId !== null)
     ) {
       return failure(400, "invalid_request", "invalid_stream_selector");
     }
     let selectedIssueStream: string | undefined;
+    let selectedEvidenceStream: string | undefined;
     if (selectedStream === "issue") {
       try {
         selectedIssueStream = issueStreamId(decoded[0]!, decoded[1]!, selectedIssueId!);
@@ -2073,12 +2238,37 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_issue_id");
       }
     }
+    if (selectedStream === "evidence") {
+      try {
+        selectedEvidenceStream = evidenceStreamId({
+          org: decoded[0]!,
+          repo: decoded[1]!,
+          entityType: selectedEntityType as "issue" | "pr",
+          entityId: selectedEntityId!,
+        });
+      } catch {
+        return failure(400, "invalid_request", "invalid_entity_id");
+      }
+    }
+    if (selectedStream === "evidence-content") {
+      try {
+        selectedEvidenceStream = evidenceContentStreamId(
+          decoded[0]!,
+          decoded[1]!,
+          selectedAttachmentId!,
+        );
+      } catch {
+        return failure(400, "invalid_request", "invalid_attachment_id");
+      }
+    }
     const target =
       selectedStream === "repo-labels"
         ? classifyDispatchTarget(repoLabelsStreamId(decoded[0]!, decoded[1]!), "application")
         : selectedIssueStream !== undefined
           ? classifyDispatchTarget(selectedIssueStream, "application")
-          : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
+          : selectedEvidenceStream !== undefined
+            ? classifyDispatchTarget(selectedEvidenceStream, "application")
+            : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
     const live = url.searchParams.get("live") === "1";
     const operation = live ? "follow" : "read";
 

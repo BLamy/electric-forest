@@ -1,0 +1,11 @@
+source=e5-t10-source.jsonl
+content=e5-t10-content.jsonl
+attachment=e5-t10-attachments.jsonl
+source-bytes=802
+chunks=1
+source-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+seal-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+attachment-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+reducer-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+cmp=0
+digest-chain=equal

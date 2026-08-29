@@ -1,0 +1,7 @@
+stream=evidence:acme/forest/issue/authz-owner credential=missing status=401 reason=missing_bearer_token log-neutral=true
+stream=evidence-content:acme/forest/authz-content credential=missing status=401 reason=missing_bearer_token log-neutral=true
+stream=evidence:acme/forest/issue/authz-owner credential=no-scope status=403 reason=authz/write-grant-required log-neutral=true
+stream=evidence-content:acme/forest/authz-content credential=no-scope status=403 reason=authz/write-grant-required log-neutral=true
+stream=evidence:acme/forest/issue/authz-owner credential=wrong-branch status=403 reason=authz/write-grant-required log-neutral=true
+stream=evidence-content:acme/forest/authz-content credential=wrong-branch status=403 reason=authz/write-grant-required log-neutral=true
+created-streams=0 target-operations=0

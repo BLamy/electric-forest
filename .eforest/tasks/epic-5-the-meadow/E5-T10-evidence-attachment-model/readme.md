@@ -3,7 +3,7 @@ id: E5-T10
 epic: 5
 title: "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
 priority: 510
-status: pending
+status: verified
 depends_on: [E5-T01, E5-T02]
 estimate: M
 capstone: false
@@ -379,3 +379,113 @@ refutation → promote at minimum: your hostile byte corpus and any accepted-log
 the fuzzer never generated into the committed corpora.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented
+
+- Implementation commits: `ff0f241e` adds the frozen `@eforest/evidence` event,
+  reducer, validator, upload/download, and stream-identity package; `c0a30824` wires its
+  two stream families through repository authorization, both dispatch writer paths,
+  application projection selectors, and the shared reducer registry.
+- Sol ran `pnpm --filter @eforest/evidence build` and
+  `pnpm --filter @eforest/evidence test`: 3 focused files, 22 tests passed, including
+  binary/empty/multi-chunk round trips, lying seals, all frozen refusal helpers,
+  tombstones, URL smuggling, and server-stamped event normalization.
+- Platform integration ran `pnpm --filter @eforest/platform build`, then
+  `pnpm exec vitest run packages/platform/test/authz.test.ts
+  packages/reducers/src/index.test.ts packages/platform/test/evidence-live-read.test.ts`:
+  3 files, 25 tests passed. The final HTTP seam rerun of
+  `packages/platform/test/evidence-live-read.test.ts` passed 2 tests after adding the
+  explicit `evidence/unknown-entity-type` assertion. `git diff --check` and a final
+  `pnpm install --frozen-lockfile` passed.
+- Replay: N/A (server/package task with no browser-reaching surface) + mitigation:
+  reducer-derived SHA-256, byte-round-trip, typed-refusal, repository-authz, automatic
+  stream creation, and online application-projection parity are covered by the focused
+  package and real HTTP tests above. No dependency ticket verifier, root suite,
+  cold-clone gate, or previously completed ticket gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: refuted
+
+- **P1 replay totality — FAILED.** Predicted the first schema-valid seal attempt would
+  be terminal even when its claim was false; at `0306a3d4`, `contentReducer` accepted a
+  later truthful seal after a lying seal and changed the same replay from
+  `sealed: false, sealError: "digest-mismatch"` to sealed. Preserve the first error,
+  ignore every later chunk/seal, and freeze the sequence as a regression golden.
+- **Contract sufficiency — FAILED.** The submission had no committed real-issue plus
+  merged-PR lifecycle proof, all-fourteen door/refusal-neutral transcript, exact
+  512 KiB and 16 MiB boundary proof, evidence-stream authorization proof, concurrent
+  dispatch proof, or deterministic generated corpus of at least 500 cases. Add tests
+  and immutable artifacts that exercise those mouths rather than describing them.
+- **Replay apparatus — FAILED.** No committed E5-T10 goldens/digests, byte-round-trip
+  chain, independent-process replay comparison, or content/attachment mutation
+  sensitivity proof existed, and there was no focused `verify-E5-T10` entrypoint.
+  Demand a non-recursive ticket target that validates committed artifacts without
+  importing dependency, root, cold-clone, or browser/Replay gates.
+- **SUITE:** none promoted until the totality defect and evidence gaps clear.
+
+### 2026-08-27 — builder rework — implemented
+
+- Implementation commit: `1e89c55f`. `contentReducer` and its door validator now make
+  the first schema-valid seal attempt terminal whether it succeeds or records a
+  `sealError`; the lying-then-truthful sequence is covered by a unit regression and the
+  committed `e5-t10-lying-seal.jsonl` golden (`ed19de74…` state digest).
+- The focused real-HTTP contract now reproduces the committed issue goldens from an
+  802-byte source artifact, preserves the issue source log, and accepts content plus a
+  reference on an opened/approved/**merged** PR without moving that terminal PR log.
+  It drives all fourteen frozen refusals with before/after head and dump digests, both
+  sides of 512 KiB and 16 MiB, six authorization refusals across both stream families,
+  and 16 runs each of chunk/chunk, seal/chunk, and seal/seal races (48 accepted, 48
+  refused, zero illegal logs).
+- Committed replay evidence includes three canonical JSONL goldens and frozen digests,
+  lifecycle/authz/boundary/concurrency/refusal transcripts, a chained source → seal →
+  attachment → reducer SHA-256 round trip, four seeds covering 512 deterministic
+  generated cases, and two mutation sentinels. Replays run twice each in separate Node
+  processes with distinct working directories and time zones; protected artifacts are
+  hashed before/after to prove the verifier does not regenerate them.
+- Final focused command: `make verify-E5-T10` — PASS. Evidence package: 5 files / 27
+  tests; platform contract/live-read: 2 files / 6 tests; authorization: 1 focused test
+  passed (23 skipped by filter); verifier: `goldens=3`, `digest-processes=6`,
+  `refusal-blocks=14`, `property-cases=512`, `roundtrip-bytes=802`; both mutation
+  markers printed `EXPECTED-FAIL OK` before `verify-E5-T10: OK`.
+- Replay: N/A (server/package rework with no browser-reaching surface) + mitigation:
+  the committed stream logs, exact digests, real dispatch transcripts, replay
+  round-trip, concurrency checks, and sensitivity mutations above are the evidence
+  layer. Per rework scope, no dependency/root/full suite, cold clone, browser, or Replay
+  gate was run. Status remains `implemented` pending a fresh critic verdict.
+
+### 2026-08-27 — builder evidence repair — implemented
+
+- Repair commit: `842836ae`. The real `/api/dispatch` contract now appends four
+  immutable refusal blocks after the original fourteen: a wrong-SHA `content.sealed`
+  attempt against a one-chunk content stream, `javascript:`, `data:`, and an exactly
+  2049-character Replay URL. Every response is the expected typed 409 refusal and every
+  watched stream has byte-identical before/after head offsets and dump SHA-256 values.
+- The replay verifier no longer launches a ticket worker that imports the evidence
+  reducers. Each of the three goldens now passes through two independent `ef replay`
+  CLI processes: stream-id inference from a foreign cwd/time zone and explicit
+  `--reducer evidence|evidence-content --stream-id` resolution from the repository.
+  The focused target builds that CLI mouth, runs the shared reducer-registry test, and
+  is now a prerequisite of `verify-all`; `verify-all` itself was not run.
+- The single replacement `make verify-E5-T10` passed: evidence package 5 files / 27
+  tests; platform live/contract 2 files / 6 tests in 134.81 seconds; authorization 1
+  focused test passed with 23 filtered; reducer registry 1 file / 9 tests; verifier
+  `goldens=3`, `digest-processes=6`, `refusal-blocks=18`, `property-cases=512`,
+  `roundtrip-bytes=802`; both mutation sentinels printed `EXPECTED-FAIL OK` before
+  `verify-E5-T10: OK`.
+- Replay: N/A (server/package evidence repair with no browser-reaching surface) +
+  mitigation: real-gateway log-neutral transcripts and actual `ef replay` CLI digest
+  processes. No root/full suite, dependency gate, cold clone, browser, Replay, or
+  repeated E5-T10 gate was run. Status remains `implemented` for a fresh critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- First-seal terminality is closed: a dishonest first seal freezes `sealError`, and
+  later truthful seals or chunks cannot rehabilitate that stream; the immutable
+  lying-seal golden reproduces the terminal unsealed state.
+- The real `/api/dispatch` proof covers wrong-SHA sealing plus `javascript:`, `data:`,
+  and overlong references as typed 409 refusals with byte-identical before/after logs.
+- Six independent `ef replay` processes exercise both registry inference and explicit
+  reducer resolution for the committed goldens. Lifecycle, authorization, exact size
+  boundaries, concurrency, 512 generated cases, and both mutation sentinels remain
+  artifact-bound at exact head `4327dad7`.
+- The critic inspected source and committed evidence only. It did not rerun a gate,
+  dependency ticket, root suite, browser session, or Replay session.

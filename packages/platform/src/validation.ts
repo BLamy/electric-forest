@@ -1,4 +1,5 @@
 import type { Event, Offset } from "@eforest/protocol";
+import { evidenceActionValidators, type EvidenceResolvedStream } from "@eforest/evidence";
 import {
   LabelSchemaError,
   validateLabelEvent,
@@ -23,6 +24,7 @@ export interface ActionValidationContext {
   readonly records: readonly Event[];
   readonly issueSource?: IssueEnvelopeSource;
   readonly resolveBranch?: (streamId: string) => Promise<PrBranchSnapshot | undefined>;
+  readonly resolveStream?: (streamId: string) => Promise<EvidenceResolvedStream | undefined>;
 }
 
 export type ActionValidator = (
@@ -100,11 +102,30 @@ export function registerLabelValidators(
   return registry;
 }
 
+export function registerEvidenceValidators(
+  registry = new ActionValidatorRegistry(),
+): ActionValidatorRegistry {
+  for (const validator of evidenceActionValidators) {
+    registry.registerValidator(validator.actionType, async (action, context) => {
+      await validator.validate(action, {
+        streamId: context.streamId,
+        state: context.state as Parameters<typeof validator.validate>[1]["state"],
+        headOffset: context.headOffset,
+        nextOffset: context.nextOffset,
+        records: context.records,
+        resolveStream: context.resolveStream ?? (async () => undefined),
+      });
+    });
+  }
+  return registry;
+}
+
 export function registerApplicationValidators(
   registry = new ActionValidatorRegistry(),
 ): ActionValidatorRegistry {
   registerIssueValidators(registry);
   registerLabelValidators(registry);
   registerPrValidators(registry);
+  registerEvidenceValidators(registry);
   return registry;
 }
