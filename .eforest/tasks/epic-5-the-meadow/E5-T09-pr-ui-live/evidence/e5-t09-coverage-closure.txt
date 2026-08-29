@@ -1,0 +1,26 @@
+E5-T09 shared-evidence coverage closure
+code-head=71f372fa
+command=CI=true pnpm exec vitest run --maxWorkers=1 apps/web/src/prs/usePrs.test.ts
+exit=0
+
+Test Files  1 passed (1)
+Tests       5 passed (5)
+Duration    793ms
+
+PASS frozen-base/live-source diff uses the same computePrDetailDiff result returned by
+     usePrDetail; its published digest equals prDiffDigest(computeSinceForkDiff(...)).
+PASS OFFSET_BEFORE_FIRST remains an empty diff.
+PASS the committed verified E5-T06 conflict PR dump reduces to status=conflicted and
+     ConflictPanel renders targetMergeOffset=0000000000000000_0000000000000002,
+     path=same.txt, kind=add-add, target-unchanged copy, and no merged styling.
+
+SHARED E5-T06 server refusal is typed and leaves PR/target heads and digests unchanged.
+SHARED E5-T12 canonical session links frozen fork and merge offsets into one verified digest.
+SHARED E5-T13 two-identity browser evidence proves the merge-driven issue closedBy flip,
+       PR/issue live convergence, zero witness navigation, and zero console/page failures.
+
+NOT RUN verify-E5-T09
+NOT RUN dependency ticket verifier
+NOT RUN root suite or workspace gate
+NOT RUN cold clone
+NOT RUN browser or Replay

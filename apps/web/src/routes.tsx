@@ -132,6 +132,19 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
 
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
+  const immersiveRepo = /^\/orgs\/[^/]+\/repos\/[^/]+\/pulls(?:\/|$)/.test(pathname);
+  if (immersiveRepo) {
+    return (
+      <main className="app-shell-repository" data-testid="app-shell">
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
+        <article id="main-content" tabIndex={-1}>
+          <Route pathname={pathname} />
+        </article>
+      </main>
+    );
+  }
   return (
     <main data-testid="app-shell">
       <a className="skip-link" href="#main-content">

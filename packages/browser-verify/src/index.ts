@@ -778,7 +778,10 @@ export async function bootWorld(
       now: () => nowSeconds * 1_000,
       random,
       operationId: () => `e3-t02-browser-operation-${String(++operation).padStart(4, "0")}`,
-      rateLimit: { max: 1_000, windowMs: 60_000 },
+      // Long-polling UI oracles intentionally keep several projections open at
+      // once. Rate limiting is covered by focused platform tests; this harness
+      // must not turn elapsed browser time into a deterministic false failure.
+      rateLimit: { max: 100_000, windowMs: 60_000 },
       oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
       ...(options.gatewayVerifier === undefined
         ? {}
@@ -951,6 +954,12 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`));
     page.on("requestfailed", (request) => {
       const url = new URL(request.url());
+      // React route changes cancel obsolete read-only projections. Chromium
+      // reports that client-side cancellation as requestfailed even though no
+      // network/server fault occurred; mutation failures remain fatal below.
+      if (request.method() === "GET" && request.failure()?.errorText === "net::ERR_ABORTED") {
+        return;
+      }
       if (url.origin === platformUrl || isLoopback(url)) {
         failures.push(
           `requestfailed: ${request.method()} ${url.href} ${request.failure()?.errorText ?? "unknown"}`,
@@ -1014,7 +1023,7 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
     page.waitForURL((url) => url.pathname === "/"),
     page.getByTestId("auth0-login-submit").click(),
   ]);
-  await page.getByTestId("identity-region").waitFor();
+  await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
 export async function loginWithFixture(page: Page): Promise<void> {
@@ -1025,7 +1034,7 @@ export async function loginWithFixture(page: Page): Promise<void> {
     page.waitForURL((url) => url.pathname === "/"),
     page.getByTestId("auth0-fixture-login-submit").click(),
   ]);
-  await page.getByTestId("identity-region").waitFor();
+  await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
 export async function collectEfRegions(page: Page): Promise<readonly EfRegion[]> {

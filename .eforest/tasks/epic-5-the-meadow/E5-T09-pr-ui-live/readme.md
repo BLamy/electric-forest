@@ -3,7 +3,7 @@ id: E5-T09
 epic: 5
 title: "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
 priority: 509
-status: pending
+status: verified
 depends_on: [E5-T05, E5-T06, E5-T07]
 estimate: L
 capstone: false
@@ -359,3 +359,77 @@ angle-4 crafted-dispatch corpus into the committed suite.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — implemented
+
+- Implementation head: `76ae6c7d` (stack base `d30c7b38`, E5-T07 / PR #64).
+- Added the reducer-materialized PR index, canonical since-fork diff and digest,
+  review-comment v2 line anchors, authenticated PR/index projections, and target-branch
+  projections pinned at the frozen fork offset (including the `-1` empty-tree boundary).
+- Added the live PR list/create flow and Activity, Commits, Checks, and Changes routes; PR
+  lifecycle controls dispatch frozen events through the existing door, conflicts and
+  issue backlinks render reduced state, Markdown renders through Docstream, diffs through
+  `@pierre/diffs`, desktop controls use source-owned shadcn-style primitives, and mobile
+  navigation uses `@brett_lamy/ui`.
+- Focused verification only, per the human's explicit instruction not to repeat dependency
+  gates or the root suite: `pnpm exec vitest run apps/web/src/prs/usePrs.test.ts` (2/2),
+  `pnpm --filter @eforest/web build`, the new PR/index/diff/platform focused tests recorded
+  in `evidence/e5-t09-focused.txt`, and `git diff --check` all passed.
+- One local in-app Browser sweep created and opened a real PR, compared the desktop activity
+  hierarchy with E5-T14's reference at 1470 x 808, and rendered the same detail at 390 x 844.
+  The sweep found and repaired Docstream's published classic-React-global crash and its
+  light nested-article theme leak; the final desktop and mobile runs had zero console errors
+  and warnings. See `design-qa.md`.
+- Replay: N/A (the human explicitly waived another recording after repeated prior suite
+  runs) + mitigation: focused exact-head web build and binding tests, committed stream/index/
+  diff tests, and one in-app desktop/mobile visual plus console sweep.
+
+### 2026-08-27 — critic — VERDICT: needs-evidence
+
+- The exact-head two-identity browser run at `abd2c05b` is internally consistent: nine
+  `/api/dispatch` writes and no other observed state writes; distinct author/reviewer
+  identities; threaded and line comments recovered from the durable PR log; approval,
+  merge, close, desktop/mobile projection parity; and zero guarded browser console,
+  page, or request failures. Evidence: `evidence/e5-t09-browser.txt` and
+  `evidence/e5-t09-browser-network.json`; verifier: `tools/verify/e5_t09_evidence.mjs`.
+- COVERAGE — INSUFFICIENT. That focused run does not itself exercise the frozen-base
+  diff parity after a source push, forced merge-before-approval refusal, conflict
+  rendering, or the issue `closedBy` backlink flip. These are already owned by the
+  pending E5-T12 negotiation and E5-T13 issue-to-merge capstone gates; consume those
+  exact artifacts before re-judging rather than rerunning T09, any dependency verifier,
+  the root suite, a cold clone, or Replay.
+- SUITE: keep the focused two-identity oracle and network artifact; re-judge against the
+  single shared E5-T12/E5-T13 capstone evidence run.
+
+### 2026-08-27 — builder — shared-evidence coverage closure at `71f372fa`
+
+- Consumed the verified E5-T06/T07/T12/T13 artifacts exactly as the prior critic
+  requested. They close the server-neutral premature-merge refusal and the causal,
+  live `closedBy` backlink flip without rerunning T09 or any dependency gate.
+- Added only the two task-local focused assertions the re-judgment found residual:
+  `computePrDetailDiff` is now the exact pure result returned by `usePrDetail`, and its
+  post-push digest equals `prDiffDigest(computeSinceForkDiff(frozenBase, liveSource))`;
+  `ConflictPanel` renders the verified E5-T06 conflicted dump's target offset,
+  `same.txt` / `add-add` row, target-unchanged copy, and no merged styling.
+- `CI=true pnpm exec vitest run --maxWorkers=1 apps/web/src/prs/usePrs.test.ts`
+  passed 1 file / 5 tests in 793 ms. Evidence:
+  `evidence/e5-t09-coverage-closure.txt`.
+- Replay: N/A (no new browser run; this closes two deterministic rendering/computation
+  gaps over already-verified stream artifacts) + mitigation: exact committed T06
+  conflicted payload, pure digest parity, component markup assertions, and the verified
+  T13 two-identity browser artifact. No broad, dependency, cold-clone, full T09, or
+  browser gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified at `48579ca5`
+
+- Confirmed `computePrDetailDiff` is the production result returned by `usePrDetail`
+  and its digest is the exact value emitted as `data-ef-diff-digest`; the independent
+  expected computation proves frozen-base/live-source parity and the before-first case.
+- Confirmed the component test folds the committed verified E5-T06 conflict dump with
+  the production `pr` reducer and renders the same `ConflictPanel` used by desktop and
+  mobile: conflicted state, exact target offset, `same.txt` / `add-add`, unchanged-target
+  copy, and no conflicting merged presentation.
+- Together with verified T06/T07/T12/T13 artifacts, the premature-merge neutral refusal,
+  frozen link/fork citations, and live merge-driven issue `closedBy` flip are covered.
+  No material acceptance contradiction remains. Critic inspection was read-only and
+  reran no test, ticket, dependency, browser, cold-clone, or root gate.

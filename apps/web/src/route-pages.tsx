@@ -19,6 +19,8 @@ import { IssueBoardPage } from "./issues/IssueBoard.js";
 import { IssueDetailPage } from "./issues/IssueDetail.js";
 import { WikiRoute } from "./wiki/WikiRoute.js";
 import { isWikiSlug } from "./wiki/useWiki.js";
+import { PrListPage } from "./prs/PrList.js";
+import { PrDetailPage, type PrDetailTab } from "./prs/PrDetail.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -891,6 +893,39 @@ function DeepTrail(): React.JSX.Element {
 
 export function PageRouter(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (
+    segments.length >= 5 &&
+    segments.length <= 7 &&
+    segments[0] === "orgs" &&
+    segments[2] === "repos" &&
+    segments[4] === "pulls"
+  ) {
+    const org = decodeRouteSegment(segments[1]!);
+    const repo = decodeRouteSegment(segments[3]!);
+    const prId = segments.length >= 6 ? decodeRouteSegment(segments[5]!) : undefined;
+    const tab = segments.length === 7 ? decodeRouteSegment(segments[6]!) : "activity";
+    const tabs: readonly PrDetailTab[] = ["activity", "commits", "checks", "changes"];
+    if (
+      org === undefined ||
+      repo === undefined ||
+      (segments.length >= 6 && prId === undefined) ||
+      tab === undefined ||
+      !tabs.includes(tab as PrDetailTab)
+    ) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return prId === undefined ? (
+      <PrListPage org={org} repo={repo} />
+    ) : (
+      <PrDetailPage
+        key={`pr:${org}/${repo}/${prId}`}
+        org={org}
+        repo={repo}
+        prId={prId}
+        tab={tab as PrDetailTab}
+      />
+    );
+  }
   if (
     segments.length >= 5 &&
     segments.length <= 7 &&

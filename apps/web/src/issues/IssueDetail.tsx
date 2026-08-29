@@ -11,6 +11,7 @@ import {
   type IssueStateName,
   type RenderedIssueError,
 } from "./useIssues.js";
+import { prIdFromStream } from "../prs/usePrs.js";
 
 function formValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "");
@@ -132,6 +133,57 @@ export function IssueDetailPage(props: {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section
+        className="issue-pr-backlinks"
+        aria-labelledby="issue-pr-backlinks-heading"
+        data-testid="issue-pr-backlinks"
+        data-ef-stream={binding.streamId}
+        data-ef-offset={binding.projection.checkpoint}
+        data-ef-digest={binding.projection.digest}
+      >
+        <h3 id="issue-pr-backlinks-heading">Pull requests</h3>
+        {(state.linkedBy?.length ?? 0) + (state.closedBy?.length ?? 0) === 0 ? (
+          <p>No pull requests reference this issue.</p>
+        ) : (
+          <ul>
+            {state.linkedBy?.map((link) => {
+              const prId = prIdFromStream(link.prStream);
+              return (
+                <li key={`linked:${link.prStream}:${link.atOffset}`}>
+                  {prId === undefined ? (
+                    <code>{link.prStream}</code>
+                  ) : (
+                    <RouteLink
+                      href={`${encodedBoard.replace(/\/issues$/, "/pulls")}/${encodeURIComponent(prId)}`}
+                    >
+                      Pull request #{prId}
+                    </RouteLink>
+                  )}
+                  <span>linked at {link.atOffset}</span>
+                </li>
+              );
+            })}
+            {state.closedBy?.map((link) => {
+              const prId = prIdFromStream(link.prStream);
+              return (
+                <li key={`closed:${link.prStream}:${link.prMergedOffset}`}>
+                  {prId === undefined ? (
+                    <code>{link.prStream}</code>
+                  ) : (
+                    <RouteLink
+                      href={`${encodedBoard.replace(/\/issues$/, "/pulls")}/${encodeURIComponent(prId)}`}
+                    >
+                      Closed by pull request #{prId}
+                    </RouteLink>
+                  )}
+                  <span>merge event {link.prMergedOffset}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {dispatchError === undefined ? null : (
