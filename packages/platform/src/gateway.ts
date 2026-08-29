@@ -42,12 +42,23 @@ import {
   isPrActionType,
   isPrEvent,
   isPrStreamId,
-  prInitialStateForStream,
-  prReducer,
   PrRefusalError,
   PrSchemaError,
   PrUnknownActionError,
 } from "@eforest/pr";
+import {
+  executeMerge,
+  isMeadowPrMergeOutcomeEvent,
+  meadowPrInitialStateForStream,
+  meadowPrReducer,
+  PrMergeRefusalError,
+  PrMergeSchemaError,
+  validatePrMergeCommand,
+  validatePrMergeOutcome,
+  type MergeBranch,
+  type PrMergeHooks,
+  type PrMergeOperations,
+} from "@eforest/meadow";
 import {
   canonicalJson,
   compareOffsets,
@@ -67,6 +78,7 @@ import {
   applyPatch,
   patchResultSize,
   resolveBranchLog,
+  ThreeWayMergeError,
   type BranchDump,
   type PatchOps,
 } from "@eforest/streamfs";
@@ -180,6 +192,15 @@ export interface PlatformGatewayOptions {
   readonly actionValidators?: ActionValidatorRegistry;
   readonly issueBoards?: IssueBoardMaterializer;
   readonly boardCacheDir?: IssueBoardMaterializerOptions["cacheDir"];
+  /** E5-T06 merge machinery. Production resolves these to StreamFs repositories. */
+  readonly prMerge?: PlatformPrMergeOptions;
+}
+
+export interface PlatformPrMergeOptions {
+  readonly resolveBranch: (streamId: string) => Promise<MergeBranch | undefined>;
+  readonly operations?: Partial<PrMergeOperations>;
+  readonly hooks?: PrMergeHooks;
+  readonly now?: () => number;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -525,8 +546,26 @@ function prEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): E
     payload,
     offset: (rawOffset ?? fallbackOffset) as Offset,
   } as Event;
-  if (!isPrEvent(event)) throw new PrSchemaError();
+  if (!isPrEvent(event) && !isMeadowPrMergeOutcomeEvent(event)) throw new PrSchemaError();
   return event;
+}
+
+function plannedPrMergeActor(value: Event): string {
+  if (value.payload === null || typeof value.payload !== "object" || Array.isArray(value.payload)) {
+    throw new PrMergeSchemaError();
+  }
+  const payload = value.payload as Record<string, unknown>;
+  const actor = payload.actor;
+  if (typeof actor !== "string" || actor.length === 0) throw new PrMergeSchemaError();
+  const command = {
+    type: value.type,
+    payload: Object.fromEntries(
+      Object.entries(payload).filter(([key]) => key !== "actor" && key !== "writer"),
+    ),
+    ts: value.ts,
+  } satisfies Event;
+  validatePrMergeCommand(command);
+  return actor;
 }
 
 async function validatePrDispatch(
@@ -539,7 +578,7 @@ async function validatePrDispatch(
   const prRecords = records.map((record, index) =>
     prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
   );
-  const state = prRecords.reduce(prReducer, prInitialStateForStream(streamId));
+  const state = prRecords.reduce(meadowPrReducer, meadowPrInitialStateForStream(streamId));
   const nextOffset = offsetForOrdinal(prRecords.length);
   const action = prEventWithoutServerMetadata(event, nextOffset);
   await actionValidators.validate(action, {
@@ -1092,6 +1131,8 @@ export class PlatformGateway {
   private readonly repositoryHomes: RepositoryHomeStore;
   private readonly actionValidators: ActionValidatorRegistry;
   private readonly issueBoards: IssueBoardMaterializer;
+  private readonly prMerge: PlatformPrMergeOptions | undefined;
+  private readonly prMergeTails = new Map<string, Promise<void>>();
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
     | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
@@ -1108,6 +1149,7 @@ export class PlatformGateway {
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
     this.actionValidators = options.actionValidators ?? registerApplicationValidators();
+    this.prMerge = options.prMerge;
     this.issueBoards =
       options.issueBoards ??
       new IssueBoardMaterializer({
@@ -1135,6 +1177,152 @@ export class PlatformGateway {
 
   terminate(): void {
     this.views?.terminate?.();
+  }
+
+  private async withPrMergeLock<A>(streamId: string, run: () => Promise<A>): Promise<A> {
+    const previous = this.prMergeTails.get(streamId) ?? Promise.resolve();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const tail = previous.catch(() => undefined).then(() => gate);
+    this.prMergeTails.set(streamId, tail);
+    await previous.catch(() => undefined);
+    try {
+      return await run();
+    } finally {
+      release();
+      if (this.prMergeTails.get(streamId) === tail) this.prMergeTails.delete(streamId);
+    }
+  }
+
+  private async existingPrMergeOutcome(operationId: string, streamId: string, subject: string) {
+    const receipt = await this.writers.findOperation(operationId, streamId, subject);
+    if (receipt === undefined) return undefined;
+    const normalized = prEventWithoutServerMetadata(receipt.event, receipt.globalSequence);
+    const outcome = {
+      type: normalized.type,
+      payload: normalized.payload,
+      ts: normalized.ts,
+    };
+    validatePrMergeOutcome(outcome);
+    return { outcome, offset: receipt.globalSequence };
+  }
+
+  private async executePrMerge(
+    prStreamId: string,
+    subject: string,
+    operationId?: string,
+    assertActive?: () => Promise<void>,
+  ) {
+    if (this.prMerge === undefined) {
+      throw new GrantTargetCommitError("PR merge execution is unavailable");
+    }
+    const merge = this.prMerge;
+    return executeMerge(
+      {
+        ...(operationId === undefined
+          ? {}
+          : {
+              readExistingPrOutcome: (streamId: string) =>
+                this.existingPrMergeOutcome(operationId, streamId, subject),
+            }),
+        readPr: async (streamId) => {
+          const raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
+          const records = raw.map((record, index) =>
+            prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+          );
+          return {
+            state: records.reduce(meadowPrReducer, meadowPrInitialStateForStream(streamId)),
+            records,
+            headOffset:
+              records.length === 0
+                ? OFFSET_BEFORE_FIRST
+                : ((records.at(-1) as Event & { readonly offset: Offset }).offset as Offset),
+          };
+        },
+        readEvidence: async (streamId) => {
+          let raw: readonly unknown[];
+          try {
+            raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
+          } catch (error) {
+            if (!isDurableNotFound(error)) throw error;
+            raw = [];
+          }
+          const records = raw.map((record, index) =>
+            evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+          );
+          return {
+            state: records.reduce(attachmentReducer, attachmentInitialStateForStream(streamId)),
+            records,
+          };
+        },
+        resolveBranch: merge.resolveBranch,
+        appendPrOutcome: async (streamId, event, expectedHead) => {
+          const receipt = await this.writers.dispatch(streamId, event, subject, {
+            ...(operationId === undefined ? {} : { operationId }),
+            ...(assertActive === undefined ? {} : { assertActive }),
+            validate: (rawRecords, stamped) => {
+              const records = rawRecords.map((record, index) =>
+                prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+              );
+              const headOffset =
+                records.length === 0
+                  ? OFFSET_BEFORE_FIRST
+                  : ((records.at(-1) as Event & { readonly offset: Offset }).offset as Offset);
+              if (headOffset !== expectedHead) {
+                throw new PrMergeRefusalError("pr/merge-not-approved");
+              }
+              const outcome = prEventWithoutServerMetadata(
+                stamped,
+                offsetForOrdinal(records.length),
+              );
+              validatePrMergeOutcome(outcome);
+              const state = records.reduce(
+                meadowPrReducer,
+                meadowPrInitialStateForStream(streamId),
+              );
+              if (state.status !== "approved") {
+                throw new PrMergeRefusalError(
+                  state.status === "merged" ? "pr/already-merged" : "pr/merge-not-approved",
+                );
+              }
+            },
+          });
+          return { offset: receipt.globalSequence };
+        },
+        ...(merge.now === undefined ? {} : { now: merge.now }),
+        ...(merge.operations === undefined ? {} : { operations: merge.operations }),
+        hooks: {
+          beforeTargetAppend: async (context) => {
+            await assertActive?.();
+            await merge.hooks?.beforeTargetAppend?.(context);
+          },
+          ...(merge.hooks?.afterTargetAppend === undefined
+            ? {}
+            : { afterTargetAppend: merge.hooks.afterTargetAppend }),
+          beforePrOutcomeAppend: async (context) => {
+            await assertActive?.();
+            await merge.hooks?.beforePrOutcomeAppend?.(context);
+          },
+        },
+        withMergeLock: (streamId, run) => this.withPrMergeLock(streamId, run),
+      },
+      prStreamId,
+    );
+  }
+
+  /** Re-enter the composite merge executor for an active production grant journal. */
+  async recoverPrMergeOperation(
+    operationId: string,
+    prStreamId: string,
+    plannedCommand: Event,
+  ): Promise<void> {
+    if (!isPrStreamId(prStreamId) || plannedCommand.type !== "pr.merge") {
+      throw new PrUnknownActionError();
+    }
+    const subject = plannedPrMergeActor(plannedCommand);
+    await this.executePrMerge(prStreamId, subject, operationId);
   }
 
   /**
@@ -1548,6 +1736,9 @@ export class PlatformGateway {
       if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
         throw new PrUnknownActionError();
       }
+      if (!namespaceEvent && parsed.event.type === "pr.merge" && !isPrStreamId(parsed.streamId)) {
+        throw new PrUnknownActionError();
+      }
       if (
         !namespaceEvent &&
         ((isEvidenceActionType(parsed.event.type) && !evidenceStream) ||
@@ -1600,8 +1791,12 @@ export class PlatformGateway {
         if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
       }
       if (isPrStreamId(parsed.streamId)) {
-        if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
-        if (!isPrEvent(parsed.event)) throw new PrSchemaError();
+        if (parsed.event.type === "pr.merge") {
+          validatePrMergeCommand(parsed.event);
+        } else {
+          if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
+          if (!isPrEvent(parsed.event)) throw new PrSchemaError();
+        }
       }
       if (evidenceStream && !isEvidenceActionType(parsed.event.type)) {
         throw new EvidenceUnknownActionError();
@@ -1684,6 +1879,24 @@ export class PlatformGateway {
           // becomes a derived frame without waiting for the poll interval.
           this.registry?.poke();
           return json(202, { ok: true, actor: identity.sub });
+        }
+        if (parsed.event.type === "pr.merge") {
+          const receipt = await this.executePrMerge(
+            parsed.streamId,
+            identity.sub,
+            operationId,
+            assertActive,
+          );
+          return json(202, {
+            ok: true,
+            actor: identity.sub,
+            ...(target.kind === "repo"
+              ? { identityOffset: decidedAt ?? repoDecision!.identityOffset }
+              : {}),
+            ...(request.headers.get("x-eforest-dispatch-receipt") === "offset"
+              ? { offset: receipt.prOutcomeOffset }
+              : {}),
+          });
         }
         let dispatchOffset: Offset | undefined;
         let committedEvent: Event | undefined;
@@ -1910,6 +2123,7 @@ export class PlatformGateway {
       if (
         error instanceof IssueSchemaError ||
         error instanceof PrSchemaError ||
+        error instanceof PrMergeSchemaError ||
         error instanceof LabelSchemaError ||
         error instanceof EvidenceSchemaError
       ) {
@@ -1923,6 +2137,12 @@ export class PlatformGateway {
       }
       if (error instanceof PrRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof PrMergeRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof ThreeWayMergeError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.code } });
       }
       if (error instanceof EvidenceRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });

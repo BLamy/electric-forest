@@ -1,0 +1,44 @@
+E5-T06 focused verification
+date=2026-08-27
+implementation-commit=fb9d9388
+
+pnpm --filter @eforest/meadow build
+exit=0
+
+pnpm --filter @eforest/meadow test
+exit=0
+test-files=2
+tests=22
+
+pnpm --filter @eforest/platform build
+exit=0
+
+pnpm exec vitest run packages/platform/test/pr-merge-door.test.ts
+exit=0
+test-files=1
+tests=1
+
+make verify-E5-T06
+meadow-build=0
+meadow-tests=0
+platform-build=0
+platform-door-test=0
+contract-check=1
+contract-failure=checker source list omitted packages/meadow/src/pr/validate.ts
+
+Serialized repair: only tools/verify/e5_t06_contract.mjs changed after the four
+successful legs above. Those legs were not rerun.
+
+node tools/verify/e5_t06_contract.mjs
+exit=0
+CONTRACT block=outcome-events byte-identical OK
+CONTRACT block=gate-and-refusals byte-identical OK
+CONTRACT block=recovery byte-identical OK
+CONTRACT merge-door-vocabulary complete OK
+
+git diff --check
+exit=0
+
+Replay: N/A (server/package task; E5-T09 owns the browser surface) + mitigation:
+focused deterministic Meadow tests and the authenticated platform merge-door test.
+No root suite, dependency verifier, cold-clone gate, or prior ticket gate was run.

@@ -25,7 +25,7 @@ new persistence, or bypass any live reducer/dispatch contract established by E0-
 Every existing DOM evidence attribute remains present, but evidence facts move into a
 secondary disclosure so the normal user experience is not dominated by diagnostics.
 
-Three implementation choices are mandatory across the whole app:
+Five implementation choices are mandatory across the whole app:
 
 1. **All rendered markdown uses
    [`@brett_lamy/docstream`](https://github.com/BLamy/docstream).** Wiki pages, repository
@@ -41,12 +41,63 @@ Three implementation choices are mandatory across the whole app:
    roots, nested directories, and changed-file navigation use Pierre's Trees React
    package, backed only by the existing StreamFS reduction. No parallel cache or GitHub
    API model is introduced.
+4. **The desktop component foundation uses
+   [shadcn/ui](https://ui.shadcn.com/).** Shared controls, dialogs, menus, tabs, tables,
+   sheets, tooltips, and form primitives are installed as open component source and
+   themed through the Electric Forest token layer. Existing accessible primitives may
+   remain only where replacing them would reduce behavior or accessibility; new product
+   chrome must not grow a second bespoke component vocabulary.
+5. **The mobile presentation uses
+   [`@brett_lamy/ui`](https://www.npmjs.com/package/@brett_lamy/ui).** At the mobile
+   breakpoint, repository navigation, primary actions, lists, detail surfaces, and
+   responsive disclosures compose the package's mobile primitives through one shared
+   adapter. Mobile is a deliberate product surface, not a desktop layout merely squeezed
+   to 390 px, and no mobile-only alternate data model or route is introduced.
 
 The capstone keeps E5-T13's complete issue-to-merge scenario intact and reruns that one
 dependency capstone only. Its recorded walkthrough begins at the repository list, opens
 the repository tree, reads a Docstream README/wiki page, opens the PR list and one PR,
 reviews its Pierre-rendered changes through the Trees file navigator, and completes the
 merge while a second session observes the live state transition.
+
+### Mobile package composition contract
+
+`@brett_lamy/ui` `0.0.1` is integrated through its actual interaction containers, not as
+a token-only dependency:
+
+- `TouchKitProvider` supplies the dark mobile surface and Electric Forest tint; its token
+  bridge aliases the same semantic colors used by the shadcn desktop layer.
+- `NavigationStack` owns repository -> entity -> detail push/pop navigation, including
+  edge-swipe back, keyboard row traversal, pull-to-refresh, and hide-on-scroll chrome.
+- `TabBar` carries Code, Pull Requests, Issues, Wiki, and Settings at compact widths;
+  each item remains a real route with `aria-current`, not local view-only state.
+- `List`, `List.Section`, and `List.Row` render repository, issue, PR, commit, check, and
+  discussion indexes. `Avatar`, `Spinner`, `SearchField`, `Segmented`, and `PillButton`
+  supply their corresponding identity, loading, query, filter/mode, and primary-action
+  roles instead of one-off mobile copies.
+- `IndexBar` is the fast scrubber for PR/issue conversation turns and long changed-file
+  sets; its preview node shows author/path plus a concise summary before committing the
+  jump by pointer drag or keyboard.
+- `SideDrawer` contains changed-file navigation and secondary filters; `Credenza` hosts
+  create/edit/comment, merge confirmation, and evidence attachment flows, using its
+  compact tray on mobile and focus-restoring dialog form where appropriate.
+- `SplitView` bridges master/detail routes at medium widths. Wide code and Pierre diff
+  content remain internally scrollable and are never forced into `List.Row` truncation.
+
+The published package has no dedicated chat-message or text-composer primitive. Issue and
+PR conversations therefore compose its navigation, list, avatar, index, credenza, and
+button primitives around the canonical Docstream message body and existing dispatch hook;
+the capstone must not invent a fake package export or misuse the selection-only `EditBar`
+as a composer.
+
+The adapter also owns current `0.0.1` package boundaries discovered from the published
+artifact: `TouchKitProvider` sets `user-select: none`, so Docstream, code, diffs, inputs,
+and copyable ids explicitly restore text selection; compact `SplitView` renders master plus
+drawer rather than its detail slot, so compact detail transitions belong to
+`NavigationStack`; and `Credenza`/`SideDrawer` receive the missing dialog labelling, focus
+containment/restoration, and inert-background behavior at the adapter boundary. Those
+repairs preserve the package's visible/gesture primitives while satisfying this task's
+keyboard and screen-reader contract.
 
 ## Visual source contract
 
@@ -85,8 +136,9 @@ must match; Electric Forest branding and stream-specific states remain truthful.
 
 ## Deliverables
 
-- A shared app shell and token layer implementing the supplied dark visual language at
-  desktop and a deliberate responsive layout below 900 px.
+- A shared shadcn-based app shell and token layer implementing the supplied dark visual
+  language at desktop, plus an `@brett_lamy/ui`-backed responsive composition below
+  900 px.
 - One `Markdown` adapter used by every Markdown callsite and backed by Docstream.
 - Pierre Diffs integrated into every diff callsite and Pierre Trees into every file-tree
   callsite, both adapted from existing reducer state without alternate reads or storage.
@@ -94,12 +146,14 @@ must match; Electric Forest branding and stream-specific states remain truthful.
   and evidence surfaces. Loading, empty, refused, stale, and error states receive the same
   finish as happy paths.
 - A focused visual Playwright journey covering the nine source compositions at fixed
-  desktop and mobile viewports, with semantic assertions and zero console errors.
+  desktop and mobile viewports, with semantic assertions that identify the shadcn and
+  `@brett_lamy/ui` adapter boundaries and zero console errors.
 - Same-session Replay + MP4 evidence for the final two-client E5-T13 journey through the
   finished shell; screenshots of each required composition are committed under
   `evidence/actual/` for critic comparison.
-- A package/source manifest pinning the exact Docstream, `@pierre/diffs`, and
-  `@pierre/trees` versions used, their licenses, and the adapter entrypoints.
+- A package/source manifest pinning the exact Docstream, `@pierre/diffs`,
+  `@pierre/trees`, shadcn CLI/schema, and `@brett_lamy/ui` versions used, their licenses,
+  and the adapter entrypoints.
 
 ## Acceptance criteria
 
@@ -118,6 +172,10 @@ must match; Electric Forest branding and stream-specific states remain truthful.
 - [ ] Every repository route exposes Code, Pull Requests, Issues, Wiki, and Settings in
       one persistent tab bar; PR detail exposes Activity, Commits, Checks, and Changes.
       Route transitions preserve keyboard focus and active-tab semantics.
+- [ ] Desktop product chrome composes the shared shadcn source components and token layer;
+      mobile product chrome crosses the shared `@brett_lamy/ui` adapter. Removing either
+      boundary makes its focused viewport test fail, and no primary workflow uses a
+      one-off duplicate primitive instead.
 - [ ] At 390x844, every primary workflow remains reachable without horizontal page
       overflow; wide code/diff panels scroll internally and navigation collapses without
       hiding state or actions.
@@ -139,10 +197,12 @@ Attack the shared adapters, not just screenshots. Insert hostile Markdown into e
 entity type and prove all routes stay inert. Feed rename/delete/binary/large-file cases
 through Trees and ensure it remains a projection of the published StreamFS checkpoint.
 Exercise added/removed/renamed/binary and long-line changes through Pierre and compare its
-inputs to the canonical PR change set. Disable each mandatory package in a scratch copy:
-the corresponding route test must fail. Compare actual/reference pairs at both viewports,
-then navigate the entire app by keyboard with reduced motion enabled. Finally rerun only
-the E5-T13 capstone to prove the visual integration did not alter the collaboration model.
+inputs to the canonical PR change set. Disable each mandatory package or shadcn adapter in
+a scratch copy: the corresponding route or viewport test must fail. At 390 px, verify the
+rendered control lineage crosses the `@brett_lamy/ui` adapter rather than only sharing its
+CSS tokens. Compare actual/reference pairs at both viewports, then navigate the entire app
+by keyboard with reduced motion enabled. Finally rerun only the E5-T13 capstone to prove
+the visual integration did not alter the collaboration model.
 
 ## Verification log
 

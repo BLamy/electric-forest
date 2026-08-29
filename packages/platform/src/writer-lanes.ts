@@ -138,6 +138,18 @@ export interface WriterDispatchReceipt {
   readonly globalSequence: Offset;
 }
 
+function operationIndex(records: readonly unknown[], operationId: string): number | undefined {
+  const existingIndexes = records.flatMap((record, index) => {
+    if (record === null || typeof record !== "object" || Array.isArray(record)) return [];
+    const payload = (record as { readonly payload?: unknown }).payload;
+    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return [];
+    const lane = (payload as { readonly writer?: unknown }).writer;
+    return exactWriterLane(lane) && lane.op === operationId ? [index] : [];
+  });
+  if (existingIndexes.length > 1) throw new WriterLaneCorruptionError(existingIndexes[1]!);
+  return existingIndexes[0];
+}
+
 /**
  * Application fencing above Durable Streams' one global Stream-Seq lane.
  * Writer state is rebuilt from the stream on every attempt; the promise chain
@@ -175,6 +187,28 @@ export class WriterLaneDispatcher {
     return this.dispatch(streamId, event, actor, { operationId });
   }
 
+  /**
+   * Read an already committed operation without inventing an expected application
+   * event. Composite commands such as pr.merge persist a derived outcome rather
+   * than the command itself, so recovery must inspect that outcome before it can
+   * decide whether any append remains.
+   */
+  async findOperation(
+    operationId: string,
+    streamId: string,
+    subject: string,
+  ): Promise<WriterDispatchReceipt | undefined> {
+    const records = await this.streams.read(streamId);
+    reduceWriterLanes(records);
+    const existingIndex = operationIndex(records, operationId);
+    if (existingIndex === undefined) return undefined;
+    const existing = records[existingIndex] as WriterScopedEvent;
+    if (existing.payload.writer.sub !== subject || existing.payload.actor !== subject) {
+      throw new WriterLaneCorruptionError(existingIndex);
+    }
+    return { event: existing, globalSequence: offsetForOrdinal(existingIndex) };
+  }
+
   private async dispatchNow(
     streamId: string,
     event: Event,
@@ -190,15 +224,7 @@ export class WriterLaneDispatcher {
       // duplicate, or any other corruption later in the stream.
       const lanes = reduceWriterLanes(records);
       if (options.operationId !== undefined) {
-        const existingIndexes = records.flatMap((record, index) => {
-          if (record === null || typeof record !== "object" || Array.isArray(record)) return [];
-          const payload = (record as { readonly payload?: unknown }).payload;
-          if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return [];
-          const lane = (payload as { readonly writer?: unknown }).writer;
-          return exactWriterLane(lane) && lane.op === options.operationId ? [index] : [];
-        });
-        if (existingIndexes.length > 1) throw new WriterLaneCorruptionError(existingIndexes[1]!);
-        const existingIndex = existingIndexes[0];
+        const existingIndex = operationIndex(records, options.operationId);
         if (existingIndex !== undefined) {
           const existing = records[existingIndex] as WriterScopedEvent;
           if (existing.payload.writer.sub !== subject || existing.payload.actor !== subject) {

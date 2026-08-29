@@ -171,6 +171,12 @@ importers:
 
   packages/meadow:
     dependencies:
+      '@eforest/evidence':
+        specifier: workspace:*
+        version: link:../evidence
+      '@eforest/pr':
+        specifier: workspace:*
+        version: link:../pr
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -192,6 +198,9 @@ importers:
       '@eforest/issues':
         specifier: workspace:*
         version: link:../issues
+      '@eforest/meadow':
+        specifier: workspace:*
+        version: link:../meadow
       '@eforest/pr':
         specifier: workspace:*
         version: link:../pr

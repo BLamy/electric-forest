@@ -3,7 +3,7 @@ id: E5-T06
 epic: 5
 title: "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
 priority: 506
-status: pending
+status: verified
 depends_on: [E5-T02, E5-T10]
 estimate: L
 capstone: false
@@ -276,3 +276,104 @@ refutation → promote at minimum: your angle-1 lifecycle streams and angle-4 ra
 as committed fixtures.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented
+
+- Implementation commit: `fb9d9388` adds the Meadow merge command/outcome model,
+  lifecycle reducer, evidence gate, fast-forward/three-way executor, crash recovery,
+  and the authenticated platform dispatch seam. Production resolves the frozen source
+  and target branch streams to the existing Epic 1 `StreamFsRepo` merge machinery;
+  the client `pr.merge` command itself is never appended.
+- Focused package verification passed at the implementation tree:
+  `pnpm --filter @eforest/meadow build` and
+  `pnpm --filter @eforest/meadow test` (2 files, 22 tests). Coverage includes the
+  zero/one-event fast-forward boundary, ordered conflict mirroring, every frozen
+  lifecycle/evidence refusal, target races, crash recovery, server-stamped outcomes,
+  same-source/different-fork recovery isolation, and concurrent double dispatch.
+- Focused platform verification passed:
+  `pnpm --filter @eforest/platform build` and
+  `pnpm exec vitest run packages/platform/test/pr-merge-door.test.ts` (1 test). Two
+  simultaneous authenticated merge commands produced one target merge, one
+  writer-fenced PR outcome at offset `0000000000000000_0000000000000002`, no persisted
+  command event, and one typed `pr/already-merged` refusal.
+- The first composed `make verify-E5-T06` run passed both builds and all 23 focused
+  tests, then stopped only in the new vocabulary checker because its source-file list
+  omitted `validate.ts`. Queue discipline preserved the successful legs: after adding
+  that checker input, only `node tools/verify/e5_t06_contract.mjs` was rerun; all three
+  frozen README blocks were byte-identical and the platform-door vocabulary check
+  passed. `git diff --check` also passed. Transcript:
+  `evidence/e5-t06-focused.txt`.
+- Replay: N/A (server/package task with no browser-reaching surface; E5-T09 owns the PR
+  UI) + mitigation: deterministic stream/reducer tests and the authenticated HTTP-door
+  seam above cover the target/PR cross-stream behavior. No dependency-ticket verifier,
+  root suite, cold-clone gate, previously completed ticket gate, or browser run was
+  executed.
+
+### 2026-08-27 — critic — VERDICT: refuted
+
+- PRODUCTION RECOVERY — FAILED. The grant operation journal stores the actor-stamped
+  `pr.merge` command, but production routed every active grant operation through generic
+  `WriterLaneDispatcher.recover`. At the target-appended/outcome-missing crash window that
+  path persisted `pr.merge` instead of re-entering the merge executor; at the
+  outcome-appended/completion-missing window it compared the journaled command with the
+  derived `pr.merged` event and raised `WriterLaneCorruptionError`. Demand: route merge
+  recovery through `executeMerge` and prove exactly one target merge plus exactly one PR
+  outcome, with no persisted `pr.merge`, at both windows.
+- STREAM EVIDENCE — INSUFFICIENT. The submitted focused transcript did not contain the
+  required target/PR dumps, independent replay digests, conflict citation, merge-offset
+  bisect, refusal before/after neutrality, or causal mutation sensitivity. Demand: commit
+  those artifacts and compose them into a non-recursive `verify-E5-T06` target using only
+  the focused package tests.
+- SUITE: add permanent production-level tests for both crash positions; leave the task
+  pending a fresh independent critic after rework.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework implementation commit: `5c802de4`. Production now recognizes journaled
+  `pr.merge` as a composite command and calls `PlatformGateway.recoverPrMergeOperation`,
+  which validates the planned actor-stamped command and re-enters `executeMerge`.
+  `WriterLaneDispatcher.findOperation` lets the executor recognize an outcome already
+  committed under the same operation id without fabricating a command/outcome equality
+  check. Normal fresh redispatch still reaches the frozen `pr/already-merged` refusal.
+- Permanent production-runtime tests use the published local Durable Streams server and
+  cover both crash windows. The target-appended test recovers the missing outcome; the
+  outcome-appended test recognizes the existing writer-fenced outcome. Both finish with
+  exactly one `fs.branch.merge`, exactly one `pr.merged`, zero `pr.merge` records, one
+  grant-operation completion, and a revoked grant. The focused platform result is 1 file,
+  3 tests passed; Meadow remains 2 files, 22 tests passed.
+- `make verify-E5-T06` is non-recursive and exited 0. It ran only the Meadow build/tests,
+  platform build, `packages/platform/test/pr-merge-door.test.ts`, stream proof, two causal
+  sabotages, and frozen-contract checker. The stream proof reported 12 direct/independent
+  replay digest equalities; target merge offset
+  `0000000000000000_0000000000000001`; PR outcome offset
+  `0000000000000000_0000000000000002`; exact bisect equality at the target merge; one
+  mirrored conflict with unchanged content-tree digest; refusal head/digest neutrality;
+  and two expected-fail fixture mutations. Transcript:
+  `evidence/e5-t06-rework-focused.txt`.
+- Durable evidence: canonical recovery, conflict, and refusal before/after target/PR dumps
+  under `evidence/streams/`; independent digest ledger
+  `evidence/e5-t06-independent-replay.txt`; conflict/bisect/refusal ledger
+  `evidence/e5-t06-conflict-bisect-refusal.txt`; causal source-mutation ledger
+  `evidence/e5-t06-causal-sensitivity.txt`. Deleting the production recovery route or the
+  existing-outcome lookup makes its corresponding production crash test fail. Ledger
+  SHA-256 values are respectively
+  `ec692af484e39f06c99d347311f896dd07e5f2098ab7332678b3dc57cce53621`,
+  `b8261d8a73a0dee645048e8636b3f3336dc4fa4cfe401b0535d2bd901ad5f8c7`, and
+  `0d0407a43445ad051ad14038c0387355e3a179c66839b5f564669c7a2dc79429`;
+  the independent ledger records the state digest and byte SHA-256 for each stream dump.
+- Replay: N/A (server/package task with no browser-reaching surface; E5-T09 owns the PR
+  UI) + mitigation: production-runtime crash tests, canonical two-stream dumps,
+  independent replay digests, exact bisect/refusal checks, and causal source mutation.
+  No root/full suite, cold clone, dependency gate, Replay, browser, or unrelated test was
+  run. Status remains `implemented` pending a fresh independent critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- Production journal recovery now routes `pr.merge` through
+  `recoverPrMergeOperation`; generic command recovery remains unchanged for every other
+  operation.
+- Both crash windows close idempotently with exactly one target merge, one durable
+  `pr.merged`, zero persisted `pr.merge`, one completion, and grant revocation.
+- The canonical target/PR dumps, all 12 independent replay equalities, merge-offset
+  citations, and both source-level causal mutations independently support the claim.
+- No gate was rerun during criticism. Every prior blocker is closed.

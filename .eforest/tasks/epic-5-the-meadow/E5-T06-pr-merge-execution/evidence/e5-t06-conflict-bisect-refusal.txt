@@ -1,0 +1,9 @@
+command=node tools/verify/e5_t06_evidence.mjs
+exit=0
+RECOVERY target-merges=1 pr-outcomes=1 commands=0 target-offset=0000000000000000_0000000000000001 pr-offset=0000000000000000_0000000000000002 OK
+BISECT fixture=recovery-fast-forward offset=0000000000000000_0000000000000001 merge-event-offset=0000000000000000_0000000000000001 common-records=1 OK
+CONFLICT target-merge-offset=0000000000000000_0000000000000002 pr-target-merge-offset=0000000000000000_0000000000000002 target-conflicts=1 pr-conflicts=1 tree-before=d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6 tree-after=d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6 state=conflicted OK
+REFUSAL case=unapproved reason=pr/merge-not-approved pr-head=unchanged target-head=unchanged pr-digest=b147744505278eb4f92df9c5d0a24bda988d385680d7da23f9216f0cfc547c23 target-digest=d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6 OK
+MUTATION fixture=recovery-pr byte=638 digest-mismatch EXPECTED-FAIL OK
+MUTATION-EXPECTED EXPECTED-FAIL OK
+E5_T06_STREAM_PROOF_OK recovery=exactly-once conflict=mirrored bisect=pinned refusal=neutral independent-replays=12 mutations=2

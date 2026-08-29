@@ -1,0 +1,1 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"author":"alice","body":"Not approved","forkOffset":"0000000000000000_0000000000000000","sourceBranch":"fs:maple/refusal-proof:feature:meta","targetBranch":"fs:maple/refusal-proof:main:meta","title":"Refusal proof","v":1},"ts":1800000000000,"type":"pr.opened"}

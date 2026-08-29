@@ -1,5 +1,7 @@
 import type { Server } from "node:http";
 import { isAbsolute } from "node:path";
+import { parseBranchStreamId } from "@eforest/pr";
+import { StreamFsRepo } from "@eforest/streamfs";
 import { BearerVerifier } from "./auth.js";
 import { GrantAwareVerifier, type AuthorizationVerifier } from "./auth/grants.js";
 import { OidcClient, OidcTransactions } from "./auth/oidc.js";
@@ -128,13 +130,19 @@ export async function createPlatformProductionRuntime(
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
+  let gateway!: PlatformGateway;
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     ...(options.now === undefined ? {} : { now: options.now }),
     recoverNamespaceOperation: (operationId, operation) =>
       namespaces.recover(operationId, operation.streamId, operation.event),
-    recoverGrantOperation: (operationId, operation) =>
-      writers.recover(operationId, operation.streamId, operation.event).then(() => undefined),
+    recoverGrantOperation: async (operationId, operation) => {
+      if (operation.event.type === "pr.merge") {
+        await gateway.recoverPrMergeOperation(operationId, operation.streamId, operation.event);
+        return;
+      }
+      await writers.recover(operationId, operation.streamId, operation.event);
+    },
   });
   await identity.ensure();
   await namespaces.reconcile();
@@ -149,7 +157,7 @@ export async function createPlatformProductionRuntime(
     ...(options.rateLimit ?? DEFAULT_PLATFORM_RATE_LIMIT),
     ...(options.now === undefined ? {} : { now: options.now }),
   });
-  const gateway = new PlatformGateway({
+  gateway = new PlatformGateway({
     verifier:
       options.gatewayVerifier ??
       new GrantAwareVerifier({
@@ -161,6 +169,20 @@ export async function createPlatformProductionRuntime(
     namespaces,
     registry,
     rateLimiter,
+    prMerge: {
+      resolveBranch: async (streamId) => {
+        const branch = parseBranchStreamId(streamId);
+        if (branch === undefined || !(await streams.exists(streamId))) return undefined;
+        return new StreamFsRepo(
+          config.EFOREST_SERVER_URL.replace(/\/+$/, ""),
+          globalThis.fetch,
+          `${branch.org}/${branch.repo}`,
+          branch.branch,
+          options.now ?? Date.now,
+        );
+      },
+      ...(options.now === undefined ? {} : { now: options.now }),
+    },
     ...(webRoot === undefined ? {} : { webRoot }),
     ...(options.gatewayDecideAuthorization === undefined
       ? {}

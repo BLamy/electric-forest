@@ -11,9 +11,11 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "test": "vitest run"
+    "test": "cd ../.. && vitest run packages/meadow/test"
   },
   "dependencies": {
+    "@eforest/evidence": "workspace:*",
+    "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/streamfs": "workspace:*"
   }

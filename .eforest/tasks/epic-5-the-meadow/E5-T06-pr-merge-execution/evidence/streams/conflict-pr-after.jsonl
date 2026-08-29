@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"author":"alice","body":"Fully conflicted add-add merge","forkOffset":"0000000000000000_0000000000000000","sourceBranch":"fs:maple/conflict-proof:feature:meta","targetBranch":"fs:maple/conflict-proof:main:meta","title":"Conflict proof","v":1},"ts":1800000000000,"type":"pr.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"reviewer":"reviewer","v":1},"ts":1800000000000,"type":"pr.approved"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":"alice","conflicts":[{"kind":"add-add","path":"same.txt"}],"targetMergeOffset":"0000000000000000_0000000000000002","v":1,"writer":{"op":"conflict-proof","seq":1,"sub":"alice","v":1}},"ts":1800000000000,"type":"pr.merge-conflicted"}

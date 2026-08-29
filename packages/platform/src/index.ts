@@ -32,7 +32,12 @@ export {
   type AuthzTarget,
 } from "./authz/decide.js";
 export { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js";
-export { PlatformGateway, createPlatformHandler, type PlatformGatewayOptions } from "./gateway.js";
+export {
+  PlatformGateway,
+  createPlatformHandler,
+  type PlatformGatewayOptions,
+  type PlatformPrMergeOptions,
+} from "./gateway.js";
 export {
   OfficialStreamAdapter,
   StreamForkExistsError,
