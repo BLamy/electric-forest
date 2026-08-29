@@ -1,0 +1,9 @@
+E5-T08 patch/full-write parity
+patch-digest=d33b6bd980b3bb1c9aa02af41222f857a2349ef28dbc59c1c4847e11ae854d34
+full-write-digest=d33b6bd980b3bb1c9aa02af41222f857a2349ef28dbc59c1c4847e11ae854d34
+patch-wire-bytes=290
+full-write-wire-bytes=5422
+patch-wire-strictly-smaller=true
+browser-save-events=fs.file.patch,fs.file.patch,fs.file.write
+browser-full-write-content-generation=canonical-exact-bytes
+E5_T08_PATCH_PARITY_OK

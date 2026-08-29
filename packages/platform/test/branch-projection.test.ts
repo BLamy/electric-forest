@@ -1,7 +1,14 @@
 import { emptyView } from "@eforest/identity";
 import type { Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
-import { digestBytes, treeDigest, type FsTree } from "@eforest/streamfs";
+import {
+  digestBytes,
+  fileCreateEvent,
+  filePatchEvent,
+  fileWriteEvent,
+  treeDigest,
+  type FsTree,
+} from "@eforest/streamfs";
 import { replayWithReducer, streamFsReducerDefinition } from "@eforest/reducers";
 import { describe, expect, it } from "vitest";
 import { PlatformGateway, type AuthorizationVerifier, type StreamAdapter } from "../src/index.js";
@@ -9,6 +16,7 @@ import type { AuthzInput } from "../src/authz/decide.js";
 
 const mainStream = "fs:maple/reading-room:main:meta";
 const branchStream = "fs:maple/reading-room:feature:meta";
+const wikiStream = "fs:maple/reading-room:wiki:meta";
 const mainContent = "fs:maple/reading-room:main:file:readme";
 const branchContent = "fs:maple/reading-room:feature:file:1-feature";
 const initial = new TextEncoder().encode("main\n");
@@ -39,6 +47,13 @@ class MemoryAdapter implements StreamAdapter {
 
   async *follow(): AsyncIterable<unknown> {
     yield* [];
+  }
+}
+
+class MutableMemoryAdapter extends MemoryAdapter {
+  override async append(streamId: string, event: Event): Promise<void> {
+    const current = this.values.get(streamId) ?? [];
+    this.values.set(streamId, [...current, event]);
   }
 }
 
@@ -184,6 +199,120 @@ function inheritedPrefixFixture(): MemoryAdapter {
 }
 
 describe("native fork branch projections", () => {
+  it("serializes concurrent parentless genesis dispatches into one accepted branch", async () => {
+    const adapter = new MutableMemoryAdapter(new Map([[wikiStream, []]]));
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const genesis = {
+      type: "fs.branch.genesis",
+      payload: { v: 1, branch: "wiki" },
+      ts: 42,
+    } satisfies Event;
+    const dispatch = (): Promise<Response> =>
+      gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({ streamId: wikiStream, event: genesis }),
+        }),
+      );
+
+    const responses = await Promise.all([dispatch(), dispatch()]);
+    expect(responses.map((response) => response.status).sort()).toEqual([202, 409]);
+    const refusal = responses.find((response) => response.status === 409)!;
+    await expect(refusal.json()).resolves.toMatchObject({
+      error: { class: "validator-rejected", reason: "fs/branch-exists" },
+    });
+    expect(adapter.values.get(wikiStream)).toHaveLength(1);
+    expect(adapter.values.get(wikiStream)?.[0]).toMatchObject(genesis);
+  });
+
+  it("preserves HTTP 409 for stale-base through the browser session dispatch route", async () => {
+    const homePath = "home.md";
+    const adapter = new MutableMemoryAdapter(
+      new Map([
+        [
+          wikiStream,
+          [
+            record(0, fileCreateEvent(homePath, `${wikiStream}:file:home`, 1)),
+            record(1, fileWriteEvent(initial, homePath, "BASE_NONE", 2)),
+          ],
+        ],
+      ]),
+    );
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const stalePatch = filePatchEvent(initial, feature, homePath, "BASE_NONE", 3);
+
+    const response = await gateway.handleSessionDispatch(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ streamId: wikiStream, event: stalePatch }),
+      }),
+      "branch-test",
+      emptyView(),
+      offsetForOrdinal(0),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        class: "validator-rejected",
+        reason: "stale-base",
+        conflict: {
+          path: homePath,
+          expectedBase: offsetForOrdinal(1),
+          actualBase: "BASE_NONE",
+        },
+      },
+    });
+    expect(adapter.values.get(wikiStream)).toHaveLength(2);
+  });
+
+  it("accepts a parentless wiki genesis as an ordinary empty branch", async () => {
+    const adapter = new MemoryAdapter(
+      new Map([
+        [
+          wikiStream,
+          [
+            record(0, {
+              type: "fs.branch.genesis",
+              payload: { v: 1, branch: "wiki" },
+              ts: 1,
+            }),
+          ],
+        ],
+      ]),
+    );
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+
+    const response = await gateway.handle(request("wiki", "events?"));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      readonly events: readonly Event[];
+      readonly branch: { readonly parentStreamId: string | null };
+    };
+    expect(body.events.map((event) => event.type)).toEqual(["fs.branch.genesis"]);
+    expect(body.branch.parentStreamId).toBeNull();
+    const replay = replayWithReducer(streamFsReducerDefinition, body.events);
+    expect(replay.digest).toBe(treeDigest(replay.state as FsTree));
+    expect(replay.state).toMatchObject({ files: {}, dirs: {} });
+  });
+
   it("resolves ancestry into an isolated contiguous tree projection", async () => {
     const adapter = fixture();
     const gateway = new PlatformGateway({

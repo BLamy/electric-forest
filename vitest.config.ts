@@ -40,7 +40,7 @@ export default defineConfig({
     ],
   },
   test: {
-    include: ["packages/**/*.test.ts"],
+    include: ["packages/**/*.test.ts", "apps/web/src/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
     // Harness scheduling budgets, NOT product budgets: sized for a heavily

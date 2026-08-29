@@ -120,16 +120,20 @@ function metadata(
   path: string,
   contentStreamId: string,
 ): FileContentState {
+  const bytes = new Uint8Array();
   return {
     ...state,
     identity,
     currentPath: path,
     contentStreamId,
-    bytes: null,
-    text: null,
+    // A newly-created StreamFS file is canonically the empty byte string.
+    // Keeping those bytes available lets a self-contained patch be the first
+    // content generation without inventing a side-channel content write.
+    bytes,
+    text: "",
     contentDigest: initialDigest(),
     size: 0,
-    status: "empty",
+    status: "text",
   };
 }
 
@@ -327,6 +331,7 @@ export function fileContentReducer(state: FileContentState, event: Event): FileC
       next = { ...next, currentPath: to };
     } else if (state.identity === null && to === state.routePath && source !== undefined) {
       next = metadata(next, source.contentStreamId, to, source.contentStreamId);
+      if (payload.contentBase64 !== undefined) next = fullContent(next, payload, source);
     }
     return next;
   }

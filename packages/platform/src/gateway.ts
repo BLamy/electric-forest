@@ -11,6 +11,7 @@ import {
 } from "@eforest/issues";
 import {
   checkpoint as applicationCheckpoint,
+  isDurableConflict,
   isDurableExistsConflict,
   isDurableNotFound,
   type StreamBatch,
@@ -41,8 +42,10 @@ import {
   isFsFileContentEvent,
   isFsEvent,
   isFsBranchForkEvent,
+  isFsBranchGenesisEvent,
   isBranchName,
   isValidFsPath,
+  applyPatch,
   patchResultSize,
   resolveBranchLog,
   type BranchDump,
@@ -99,6 +102,7 @@ import {
   WriterLaneDispatcher,
   WriterLaneRefusalError,
   reduceWriterLanes,
+  type WriterScopedEvent,
 } from "./writer-lanes.js";
 import { classifyPlatformRoute } from "./route-topology.js";
 import {
@@ -212,6 +216,12 @@ function moveBasePaths(values: Map<string, string>, from: string, to: string): v
 }
 
 function validateFsBase(records: readonly unknown[], event: Event): void {
+  if (event.type === "fs.branch.genesis") {
+    if (records.length > 0) {
+      throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+    }
+    return;
+  }
   if (event.type !== "fs.file.write" && event.type !== "fs.file.patch") return;
   const payload = event.payload as Record<string, unknown>;
   if (typeof payload.path !== "string" || typeof payload.base !== "string") return;
@@ -256,6 +266,102 @@ function validateFsBase(records: readonly unknown[], event: Event): void {
       actualBase: payload.base,
     });
   }
+}
+
+function fsContentStreams(records: readonly unknown[]): Map<string, string> {
+  const streams = new Map<string, string>();
+  for (const candidate of records) {
+    if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const record = candidate as { readonly type?: unknown; readonly payload?: unknown };
+    if (
+      record.payload === null ||
+      typeof record.payload !== "object" ||
+      Array.isArray(record.payload)
+    ) {
+      continue;
+    }
+    const payload = record.payload as Record<string, unknown>;
+    if (record.type === "fs.rename") {
+      if (typeof payload.from === "string" && typeof payload.to === "string") {
+        moveFileMap(streams, payload.from, payload.to);
+      }
+      continue;
+    }
+    if (typeof payload.path !== "string") continue;
+    if (record.type === "fs.file.create" && typeof payload.contentStreamId === "string") {
+      streams.set(payload.path, payload.contentStreamId);
+    } else if (record.type === "fs.file.delete") {
+      streams.delete(payload.path);
+    }
+  }
+  return streams;
+}
+
+function fullWriteContentStream(
+  records: readonly unknown[],
+  write: Event,
+  contentEvent: Event,
+): string {
+  if (write.type !== "fs.file.write" || !isFsFileContentEvent(contentEvent)) {
+    throw new TypeError("invalid_full_write_content_event");
+  }
+  const payload = write.payload as Record<string, unknown>;
+  const path = payload.path;
+  if (typeof path !== "string") throw new TypeError("invalid_full_write_path");
+  const contentStreamId = fsContentStreams(records).get(path);
+  if (
+    contentStreamId === undefined ||
+    contentEvent.payload.contentStreamId !== contentStreamId
+  ) {
+    throw new TypeError("full_write_content_stream_mismatch");
+  }
+  const encoded = contentEvent.payload.contentBase64;
+  const bytes = Buffer.from(encoded, "base64");
+  if (bytes.toString("base64") !== encoded) {
+    throw new TypeError("full_write_content_not_canonical_base64");
+  }
+  if (
+    payload.contentSha256 !== createHash("sha256").update(bytes).digest("hex") ||
+    payload.size !== bytes.byteLength
+  ) {
+    throw new TypeError("full_write_content_integrity_mismatch");
+  }
+  return contentStreamId;
+}
+
+async function stageFullWriteContent(
+  streams: StreamAdapter,
+  metadataRecords: readonly unknown[],
+  write: Event,
+  contentEvent: Event,
+  operationId?: string,
+): Promise<void> {
+  const contentStreamId = fullWriteContentStream(metadataRecords, write, contentEvent);
+  try {
+    await streams.create(contentStreamId);
+  } catch (error) {
+    if (!isDurableExistsConflict(error)) throw error;
+  }
+  let lastLength = -1;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const records = await streams.read(contentStreamId);
+    const applicationOffset = offsetForOrdinal(records.length);
+    try {
+      await streams.append(contentStreamId, contentEvent, {
+        sequence: applicationOffset,
+        applicationOffset,
+        ...(operationId === undefined
+          ? {}
+          : { idempotencyKey: `${operationId}:fs-file-content` }),
+      });
+      return;
+    } catch (error) {
+      if (!isDurableConflict(error)) throw error;
+      if (records.length <= lastLength) throw new WriterLaneContentionError();
+      lastLength = records.length;
+    }
+  }
+  throw new WriterLaneContentionError();
 }
 
 function issueEventWithoutServerMetadata(value: unknown): Event {
@@ -466,6 +572,13 @@ function branchFork(record: StreamRecord | undefined) {
   if (record === undefined) return undefined;
   const event = { type: record.type, payload: record.payload, ts: record.ts };
   return isFsBranchForkEvent(event) ? event : undefined;
+}
+
+function branchGenesis(record: StreamRecord | undefined) {
+  if (record === undefined) return undefined;
+  const clean = stripWriterMetadata(record);
+  const event = { type: clean.type, payload: clean.payload, ts: clean.ts };
+  return isFsBranchGenesisEvent(event) ? event : undefined;
 }
 
 /**
@@ -817,6 +930,7 @@ function branchForkParentMatches(
 function parseDispatch(value: unknown): {
   readonly streamId: string;
   readonly event: Event;
+  readonly contentEvent?: Event;
   readonly writerSeq?: number;
 } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -834,6 +948,18 @@ function parseDispatch(value: unknown): {
   ) {
     throw new TypeError("payload_must_be_object");
   }
+  const contentEvent = record.contentEvent;
+  if (contentEvent !== undefined && !isEvent(contentEvent)) {
+    throw new TypeError("invalid_content_event");
+  }
+  if (
+    contentEvent !== undefined &&
+    (contentEvent.payload === null ||
+      typeof contentEvent.payload !== "object" ||
+      Array.isArray(contentEvent.payload))
+  ) {
+    throw new TypeError("content_payload_must_be_object");
+  }
   if (
     record.writerSeq !== undefined &&
     (typeof record.writerSeq !== "number" ||
@@ -845,6 +971,7 @@ function parseDispatch(value: unknown): {
   return {
     streamId: record.streamId,
     event: record.event,
+    ...(contentEvent === undefined ? {} : { contentEvent }),
     ...(record.writerSeq === undefined ? {} : { writerSeq: record.writerSeq as number }),
   };
 }
@@ -971,13 +1098,15 @@ export class PlatformGateway {
       identityOffset,
     });
     if (response.status !== 409) return response;
-    // Chromium reports handled fetch 4xx responses as console errors. Keep the
-    // validator's exact structured refusal while transporting it as a normal
-    // same-origin web-session envelope; bearer/API callers retain HTTP 409.
-    const body = (await response.json()) as {
+    // Chromium reports handled fetch 4xx responses as console errors. Most
+    // same-origin session validators retain the legacy 200 refusal envelope,
+    // but the StreamFS stale-write fence is contractually HTTP 409 in every
+    // transport, including the browser route.
+    const body = (await response.clone().json()) as {
       readonly error?: Readonly<Record<string, unknown>>;
     };
     const error = body.error;
+    if (error?.reason === "stale-base") return response;
     const refusal =
       error !== undefined && typeof error.reason === "string" && error.message === undefined
         ? { ...body, error: { ...error, message: error.reason } }
@@ -1221,6 +1350,7 @@ export class PlatformGateway {
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
     const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
+    const branchGenesisEvent = isFsBranchGenesisEvent(parsed.event) ? parsed.event : undefined;
     const target = parsed.streamId.startsWith("issue-board:")
       ? ({ kind: "internal" as const, streamId: parsed.streamId } satisfies AuthzTarget)
       : branchForkEvent === undefined
@@ -1249,6 +1379,19 @@ export class PlatformGateway {
         });
       }
     }
+    if (
+      branchGenesisEvent !== undefined &&
+      target.kind === "repo" &&
+      branchGenesisEvent.payload.branch !== target.branch
+    ) {
+      return json(409, {
+        error: {
+          class: "validator-rejected",
+          reason: "fs/invalid-branch-name",
+          message: "branch genesis does not match its target stream",
+        },
+      });
+    }
     if (revokedCredential !== undefined) {
       if (target.kind === "repo" || target.kind === "malformed") {
         return authzRefusalResponse({
@@ -1265,6 +1408,18 @@ export class PlatformGateway {
     }
     if (!namespaceEvent && ownKey(parsed.event.payload, "writer")) {
       return failure(400, "invalid_request", "client_writer_forbidden");
+    }
+    if (
+      parsed.contentEvent !== undefined &&
+      (ownKey(parsed.contentEvent.payload, "actor") || ownKey(parsed.contentEvent.payload, "writer"))
+    ) {
+      return failure(400, "invalid_request", "client_content_writer_metadata_forbidden");
+    }
+    if (
+      parsed.contentEvent !== undefined &&
+      (parsed.event.type !== "fs.file.write" || !isFsFileContentEvent(parsed.contentEvent))
+    ) {
+      return failure(400, "invalid_request", "invalid_full_write_content_event");
     }
 
     try {
@@ -1411,6 +1566,16 @@ export class PlatformGateway {
         let committedEvent: Event | undefined;
         let issueCatalogOffset: Offset | undefined;
         try {
+          if (branchGenesisEvent !== undefined) {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (isDurableExistsConflict(error)) {
+                throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+              }
+              throw error;
+            }
+          }
           if (isIssueStreamId(parsed.streamId) && parsed.event.type === "issue.opened") {
             try {
               await this.streams.create(parsed.streamId);
@@ -1425,6 +1590,51 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
+          let fullWriteContentStaged = false;
+          const validateApplication = async (
+            records: readonly unknown[],
+            stamped: WriterScopedEvent,
+          ): Promise<void> => {
+            validateFsBase(records, stamped);
+            if (isIssueStreamId(parsed.streamId)) {
+              issueCatalogOffset = await validateIssueDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.issueBoards,
+                parsed.issueSource,
+              );
+            }
+            if (isRepoLabelsStreamId(parsed.streamId)) {
+              await validateLabelDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+              );
+            }
+            if (isPrStreamId(parsed.streamId)) {
+              await validatePrDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.streams,
+              );
+            }
+            if (parsed.contentEvent !== undefined && !fullWriteContentStaged) {
+              if (assertActive !== undefined) await assertActive();
+              await stageFullWriteContent(
+                this.streams,
+                records,
+                stamped,
+                parsed.contentEvent,
+                operationId,
+              );
+              fullWriteContentStaged = true;
+            }
+          };
           if (operationId === undefined) {
             const receipt = await this.writers.dispatch(
               parsed.streamId,
@@ -1432,36 +1642,7 @@ export class PlatformGateway {
               identity.sub,
               {
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-                validate: async (records, stamped) => {
-                  validateFsBase(records, stamped);
-                  if (isIssueStreamId(parsed.streamId)) {
-                    issueCatalogOffset = await validateIssueDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.issueBoards,
-                      parsed.issueSource,
-                    );
-                  }
-                  if (isRepoLabelsStreamId(parsed.streamId)) {
-                    await validateLabelDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                    );
-                  }
-                  if (isPrStreamId(parsed.streamId)) {
-                    await validatePrDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.streams,
-                    );
-                  }
-                },
+                validate: validateApplication,
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1475,36 +1656,7 @@ export class PlatformGateway {
                 operationId,
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
                 ...(assertActive === undefined ? {} : { assertActive }),
-                validate: async (records, stamped) => {
-                  validateFsBase(records, stamped);
-                  if (isIssueStreamId(parsed.streamId)) {
-                    issueCatalogOffset = await validateIssueDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.issueBoards,
-                      parsed.issueSource,
-                    );
-                  }
-                  if (isRepoLabelsStreamId(parsed.streamId)) {
-                    await validateLabelDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                    );
-                  }
-                  if (isPrStreamId(parsed.streamId)) {
-                    await validatePrDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.streams,
-                    );
-                  }
-                },
+                validate: validateApplication,
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1513,6 +1665,8 @@ export class PlatformGateway {
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (
+            error instanceof BranchForkRefusalError ||
+            error instanceof TypeError ||
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
             error instanceof WriterLaneContentionError ||
@@ -2384,6 +2538,7 @@ export class PlatformGateway {
     const contentIndexes = new Map<string, number>();
     const pathStreams = new Map<string, string>();
     const expectations = new Map<string, FileContentExpectation>();
+    const contentBytes = new Map<string, Uint8Array>();
     const events: StreamRecord[] = [];
     const append = (type: string, payload: unknown, ts: number): void => {
       events.push({ offset: offsetForOrdinal(events.length), type, payload, ts });
@@ -2419,6 +2574,9 @@ export class PlatformGateway {
           nextPayload.contentBase64 = consumed.content.contentBase64;
           nextPayload.contentSha256 = expected.digest;
           nextPayload.size = expected.size;
+          contentBytes.set(filePath, Buffer.from(consumed.content.contentBase64, "base64"));
+        } else if (previousStream === undefined) {
+          contentBytes.set(filePath, new Uint8Array());
         }
         pathStreams.set(filePath, contentStreamId);
         append(record.type, nextPayload, record.ts);
@@ -2447,6 +2605,7 @@ export class PlatformGateway {
         );
         contentIndexes.set(contentStreamId, consumed.next);
         expectations.set(filePath, expected);
+        contentBytes.set(filePath, Buffer.from(consumed.content.contentBase64, "base64"));
         append(
           record.type,
           { ...payload, contentBase64: consumed.content.contentBase64 },
@@ -2475,6 +2634,21 @@ export class PlatformGateway {
           );
         }
         expectations.set(filePath, { digest: resultDigest, size: resultSize });
+        const previousBytes = contentBytes.get(filePath);
+        if (previousBytes !== undefined) {
+          try {
+            const result = applyPatch(previousBytes, payload.ops as PatchOps);
+            if (createHash("sha256").update(result).digest("hex") !== resultDigest) {
+              throw new Error("patch/result-mismatch");
+            }
+            contentBytes.set(filePath, result);
+          } catch (error) {
+            throw new FileContentProjectionError(
+              record.offset,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
+        }
         append(record.type, payload, record.ts);
         continue;
       }
@@ -2483,10 +2657,31 @@ export class PlatformGateway {
         const to = requiredString(payload.to, "to", record.offset);
         moveFileMap(pathStreams, from, to);
         moveFileMap(expectations, from, to);
+        moveFileMap(contentBytes, from, to);
+        const materialized = contentBytes.get(path);
+        const expected = expectations.get(path);
+        if (
+          (path === to || path.startsWith(`${to}/`)) &&
+          materialized !== undefined &&
+          expected !== undefined
+        ) {
+          append(
+            record.type,
+            {
+              ...payload,
+              contentBase64: Buffer.from(materialized).toString("base64"),
+              contentSha256: expected.digest,
+              size: expected.size,
+            },
+            record.ts,
+          );
+          continue;
+        }
       } else if (record.type === "fs.file.delete") {
         const filePath = requiredString(payload.path, "path", record.offset);
         pathStreams.delete(filePath);
         expectations.delete(filePath);
+        contentBytes.delete(filePath);
       }
       append(record.type, payload, record.ts);
     }
@@ -2717,6 +2912,7 @@ export class PlatformGateway {
           ? (event.payload as Record<string, unknown>)
           : undefined;
       const supportedFsVersion =
+        (event.type === "fs.branch.genesis" && payload?.v === 1) ||
         (event.type === "fs.branch.fork" && payload?.v === 1) ||
         (event.type === "fs.branch.merge" && (payload?.v === 1 || payload?.v === 2)) ||
         ((event.type === "fs.file.create" ||
@@ -2771,13 +2967,14 @@ export class PlatformGateway {
   ): Promise<RepositoryProjection> {
     const leaf = branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]);
     const initialFork = branchFork(leaf[0]);
+    const initialGenesis = branchGenesis(leaf[0]);
     const baseMetadata = {
       parentStreamId: null,
       forkCheckpoint: OFFSET_BEFORE_FIRST,
       ancestry: [],
     } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
     if (initialFork === undefined) {
-      if (branch !== "main" && leaf.length > 0) {
+      if (branch !== "main" && leaf.length > 0 && initialGenesis?.payload.branch !== branch) {
         throw new ApplicationProjectionError(
           OFFSET_BEFORE_FIRST,
           `branch ${branch} is missing its first fs.branch.fork directive`,
@@ -2880,13 +3077,14 @@ export class PlatformGateway {
       );
     }
     const firstFork = branchFork(raw[0]);
+    const firstGenesis = branchGenesis(raw[0]);
     const metadataBase = {
       parentStreamId: null,
       forkCheckpoint: OFFSET_BEFORE_FIRST,
       ancestry: [],
     } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
     if (firstFork === undefined) {
-      if (requireFork && raw.length > 0) {
+      if (requireFork && raw.length > 0 && firstGenesis?.payload.branch !== branch) {
         throw new ApplicationProjectionError(
           OFFSET_BEFORE_FIRST,
           `branch ${branch} is missing its first fs.branch.fork directive`,

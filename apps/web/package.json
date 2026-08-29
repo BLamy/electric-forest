@@ -7,8 +7,10 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@eforest/reducers": "workspace:*",
+    "@brett_lamy/docstream": "0.3.7",
+    "@eforest/meadow": "workspace:*",
     "@eforest/protocol": "workspace:*",
+    "@eforest/reducers": "workspace:*",
     "@eforest/streamfs": "workspace:*",
     "@eforest/web-hooks": "workspace:*",
     "react": "^19.2.3",

@@ -1,0 +1,260 @@
+{
+  "v": 1,
+  "candidateHead": "06d6d28853154a88e3f1719f07acceafc4e07ab5",
+  "replay": {
+    "status": "N/A",
+    "reason": "tools/replay/preflight.sh failed: unknown command mcp",
+    "mitigation": "focused production-runtime Playwright fallback with console and network interrogation"
+  },
+  "sessions": 2,
+  "liveBudgetMs": 2000,
+  "liveWithinBudget": true,
+  "fullWriteWithinBudget": true,
+  "renameWithinBudget": true,
+  "createWithinBudget": true,
+  "deleteWithinBudget": true,
+  "navigationCounts": {
+    "followerView": 0,
+    "followerIndex": 0
+  },
+  "console": {
+    "writerErrors": 0,
+    "followerErrors": 1,
+    "handledHttp409Errors": 1,
+    "unexpectedErrors": 0,
+    "pageErrors": 0,
+    "writerLog": [],
+    "followerLog": [
+      {
+        "page": "page-3",
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+      }
+    ],
+    "pageErrorLog": [],
+    "expectedCanceledWikiReads": 15,
+    "requestFailureLog": [
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/guide.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/disposable.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/disposable.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/guide.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      }
+    ],
+    "unexpectedRequestFailures": 0
+  },
+  "network": {
+    "dispatchPosts": [
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.branch.genesis",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.branch.genesis",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.create",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.create",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.delete",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.write",
+        "contentEvent": "fs.file.content"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.rename",
+        "contentEvent": null
+      }
+    ],
+    "responseReasons": [
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "fs/branch-exists",
+      "stale-base"
+    ],
+    "staleBaseStatus": 409,
+    "requestCount": 10,
+    "responseCount": 10,
+    "responseLifecycle": [
+      {
+        "status": 200,
+        "reason": "fs/branch-exists"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 409,
+        "reason": "stale-base"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      }
+    ],
+    "otherStateWrites": 0
+  },
+  "fullWrite": {
+    "metadataOffset": "0000000000000000_0000000000000005",
+    "contentStreamId": "fs:maple/reading-room:wiki:file:00000000-0000-4000-8000-000000000001",
+    "canonicalContentEvents": 2,
+    "exactBytes": true,
+    "writerSourceExact": true,
+    "followerSourceExact": true
+  },
+  "rename": {
+    "metadataOffset": "0000000000000000_0000000000000006",
+    "type": "fs.rename",
+    "oldPath": "home.md",
+    "oldRouteMissing": true,
+    "newPath": "guide.md",
+    "writerFollowerConverged": true
+  },
+  "assertions": {
+    "concurrentFirstOpenSingleGenesis": true,
+    "livePatch": true,
+    "threeAcceptedEdits": true,
+    "canonicalFullWrite": true,
+    "pointerRename": true,
+    "oldRouteMissing": true,
+    "staleRefusal": true,
+    "staleRefusalHttp409": true,
+    "noOptimisticApply": true,
+    "dispatchOnly": true,
+    "hostileMarkdownInert": true,
+    "hostileBytesVerbatim": true,
+    "deleteTombstone": true,
+    "domServerReplayGoldenParity": true,
+    "causalSensitivity": true
+  }
+}

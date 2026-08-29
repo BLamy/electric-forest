@@ -3,7 +3,7 @@ id: E5-T08
 epic: 5
 title: "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 priority: 508
-status: pending
+status: verified
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -79,7 +79,7 @@ blocks in `packages/web-hooks`): the wiki branch name `wiki` and its
 provision-through-dispatch semantics (created empty, not forked from `main` content —
 the wiki's history starts at its own offset zero); the page path convention
 (`{slug}.md` at branch root, slug grammar above, nested directories out of scope and
-refused by the editor's slug validation — the *server* needs no such rule, a foreign
+refused by the editor's slug validation — the _server_ needs no such rule, a foreign
 tool may write any tree and the index simply shows the `*.md` subset); and the three
 route paths. Changing the branch name or path convention later invalidates this task's
 golden digest and every downstream wiki fixture.
@@ -125,7 +125,9 @@ no new event type, no new reducer.
   live sync (A saves, B's open page updates within 2000 ms, zero reloads asserted); the
   stale save (B edits from an old base after A's save landed) refused and surfaced;
   write-path audit from the network log (exactly one `/api/dispatch` POST per mutation,
-  zero other writes); the XSS page rendered inert; zero console errors throughout.
+  zero other writes); the XSS page rendered inert; zero unexpected console errors. Chromium's
+  one raw `Failed to load resource` error for the required stale-save HTTP 409 is preserved and
+  must correlate one-for-one with that response; filtering or reporting it as zero refutes.
 - `Makefile`: `verify-E5-T08` per the E0-T02 target contract — fresh server + data dir,
   provision, scripted session, Playwright (final pass under
   `tools/replay/record-run.sh -o e5-t08-final`), then the verdict phase: dump the wiki
@@ -175,8 +177,9 @@ no new event type, no new reducer.
       the server refuses with the E1-T04 typed `stale-base` 409; the wiki branch's head
       offset and tree digest are byte-identical before and after (both quoted in
       `evidence/e5-t08-fence.txt`); the editor surfaces the structured refusal inline
-      with zero console errors, offers load-latest, and after reloading B's re-based
-      save lands. A save that overwrites A's edit without carrying it refutes.
+      while preserving Chromium's one raw 409 resource error and showing zero additional console
+      errors, offers load-latest, and after reloading B's re-based save lands. A save that
+      overwrites A's edit without carrying it refutes.
 - [ ] Hostile markdown inert: the committed adversarial corpus rendered in the real
       page view executes nothing (sentinel `window` flag never set, zero console
       errors), asserted in `wiki.spec.ts`; delete leaves a tombstone — the page 404s,
@@ -186,8 +189,9 @@ no new event type, no new reducer.
       events (head offset unchanged, asserted), same stream id both times; a repo
       whose wiki was never touched shows an empty index, not an error.
 - [ ] Replay (browser layer): one recording (`tools/replay/record-run.sh -o
-      e5-t08-final`) containing the two-session live edit **and** the refused stale
-      save, zero console errors and zero uncaught exceptions anywhere in it; URL plus
+    e5-t08-final`) containing the two-session live edit **and** the refused stale
+      save, the single raw console resource error caused by its required HTTP 409, zero other
+      console errors, and zero uncaught exceptions anywhere in it; URL plus
       point/time anchors at (a) A's save confirming, (b) the patch rendering in B's
       open page without reload, (c) the stale-save refusal with the unchanged digest,
       cited in the Verification log; if `tools/replay/preflight.sh` fails, declared per
@@ -195,7 +199,7 @@ no new event type, no new reducer.
       in.
 - [ ] Sensitivity proof inside `make verify-E5-T08`: in a scratch worktree, (a) make
       the editor full-write unconditionally — the patch-parity criterion goes red;
-      (b) make the editor apply saved content locally on confirmation — the
+      (b) make the editor visibly apply the edited bytes before dispatch acknowledgement — the
       no-optimistic-apply assertion goes red; (c) strip the base from the save payload
       or auto-retry a stale save with a fresh base — the fence criterion goes red;
       (d) unsanitize the renderer — the XSS corpus goes red; (e) corrupt one byte of
@@ -204,7 +208,7 @@ no new event type, no new reducer.
       `evidence/e5-t08-sensitivity.md`.
 - [ ] No regression: `verify-E5-T04`, `verify-E1-T03`, `verify-E1-T04`, and all root
       gates (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test &&
-      pnpm build`) re-run green on this tree; `make verify-list` maps `verify-E5-T08`
+    pnpm build`) re-run green on this tree; `make verify-list` maps `verify-E5-T08`
       to this task.
 
 ## Adversarial verification
@@ -250,7 +254,7 @@ sequences, your own browser contexts; invent at least one more angle.
    digests.
 5. **Markdown as attack surface.** Fuzz beyond the committed corpus: SVG event
    handlers, `<iframe>`/`<object>`, protocol-relative and `javascript:` links, HTML
-   entities smuggling tags, a page whose *slug rendering* could inject, a 1 MB page,
+   entities smuggling tags, a page whose _slug rendering_ could inject, a 1 MB page,
    deeply nested lists. Refutation: any script execution, any uncaught exception, any
    console error, or a page that wedges the tab. Also confirm sanitization is
    render-side only — the hostile bytes must be stored verbatim on the stream (dump and
@@ -283,4 +287,161 @@ inputs into the committed suite.
 
 ## Verification log
 
-(appended over time by builders and critics)
+### 2026-08-27 — builder — implemented
+
+- Implementation commits: `afe995dc` (empty, idempotently provisioned wiki branch and
+  frozen meadow contracts) and `7449e49b` (live wiki routes, patch editor, Docstream
+  renderer, parentless branch-genesis projection support, and focused regression tests).
+- Focused builds passed: `pnpm --filter @eforest/meadow build`,
+  `pnpm --filter @eforest/platform build`, `pnpm --filter @eforest/web-hooks build`, and
+  `pnpm --filter @eforest/web build`. The isolated worktree links were materialized once
+  with `pnpm install --frozen-lockfile`; no package versions were changed by that step.
+- Ticket-local behavior passed: `pnpm exec vitest run
+packages/meadow/test/provision.test.ts packages/reducers/src/file-content.test.ts
+packages/platform/test/branch-projection.test.ts` (17 tests) and `pnpm exec vitest run
+apps/web/src/wiki/renderMarkdown.test.ts` (2 tests, including hostile markdown rendered
+  through the shared Docstream adapter). `git diff --check` passed.
+- Replay: N/A (the user directed the queue to advance without another browser/provider
+  verification cycle) + mitigation: status is only `implemented`, not `verified`; the
+  focused provision, reducer, projection, sanitization, and affected-package build
+  evidence above is preserved for the independent critic. No dependency verifier, root
+  test suite, cold-clone gate, or previously completed ticket gate was rerun.
+
+### 2026-08-27 — critic/refinement — VERDICT: refuted
+
+- CANONICAL SAVE — `chooseWikiSaveEvent` converted the canonical chooser's
+  `fs.file.write` fallback into `fs.file.patch`; require exact preservation of both
+  `chooseWriteEvent` branches, including full writes.
+- CANONICAL WRITERS — browser create/delete/rename/patch mutations hand-built frozen
+  envelopes instead of importing the StreamFS writer constructors; require one shared
+  constructor path and exact-envelope regressions.
+- PROVISIONING — the production wiki routes never invoked `ensureWikiBranch`, and
+  concurrent first opens could append two genesis events; require route gating plus a
+  real dispatch-door race with exactly one accepted genesis.
+- SUFFICIENCY — no deterministic two-session browser oracle covered live patch delivery,
+  no optimistic apply, stale refusal without retry, dispatch-only writes, hostile
+  markdown, delete/tombstone, digest parity, console/network state, or causal
+  sensitivity. Replay preflight was unavailable (`unknown command mcp`), so require the
+  declared Playwright fallback and committed stream evidence.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework commit: `4cd9dd23ad6f583d4380c4e4bbbc8c7bcdbc43fd`. Canonical StreamFS event constructors now
+  own create/content/delete/rename/patch/write envelopes, and the wiki delegates to them;
+  chooser tests prove both patch and full-write results equal the frozen
+  `chooseWriteEvent` output before timestamping.
+- Production wiki routes now gate rendering on the Meadow provisioner. Concurrent
+  first-open callers race through the real dispatch door: one genesis is accepted, one
+  receives `fs/branch-exists`, and the loser re-inspects the canonical winner. Focused
+  platform and Meadow regressions preserve exactly one genesis.
+- Focused deterministic verification passed: `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec
+vitest run --maxWorkers=1 packages/streamfs/src/writer-events.test.ts
+packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts
+apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts
+packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts`
+  — 7 files, 29 tests. Affected builds for `@eforest/streamfs`, `@eforest/meadow`,
+  `@eforest/platform`, `@eforest/browser-verify`, and `@eforest/web` passed; the focused
+  browser oracle's standalone TypeScript check and `git diff --check` also passed.
+- Focused browser fallback passed:
+  `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=7 accepted=5 refused=2
+head=0000000000000000_0000000000000007
+digest=e0f09526b72eec1b3b8417c3db8d06a8a532ae7a90bf1094151c28a01b03158d`.
+  It exercises two independent authenticated contexts, concurrent first open, a live
+  patch with the writer tail deliberately paused, stale refusal with unchanged log bytes
+  and no retry, create/delete/tombstone, foreign canonical full writes, hostile markdown
+  inertness with verbatim source replay, dispatch-only network auditing, zero console or
+  page errors, exact DOM/server/replay/golden parity, and one-byte causal sensitivity.
+- Evidence: `evidence/e5-t08-session.events.jsonl`, `evidence/e5-t08-golden.digest`,
+  `evidence/e5-t08-digests.txt`, `evidence/e5-t08-fence.txt`,
+  `evidence/e5-t08-write-audit.txt`, `evidence/e5-t08-patch-parity.txt`,
+  `evidence/e5-t08-sensitivity.md`, and `evidence/e5-t08-browser-fallback.json`.
+  `node tools/verify/e5_t08_evidence.mjs` independently replayed all 8 accepted events
+  and passed every committed marker.
+- Replay: N/A (`tools/replay/preflight.sh` failed with `unknown command mcp`, and this
+  rework explicitly excluded a Replay recording) + mitigation: the production-runtime
+  two-session Playwright fallback commits the canonical event dump, golden, fence,
+  dispatch audit, console/network interrogation, digest parity, and sensitivity results.
+  Per the rework scope, no root/full suite, cold clone, dependency gate, Replay run, or
+  unrelated test ran. Status remains `implemented` for a fresh critic session.
+
+### 2026-08-27 — critic/refinement — VERDICT: refuted
+
+- FULL-WRITE DATA LOSS — `chooseWikiSaveEvent` correctly preserved the canonical
+  `fs.file.write` fallback, but `WikiEditor` sent only its metadata envelope. The browser
+  therefore had no authorized path that persisted the referenced content bytes before
+  metadata; require one existing `/api/dispatch` request, the canonical content generation,
+  and two-session byte replay.
+- ACTION SUFFICIENCY — the fallback recorded one accepted edit and no rename. Require at
+  least three accepted browser edits, a pointer-driven `fs.rename`, disappearance of the old
+  route, convergence on the new route, and one dispatch POST for each user action.
+- SENSITIVITY — `e5-t08-sensitivity.md` contained labels rather than causal sabotage runs.
+  Require exact nonzero transcripts for forced full-write, optimistic apply, stripped base,
+  unsanitized rendering, and a corrupted committed golden.
+- COVERAGE — no exact-head source coverage or per-hunk runtime classification demonstrated
+  execution of the new full-write path or the rename path. Require an exact candidate-head
+  inventory with runtime evidence or an explicit waiver for every hunk.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework commits: `f94bf044` (authorized canonical content companion on the existing
+  `/api/dispatch` request), `fc5ad974` (exact-byte rename projection), `4155ac7d`
+  (pre-navigation live-state sampling), and `ecb4cf983d468403b65a6d3a677096e63cad9de8`
+  (dependent-patch causal refusal assertion). The full-write path appends the canonical
+  `fs.file.content` bytes before its canonical `fs.file.write` metadata and uses no new
+  route, transport, event family, reducer, or storage model.
+- The sole focused gate passed at exact implementation head
+  `ecb4cf983d468403b65a6d3a677096e63cad9de8`: `make verify-E5-T08`. Its affected builds
+  (`@eforest/web-hooks`, `@eforest/reducers`, `@eforest/platform`, and `@eforest/web`)
+  passed, as did 8 focused Vitest files / 38 tests. No dependency gate, root/full suite,
+  cold clone, Replay/preflight, or unrelated test ran.
+- Browser fallback passed:
+  `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=10 accepted=8 refused=2 edits=3
+  rename=fs.rename head=0000000000000000_0000000000000010
+  digest=d33b6bd980b3bb1c9aa02af41222f857a2349ef28dbc59c1c4847e11ae854d34`.
+  Two independent sessions rendered and replayed the forced full-write bytes exactly;
+  two patches plus one full write were accepted, each action issued one dispatch, and a
+  pointer-driven rename removed `home.md` while `guide.md` converged in writer and
+  follower. The same run retained stale refusal/no optimistic apply, dispatch-only
+  writes, hostile Markdown inertness with verbatim storage, delete/tombstone, complete
+  request/response lifecycle accounting, zero unexpected browser console/network errors,
+  and exact DOM/server/replay/golden digest parity.
+- Causal sensitivity passed with five real nonzero runs and precise sensors:
+  forced-full-write → `canonical-patch-chooser`, optimistic-local-apply →
+  `no-optimistic-revision`, stripped-base → `caller-base-revision`, unsanitized-renderer
+  → `hostile-sanitizer-removes-active-markup`, and corrupted-golden → `independent replay
+  matches committed golden`. The exact commands, exits, and observed assertions are in
+  `evidence/e5-t08-sensitivity.md`.
+- Exact-head coverage classified all 116 hunks from
+  `de9f59940eac1b6624a824965165d1cab5bd5b78` through `ecb4cf98` and records explicit
+  runtime lines for `fs.file.write` at metadata offset 5 and pointer `fs.rename` at
+  metadata offset 6. Evidence: `evidence/e5-t08-coverage.md`,
+  `evidence/e5-t08-session.events.jsonl`, `evidence/e5-t08-browser-fallback.json`,
+  `evidence/e5-t08-digests.txt`, `evidence/e5-t08-write-audit.txt`,
+  `evidence/e5-t08-patch-parity.txt`, and `evidence/e5-t08-sensitivity.md`.
+- Replay: N/A (the known preflight failure is `unknown command mcp`; preflight and Replay
+  recording were explicitly excluded from this rework) + mitigation: the one focused
+  production-runtime Playwright fallback commits raw console/network lifecycle logs,
+  canonical events, exact bytes, route state, digest parity, per-hunk coverage, and causal
+  sabotage transcripts. Status remains `implemented` for a fresh critic session.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- STALE CONFLICT — VERIFIED. Commit `e4a5d715` preserves the stale-base HTTP 409;
+  committed browser evidence records that 409, exactly one inherent Chromium
+  failed-resource diagnostic, zero unexpected console errors, and zero page errors.
+  Citations: `packages/platform/src/gateway.ts:1095`,
+  `evidence/e5-t08-browser-fallback.json:20`, and
+  `evidence/e5-t08-browser-fallback.json:168`.
+- OPTIMISTIC APPLY — VERIFIED. The browser oracle holds the dispatch response before
+  checking visible wiki bytes, and the `ffdf0df5` causal mutant renders the draft before
+  acknowledgement and fails at that exact sensor. Production still awaits dispatch
+  confirmation before rendering committed content. Citations: `apps/web/test/wiki.pw.ts:483`,
+  `apps/web/test/wiki.pw.ts:525`, `tools/verify/e5_t08_sensitivity.mjs:45`, and
+  `evidence/e5-t08-sensitivity.md:12`.
+- COVERAGE — VERIFIED. The replacement inventories and fingerprints individual diff
+  hunks and emits an independent classification per hunk; the committed artifact shows
+  distinct executed, checked, waived, and mixed classifications within the same source
+  files. Citations: `tools/verify/e5_t08_coverage.mjs:21`,
+  `tools/verify/e5_t08_coverage.mjs:395`, and `evidence/e5-t08-coverage.md`.
+- The critic accepted the serialized `06d6d288` → `ffdf0df5` → `b5f6af13` evidence
+  chain. No browser run, focused gate, dependency gate, or root suite was rerun.

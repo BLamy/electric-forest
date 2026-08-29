@@ -17,6 +17,8 @@ import { humanizeRecord } from "./history.js";
 import { LabelManagement } from "./label-management.js";
 import { IssueBoardPage } from "./issues/IssueBoard.js";
 import { IssueDetailPage } from "./issues/IssueDetail.js";
+import { WikiRoute } from "./wiki/WikiRoute.js";
+import { isWikiSlug } from "./wiki/useWiki.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -140,6 +142,11 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
       </div>
 
       <nav aria-label="Repository settings">
+        <RouteLink
+          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/wiki`}
+        >
+          Wiki
+        </RouteLink>
         <RouteLink
           href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/issues`}
         >
@@ -884,6 +891,35 @@ function DeepTrail(): React.JSX.Element {
 
 export function PageRouter(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (
+    segments.length >= 5 &&
+    segments.length <= 7 &&
+    segments[0] === "orgs" &&
+    segments[2] === "repos" &&
+    segments[4] === "wiki"
+  ) {
+    const org = decodeRouteSegment(segments[1]!);
+    const repo = decodeRouteSegment(segments[3]!);
+    const slug = segments.length >= 6 ? decodeRouteSegment(segments[5]!) : undefined;
+    const editor = segments.length === 7 && segments[6] === "edit";
+    if (
+      org === undefined ||
+      repo === undefined ||
+      (segments.length >= 6 && (slug === undefined || !isWikiSlug(slug))) ||
+      (segments.length === 7 && !editor)
+    ) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return (
+      <WikiRoute
+        key={`wiki:${org}/${repo}/${slug ?? "index"}:${editor ? "edit" : "view"}`}
+        org={org}
+        repo={repo}
+        {...(slug === undefined ? {} : { slug })}
+        {...(editor ? { editor: true } : {})}
+      />
+    );
+  }
   if (
     (segments.length === 5 || segments.length === 6) &&
     segments[0] === "orgs" &&

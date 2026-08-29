@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t08 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -682,7 +682,24 @@ _v-e5-t05: _v-build
 	@output="$$(node tools/verify/e5_t05_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 3
 	@node tools/verify/e5_t05_evidence.mjs
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05
+verify-E5-T08: _verify-E5-T08-inner
+	@echo "verify-E5-T08: OK"
+
+_verify-E5-T08-inner: _v-e5-t08
+
+_v-e5-t08:
+	@pnpm --filter @eforest/web-hooks build
+	@pnpm --filter @eforest/reducers build
+	@pnpm --filter @eforest/platform build
+	@pnpm --filter @eforest/web build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/web-hooks/src/useDispatch.test.ts packages/streamfs/src/writer-events.test.ts packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts
+	@git diff --check
+	@node --experimental-strip-types apps/web/test/wiki.pw.ts
+	@node tools/verify/e5_t08_coverage.mjs
+	@node tools/verify/e5_t08_sensitivity.mjs
+	@node tools/verify/e5_t08_evidence.mjs
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

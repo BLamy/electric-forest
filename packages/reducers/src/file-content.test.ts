@@ -72,6 +72,21 @@ function loadedFile(path = "docs/readme.md", stream = "content-a") {
 }
 
 describe("file-content reducer", () => {
+  it("applies a self-contained first patch to the canonical empty create", () => {
+    const path = "home.md";
+    const result = encoder.encode("# Home\n");
+    let state = fileContentReducer(
+      fileContentReducer(fileContentInitialState, event("file.view.target", { v: 1, path })),
+      event("fs.file.create", { v: 2, path, contentStreamId: "wiki-home" }),
+    );
+    state = fileContentReducer(state, patch(path, new Uint8Array(), [["+", "# Home\n"]], result));
+
+    expect(state.status).toBe("text");
+    expect(state.text).toBe("# Home\n");
+    expect(state.bytes).toEqual(result);
+    expect(state.contentDigest).toBe(digestBytes(result));
+  });
+
   it("replays one full generation and a canonical text patch", () => {
     const { state, bytes } = loadedFile();
     const result = encoder.encode("hello durable streams\n");
@@ -250,5 +265,39 @@ describe("file-content reducer", () => {
     expect(recreated.currentPath).toBe("docs/readme.md");
     expect(recreated.text).toBe("recreated\n");
     expect(recreated.contentDigest).toBe(digestBytes(recreatedBytes));
+  });
+
+  it("materializes bytes when the requested route is the destination of a rename", () => {
+    const bytes = encoder.encode("renamed bytes\n");
+    let state = fileContentReducer(
+      fileContentInitialState,
+      event("file.view.target", { v: 1, path: "guide.md" }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.file.create", { v: 2, path: "home.md", contentStreamId: "content-home" }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.file.write", {
+        v: 2,
+        path: "home.md",
+        base: "BASE_NONE",
+        ...content(bytes),
+      }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.rename", {
+        v: 2,
+        from: "home.md",
+        to: "guide.md",
+        ...content(bytes),
+      }),
+    );
+
+    expect(state.currentPath).toBe("guide.md");
+    expect(state.text).toBe("renamed bytes\n");
+    expect(state.contentDigest).toBe(digestBytes(bytes));
   });
 });
