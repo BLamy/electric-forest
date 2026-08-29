@@ -57,3 +57,4 @@ verify-E3-T10
 verify-E3-capstone
 verify-E3-shell
 verify-E4-T01
+verify-E4-T02

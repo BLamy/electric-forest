@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"branch":"main","v":1},"ts":0,"type":"fs.branch.genesis"}
+{"offset":"0000000000000000_0000000000000001","payload":{"path":"nested","v":2},"ts":1,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:golden:main:file:1","path":"empty.bin","v":2},"ts":2,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"BASE_NONE","contentSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","path":"empty.bin","size":0,"v":2},"ts":3,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000004","payload":{"contentStreamId":"fs:golden:main:file:2","path":"nested/hello.txt","v":2},"ts":4,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000005","payload":{"base":"BASE_NONE","contentSha256":"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03","path":"nested/hello.txt","size":6,"v":2},"ts":5,"type":"fs.file.write"}

@@ -202,6 +202,7 @@ function mapOne(record: StreamRecord, state: FsWatchState): WatchMappingResult {
       return { events, state: current };
     }
     case "fs.branch.fork":
+    case "fs.branch.genesis":
     case "fs.snapshot":
     case "fs/merge-change":
     case "fs/merge-conflict":
