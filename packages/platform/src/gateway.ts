@@ -17,6 +17,7 @@ import {
 import { fileViewStreamId, requireReducer, type ReducerDefinition } from "@eforest/reducers";
 import {
   isFsFileContentEvent,
+  isFsEvent,
   isFsBranchForkEvent,
   isValidFsPath,
   patchResultSize,
@@ -70,6 +71,7 @@ import {
   WriterLaneCorruptionError,
   WriterLaneDispatcher,
   WriterLaneRefusalError,
+  reduceWriterLanes,
 } from "./writer-lanes.js";
 import { classifyPlatformRoute } from "./route-topology.js";
 import {
@@ -134,6 +136,17 @@ interface RepositoryProjection {
   readonly metadata: BranchProjectionMetadata;
 }
 
+interface HistoryProjectionRecord extends StreamRecord {
+  readonly sourceStreamId: string;
+  readonly actor: string;
+  readonly nativeOffset: Offset;
+}
+
+interface RepositoryHistory {
+  readonly records: readonly HistoryProjectionRecord[];
+  readonly metadata: BranchProjectionMetadata;
+}
+
 function branchFork(record: StreamRecord | undefined) {
   if (record === undefined) return undefined;
   const event = { type: record.type, payload: record.payload, ts: record.ts };
@@ -152,6 +165,45 @@ function stripWriterMetadata(record: StreamRecord): StreamRecord {
     Object.entries(record.payload).filter(([key]) => key !== "actor" && key !== "writer"),
   );
   return { ...record, payload };
+}
+
+function stampedActor(record: StreamRecord): string {
+  if (
+    record.payload === null ||
+    typeof record.payload !== "object" ||
+    Array.isArray(record.payload)
+  ) {
+    return "unknown-actor";
+  }
+  const payload = record.payload as Record<string, unknown>;
+  const writer = payload.writer;
+  const actor = payload.actor;
+  if (
+    writer !== null &&
+    typeof writer === "object" &&
+    !Array.isArray(writer) &&
+    (writer as Record<string, unknown>).v === 1 &&
+    typeof (writer as Record<string, unknown>).sub === "string" &&
+    Number.isSafeInteger((writer as Record<string, unknown>).seq) &&
+    ((writer as Record<string, unknown>).seq as number) >= 1 &&
+    actor === (writer as Record<string, unknown>).sub
+  ) {
+    return (writer as Record<string, unknown>).sub as string;
+  }
+  return "unknown-actor";
+}
+
+function publicHistoryRecord(
+  record: HistoryProjectionRecord,
+): Omit<HistoryProjectionRecord, "nativeOffset"> {
+  return {
+    offset: record.offset,
+    type: record.type,
+    payload: record.payload,
+    ts: record.ts,
+    sourceStreamId: record.sourceStreamId,
+    actor: record.actor,
+  };
 }
 
 function branchMetadata(
@@ -1145,10 +1197,31 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_reducer");
       }
     }
+    const historyProjection = projection && reducer?.id === "history";
 
     if (!live) {
       if (projection) {
         try {
+          if (historyProjection) {
+            const history = await this.historyProjection(decision.streamId, decoded[2]!);
+            const events = history.records.map(publicHistoryRecord);
+            const checkpoint = applicationCheckpoint(events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST);
+            validateProjectionReducer(reducer!, events);
+            return json(200, {
+              ok: true,
+              events,
+              checkpoint: checkpoint.offset,
+              reducer: { id: reducer!.id, version: reducer!.version },
+              branch: branchMetadata(
+                history.metadata.name,
+                history.metadata.streamId,
+                history.metadata,
+                checkpoint.offset,
+              ),
+              identityOffset: decision.identityOffset,
+              basis: decision.basis,
+            });
+          }
           const repository =
             decoded[2] === "main"
               ? {
@@ -1218,6 +1291,29 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_follow_parameters");
       }
       try {
+        if (historyProjection) {
+          const history = await this.followHistoryProjection(
+            decision.streamId,
+            decoded[2]!,
+            applicationCheckpoint(from),
+            waitMs,
+          );
+          const batch = history.batch;
+          return json(200, {
+            ok: true,
+            events: batch.events,
+            checkpoint: batch.checkpoint.offset,
+            reducer: { id: reducer!.id, version: reducer!.version },
+            branch: branchMetadata(
+              history.metadata.name,
+              history.metadata.streamId,
+              history.metadata,
+              batch.checkpoint.offset,
+            ),
+            identityOffset: decision.identityOffset,
+            basis: decision.basis,
+          });
+        }
         const repository =
           decoded[2] === "main"
             ? {
@@ -1689,6 +1785,112 @@ export class PlatformGateway {
     }
   }
 
+  private historyRecords(streamId: string, values: readonly unknown[]): readonly StreamRecord[] {
+    const records: StreamRecord[] = [];
+    let previous = OFFSET_BEFORE_FIRST;
+    for (const value of values) {
+      if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        throw new ApplicationProjectionError(
+          previous,
+          `history record on ${streamId} is not an object`,
+        );
+      }
+      const candidate = value as Record<string, unknown>;
+      const offset = candidate.offset;
+      if (
+        typeof offset !== "string" ||
+        !isWellFormedOffset(offset) ||
+        offset === OFFSET_BEFORE_FIRST
+      ) {
+        throw new ApplicationProjectionError(
+          String(offset ?? previous),
+          `history record on ${streamId} has an invalid native offset`,
+        );
+      }
+      if (compareOffsets(offset, previous) <= 0) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} is out of native offset order`,
+        );
+      }
+      let expected: Offset;
+      try {
+        expected = nextAllocatedOffset(previous);
+      } catch {
+        throw new ApplicationProjectionError(
+          previous,
+          `history record on ${streamId} has an invalid prior native offset`,
+        );
+      }
+      if (offset !== expected) {
+        throw new ApplicationProjectionError(
+          expected,
+          `history record on ${streamId} is missing a native event before ${offset}`,
+        );
+      }
+      if (
+        !Object.prototype.hasOwnProperty.call(candidate, "payload") ||
+        candidate.payload === undefined
+      ) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} has no payload`,
+        );
+      }
+      const event = { type: candidate.type, payload: candidate.payload, ts: candidate.ts };
+      if (!isEvent(event)) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} is not an event`,
+        );
+      }
+      const payload =
+        event.payload !== null && typeof event.payload === "object" && !Array.isArray(event.payload)
+          ? (event.payload as Record<string, unknown>)
+          : undefined;
+      const supportedFsVersion =
+        (event.type === "fs.branch.fork" && payload?.v === 1) ||
+        (event.type === "fs.branch.merge" && (payload?.v === 1 || payload?.v === 2)) ||
+        ((event.type === "fs.file.create" ||
+          event.type === "fs.file.write" ||
+          event.type === "fs.file.patch" ||
+          event.type === "fs.file.delete" ||
+          event.type === "fs.dir.create" ||
+          event.type === "fs.dir.remove" ||
+          event.type === "fs.rename") &&
+          payload?.v === 2);
+      const validationEvent = stripWriterMetadata({ offset, ...event });
+      if (
+        supportedFsVersion &&
+        !isFsEvent({
+          type: validationEvent.type,
+          payload: validationEvent.payload,
+          ts: validationEvent.ts,
+        })
+      ) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} has an invalid supported StreamFS payload`,
+        );
+      }
+      records.push({ offset, ...event });
+      previous = offset;
+    }
+    try {
+      reduceWriterLanes(records);
+    } catch (error) {
+      if (error instanceof WriterLaneCorruptionError) {
+        const record = records[error.index];
+        throw new ApplicationProjectionError(
+          record?.offset ?? previous,
+          `history record on ${streamId} has corrupt writer metadata`,
+        );
+      }
+      throw error;
+    }
+    return records;
+  }
+
   /**
    * Materialize a logical StreamFS branch from its native fork chain. The
    * transport stream only carries the fork directive plus branch-local
@@ -1774,6 +1976,146 @@ export class PlatformGateway {
         ancestry,
       },
     };
+  }
+
+  /**
+   * Materialize the complete canonical event history for a branch. Unlike the
+   * reducer projection above, this keeps the native fork directive and the
+   * server-stamped writer actor, then assigns one contiguous logical offset
+   * space so inherited and branch-local records have a total order.
+   */
+  private async repositoryHistory(
+    streamId: string,
+    branch: string,
+    visited = new Set<string>(),
+    requireFork = branch !== "main",
+  ): Promise<RepositoryHistory> {
+    if (visited.has(streamId)) {
+      throw new ApplicationProjectionError(
+        OFFSET_BEFORE_FIRST,
+        `branch history repeats ${streamId}`,
+      );
+    }
+    const nextVisited = new Set(visited);
+    nextVisited.add(streamId);
+    const raw = this.historyRecords(streamId, await this.readTarget(streamId));
+    const repeatedFork = raw.slice(1).find((record) => branchFork(record) !== undefined);
+    if (repeatedFork !== undefined) {
+      throw new ApplicationProjectionError(
+        repeatedFork.offset,
+        `branch history has a repeated fs.branch.fork directive at ${repeatedFork.offset}`,
+      );
+    }
+    const firstFork = branchFork(raw[0]);
+    const metadataBase = {
+      parentStreamId: null,
+      forkCheckpoint: OFFSET_BEFORE_FIRST,
+      ancestry: [],
+    } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
+    if (firstFork === undefined) {
+      if (requireFork && raw.length > 0) {
+        throw new ApplicationProjectionError(
+          OFFSET_BEFORE_FIRST,
+          `branch ${branch} is missing its first fs.branch.fork directive`,
+        );
+      }
+      return {
+        records: raw.map((record) => ({
+          ...record,
+          sourceStreamId: streamId,
+          actor: stampedActor(record),
+          nativeOffset: record.offset,
+        })),
+        metadata: { name: branch, streamId, ...metadataBase },
+      };
+    }
+
+    const parent = await this.repositoryHistory(
+      firstFork.payload.parentStreamId,
+      "parent",
+      nextVisited,
+      false,
+    );
+    const forkIndex = parent.records.findIndex(
+      (record) =>
+        record.sourceStreamId === firstFork.payload.parentStreamId &&
+        record.nativeOffset === firstFork.payload.forkOffset,
+    );
+    if (forkIndex < 0) {
+      throw new ApplicationProjectionError(
+        firstFork.payload.forkOffset,
+        `fork offset ${firstFork.payload.forkOffset} is not present in parent ${firstFork.payload.parentStreamId}`,
+      );
+    }
+    const local = raw.map((record) => ({
+      ...record,
+      sourceStreamId: streamId,
+      actor: stampedActor(record),
+      nativeOffset: record.offset,
+    }));
+    const records = [...parent.records.slice(0, forkIndex + 1), ...local];
+    return {
+      records,
+      metadata: {
+        name: branch,
+        streamId,
+        parentStreamId: firstFork.payload.parentStreamId,
+        forkCheckpoint: firstFork.payload.forkOffset,
+        ancestry: [
+          {
+            streamId,
+            parentStreamId: firstFork.payload.parentStreamId,
+            forkCheckpoint: firstFork.payload.forkOffset,
+          },
+          ...parent.metadata.ancestry,
+        ],
+      },
+    };
+  }
+
+  private async historyProjection(
+    streamId: string,
+    branch: string,
+  ): Promise<{
+    readonly records: readonly HistoryProjectionRecord[];
+    readonly metadata: BranchProjectionMetadata;
+  }> {
+    const history = await this.repositoryHistory(streamId, branch);
+    return {
+      records: history.records.map((record, ordinal) => ({
+        ...record,
+        offset: offsetForOrdinal(ordinal),
+      })),
+      metadata: history.metadata,
+    };
+  }
+
+  private async followHistoryProjection(
+    streamId: string,
+    branch: string,
+    from: StreamCheckpoint,
+    waitMs: number,
+  ): Promise<{
+    readonly batch: StreamBatch;
+    readonly metadata: BranchProjectionMetadata;
+  }> {
+    const deadline = Date.now() + waitMs;
+    for (;;) {
+      const projection = await this.historyProjection(streamId, branch);
+      const events = projection.records.filter(
+        (event) => compareOffsets(event.offset, from.offset) > 0,
+      );
+      if (events.length > 0 || Date.now() >= deadline || waitMs === 0) {
+        return {
+          batch: {
+            events: events.map(publicHistoryRecord),
+            checkpoint: applicationCheckpoint(events.at(-1)?.offset ?? from.offset),
+          },
+          metadata: projection.metadata,
+        };
+      }
+      await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
+    }
   }
 
   private async followRepositoryProjection(

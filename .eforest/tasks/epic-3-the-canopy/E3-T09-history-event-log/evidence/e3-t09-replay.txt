@@ -1,0 +1,2 @@
+Replay: N/A (preflight authenticated the Replay CLI and found Replay Chromium, but `npx -y replayio mcp` failed with `error: unknown command 'mcp'`).
+Mitigation: `apps/web/test/history-event-log.pw.ts` drove the built app with Playwright Chromium, captured zero console/page errors, and `tools/verify/e3_t09_evidence.mjs` independently replayed the committed canonical event dumps and rejected a one-byte payload mutation.

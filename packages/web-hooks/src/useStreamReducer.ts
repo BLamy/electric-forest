@@ -32,6 +32,8 @@ export interface UseStreamReducerOptions {
 
 export interface ApplicationRecord extends Event {
   readonly offset: Offset;
+  readonly sourceStreamId?: string;
+  readonly actor?: string;
 }
 
 interface ProjectionResponse {
@@ -105,8 +107,19 @@ function parseProjectionResponse(
     if (!isEvent(event)) {
       throw new StreamReducerFailure(offset, "malformed application event");
     }
+    if (record.sourceStreamId !== undefined && typeof record.sourceStreamId !== "string") {
+      throw new StreamReducerFailure(offset, "invalid source stream id");
+    }
+    if (record.actor !== undefined && typeof record.actor !== "string") {
+      throw new StreamReducerFailure(offset, "invalid actor metadata");
+    }
     previous = offset;
-    return { offset, ...event };
+    return {
+      offset,
+      ...(record.sourceStreamId === undefined ? {} : { sourceStreamId: record.sourceStreamId }),
+      ...(record.actor === undefined ? {} : { actor: record.actor }),
+      ...event,
+    };
   });
   if (typeof response.checkpoint !== "string" || !isWellFormedOffset(response.checkpoint)) {
     throw new StreamReducerFailure(previous, "invalid projection checkpoint");
