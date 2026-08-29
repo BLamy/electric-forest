@@ -159,6 +159,12 @@ const WAIVERS = [
   },
   {
     file: "packages/platform/package.json",
+    tell: "new-workspace-dependency:@eforest/issues",
+    reason:
+      "the platform validates issue events and materializes the issue board from authoritative Durable Streams; @eforest/issues is pure event/reducer code, not a database",
+  },
+  {
+    file: "packages/platform/package.json",
     tell: "new-workspace-dependency:@eforest/pr",
     reason:
       "the platform wires PR validation and reducer registration over official streams; @eforest/pr adds no database",
@@ -180,6 +186,18 @@ const WAIVERS = [
     tell: "new-workspace-dependency:@eforest/protocol",
     reason:
       "the PR package defines canonical event schemas, offsets, and a pure reducer over protocol envelopes; it adds no database",
+  },
+  {
+    file: "packages/issues/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason:
+      "the issue package defines canonical event schemas and pure reducers over protocol envelopes; it adds no persistence layer",
+  },
+  {
+    file: "packages/reducers/package.json",
+    tell: "new-workspace-dependency:@eforest/issues",
+    reason:
+      "reducers register the pure issue-board reducer over official stream events; they add no database",
   },
   {
     file: "packages/reducers/package.json",
@@ -224,6 +242,18 @@ const WAIVERS = [
     tell: "new-workspace-dependency:@eforest/protocol",
     reason:
       "the .ef workspace ledger uses canonical protocol types; it writes caller-owned workspace metadata, not a database",
+  },
+  {
+    file: "packages/platform/src/issues/board-store.ts",
+    tell: "fs-write:2",
+    reason:
+      "the issue-board materializer imports filesystem primitives only for an optional disposable snapshot cache; authoritative state and provenance are rebuilt from Durable Streams",
+  },
+  {
+    file: "packages/platform/src/issues/board-store.ts",
+    tell: "fs-write:499",
+    reason:
+      "the materializer atomically replaces its optional disposable snapshot after stream-derived state is validated and removes failed temporary writes; deleting or corrupting the snapshot forces an authoritative rebuild",
   },
 ];
 

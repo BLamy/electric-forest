@@ -1,0 +1,21 @@
+recorded-at 2026-08-25T09:51:57-04:00
+command CI=true tools/verify/cold_clone.sh verify-E5-T03
+source-head 3c7f09bc0ed387953f38d12073b234e67fbb5426
+outcome failed
+exit-code 2
+transcript e5-t03-cold-clone-3c7f09bc-inherited-provenance-failed.txt
+sha256 70deee98582db740fff9db67a70a5aa531b1419e9a2330be5c28792187b2ae95
+lines 2435
+bytes 233247
+source-head-markers 1
+verify-E5-T03-ok-markers 0
+cold-clone-pass-markers 0
+cold-clone-failed-exit-2-markers 1
+skipped-markers 0
+dependency-integrity-ok-markers 4
+root-76-file-pass-blocks 3
+root-676-test-pass-blocks 3
+failure-target _v-e1-t11-capstone
+failure-reason fresh capstone evidence drifted: transport-provenance.json
+actual-makefile-sha256 777d29fd31e05d621d125b01b5753adaaab8862c06010ac76ad83ecbb9e22572
+sealed-makefile-sha256 f58001b4a03ac505ed5f2dd1681db935bcaaf68aa60b964be688dd18a93028c1

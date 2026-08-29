@@ -73,3 +73,4 @@ verify-E4-capstone
 verify-E4-T12-browser
 verify-E5-T01
 verify-E5-T02
+verify-E5-T03

@@ -1,4 +1,5 @@
 import { roleOf, type AuthorizationView, type IdentityGrantView } from "@eforest/identity";
+import { isRepoIssuesStreamId } from "@eforest/issues";
 import { parsePrStreamId } from "@eforest/pr";
 import type { NamespaceView } from "../ns/reducer.js";
 
@@ -152,12 +153,15 @@ export function repoTargetFromPath(
  * namespace control plane (the E2-T06 dispatcher enforces the exact stream
  * shape and refuses with its frozen taxonomy). Application events resolve:
  * `fs:<org>/<repo>:<branch>:<meta|file:…>` is a repo/branch stream, dunder
- * ids (`__identity__`, …) and every other `ns:`-prefixed id are internal and
- * never exist for applications, and anything else is a legacy sandbox stream
- * (the frozen E2-T03 dispatch surface).
+ * ids (`__identity__`, …), the gateway-maintained `repo-issues:` catalogs,
+ * and every other `ns:`-prefixed id are internal and never exist for
+ * applications; anything else is a legacy sandbox stream (the frozen E2-T03
+ * dispatch surface).
  */
 export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKind): AuthzTarget {
   if (eventKind === "namespace") return { kind: "control", streamId };
+  if (isRepoIssuesStreamId(streamId) || streamId.startsWith("repo-issues:"))
+    return { kind: "internal", streamId };
   if (streamId.startsWith("fs:")) {
     const match = FS_STREAM_PATTERN.exec(streamId);
     if (match === null) return { kind: "malformed", input: streamId };
@@ -183,6 +187,13 @@ export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKi
     if (!isAuthzName(org) || !isAuthzName(repo) || !/^[A-Za-z0-9._~-]+$/.test(issueId)) {
       return { kind: "malformed", input: streamId };
     }
+    return { kind: "repo", org, repo, branch: "main", streamId };
+  }
+  if (streamId.startsWith("repo-labels:")) {
+    const match = /^repo-labels:([^/]+)\/([^/]+)$/.exec(streamId);
+    if (match === null) return { kind: "malformed", input: streamId };
+    const [, org, repo] = match as unknown as [string, string, string];
+    if (!isAuthzName(org) || !isAuthzName(repo)) return { kind: "malformed", input: streamId };
     return { kind: "repo", org, repo, branch: "main", streamId };
   }
   if (streamId.startsWith("pr:")) {

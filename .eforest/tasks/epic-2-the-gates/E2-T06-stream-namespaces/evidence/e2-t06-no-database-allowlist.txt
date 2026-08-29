@@ -70,6 +70,7 @@ apps/web/test/stream-reducer.pw.ts:31:filesystem-write
 apps/web/test/stream-reducer.pw.ts:3:filesystem-write
 apps/web/test/stream-reducer.pw.ts:48:filesystem-write
 dependency:@eforest/pr
+dependency:@eforest/issues
 dependency:@eforest/reducers
 dependency:@eforest/streamfs
 dependency:replayio
@@ -658,12 +659,14 @@ fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:f29a145cf91c713
 fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:f8f8103f5fb0a3c4f29b1b0d8a72148d24596d20242896e812f9ef2caefe7fa6
 # Later-epic test and verifier tooling is outside the E2-T06 platform runtime boundary.
 path-prefix:.eforest/tasks/epic-4-the-roots/
+path-prefix:.eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/
 path-prefix:apps/web/test/e4-
 path-prefix:apps/web/test/history-event-log.pw.ts
 path-prefix:packages/browser-verify/
 path-prefix:packages/cli/
 path-prefix:packages/identity/scripts/verify-provenance-refresh.mjs
 path-prefix:packages/platform/test/
+path-prefix:packages/issues/test/
 path-prefix:packages/streamfs/
 path-prefix:packages/sync-harness/
 # Cold-clone dependency integrity tooling hashes installed files and mutates only
@@ -672,20 +675,21 @@ path-prefix:tools/verify/dependency_integrity.mjs
 path-prefix:tools/verify/dependency_integrity_sensitivity.mjs
 path-prefix:tools/verify/e4_
 path-prefix:tools/verify/e4-sync/
-packages/platform/src/gateway.ts:195:mutable-map
-packages/platform/src/gateway.ts:1978:mutable-map
-packages/platform/src/gateway.ts:1985:mutable-map
-packages/platform/src/gateway.ts:1993:mutable-map
-packages/platform/src/gateway.ts:1994:mutable-map
-packages/platform/src/gateway.ts:1995:mutable-map
-packages/platform/src/gateway.ts:2407:mutable-map
-packages/platform/src/gateway.ts:2469:mutable-map
-packages/platform/src/gateway.ts:2478:mutable-map
+path-prefix:tools/verify/e5_t03_
+packages/platform/src/gateway.ts:211:mutable-map
+packages/platform/src/gateway.ts:2180:mutable-map
+packages/platform/src/gateway.ts:2187:mutable-map
+packages/platform/src/gateway.ts:2195:mutable-map
+packages/platform/src/gateway.ts:2196:mutable-map
+packages/platform/src/gateway.ts:2197:mutable-map
+packages/platform/src/gateway.ts:2609:mutable-map
+packages/platform/src/gateway.ts:2671:mutable-map
+packages/platform/src/gateway.ts:2680:mutable-map
 packages/platform/src/issues/envelope.ts:17:module-scope-state
 packages/platform/src/issues/envelope.ts:63:module-scope-state
 packages/platform/src/issues/json-source.ts:1:module-scope-state
 packages/platform/src/issues/json-source.ts:1:mutable-map
-packages/platform/src/validation.ts:28:mutable-map
+packages/platform/src/validation.ts:34:mutable-map
 # E5-T02 PR Map/Set instances are reducer-local canonicalization or test/verifier
 # fixtures; the sensitivity writes target disposable sabotage worktrees.
 packages/pr/src/reducer.ts:17:mutable-map
@@ -711,3 +715,21 @@ tools/verify/e5_t02_sensitivity.mjs:86:filesystem-write
 tools/verify/e5_t02_sensitivity.mjs:91:filesystem-write
 tools/verify/e5_t02_sensitivity.mjs:98:filesystem-write
 tools/verify/e2_t06_no_database.mjs:524:mutable-map
+# E5-T03 issue-board state uses reducer-local canonicalization maps. The platform
+# materializer keeps process-local acceleration and an explicitly disposable,
+# atomically replaced snapshot; durable streams remain authoritative.
+packages/issues/src/board.ts:119:mutable-map
+packages/issues/src/board.ts:159:mutable-map
+packages/issues/src/board.ts:173:mutable-map
+packages/platform/src/issues/board-store.ts:126:mutable-map
+packages/platform/src/issues/board-store.ts:127:mutable-map
+packages/platform/src/issues/board-store.ts:128:mutable-map
+packages/platform/src/issues/board-store.ts:239:mutable-map
+packages/platform/src/issues/board-store.ts:240:mutable-map
+packages/platform/src/issues/board-store.ts:257:mutable-map
+packages/platform/src/issues/board-store.ts:289:mutable-map
+packages/platform/src/issues/board-store.ts:290:mutable-map
+packages/platform/src/issues/board-store.ts:291:mutable-map
+packages/platform/src/issues/board-store.ts:2:capability-import
+packages/platform/src/issues/board-store.ts:2:filesystem-write
+packages/platform/src/issues/board-store.ts:499:filesystem-write

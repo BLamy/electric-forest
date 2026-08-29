@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"e5-t03-evidence","body":"","title":"Golden issue 0","v":1,"writer":{"seq":1,"sub":"e5-t03-evidence","v":1}},"ts":4,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"e5-t03-evidence","label":"bug","v":1,"writer":{"seq":2,"sub":"e5-t03-evidence","v":1}},"ts":11,"type":"issue.labeled"}

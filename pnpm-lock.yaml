@@ -151,6 +151,12 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/issues:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
   packages/platform:
     dependencies:
       '@eforest/client':
@@ -159,6 +165,9 @@ importers:
       '@eforest/identity':
         specifier: workspace:*
         version: link:../identity
+      '@eforest/issues':
+        specifier: workspace:*
+        version: link:../issues
       '@eforest/pr':
         specifier: workspace:*
         version: link:../pr
@@ -186,6 +195,9 @@ importers:
 
   packages/reducers:
     dependencies:
+      '@eforest/issues':
+        specifier: workspace:*
+        version: link:../issues
       '@eforest/pr':
         specifier: workspace:*
         version: link:../pr

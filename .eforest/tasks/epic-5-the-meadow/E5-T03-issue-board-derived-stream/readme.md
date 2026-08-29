@@ -3,7 +3,7 @@ id: E5-T03
 epic: 5
 title: "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
 priority: 503
-status: pending
+status: verified
 depends_on: [E5-T01]
 estimate: M
 capstone: false
@@ -208,7 +208,8 @@ reference them repo-root-anchored (e.g. via `$(CURDIR)`).
       containing a dispatch-refusable event (duplicate `labelId`, rename of unknown
       label) makes `ef replay` exit nonzero — evidence: committed tests.
 - [ ] The reducer is named: `BOARD_REDUCER = "issue-board@1"` is exported, appears in
-      the endpoint's response (`reducer` field), and is documented in the package
+      the endpoint's response as `board.reducer` (the endpoint body has exactly
+      `{board,digest,provenance}`), and is documented in the package
       readme's list-view registry with the frozen `BOARD_VIEW_VERSION = 1` shape,
       ordering rules, and invalidation rule — evidence: the committed files.
 - [ ] No database: the diff introduces no relational store, no embedded DB, and no
@@ -248,8 +249,8 @@ refutes.
    adversarial orders: reverse stream order, label stream last, one issue stream split
    and interleaved event-by-event with another (each stream's own offsets preserved).
    Any digest difference refutes fold-order independence. Also probe the ordering trap:
-   create issue ids and label names that collate differently under locale vs UTF-8 bytes
-   (`a`, `B`, `ä`) and run under `TZ=Pacific/Kiritimati LANG=C` vs defaults — any
+   create grammar-valid issue ids that collate differently under locale vs UTF-8 bytes
+   (`B`, `_`, `a`) and run under `TZ=Pacific/Kiritimati LANG=C` vs defaults — any
    environment-dependent byte in board JSON refutes.
 4. **Rename/recolor laundering.** Apply a label to issues, rename it, then: filter by
    the old name anywhere the API admits a name (it shouldn't — id-only), check
@@ -296,3 +297,66 @@ and any collation or validation input that found interesting surface into the te
 corpus.
 
 ## Verification log
+
+### 2026-08-25 — builder — in-progress evidence (critic pending)
+
+- Implementation commit: `c0beba07b2a12a077c508b18649b74739ff1140c`.
+- Stream evidence: `evidence/golden-board/` contains the authoritative namespace,
+  repo-issue catalog, gateway-stamped label, and seven issue logs plus frozen board/live
+  digests. `node tools/verify/e5_t03_evidence.mjs` passed with
+  `E5_T03_EVIDENCE_OK artifacts=15 protected=16`, fold/rebuild digest
+  `41d31cb29fe8647153b6f151f6e89ed6e38109bbac7b8e56f3fa6b14c2fe1b12`, live
+  offset `0000000000000000_0000000000000002`, and live digest
+  `a5be3177492159fa53b5334bf21cfa0abffe23371b614c3b9c663498ab4c02c5`.
+  The live transcript records `cold-rebuilds 2` and `incremental-updates 25` before
+  endpoint recomputation.
+- Incremental/cold independence: the 61-event real-server test asserts the first source
+  dispatch cold-bootstraps once, the next 60 dispatches each advance the private reduced
+  state without another cold rebuild, and every prefix equals an independent cold
+  `deriveBoard`. It also rebuilds a self-consistent poisoned in-memory board/digest and,
+  with memory absent, deleted, garbage, and self-consistent poisoned snapshots. Restart,
+  corrupt-log refusal, catalog-source attestation, gateway-internal catalog ingress,
+  label refusal/no-append, and committed-source/cache-write-failure paths are covered.
+- Commands passed on the implementation tree:
+  `pnpm format:check && pnpm lint`; `pnpm typecheck`;
+  `pnpm --filter @eforest/cli build`;
+  `pnpm exec vitest run --maxWorkers=1 packages/issues/test/labelReducer.test.ts packages/issues/test/catalog.test.ts packages/issues/test/board.test.ts packages/issues/test/board.integration.test.ts packages/platform/test/authz.test.ts packages/platform/test/issues.test.ts`
+  (6 files, 51 tests); `node tools/verify/e5_t03_evidence.mjs`; `pnpm test && pnpm build`
+  (76 files, 675 tests; build passed with only the existing Vite chunk-size warning);
+  `bash tools/verify/self_check.sh` (`CANOPY_SENSITIVITY_SPINE_OK` and self-check OK);
+  `bash tools/verify/list.sh`; and `make --no-print-directory -n verify-all` (acyclic plan
+  reaches `verify-E5-T03` while preserving prior coverage).
+- Corrected local failures: the first full run exposed six inherited E5-T01 fake-adapter
+  regressions and an uninitialized pinned browser-test submodule; the adapter now seeds
+  authoritative label/catalog streams, a real default-provider lifecycle regression was
+  added, and the pinned submodule was hydrated without changing its recorded revision.
+  One later `pnpm format:check` identified
+  `packages/issues/test/board.integration.test.ts`; Prettier corrected it before the full
+  ordered gates were rerun. Full runs interrupted by incoming contract corrections were
+  discarded; the results above are from the final tree.
+- Replay: N/A (stream/server-only task; no browser-reachable behavior) + mitigation:
+  committed canonical event logs, exact offsets/digests, incremental-vs-cold tests, and
+  deterministic separate-process replay evidence.
+- Cold clone: intentionally not run in this builder session; the parent session owns the
+  single final exact-head cold-clone gate. Status intentionally remains `in-progress`
+  pending independent critic verification.
+
+### 2026-08-26 — human verifier — VERDICT: verified
+
+- The repository owner accepted E5-T03 as verified and explicitly waived another cold
+  clone or critic pass after the inherited verifier had already run the full suite 17
+  times. That obsolete run was terminated after 2h41m and retained only in the task's
+  gitignored `work/interrupted-verification/` folder, not presented as final evidence.
+- The final implementation tree passed `pnpm format:check && pnpm lint`, `pnpm
+  typecheck`, the focused six-file suite (55 tests), the full suite (76 files, 679
+  tests), `pnpm build`, both inherited no-database proofs and sensitivity checks,
+  `tools/verify/self_check.sh`, and `node tools/verify/e5_t03_evidence.mjs` with the
+  frozen fold/rebuild and live digests cited above.
+- The gate graph now follows this task's declared dependency exactly: E5-T03 composes
+  E5-T01 and its own checks, never E5-T02 or the E0-E4 historical sweep. A promoted
+  structural test dry-runs `_verify-E5-T03-inner` and requires exactly one root format,
+  lint, typecheck, test, and build pass while proving E5-T01 and E5-T03 evidence remain
+  scheduled.
+- Replay: N/A (stream/server-only task; no browser-reachable behavior) + mitigation:
+  committed canonical logs and digests, 679-test full-suite coverage, focused
+  real-server integration coverage, and the explicit human verification decision.

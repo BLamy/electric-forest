@@ -169,9 +169,18 @@ export {
 export { NS_NAME_RE } from "./ns/events.js";
 export * from "./issues/index.js";
 export {
+  boardCachePath,
+  IssueBoardMaterializer,
+  type BoardEndpointBody,
+  type BoardInputProvenance,
+  type BoardProvenance,
+  type IssueBoardMaterializerOptions,
+} from "./issues/board-store.js";
+export {
   ActionValidatorRegistry,
   registerApplicationValidators,
   registerIssueValidators,
+  registerLabelValidators,
   registerPrValidators,
   type ActionValidationContext,
   type ActionValidator,

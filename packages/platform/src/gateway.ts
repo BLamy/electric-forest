@@ -1,5 +1,14 @@
 import { createHash } from "node:crypto";
 import {
+  isLabelActionType,
+  isRepoLabelsStreamId,
+  labelInitialState,
+  labelReducer,
+  LabelRefusalError,
+  LabelSchemaError,
+  LabelUnknownActionError,
+} from "@eforest/issues";
+import {
   checkpoint as applicationCheckpoint,
   isDurableExistsConflict,
   isDurableNotFound,
@@ -19,6 +28,7 @@ import {
   PrUnknownActionError,
 } from "@eforest/pr";
 import {
+  canonicalJson,
   compareOffsets,
   isEvent,
   OFFSET_BEFORE_FIRST,
@@ -119,6 +129,10 @@ import {
   IssueUnknownActionError,
 } from "./issues/validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
+import {
+  IssueBoardMaterializer,
+  type IssueBoardMaterializerOptions,
+} from "./issues/board-store.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -134,6 +148,8 @@ export interface PlatformGatewayOptions {
   readonly namespaceViewReader?: Pick<NamespaceViewReader, "viewFor">;
   readonly repositoryHomes?: RepositoryHomeStore;
   readonly actionValidators?: ActionValidatorRegistry;
+  readonly issueBoards?: IssueBoardMaterializer;
+  readonly boardCacheDir?: IssueBoardMaterializerOptions["cacheDir"];
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -256,18 +272,19 @@ function issueEventWithoutServerMetadata(value: unknown): Event {
   return { type: record.type, payload, ts: record.ts };
 }
 
-function validateIssueDispatch(
+async function validateIssueDispatch(
   records: readonly unknown[],
   event: Event,
   streamId: string,
   actionValidators: ActionValidatorRegistry,
+  issueBoards: IssueBoardMaterializer,
   issueSource?: IssueEnvelopeSource,
-): Promise<void> {
+): Promise<Offset | undefined> {
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
   const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
   const action = issueEventWithoutServerMetadata(event);
-  return actionValidators.validate(action, {
+  await actionValidators.validate(action, {
     streamId,
     state,
     headOffset:
@@ -275,6 +292,77 @@ function validateIssueDispatch(
     nextOffset: offsetForOrdinal(issueRecords.length),
     records: issueRecords,
     ...(issueSource === undefined ? {} : { issueSource }),
+  });
+  const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
+  if (identity === null) throw new IssueSchemaError();
+  if (action.type === "issue.labeled" || action.type === "issue.unlabeled") {
+    const labels = await issueBoards.labelsForRepo(identity[1]!, identity[2]!);
+    const labelId = (action.payload as { readonly label: string }).label;
+    if (!Object.prototype.hasOwnProperty.call(labels.labels, labelId))
+      throw new IssueRefusalError("issue/unknown-label");
+  }
+  if (action.type === "issue.opened") {
+    return issueBoards.discoverIssue(
+      identity[1]!,
+      identity[2]!,
+      streamId,
+      offsetForOrdinal(issueRecords.length),
+      action.ts,
+    );
+  } else {
+    try {
+      await issueBoards.assertIssueDeclared(
+        identity[1]!,
+        identity[2]!,
+        streamId,
+        offsetForOrdinal(0),
+      );
+    } catch (error) {
+      throw new IssueRefusalError(
+        error instanceof Error ? error.message : "repo-issues/migration-required",
+      );
+    }
+  }
+  return undefined;
+}
+
+function labelEventWithoutServerMetadata(value: unknown): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    throw new LabelSchemaError();
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.type !== "string" ||
+    typeof record.ts !== "number" ||
+    record.payload === null ||
+    typeof record.payload !== "object" ||
+    Array.isArray(record.payload)
+  )
+    throw new LabelSchemaError();
+  return {
+    type: record.type,
+    payload: Object.fromEntries(
+      Object.entries(record.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+    ),
+    ts: record.ts,
+  };
+}
+
+function validateLabelDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+): Promise<void> {
+  if (!isRepoLabelsStreamId(streamId)) throw new LabelUnknownActionError();
+  const labelRecords = records.map(labelEventWithoutServerMetadata);
+  const state = labelRecords.reduce(labelReducer, labelInitialState);
+  return actionValidators.validate(labelEventWithoutServerMetadata(event), {
+    streamId,
+    state,
+    headOffset:
+      labelRecords.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(labelRecords.length - 1),
+    nextOffset: offsetForOrdinal(labelRecords.length),
+    records: labelRecords,
   });
 }
 
@@ -650,6 +738,13 @@ function json(status: number, body: unknown): Response {
   });
 }
 
+function canonicalResponse(status: number, body: unknown): Response {
+  return new Response(canonicalJson(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 function failure(status: number, code: ErrorCode, reason: string): Response {
   return json(status, { error: { code, reason } });
 }
@@ -757,6 +852,7 @@ export class PlatformGateway {
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly repositoryHomes: RepositoryHomeStore;
   private readonly actionValidators: ActionValidatorRegistry;
+  private readonly issueBoards: IssueBoardMaterializer;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
     | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
@@ -773,6 +869,12 @@ export class PlatformGateway {
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
     this.actionValidators = options.actionValidators ?? registerApplicationValidators();
+    this.issueBoards =
+      options.issueBoards ??
+      new IssueBoardMaterializer({
+        streams: options.streams,
+        ...(options.boardCacheDir === undefined ? {} : { cacheDir: options.boardCacheDir }),
+      });
     this.views = options.namespaceViewReader;
   }
 
@@ -1101,6 +1203,13 @@ export class PlatformGateway {
       ) {
         throw new IssueUnknownActionError();
       }
+      if (
+        !namespaceEvent &&
+        isLabelActionType(parsed.event.type) &&
+        !isRepoLabelsStreamId(parsed.streamId)
+      ) {
+        throw new LabelUnknownActionError();
+      }
       if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
         throw new PrUnknownActionError();
       }
@@ -1225,6 +1334,8 @@ export class PlatformGateway {
           return json(202, { ok: true, actor: identity.sub });
         }
         let dispatchOffset: Offset | undefined;
+        let committedEvent: Event | undefined;
+        let issueCatalogOffset: Offset | undefined;
         try {
           if (operationId === undefined) {
             const receipt = await this.writers.dispatch(
@@ -1236,12 +1347,21 @@ export class PlatformGateway {
                 validate: async (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    await validateIssueDispatch(
+                    issueCatalogOffset = await validateIssueDispatch(
                       records,
                       stamped,
                       parsed.streamId,
                       this.actionValidators,
+                      this.issueBoards,
                       parsed.issueSource,
+                    );
+                  }
+                  if (isRepoLabelsStreamId(parsed.streamId)) {
+                    await validateLabelDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
                     );
                   }
                   if (isPrStreamId(parsed.streamId)) {
@@ -1257,6 +1377,7 @@ export class PlatformGateway {
               },
             );
             dispatchOffset = receipt.globalSequence;
+            committedEvent = receipt.event;
           } else {
             const receipt = await this.writers.dispatch(
               parsed.streamId,
@@ -1269,12 +1390,21 @@ export class PlatformGateway {
                 validate: async (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    await validateIssueDispatch(
+                    issueCatalogOffset = await validateIssueDispatch(
                       records,
                       stamped,
                       parsed.streamId,
                       this.actionValidators,
+                      this.issueBoards,
                       parsed.issueSource,
+                    );
+                  }
+                  if (isRepoLabelsStreamId(parsed.streamId)) {
+                    await validateLabelDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
                     );
                   }
                   if (isPrStreamId(parsed.streamId)) {
@@ -1290,6 +1420,7 @@ export class PlatformGateway {
               },
             );
             dispatchOffset = receipt.globalSequence;
+            committedEvent = receipt.event;
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
@@ -1301,6 +1432,9 @@ export class PlatformGateway {
             error instanceof IssueUnknownActionError ||
             error instanceof IssueSchemaError ||
             error instanceof IssueRefusalError ||
+            error instanceof LabelUnknownActionError ||
+            error instanceof LabelSchemaError ||
+            error instanceof LabelRefusalError ||
             error instanceof PrUnknownActionError ||
             error instanceof PrSchemaError ||
             error instanceof PrRefusalError
@@ -1309,6 +1443,23 @@ export class PlatformGateway {
           }
           if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
           throw new GrantTargetCommitError(error);
+        }
+        try {
+          if (
+            (isIssueStreamId(parsed.streamId) || isRepoLabelsStreamId(parsed.streamId)) &&
+            committedEvent !== undefined &&
+            dispatchOffset !== undefined
+          ) {
+            await this.issueBoards.applyCommittedEvent(
+              parsed.streamId,
+              committedEvent,
+              dispatchOffset,
+              issueCatalogOffset,
+            );
+          }
+        } catch {
+          // The source event is already committed. A disposable derived-copy
+          // refresh failure must not turn that accepted mutation into a false refusal.
         }
         if (target.kind === "repo") {
           return json(202, {
@@ -1364,13 +1515,24 @@ export class PlatformGateway {
         return failure(401, "unauthorized", error.reason);
       }
       if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
-      if (error instanceof IssueUnknownActionError || error instanceof PrUnknownActionError) {
+      if (
+        error instanceof IssueUnknownActionError ||
+        error instanceof PrUnknownActionError ||
+        error instanceof LabelUnknownActionError
+      ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
-      if (error instanceof IssueSchemaError || error instanceof PrSchemaError) {
+      if (
+        error instanceof IssueSchemaError ||
+        error instanceof PrSchemaError ||
+        error instanceof LabelSchemaError
+      ) {
         return json(422, { error: { class: "schema-violation" } });
       }
       if (error instanceof IssueRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof LabelRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof PrRefusalError) {
@@ -1588,12 +1750,24 @@ export class PlatformGateway {
         ? (segments[4] as RepositoryHomeRegion)
         : undefined;
     const applicationEvents = segments.length === 5 && segments[4] === "events";
+    const boardRoute = segments.length === 4 && segments[3] === "board";
     const blobRoute = segments.length >= 6 && segments[4] === "blob";
     if (
-      (!applicationEvents && homeRegion === undefined && !blobRoute) ||
+      (!applicationEvents && homeRegion === undefined && !blobRoute && !boardRoute) ||
       segments.some((s) => s === "")
     ) {
       return failure(404, "invalid_request", "not_found");
+    }
+    if (boardRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryBoardRoute(request, org, repo, trustedContext);
     }
     let decoded: string[];
     try {
@@ -1861,6 +2035,34 @@ export class PlatformGateway {
       identityOffset: decision.identityOffset,
       basis: decision.basis,
     });
+  }
+
+  private async repositoryBoardRoute(
+    request: Request,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    return canonicalResponse(200, await this.issueBoards.materialize(org, repo));
   }
 
   /**

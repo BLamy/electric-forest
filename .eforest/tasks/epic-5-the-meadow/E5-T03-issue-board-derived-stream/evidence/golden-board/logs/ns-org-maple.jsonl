@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":{"sub":"e5-t03-evidence"},"name":"meadow","v":1},"ts":2,"type":"ns.project.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":{"sub":"e5-t03-evidence"},"name":"golden-board","project":"meadow","v":1,"visibility":"public"},"ts":3,"type":"ns.repo.create"}

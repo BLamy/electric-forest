@@ -403,7 +403,15 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
     ]) {
       expect(classifyDispatchTarget(malformed, "application").kind, malformed).toBe("malformed");
     }
-    for (const internal of ["ns:root", "ns:org:acme", "ns:anything", "__identity__", "__x__"]) {
+    for (const internal of [
+      "ns:root",
+      "ns:org:acme",
+      "ns:anything",
+      "repo-issues:acme/forest",
+      "repo-issues:malformed",
+      "__identity__",
+      "__x__",
+    ]) {
       expect(classifyDispatchTarget(internal, "application").kind, internal).toBe("internal");
     }
     // Case variants are NOT aliases: the reference server resolves stream

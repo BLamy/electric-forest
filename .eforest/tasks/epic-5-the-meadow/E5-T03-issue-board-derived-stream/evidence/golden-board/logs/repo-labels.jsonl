@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"e5-t03-evidence","color":"#d73a4a","labelId":"bug","name":"Bug","v":1,"writer":{"seq":1,"sub":"e5-t03-evidence","v":1}},"ts":1,"type":"label.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"e5-t03-evidence","color":"#0075ca","labelId":"docs","name":"Docs","v":1,"writer":{"seq":2,"sub":"e5-t03-evidence","v":1}},"ts":2,"type":"label.created"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":"e5-t03-evidence","color":"#b60205","labelId":"priority","name":"Priority","v":1,"writer":{"seq":3,"sub":"e5-t03-evidence","v":1}},"ts":3,"type":"label.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"actor":"e5-t03-evidence","labelId":"bug","name":"Defect","v":1,"writer":{"seq":4,"sub":"e5-t03-evidence","v":1}},"ts":18,"type":"label.renamed"}
+{"offset":"0000000000000000_0000000000000004","payload":{"actor":"e5-t03-evidence","color":"#5319e7","labelId":"docs","v":1,"writer":{"seq":5,"sub":"e5-t03-evidence","v":1}},"ts":19,"type":"label.recolored"}
