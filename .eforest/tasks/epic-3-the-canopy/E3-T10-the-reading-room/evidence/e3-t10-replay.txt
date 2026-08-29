@@ -1,0 +1,3 @@
+Replay: N/A (tools/replay/preflight.sh failed because `npx -y replayio mcp` returns `error: unknown command 'mcp'`)
+Mitigation: the recorded Playwright run uses Replay Chromium, captures both authenticated sessions, records browser network/console/page-error observations, and is independently replayed from committed official-stream evidence by `tools/verify/e3_t10_evidence.mjs`.
+MP4: N/A (tools/replay/record-run.sh -o e3-t10-final refused to start after the same preflight failure)
