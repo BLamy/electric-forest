@@ -3,7 +3,7 @@ id: E5-T05
 epic: 5
 title: "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 priority: 505
-status: pending
+status: verified
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -44,8 +44,8 @@ UI in E5-T09, evidence rendering in E5-T11, the capstone E5-T13 watches issues f
 through exactly these two pages).
 
 Builds on: **E5-T04** (the browser write path — `useDispatch` with confirmed offsets,
-reconcile-through-replay, and typed refusals is *frozen there and consumed here
-unchanged*; this task adds zero dispatch machinery and zero server surface), **E5-T03**
+reconcile-through-replay, and typed refusals is _frozen there and consumed here
+unchanged_; this task adds zero dispatch machinery and zero server surface), **E5-T03**
 through the dependency closure (the derived board stream and reducer — this task renders
 it and adds zero board-derivation logic; a board row the derived stream can't account for
 is a finding against whichever side diverged), **E5-T01** (the frozen per-issue event
@@ -79,8 +79,8 @@ drag-and-drop (transitions go through an explicit control), and any change to
   digest; comment / label add/remove / state-transition forms, each one `useDispatch`
   call; inline rendering of a structured server refusal.
 - `packages/webapp/src/issues/useIssues.ts` — the one thin binding of `useStreamReducer`
-  + `useDispatch` to the board stream, per-issue streams, and the imported E5-T01/E5-T03
-  reducers; no other webapp module touches issue data or dispatch.
+  - `useDispatch` to the board stream, per-issue streams, and the imported E5-T01/E5-T03
+    reducers; no other webapp module touches issue data or dispatch.
 - `packages/webapp/test/issues.spec.ts` — Playwright (E3-T02 harness): two contexts, A
   mutating (≥1 create, ≥2 comments, ≥2 label ops, ≥2 legal transitions) and B watching;
   per-mutation ≤2000 ms arrival in B with navigation count asserted zero; the forced
@@ -127,7 +127,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
       with zero console errors, and the issue stream's head offset and digest are
       byte-identical before and after — both quoted in `evidence/e5-t05-refusal.txt`.
 - [ ] Replay (browser layer): one recording (`tools/replay/record-run.sh -o
-      e5-t05-final`) containing the two-session live sync and the refused transition,
+  e5-t05-final`) containing the two-session live sync and the refused transition,
       zero console errors and zero uncaught exceptions anywhere in it; URL plus
       point/time anchors at (a) A's create dispatch confirming, (b) the card appearing in
       B, (c) the refusal rendering with the unchanged digest, cited in the Verification
@@ -141,7 +141,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
       `evidence/e5-t05-sensitivity.md`.
 - [ ] No regression: `verify-E5-T04`, the E5-T01/E5-T03 verify targets, `verify-E3-T03`,
       and all root gates (`pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build`) re-run green on this tree.
+  pnpm test && pnpm build`) re-run green on this tree.
 
 ## Adversarial verification
 
@@ -169,8 +169,8 @@ sequences, your own browser contexts; invent at least one more angle.
    spinner-masked state), reconnect, verify exactly-once in-order catch-up to digest
    equality. Then sever A's own tail and dispatch from A: the confirmed offset in the
    promise must not surface as state — a card appearing in A before A's tail replayed it
-   refutes the E5-T04 contract *as consumed here*.
-4. **At-offset, not at-head.** The board-parity claim is at the *same offset*, not
+   refutes the E5-T04 contract _as consumed here_.
+4. **At-offset, not at-head.** The board-parity claim is at the _same offset_, not
    "eventually equal". While a mutation storm runs (scripted rapid dispatches), sample
    B's `(offset, digest)` pair repeatedly and fetch the endpoint digest at each sampled
    offset: every pair must match its own offset exactly. A DOM pair whose digest belongs
@@ -210,4 +210,165 @@ trials into the committed suite.
 
 ## Verification log
 
+### 2026-08-27 — builder — implemented
+
+- Product commits: `0cde9c215dfbf58c0aadd0e9db469cdca3def172` adds the minimal
+  durable read bridge required by the pages; `42df1ae6` adds the board/detail routes,
+  thin issue binding, one-door forms, focused browser oracle, sensitivity harness, and
+  committed evidence. The recording walkthrough ran against exact product head
+  `42df1ae6`.
+- The task text called for rendering E5-T03's live board stream while also claiming this
+  task needed zero server surface. The inherited stack had the frozen board reducer but
+  no live/at-offset board transport and no per-issue projection route. The bridge is
+  read-only except for creating the authorized per-issue stream immediately before its
+  first existing `/api/dispatch` write; it adds no browser write path and keeps board
+  derivation server-side.
+- Focused deterministic checks: the targeted TypeScript package build and web build
+  passed; 12 tests passed across `useStreamReducer.test.ts`,
+  `board-projection.test.ts`, and `issues-live-read.test.ts`; targeted Prettier, ESLint,
+  and `git diff --check` passed. `node tools/verify/e5_t05_evidence.mjs` reproduced the
+  issue digest through `ef replay` and reported board offset
+  `0000000000000000_0000000000000007` and issue offset
+  `0000000000000000_0000000000000006`. No dependency ticket verifier or root suite was
+  rerun; one root build was performed once to populate the browser runtime artifacts.
+- Browser oracle: `node --experimental-strip-types apps/web/test/issues.pw.ts` passed
+  with `accepted=7 refused=1 max_latency_ms=413`. Two authenticated contexts observed
+  create, two comments, label add/remove, and two legal transitions with zero navigation
+  and clean consoles; the forced transition from `done` to `closed` rendered
+  `issue/illegal-transition` and left offset/digest unchanged. The write audit records
+  exactly eight `/api/dispatch` POSTs, seven accepted events, one refusal, and zero other
+  state-writing requests.
+- Sensitivity: `node tools/verify/e5_t05_sensitivity.mjs` produced three expected-red
+  results in one detached worktree: dropped follower frame → `watcher-live-sync`, stale
+  board offset → `board-at-offset-parity`, phantom card → `board-literal-equality`.
+- Stream evidence: `evidence/e5-t05-session.events.jsonl`,
+  `evidence/e5-t05-digests.txt`, `evidence/e5-t05-write-audit.txt`,
+  `evidence/e5-t05-refusal.txt`, and `evidence/e5-t05-sensitivity.md`.
+- Replay writer:
+  https://app.replay.io/recording/7269e0e6-56f9-4ae0-a253-dc9e412c185c
+- Replay follower:
+  https://app.replay.io/recording/22371cc4-c7fe-4789-8491-beab383e7760
+- Same-session videos were verified and stitched side-by-side at
+  `recordings/e5-t05-final.mp4` (558,139 bytes, ISO MP4). The final walkthrough reached
+  issue offset `0000000000000000_0000000000000006` and digest
+  `11de26cbb6441a02d1095bd31597781215b0dd0e07c7adf30ceae451d854eba3` in both
+  sessions; writer and follower CLI console sweeps each reported zero errors. Immediate
+  post-upload Replay MCP calls timed out while processing, so point-link/source-coverage
+  interrogation is explicitly deferred to the fresh critic rather than claimed here.
+
+Claim: the issue board and detail pages are live renders of durable projections; all UI
+mutations use the frozen dispatch door exactly once, two independent sessions converge
+without reload, endpoint and replay digests match the DOM's published offsets, and an
+illegal transition is typed, visible, and append-free.
+
 (appended over time by builders and critics)
+
+### 2026-08-27 — critic — VERDICT: needs-evidence
+
+- REPLAY WRITER — PROVIDER BLOCKED. Predicted an inspectable timeline with console,
+  exceptions, network, interactions, and source hits; Replay MCP repeatedly returned
+  `LinkerCrash:New | Hanged` for
+  https://app.replay.io/recording/7269e0e6-56f9-4ae0-a253-dc9e412c185c.
+- REPLAY FOLLOWER — PROVIDER BLOCKED. Predicted inspectable follower appearance and
+  live-update evidence; Replay MCP returned the same linker failure for
+  https://app.replay.io/recording/22371cc4-c7fe-4789-8491-beab383e7760.
+- BEHAVIORAL EVIDENCE — NO CONTRADICTION. The verified same-session MP4, committed
+  two-context browser oracle, stream artifacts, exact final offset/digest values, clean
+  console sweeps, and three causal mutation sensors establish the claimed outcomes, but
+  cannot independently prove source-hit coverage for every material browser-facing diff
+  hunk under the critic's Replay-only coverage contract.
+- DEMAND: make either existing uploaded recording MCP-inspectable and audit source hits,
+  or supply equivalent exact-head source-execution coverage. Do not rerun dependency
+  gates, root suites, or the already-green deterministic/browser checks.
+- SUITE: no additional suite work; the blocker is Replay provider inspection, not an
+  observed product or test failure.
+
+### 2026-08-27 — builder rework — implemented
+
+- Exact-head fallback: the replacement browser oracle recorded product source head
+  `d840151eecbceb0d4689f9c632e1b5cdfc3f221b` and refused to run if any material E5-T05
+  browser source differed from that commit. `pnpm --filter @eforest/web build` passed
+  (Vite 7.3.6, 92 modules; only the existing chunk-size warning).
+- Browser oracle: the first rework attempt is discarded and not cited as evidence. A
+  temporary coverage-only detour through repository home caused cleanup to report
+  `net::ERR_ABORTED` for the three `/home/namespace`, `/home/branches`, and `/home/status`
+  projection reads. After restoring the original scenario, the one explicitly authorized
+  replacement invocation, `node --experimental-strip-types apps/web/test/issues.pw.ts`,
+  passed with `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=497
+  board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006`.
+- Browser fallback evidence: `evidence/e5-t05-browser-transcript.json` contains 90 raw,
+  normalized network records and the complete console/page-error channels (zero console
+  messages, zero page errors, zero failed requests). `evidence/e5-t05-browser-source-coverage.json`
+  maps all 31 material requirements across eight writer/follower board/detail initial and
+  mutation captures; its mandatory sensors include label, unlabel, legal transitions,
+  illegal-transition submission and refusal rendering, and follower board/detail paths.
+- Stream fallback evidence: `evidence/e5-t05-board-projection.events.jsonl` contains all
+  eight durable board projection events through offset
+  `0000000000000000_0000000000000007`; the final board digest is
+  `a9e567924073ad2c6da8cfce5c8d8e1395efd8421ebb73746b4b47d499df0e04` and matches the
+  writer, follower, and at-offset endpoint values in `evidence/e5-t05-digests.txt`.
+- Replay: N/A (tools/replay/preflight.sh cannot initialize Replay MCP because
+  `npx -y replayio mcp` exits 1 with `error: unknown command 'mcp'`) + mitigation:
+  exact-head Playwright browser transcript, per-role source-execution coverage, and
+  durable issue/board replay artifacts. The exact failure is preserved in
+  `evidence/e5-t05-replay-fallback.txt`; Replay and preflight were not rerun.
+- `tools/verify/e5_t05_evidence.mjs` now rejects missing/malformed fallback artifacts,
+  source drift, uncovered critical paths, transcript errors/failures, and a board dump
+  that does not replay to the claimed offset/digest. Per the final rework instruction,
+  the verifier was not rerun. No root suite, dependency gates, cold clone, sensitivity
+  run, previously passed tests, or additional browser-oracle invocation was run. Status
+  remains `implemented`; a fresh critic must decide verification.
+
+### 2026-08-27 — builder evidence repair — implemented
+
+- The one authorized corrected replacement browser invocation ran at exact pre-commit
+  source head `2496301fe8bce5e9b1b44154fce8b3a6681e52e5`:
+  `node --experimental-strip-types apps/web/test/issues.pw.ts`. It passed with
+  `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=407
+  board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006 requestfailed_observed=0
+  terminal_long_polls=4 requestfailed_unexpected=0 coverage_requirements=36`.
+- The follower exercised the label filter through real selection: selecting `bug`
+  retained only `live-issue`, the committed label-removal event emptied every filtered
+  column while `bug` remained selected, and resetting the filter restored the issue.
+  The illegal transition also exercised the frozen session-envelope refusal contract:
+  HTTP `200`, `x-eforest-refusal-status: 409`, code
+  `issue/illegal-transition`, and no append or offset/digest change.
+- `evidence/e5-t05-browser-transcript.json` serializes 98 normalized request entries,
+  an explicit empty `requestFailures` array, and four terminal board/detail long polls
+  separately paired to writer/follower request sequences. Its summary independently
+  records zero observed failures, four accounted terminal long polls, and zero
+  unexpected failures.
+- `evidence/e5-t05-browser-source-coverage.json` covers all 36 requirements across nine
+  material browser sources, including `useStreamReducer`, the issue-board reducer and
+  label filter, and reducer registration. It classifies all 13 runtime sources in the
+  frozen E5-T05 product diff: nine browser-executed-and-covered and four server-only.
+- The one authorized verifier invocation, `node tools/verify/e5_t05_evidence.mjs`,
+  passed with `E5_T05_EVIDENCE_OK board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006 api_entries=98
+  requestfailed_observed=0 terminal_long_polls=4 requestfailed_unexpected=0
+  browser_sources=9 runtime_sources_classified=13 coverage_requirements=36`. The
+  verifier replays the static board reducer without a stream id and audits HTTP 200 plus
+  the refusal-status header rather than expecting a transport-level 4xx.
+- The committed T05 evidence set contains nine files: seven issue-stream events, eight
+  board-projection events, the browser transcript and source-coverage manifest, digest,
+  refusal, write-audit, sensitivity, and Replay-fallback records. No other test, build,
+  root or dependency gate, Replay command, cold clone, sensitivity rerun, browser rerun,
+  or push was performed. Status remains `implemented` for a fresh critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- The illegal transition is proven append-free through the real browser envelope:
+  transport 200, `x-eforest-refusal-status: 409`, typed
+  `issue/illegal-transition`, and an unchanged issue projection.
+- The follower exercises the real `bug` label selector, observes the labelled card,
+  sees it disappear after the durable unlabel event, and restores the full board when
+  the filter resets.
+- All 13 changed runtime sources are classified at exact head: nine browser-executed
+  sources have source-map coverage and four server-only sources are explicitly waived.
+  The transcript separately records zero request failures and four expected terminal
+  long polls.
+- Evidence provenance is exact: the final commit only changed the oracle, verifier,
+  artifacts, and task log after the recorded product-source head. The critic reran no
+  test, browser session, dependency gate, root suite, or Replay command.

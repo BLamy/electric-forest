@@ -1,0 +1,6 @@
+E5-T05 Replay fallback
+command=tools/replay/preflight.sh
+failing-probe=npx -y replayio mcp
+probe-exit=1
+probe-stderr=error: unknown command 'mcp'
+Replay: N/A (tools/replay/preflight.sh cannot initialize Replay MCP because `npx -y replayio mcp` exits 1 with `error: unknown command 'mcp'`) + mitigation: exact-head Playwright browser transcript, per-role source-execution coverage, and durable issue/board replay artifacts.

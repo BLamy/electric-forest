@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _v-e5-t03 _v-e5-t04 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -665,7 +665,24 @@ _v-e5-t04: _v-build
 	@output="$$(node tools/verify/e5_t04_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 4
 	@node tools/verify/e5_t04_evidence.mjs
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04
+verify-E5-T05: _verify-E5-T05-inner
+	@echo "verify-E5-T05: OK"
+
+_verify-E5-T05-inner: _v-e5-t05
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E5-T05"
+
+_v-e5-t05: _v-build
+	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
+	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "82eb835947c97fcf6e0596a4377acbb01ca13ede"
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/web-hooks/src/useStreamReducer.test.ts packages/issues/test/board-projection.test.ts packages/platform/test/issues-live-read.test.ts
+	@node --experimental-strip-types apps/web/test/issues.pw.ts
+	@output="$$(node tools/verify/e5_t05_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 3
+	@node tools/verify/e5_t05_evidence.mjs
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

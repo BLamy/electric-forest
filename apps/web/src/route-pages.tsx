@@ -15,6 +15,8 @@ import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
 import { humanizeRecord } from "./history.js";
 import { LabelManagement } from "./label-management.js";
+import { IssueBoardPage } from "./issues/IssueBoard.js";
+import { IssueDetailPage } from "./issues/IssueDetail.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -138,6 +140,11 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
       </div>
 
       <nav aria-label="Repository settings">
+        <RouteLink
+          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/issues`}
+        >
+          Issues
+        </RouteLink>
         <RouteLink
           href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/labels`}
         >
@@ -877,6 +884,33 @@ function DeepTrail(): React.JSX.Element {
 
 export function PageRouter(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (
+    (segments.length === 5 || segments.length === 6) &&
+    segments[0] === "orgs" &&
+    segments[2] === "repos" &&
+    segments[4] === "issues"
+  ) {
+    const org = decodeRouteSegment(segments[1]!);
+    const repo = decodeRouteSegment(segments[3]!);
+    const issueId = segments.length === 6 ? decodeRouteSegment(segments[5]!) : undefined;
+    if (
+      org === undefined ||
+      repo === undefined ||
+      (segments.length === 6 && issueId === undefined)
+    ) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return issueId === undefined ? (
+      <IssueBoardPage org={org} repo={repo} />
+    ) : (
+      <IssueDetailPage
+        key={`issue:${org}/${repo}/${issueId}`}
+        org={org}
+        repo={repo}
+        issueId={issueId}
+      />
+    );
+  }
   if (
     segments.length === 5 &&
     segments[0] === "orgs" &&

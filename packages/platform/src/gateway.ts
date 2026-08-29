@@ -117,7 +117,13 @@ import {
   RepositoryHomeStore,
   type RepositoryHomeRegion,
 } from "./repo-home.js";
-import { isIssueActionType, isIssueStreamId } from "@eforest/reducers";
+import {
+  BOARD_REDUCER,
+  isIssueActionType,
+  isIssueStreamId,
+  issueStreamId,
+  repoIssueBoardStreamId,
+} from "@eforest/reducers";
 import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
 import {
   isIssueEnvelopeSourceValid,
@@ -1215,8 +1221,9 @@ export class PlatformGateway {
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
     const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
-    const target =
-      branchForkEvent === undefined
+    const target = parsed.streamId.startsWith("issue-board:")
+      ? ({ kind: "internal" as const, streamId: parsed.streamId } satisfies AuthzTarget)
+      : branchForkEvent === undefined
         ? classifyDispatchTarget(parsed.streamId, namespaceEvent ? "namespace" : "application")
         : (branchForkTarget(parsed.streamId) ?? {
             kind: "malformed" as const,
@@ -1404,6 +1411,13 @@ export class PlatformGateway {
         let committedEvent: Event | undefined;
         let issueCatalogOffset: Offset | undefined;
         try {
+          if (isIssueStreamId(parsed.streamId) && parsed.event.type === "issue.opened") {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
           if (isRepoLabelsStreamId(parsed.streamId)) {
             try {
               await this.streams.create(parsed.streamId);
@@ -1841,7 +1855,7 @@ export class PlatformGateway {
       } catch {
         return failure(404, "invalid_request", "not_found");
       }
-      return this.repositoryBoardRoute(request, org, repo, trustedContext);
+      return this.repositoryBoardRoute(request, url, org, repo, trustedContext);
     }
     let decoded: string[];
     try {
@@ -1886,16 +1900,31 @@ export class PlatformGateway {
       return failure(405, "invalid_request", "method_not_allowed");
     }
     const selectedStream = url.searchParams.get("stream");
-    if (selectedStream !== null && selectedStream !== "repo-labels") {
+    const selectedIssueId = url.searchParams.get("issueId");
+    if (selectedStream !== null && selectedStream !== "repo-labels" && selectedStream !== "issue") {
       return failure(400, "invalid_request", "invalid_stream_selector");
     }
-    if (selectedStream === "repo-labels" && decoded[2] !== "main") {
+    if (
+      ((selectedStream === "repo-labels" || selectedStream === "issue") && decoded[2] !== "main") ||
+      (selectedStream === "issue" && selectedIssueId === null) ||
+      (selectedStream !== "issue" && selectedIssueId !== null)
+    ) {
       return failure(400, "invalid_request", "invalid_stream_selector");
+    }
+    let selectedIssueStream: string | undefined;
+    if (selectedStream === "issue") {
+      try {
+        selectedIssueStream = issueStreamId(decoded[0]!, decoded[1]!, selectedIssueId!);
+      } catch {
+        return failure(400, "invalid_request", "invalid_issue_id");
+      }
     }
     const target =
       selectedStream === "repo-labels"
         ? classifyDispatchTarget(repoLabelsStreamId(decoded[0]!, decoded[1]!), "application")
-        : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
+        : selectedIssueStream !== undefined
+          ? classifyDispatchTarget(selectedIssueStream, "application")
+          : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
     const live = url.searchParams.get("live") === "1";
     const operation = live ? "follow" : "read";
 
@@ -2123,15 +2152,19 @@ export class PlatformGateway {
 
   private async repositoryBoardRoute(
     request: Request,
+    url: URL,
     org: string,
     repo: string,
     trustedContext?: AuthorizationContext,
   ): Promise<Response> {
     if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    const projection = url.searchParams.get("projection") === "1";
+    const liveRaw = url.searchParams.get("live");
+    const live = projection && liveRaw === "1";
     let decision: AuthzDecision;
     try {
       decision = await this.decideRepo(
-        "read",
+        live ? "follow" : "read",
         repoTargetFromPath(org, repo, "main"),
         request.headers.get("authorization"),
         trustedContext,
@@ -2146,6 +2179,78 @@ export class PlatformGateway {
       throw error;
     }
     if (!decision.allowed) return authzRefusalResponse(decision);
+    if (projection) {
+      const streamId = repoIssueBoardStreamId(org, repo);
+      let reducer: ReturnType<typeof requireReducer>;
+      try {
+        reducer = requireReducer(url.searchParams.get("reducer") ?? "", streamId);
+      } catch {
+        return failure(400, "invalid_request", "invalid_reducer");
+      }
+      if (reducer.id !== BOARD_REDUCER) {
+        return failure(400, "invalid_request", "invalid_reducer");
+      }
+      if (liveRaw !== null && liveRaw !== "1") {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      const checkpointRaw = live ? url.searchParams.get("checkpoint") : undefined;
+      const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+      if (
+        (live && (checkpointRaw === null || !isWellFormedOffset(checkpointRaw))) ||
+        !Number.isSafeInteger(waitMs) ||
+        waitMs < 0 ||
+        waitMs > MAX_FOLLOW_WAIT_MS
+      ) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      try {
+        await this.issueBoards.materialize(org, repo);
+        const batch = live
+          ? await this.followProjection(
+              streamId,
+              applicationCheckpoint(checkpointRaw! as Offset),
+              waitMs,
+            )
+          : await this.bootstrapProjection(streamId);
+        validateProjectionReducer(reducer, batch.events, streamId);
+        return json(200, {
+          ok: true,
+          events: batch.events,
+          checkpoint: batch.checkpoint.offset,
+          reducer: { id: reducer.id, version: reducer.version },
+          branch: branchMetadata(
+            "main",
+            streamId,
+            { parentStreamId: null, forkCheckpoint: OFFSET_BEFORE_FIRST, ancestry: [] },
+            batch.checkpoint.offset,
+          ),
+          identityOffset: decision.identityOffset,
+          basis: decision.basis,
+        });
+      } catch (error) {
+        if (error instanceof ApplicationProjectionError) {
+          return json(422, {
+            error: {
+              class: "malformed_application_event",
+              offset: error.offset,
+              reason: error.message,
+            },
+          });
+        }
+        throw error;
+      }
+    }
+    const at = url.searchParams.get("at");
+    if (at !== null) {
+      if (!isWellFormedOffset(at) || at === OFFSET_BEFORE_FIRST) {
+        return failure(400, "invalid_request", "invalid_board_projection_offset");
+      }
+      await this.issueBoards.materialize(org, repo);
+      const snapshot = await this.issueBoards.snapshotAt(org, repo, at as Offset);
+      return snapshot === undefined
+        ? failure(404, "invalid_request", "board_projection_not_found")
+        : canonicalResponse(200, snapshot);
+    }
     return canonicalResponse(200, await this.issueBoards.materialize(org, repo));
   }
 

@@ -8,7 +8,7 @@ import {
   StreamReducerFailure,
   type StreamReducerResult,
 } from "./useStreamReducer.js";
-import { streamFsReducerDefinition } from "@eforest/reducers";
+import { issueReducerDefinition, streamFsReducerDefinition } from "@eforest/reducers";
 
 const streamId = "fs:maple/reading-room:main:meta";
 const reducer = { id: "streamfs", version: 2 };
@@ -23,6 +23,7 @@ const initial: StreamReducerResult = {
   checkpoint: OFFSET_BEFORE_FIRST,
   digest: streamFsReducerDefinition.digest(streamFsReducerDefinition.initialState),
   status: "loading",
+  records: [],
 };
 
 describe("useStreamReducer application checkpoints", () => {
@@ -35,6 +36,7 @@ describe("useStreamReducer application checkpoints", () => {
     expect((result.state as FsTree).dirs).toHaveProperty("docs");
     expect((result.state as FsTree).dirs).toHaveProperty("src");
     expect(result.digest).toBe(treeDigest(result.state as FsTree));
+    expect(result.records).toEqual([event(0, "docs"), event(1, "src")]);
   });
 
   it.each([
@@ -188,5 +190,39 @@ describe("useStreamReducer application checkpoints", () => {
     expect(urls).toHaveLength(1);
     expect(urls[0]).toContain(`live=1&checkpoint=${encodeURIComponent(offsetForOrdinal(0))}`);
     expect((updates.at(-1)!.state as FsTree).dirs).toHaveProperty("src");
+  });
+
+  it("initializes a stream-specific reducer from the requested stream identity", async () => {
+    const issueId = "hook-identity";
+    const issueStream = `issue:maple/reading-room/${issueId}`;
+    const controller = new AbortController();
+    const updates: StreamReducerResult[] = [];
+    const opened = {
+      type: "issue.opened",
+      payload: { v: 1, title: "Hook identity", body: "Per-stream initial state" },
+      ts: 1,
+      offset: offsetForOrdinal(0),
+    };
+    const fetcher = (async () =>
+      Response.json({
+        events: [opened],
+        checkpoint: opened.offset,
+        reducer: { id: issueReducerDefinition.id, version: issueReducerDefinition.version },
+      })) as typeof fetch;
+
+    await runStreamReducer({
+      apiPath: "/api/repos/maple/reading-room/main/events?stream=issue&issueId=hook-identity",
+      streamId: issueStream,
+      reducerId: issueReducerDefinition.id,
+      fetch: fetcher,
+      signal: controller.signal,
+      onUpdate: (result) => {
+        updates.push(result);
+        if (result.checkpoint === opened.offset) controller.abort();
+      },
+    });
+
+    expect(updates.at(-1)!.state).toMatchObject({ issueId, title: "Hook identity" });
+    expect(updates.at(-1)!.records).toEqual([opened]);
   });
 });

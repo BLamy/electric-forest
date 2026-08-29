@@ -1,9 +1,11 @@
 import { stateDigest, type Event, type Offset } from "@eforest/protocol";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import {
   ISSUE_STATES,
   issueHasBeenOpened,
   issueInitialStateForStream,
   isIssueEventShape,
+  isIssueString,
   isLegal,
   issueReducer,
   type IssueState,
@@ -13,6 +15,8 @@ import { labelInitialState, reduceLabelApplicationEvent, type LabelState } from 
 
 export const BOARD_REDUCER = "issue-board@1" as const;
 export const BOARD_VIEW_VERSION = 1 as const;
+export const ISSUE_BOARD_REPLACED_EVENT = "issue-board.replaced" as const;
+export const ISSUE_BOARD_EVENT_VERSION = 1 as const;
 
 export interface BoardColumn {
   readonly count: number;
@@ -31,6 +35,26 @@ export interface IssueBoard {
   readonly columns: Readonly<Record<IssueStateName, BoardColumn>>;
   readonly labels: Readonly<Record<string, BoardLabel>>;
 }
+
+export interface IssueBoardInputProvenance {
+  readonly streamId: string;
+  readonly offset: Offset;
+}
+
+export interface IssueBoardProvenance {
+  readonly inputs: readonly IssueBoardInputProvenance[];
+}
+
+export interface IssueBoardReplacementPayload {
+  readonly v: typeof ISSUE_BOARD_EVENT_VERSION;
+  readonly board: IssueBoard;
+  readonly provenance: IssueBoardProvenance;
+}
+
+export type IssueBoardReplacementEvent = Event & {
+  readonly type: typeof ISSUE_BOARD_REPLACED_EVENT;
+  readonly payload: IssueBoardReplacementPayload;
+};
 
 export interface InputRecord extends Event {
   readonly offset?: Offset;
@@ -73,6 +97,147 @@ function emptyColumns(): Record<IssueStateName, { count: number; issues: string[
     "wont-do": { count: 0, issues: [] },
   };
 }
+
+export const issueBoardInitialState: IssueBoard = Object.freeze({
+  v: BOARD_VIEW_VERSION,
+  reducer: BOARD_REDUCER,
+  columns: Object.freeze({
+    open: Object.freeze({ count: 0, issues: Object.freeze([]) }),
+    "in-progress": Object.freeze({ count: 0, issues: Object.freeze([]) }),
+    done: Object.freeze({ count: 0, issues: Object.freeze([]) }),
+    closed: Object.freeze({ count: 0, issues: Object.freeze([]) }),
+    "wont-do": Object.freeze({ count: 0, issues: Object.freeze([]) }),
+  }),
+  labels: Object.freeze({}),
+});
+
+export function repoIssueBoardStreamId(org: string, repo: string): string {
+  return `issue-board:${org}/${repo}`;
+}
+
+export function isRepoIssueBoardStreamId(streamId: string): boolean {
+  return /^issue-board:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*$/.test(streamId);
+}
+
+function exactObject(value: unknown, fields: readonly string[]): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Object.keys(value).sort();
+  const expected = [...fields].sort();
+  return keys.length === expected.length && keys.every((key, index) => key === expected[index]);
+}
+
+function sortedUniqueIssueIds(value: unknown): value is readonly string[] {
+  if (!Array.isArray(value)) return false;
+  let previous: string | undefined;
+  for (const issueId of value) {
+    if (typeof issueId !== "string" || !/^[A-Za-z0-9._~-]+$/.test(issueId)) return false;
+    if (previous !== undefined && compareUtf8(previous, issueId) >= 0) return false;
+    previous = issueId;
+  }
+  return true;
+}
+
+export function isIssueBoard(value: unknown): value is IssueBoard {
+  if (!exactObject(value, ["v", "reducer", "columns", "labels"])) return false;
+  if (value.v !== BOARD_VIEW_VERSION || value.reducer !== BOARD_REDUCER) return false;
+  if (!exactObject(value.columns, ISSUE_STATES)) return false;
+  const boardIssueIds = new Set<string>();
+  for (const state of ISSUE_STATES) {
+    const column = value.columns[state];
+    if (
+      !exactObject(column, ["count", "issues"]) ||
+      !Number.isSafeInteger(column.count) ||
+      (column.count as number) < 0 ||
+      !sortedUniqueIssueIds(column.issues) ||
+      column.count !== column.issues.length
+    ) {
+      return false;
+    }
+    for (const issueId of column.issues) {
+      if (boardIssueIds.has(issueId)) return false;
+      boardIssueIds.add(issueId);
+    }
+  }
+  if (value.labels === null || typeof value.labels !== "object" || Array.isArray(value.labels))
+    return false;
+  const labels = value.labels as Record<string, unknown>;
+  const labelIds = Object.keys(labels);
+  if (labelIds.some((labelId) => !/^[A-Za-z0-9._~-]+$/.test(labelId))) return false;
+  if ([...labelIds].sort(compareUtf8).some((labelId, index) => labelId !== labelIds[index]))
+    return false;
+  for (const labelId of labelIds) {
+    const label = labels[labelId];
+    if (
+      !exactObject(label, ["name", "color", "issues"]) ||
+      !isIssueString(label.name) ||
+      label.name === "" ||
+      !isIssueString(label.color) ||
+      label.color === "" ||
+      !sortedUniqueIssueIds(label.issues) ||
+      label.issues.some((issueId) => !boardIssueIds.has(issueId))
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function isIssueBoardProvenance(value: unknown): value is IssueBoardProvenance {
+  if (!exactObject(value, ["inputs"]) || !Array.isArray(value.inputs)) return false;
+  let previous: string | undefined;
+  for (const input of value.inputs) {
+    if (
+      !exactObject(input, ["streamId", "offset"]) ||
+      typeof input.streamId !== "string" ||
+      input.streamId.length === 0 ||
+      typeof input.offset !== "string" ||
+      !isWellFormedOffset(input.offset)
+    ) {
+      return false;
+    }
+    if (previous !== undefined && compareUtf8(previous, input.streamId) >= 0) return false;
+    previous = input.streamId;
+  }
+  return true;
+}
+
+export function isIssueBoardReplacementEvent(event: Event): event is IssueBoardReplacementEvent {
+  return (
+    event.type === ISSUE_BOARD_REPLACED_EVENT &&
+    exactObject(event.payload, ["v", "board", "provenance"]) &&
+    event.payload.v === ISSUE_BOARD_EVENT_VERSION &&
+    isIssueBoard(event.payload.board) &&
+    isIssueBoardProvenance(event.payload.provenance)
+  );
+}
+
+export function issueBoardReplacementEvent(
+  board: IssueBoard,
+  provenance: IssueBoardProvenance,
+  ts = 0,
+): IssueBoardReplacementEvent {
+  const event: Event = {
+    type: ISSUE_BOARD_REPLACED_EVENT,
+    payload: { v: ISSUE_BOARD_EVENT_VERSION, board, provenance },
+    ts,
+  };
+  if (!isIssueBoardReplacementEvent(event)) throw new TypeError("issue-board/invalid-snapshot");
+  return event;
+}
+
+export function issueBoardReducer(_state: IssueBoard, event: Event): IssueBoard {
+  if (!isIssueBoardReplacementEvent(event)) throw new TypeError("issue-board/corrupt-event");
+  return event.payload.board;
+}
+
+export const issueBoardReducerDefinition = Object.freeze({
+  id: BOARD_REDUCER,
+  version: BOARD_VIEW_VERSION,
+  initialState: issueBoardInitialState,
+  reduce: issueBoardReducer as (state: unknown, event: Event) => IssueBoard,
+  digest: boardDigest as (state: unknown) => string,
+  matchesStream: isRepoIssueBoardStreamId,
+});
 
 function labelState(labelLog: readonly InputRecord[]): LabelState {
   return labelLog.reduce<LabelState>(

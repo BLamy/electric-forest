@@ -8,13 +8,16 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E5-T05** — "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E5-T05** — "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 1. **E5-T08** — "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 1. **E5-T10** — "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
+
+## Unlocks when E5-T05 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -98,7 +101,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `502` [E5-T02](epic-5-the-meadow/E5-T02-pr-event-model/readme.md) — "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer" *(deps: E4)*
 - [x] `503` [E5-T03](epic-5-the-meadow/E5-T03-issue-board-derived-stream/readme.md) — "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing" *(deps: E5-T01)*
 - [x] `504` [E5-T04](epic-5-the-meadow/E5-T04-browser-dispatch-hook/readme.md) — "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management" *(deps: E5-T03)*
-- [ ] `505` [E5-T05](epic-5-the-meadow/E5-T05-issues-ui-live/readme.md) — "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live" *(deps: E5-T04)*
+- [~] `505` [E5-T05](epic-5-the-meadow/E5-T05-issues-ui-live/readme.md) — "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live" *(deps: E5-T04)*
 - [ ] `506` [E5-T06](epic-5-the-meadow/E5-T06-pr-merge-execution/readme.md) — "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events" *(deps: E5-T02, E5-T10)*
 - [ ] `507` [E5-T07](epic-5-the-meadow/E5-T07-cross-entity-linking/readme.md) — "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once" *(deps: E5-T01, E5-T06)*
 - [ ] `508` [E5-T08](epic-5-the-meadow/E5-T08-wiki-branch-live/readme.md) — "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code" *(deps: E5-T04)*

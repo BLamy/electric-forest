@@ -7,19 +7,25 @@ import {
   compareUtf8,
   deriveBoardFromStates,
   issueBelongsToRepo,
+  issueBoardReplacementEvent,
   ISSUE_CATALOG_EVENT,
   issueInitialStateForStream,
+  isIssueBoardReplacementEvent,
   isIssueEventShape,
   labelInitialState,
   reduceIssueApplicationEvent,
   reduceIssueLog,
   reduceLabelApplicationEvent,
   repoIdentityFromLabelStream,
+  repoIssueBoardStreamId,
   repoIssuesStreamId,
   repoLabelsStreamId,
   replayIssueCatalog,
   type InputRecord,
   type IssueBoard,
+  type IssueBoardInputProvenance,
+  type IssueBoardProvenance,
+  type IssueBoardReplacementEvent,
   type IssueLog,
   type IssueState,
   type LabelState,
@@ -28,14 +34,8 @@ import { canonicalJson, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@ef
 import { nextAllocatedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "../official.js";
 
-export interface BoardInputProvenance {
-  readonly streamId: string;
-  readonly offset: Offset;
-}
-
-export interface BoardProvenance {
-  readonly inputs: readonly BoardInputProvenance[];
-}
+export type BoardInputProvenance = IssueBoardInputProvenance;
+export type BoardProvenance = IssueBoardProvenance;
 
 export interface BoardEndpointBody {
   readonly board: IssueBoard;
@@ -198,6 +198,16 @@ export class IssueBoardMaterializer {
     return run;
   }
 
+  async snapshotAt(
+    org: string,
+    repo: string,
+    offset: Offset,
+  ): Promise<BoardEndpointBody | undefined> {
+    const records = await this.readBoardProjection(org, repo);
+    const record = records.find((candidate) => candidate.offset === offset);
+    return record === undefined ? undefined : this.bodyFromProjectionEvent(record.event);
+  }
+
   materializedCopy(org: string, repo: string): BoardEndpointBody | undefined {
     return this.memory.get(`${org}/${repo}`)?.body;
   }
@@ -221,6 +231,7 @@ export class IssueBoardMaterializer {
       this.bodyMatchesReducedState(current) &&
       (await this.sourceHeadsMatch(org, repo, current))
     ) {
+      await this.publishBoardProjection(org, repo, current.body);
       return current.body;
     }
     return this.coldRebuild(org, repo);
@@ -384,7 +395,74 @@ export class IssueBoardMaterializer {
     } catch (error) {
       this.snapshotErrors.set(key, error instanceof Error ? error : new Error(String(error)));
     }
+    await this.publishBoardProjection(org, repo, body);
     return state;
+  }
+
+  private async publishBoardProjection(
+    org: string,
+    repo: string,
+    body: BoardEndpointBody,
+  ): Promise<void> {
+    const streamId = repoIssueBoardStreamId(org, repo);
+    await this.ensureStream(streamId);
+    let previousLength = -1;
+    let stalled = 0;
+    for (;;) {
+      const records = await this.readBoardProjection(org, repo);
+      const latest = records.at(-1);
+      if (latest !== undefined) {
+        const published = this.bodyFromProjectionEvent(latest.event);
+        if (
+          published.digest === body.digest &&
+          canonicalJson(published.provenance) === canonicalJson(body.provenance)
+        ) {
+          return;
+        }
+      }
+      const offset = offsetForOrdinal(records.length);
+      const event = issueBoardReplacementEvent(
+        structuredClone(body.board),
+        structuredClone(body.provenance),
+      );
+      try {
+        await this.streams.append(streamId, event, {
+          sequence: offset,
+          applicationOffset: offset,
+        });
+        return;
+      } catch (error) {
+        if (!isDurableConflict(error)) throw error;
+        stalled = records.length > previousLength ? 0 : stalled + 1;
+        if (stalled >= 8) throw new Error("issue-board/contention", { cause: error });
+        previousLength = records.length;
+      }
+    }
+  }
+
+  private async readBoardProjection(
+    org: string,
+    repo: string,
+  ): Promise<readonly { readonly offset: Offset; readonly event: IssueBoardReplacementEvent }[]> {
+    const streamId = repoIssueBoardStreamId(org, repo);
+    const records = await this.readOptional(streamId);
+    return records.map((value, ordinal) => {
+      const record = cleanRecord(value);
+      const offset = record.offset;
+      const expected = offsetForOrdinal(ordinal);
+      if (offset !== expected) throw new TypeError(`issue-board/noncontiguous-offset:${expected}`);
+      const event: Event = { type: record.type, payload: record.payload, ts: record.ts };
+      if (!isIssueBoardReplacementEvent(event)) throw new TypeError("issue-board/corrupt-event");
+      return { offset, event };
+    });
+  }
+
+  private bodyFromProjectionEvent(event: IssueBoardReplacementEvent): BoardEndpointBody {
+    return {
+      board: event.payload.board,
+      digest: boardDigest(event.payload.board),
+      provenance: event.payload.provenance,
+    };
   }
 
   private bodyMatchesReducedState(state: MaterializedRepoState): boolean {

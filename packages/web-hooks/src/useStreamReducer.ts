@@ -16,6 +16,7 @@ export interface StreamReducerResult<State = unknown> {
   readonly checkpoint: Offset;
   readonly digest: string;
   readonly status: StreamReducerStatus;
+  readonly records: readonly ApplicationRecord[];
 }
 
 export interface UseStreamReducerOptions {
@@ -178,7 +179,12 @@ export function applyProjectionBatch(
     checkpoint: batch.checkpoint,
     digest: definition.digest(state),
     status: "live",
+    records: [...current.records, ...batch.events],
   };
+}
+
+function initialReducerState(definition: ReducerDefinition, streamId: string): unknown {
+  return definition.initialStateForStream?.(streamId) ?? definition.initialState;
 }
 
 function delay(milliseconds: number, signal: AbortSignal): Promise<void> {
@@ -209,11 +215,13 @@ export interface StreamReducerRunOptions extends UseStreamReducerOptions {
 export async function runStreamReducer(options: StreamReducerRunOptions): Promise<void> {
   const definition = requireReducer(options.reducerId, options.streamId);
   const fetcher = options.fetch ?? fetch;
+  const initialState = initialReducerState(definition, options.streamId);
   let current: StreamReducerResult = options.initialResult ?? {
-    state: definition.initialState,
+    state: initialState,
     checkpoint: OFFSET_BEFORE_FIRST,
-    digest: definition.digest(definition.initialState),
+    digest: definition.digest(initialState),
     status: "loading",
+    records: [],
   };
   options.onUpdate(current);
 
@@ -277,16 +285,18 @@ export function useStreamReducer<State = unknown>(
   );
   const cacheKey =
     options.cacheKey ?? `${options.reducerId}:${options.streamId}:${options.apiPath}`;
-  const initialResult = useMemo(
-    () =>
+  const initialResult = useMemo(() => {
+    const initialState = initialReducerState(definition, options.streamId);
+    return (
       options.cache?.get(cacheKey) ?? {
-        state: definition.initialState,
+        state: initialState,
         checkpoint: OFFSET_BEFORE_FIRST,
-        digest: definition.digest(definition.initialState),
+        digest: definition.digest(initialState),
         status: "loading" as const,
-      },
-    [cacheKey, definition, options.cache],
-  );
+        records: [],
+      }
+    );
+  }, [cacheKey, definition, options.cache, options.streamId]);
   const [result, setResult] = useState<StreamReducerResult>(() => initialResult);
 
   useEffect(() => {
