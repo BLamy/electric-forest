@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DispatchRefusalError } from "@eforest/web-hooks";
+import { Markdown } from "../components/markdown/Markdown.js";
 import { RouteLink } from "../navigation.js";
-import { MarkdownDocument } from "./renderMarkdown.js";
 import {
   deleteWikiPageEvent,
   isWikiSlug,
@@ -115,7 +115,7 @@ export function WikiPage(props: {
       ) : source === null ? (
         <p data-testid="wiki-page-loading">Loading page content…</p>
       ) : (
-        <MarkdownDocument source={source} />
+        <Markdown source={source} data-testid="wiki-markdown" />
       )}
 
       {missing ? null : (

@@ -895,6 +895,25 @@
   gap: 1rem;
 }
 
+.pr-changes-toolbar {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--pr-muted);
+}
+
+.pr-changes-toolbar .ui-tabs {
+  border: 1px solid var(--pr-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pr-changes-toolbar .ui-tab {
+  min-height: 34px;
+}
+
 .pr-files {
   align-self: start;
   overflow: hidden;
@@ -967,7 +986,11 @@
   border-bottom: 1px solid var(--pr-border);
 }
 
-.pr-diff-file [data-diffs] {
+.pr-pierre-diff {
+  min-width: 0;
+}
+
+.pr-diff-file diffs-container {
   --diffs-bg: #111212;
   display: block;
   overflow: auto;
@@ -1076,6 +1099,27 @@
   overflow-x: hidden;
 }
 
+.mobile-pr-segmented {
+  padding: 0.45rem 0.65rem 0.55rem;
+  border-bottom: 1px solid var(--tk-sep);
+  background: var(--tk-bar);
+  backdrop-filter: blur(18px) saturate(1.6);
+}
+
+.mobile-pr-activity {
+  display: grid;
+  min-width: 0;
+  gap: 0.85rem;
+}
+
+.mobile-pr-activity .mobile-conversation {
+  padding-inline: 0;
+}
+
+.issue-mobile-conversation {
+  display: none;
+}
+
 .mobile-pr-detail .pr-detail-title h1 {
   font-size: 22px;
 }
@@ -1096,6 +1140,25 @@
   margin-top: 1rem;
 }
 
+@media (min-width: 900px) {
+  .pr-detail-page .pr-detail-grid {
+    height: calc(100vh - 18.75rem);
+    min-height: 34rem;
+    overflow: hidden;
+  }
+
+  .pr-detail-page .pr-detail-main,
+  .pr-detail-page .pr-detail-aside {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .pr-detail-page .pr-detail-main {
+    padding-right: 0.45rem;
+  }
+}
+
 @media (max-width: 960px) {
   .pr-detail-grid {
     grid-template-columns: minmax(0, 1fr) 14rem;
@@ -1104,6 +1167,20 @@
 
   .pr-changes {
     grid-template-columns: 13rem minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 899px) {
+  .issue-mobile-conversation {
+    display: block;
+  }
+
+  .issue-desktop-timeline {
+    display: none;
+  }
+
+  .mobile-pr-detail .pr-changes-toolbar {
+    align-items: flex-start;
   }
 }
 
@@ -1143,7 +1220,7 @@
     flex-wrap: wrap;
   }
 
-  .pr-diff-file [data-diffs] {
+  .pr-diff-file diffs-container {
     max-width: calc(100vw - 3rem);
   }
 }

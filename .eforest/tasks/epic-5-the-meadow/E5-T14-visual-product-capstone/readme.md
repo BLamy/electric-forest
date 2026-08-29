@@ -3,7 +3,7 @@ id: E5-T14
 epic: 5
 title: "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing"
 priority: 514
-status: pending
+status: verified
 depends_on: [E5-T13]
 estimate: L
 capstone: true
@@ -207,3 +207,181 @@ the visual integration did not alter the collaboration model.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — focused visual capstone at `0f7186d3`
+
+- Preserved all nine owner-supplied references byte-for-byte, then implemented the shared
+  dark desktop/mobile product shell, persistent Code/Pull Requests/Issues/Wiki/Settings
+  navigation, and the four PR-detail tabs. Exact hashes and dimensions are recorded in
+  `references/README.md`.
+- Routed rendered Markdown through `@brett_lamy/docstream@0.3.7`, diffs through
+  `@pierre/diffs@1.3.6`, repository and changed-file trees through
+  `@pierre/trees@1.0.0-beta.6`, desktop controls through source-owned shadcn components,
+  and mobile composition through the inspected `@brett_lamy/ui@0.0.1` primitives. Exact
+  versions, licenses, exports, and adapter entrypoints are frozen in
+  `evidence/package-source-manifest.md`.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,966 modules, 16.71 s);
+  `node tools/verify/e5_t14_visual_contract.mjs`
+  (`E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5`); and
+  `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1
+apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
+- Browser QA exercised the registry, repository tree/file, PR list/detail/activity/commits/
+  checks/changes, Issues, and Wiki at desktop and 390 x 844 mobile. Mobile document/body
+  width remained 390 px on the checked routes and current-origin console errors were zero.
+  Final captures are in `evidence/actual/`; all nine normalized source/actual comparison
+  sheets and the pass/fix record are indexed by `/design-qa.md`.
+- The direct E5-T13 dependency gate had already passed once at the exact parent head
+  `728ac52b`; it was not duplicated. No root suite, cold-clone fan-out, or indirect
+  dependency verifier ran for this capstone.
+- Replay: N/A (owner directed focused visual/package verification without another Replay
+  or dependency-gate rerun) + mitigation: exact reference hashes, package/source contract,
+  focused build and hostile-Markdown tests, final DOM interaction/overflow assertions,
+  zero current-origin console errors, 13 committed product captures, nine committed
+  side-by-side comparisons, and the inherited exact-parent E5-T13 stream evidence.
+
+### 2026-08-27 — builder — refreshed focused evidence at browser head `99f04a2e`
+
+- Repaired the stale preview-only wiki branch shape, separated expected navigation-aborted
+  projection requests from real failures, and made the Changes journey wait for Pierre's
+  rendered shadow-DOM rows. The final Changes image therefore proves the split diff body,
+  not merely its toolbar and Trees navigator.
+- Focused checks passed: the shared Docstream hostile-input test (1 file, 3 tests,
+  384 ms); `node tools/verify/e5_t14_visual_contract.mjs`
+  (`E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5`);
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`); and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`).
+- `evidence/e5-t14-browser.json` binds all capture hashes to full code head
+  `99f04a2efe998a209d6df73ae85b5b820a5febf4`, exact 1440 x 900 and 390 x 844
+  viewports, the five required package/component boundaries, both tab sets, and empty
+  console/page/unexpected-request failure arrays. All nine normalized side-by-side sheets
+  were regenerated and inspected; `/design-qa.md` records `final result: passed`.
+- The direct E5-T13 dependency remains independently verified with two identities, zero
+  navigations/console errors, and replay/DOM composite
+  `06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae`.
+  It was not rerun. No root/full suite, unrelated verifier, dependency verifier, cold
+  clone, Replay upload, or MP4 capture ran for this refresh.
+- Replay: N/A (owner explicitly requested focused verification without more gate churn) +
+  mitigation: exact reference/capture hashes, package and route contract checks, hostile
+  Markdown coverage, rendered-Pierre assertion, 13 committed browser captures, nine
+  combined reference/actual comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: refuted at artifact commit `80c5ada7`
+
+- Fresh critic session `b8111a79-2924-4d18-8af1-f2fb2a485a4a` reproduced all reference and
+  capture hashes but found that 05/07 were byte-identical, so the lower Activity merge card
+  and composer had no independent visual proof.
+- The Changes pair rendered Pierre, but only as one line of content-digest placeholders;
+  the changed-file Trees rows appeared crowded. The visible PR body also repeated Summary.
+- Demand: repair only those focused visual surfaces and strengthen the existing T14 browser
+  assertions. No Replay, MP4, dependency, root, cold-clone, or broad verifier rerun.
+
+### 2026-08-27 — builder — refutation repaired at browser head `74f7923e`
+
+- PR diffs now join the existing authorized branch-blob projections to the canonical
+  changed-file metadata and admit text only when its content digest is exact. Pierre is
+  remounted when hydration becomes exact, producing real multi-line split hunks while the
+  existing published diff digest remains unchanged.
+- The changed-file navigator uses Pierre Trees at default row density. The focused browser
+  oracle checks that its search region and every visible row rectangle do not overlap.
+- Activity now scrolls its conversation region independently, leaving repository/PR
+  context and facts visible while the merge-readiness controls and Docstream comment
+  composer are in-frame. Captures 05 and 07 are hash-distinct and route fields come from
+  the observed browser URL. The duplicate wrapper Summary heading is gone.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,974 modules, 9.07 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). The previously passing three-test
+  Docstream and 9-reference/5-adapter/5-tab contract checks were not duplicated.
+- `evidence/e5-t14-browser.json` binds the final 13 capture hashes and observed routes to
+  `74f7923ebba4d49a3747ccb2275b86d9612601bb`; all nine comparison sheets were regenerated
+  and inspected after the repairs. Direct dependency E5-T13 remains verified and was not
+  rerun. No root/full suite, unrelated verifier, cold clone, Replay upload, or MP4 ran.
+- Replay: N/A (owner explicitly waived another Replay/MP4/dependency pass) + mitigation:
+  source-bound capture hashes, exact blob/metadata digest parity, rendered Pierre row and
+  Trees geometry assertions, independently framed Activity evidence, nine combined visual
+  comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: refuted at artifact commit `d9baaa0e`
+
+- Fresh critic session `51a6737d-a379-4d71-8ad0-ad2cf256224d` confirmed the prior diff,
+  Activity, and Summary repairs but found capture 02's primary Code tree still displayed
+  vertically displaced Pierre labels/icons; the existing geometry check covered only the
+  changed-file navigator.
+- The same artifact rendered the mobile SideDrawer, Credenza, and conversation IndexBar
+  code without crossing their keyboard/focus interaction boundaries.
+- Demand: repair and assert only those shared Tree and mobile adapter boundaries, regenerate
+  captures 02/06/13, and do not rerun Replay, MP4, dependencies, cold clone, root suite, or
+  broad gates.
+
+### 2026-08-27 — builder — second refutation repaired at browser head `73506008`
+
+- All repository and changed-file Pierre Trees now use separate default-density rows and
+  the package's minimal icon set. The adapter overlays Pierre's hidden overflow-measure
+  node inside its documented shadow-DOM `unsafeCSS` boundary so visible labels and icons
+  remain centered in their owning rows.
+- The focused browser oracle checks search/row separation, adjacent-row non-overlap,
+  unflattened path labels, and visible text/icon containment on desktop Code, mobile Code,
+  and Changes. Final captures 02, 06, and 13 and comparisons 02/06 were regenerated and
+  inspected together with the owner references.
+- The same oracle opens and closes the mobile SideDrawer and Credenza by keyboard, verifies
+  modal naming, inert background, Escape handling, and restored trigger focus, then drives
+  both list and conversation IndexBars by keyboard and verifies the Docstream article jump.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,974 modules, 9.99 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). The final JSON binds capture hashes,
+  observed routes, and four mobile interactions to
+  `735060081ea594c7a3ed59d1979a6f643317e8d4`.
+- Previously passing Docstream and visual-contract checks were not duplicated. E5-T13 and
+  every unrelated/root/full/cold-clone gate were not rerun. Replay: N/A (owner explicitly
+  waived more Replay/MP4 churn) + mitigation: exact-head hash/route binding, three-surface
+  Pierre geometry assertions, four focused mobile adapter interactions, combined visual
+  comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: needs-evidence at artifact commit `9181187f`
+
+- Fresh critic session `c505b3a3-d7e0-4e2e-aa5e-dbe113bb7074` independently reproduced
+  all reference/capture hashes and confirmed every blocker from the two prior critic
+  sessions was closed with no remaining P0/P1/P2 visual mismatch.
+- Sufficiency remained open only for three changed, documented desktop paths the browser
+  ledger had not driven: repository-tree search, Pierre Unified/Split switching, and the
+  repository Settings route.
+- Demand: cross those three existing task-local interactions or narrow the claims. Do not
+  run Replay, MP4, E5-T13/dependencies, cold clone, root suite, or broad gates.
+
+### 2026-08-27 — builder — final sufficiency gap repaired at browser head `eb90dbcb`
+
+- The focused oracle now filters the Pierre repository tree to fewer visible rows and
+  clears it back to the exact original count; it navigates Settings and verifies both the
+  canonical pathname and `aria-current=page`.
+- Changes now exposes the current mode in the adapter boundary. The oracle selects Unified,
+  proves both the view and Pierre prop changed, returns to Split, proves both values again,
+  then captures the reference-matching split state.
+- `evidence/e5-t14-browser.json` binds those three desktop interactions, the four prior
+  mobile interactions, observed routes, 13 hashes, and zero console/page/unexpected request
+  failures to `eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe`.
+- Focused checks passed: web build (4,974 modules, 9.17 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). No previously waived or unrelated
+  gate ran.
+
+### 2026-08-27 — critic — VERDICT: verified at artifact commit `e06c9cb9`
+
+- Fresh read-only critic session `86bd17d9-d344-45d0-98ba-ab73b4957291` confirmed the
+  browser ledger binds source head `eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe`, all 13
+  capture hashes, and empty console/page/unexpected-request failure arrays; the later
+  artifact commit changes evidence and documentation only.
+- Repository-tree search proves a strict visible-row reduction and exact restoration;
+  Settings proves the canonical route and `aria-current=page`; Pierre diff controls prove
+  both application state and adapter prop in Unified and Split modes before returning to
+  the reference-matching Split capture.
+- Every hunk in the final sufficiency patch executes on the cited task-local oracle path,
+  and the focused verifier exact-matches all three desktop interaction ledger entries.
+  No unexecuted changed hunk or remaining P0/P1/P2 visual blocker remains.
+- No Replay, MP4, E5-T13/dependency, cold-clone, root-suite, or broad gate was rerun.

@@ -1,6 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { RouteLink } from "./navigation.js";
+import { Icon, List, ListRow, ListSection } from "@brett_lamy/ui";
 import { IdentityRegion } from "./identity.js";
+import { MobileProductShell } from "./components/mobile/MobileProductShell.js";
+import { DesktopProductShell, repositoryRoute } from "./components/shell/ProductShell.js";
+import { navigate, repoSectionPath, type RepoSection } from "./prs/RepoChrome.js";
 
 interface ProofReceiptValue {
   readonly identityStream: string;
@@ -108,6 +111,17 @@ function usePathname(): string {
   return pathname;
 }
 
+function useCompactProductShell(): boolean {
+  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 899px)").matches);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 899px)");
+    const update = (): void => setCompact(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return compact;
+}
+
 const PageRouter = lazy(async () => {
   const module = await import("./route-pages.js");
   return { default: module.PageRouter };
@@ -118,11 +132,6 @@ function RouteFallback(): React.JSX.Element {
 }
 
 function Route(props: { readonly pathname: string }): React.JSX.Element {
-  const segments = props.pathname.split("/").filter(Boolean);
-  if (segments.length === 0) return <h2 data-testid="route-home">Forest home</h2>;
-  if (segments.length === 1 && segments[0] !== "repositories") {
-    return <h2 data-testid="route-org">Organization: {segments[0]}</h2>;
-  }
   return (
     <Suspense fallback={<RouteFallback />}>
       <PageRouter pathname={props.pathname} />
@@ -130,54 +139,110 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
   );
 }
 
+const repositorySections: readonly {
+  id: RepoSection;
+  title: string;
+  subtitle: string;
+  icon: string;
+}[] = [
+  { id: "code", title: "Code", subtitle: "Browse branches and files", icon: "layers" },
+  { id: "pulls", title: "Pull Requests", subtitle: "Review activity and changes", icon: "message" },
+  { id: "issues", title: "Issues", subtitle: "Plan and track work", icon: "info" },
+  { id: "wiki", title: "Wiki", subtitle: "Read repository documentation", icon: "star" },
+  { id: "settings", title: "Settings", subtitle: "Configure this repository", icon: "sliders" },
+];
+
+function MobileRepositoryRoute(props: {
+  readonly pathname: string;
+  readonly org: string;
+  readonly repo: string;
+  readonly active: RepoSection;
+}): React.JSX.Element {
+  const section = repositorySections.find((item) => item.id === props.active);
+  const rootContent = (
+    <List inset>
+      <ListSection
+        title={`${props.org} / ${props.repo}`}
+        footer="Every mutation is backed by a durable stream."
+      >
+        {repositorySections.map((item) => (
+          <ListRow
+            key={item.id}
+            title={item.title}
+            subtitle={item.subtitle}
+            leading={<Icon name={item.icon} />}
+            accessory="chevron"
+            selected={item.id === props.active}
+            onPress={() => navigate(repoSectionPath(props.org, props.repo, item.id))}
+          />
+        ))}
+      </ListSection>
+    </List>
+  );
+  const rootScreen = {
+    key: "repository",
+    title: props.repo,
+    largeTitle: true,
+    content: rootContent,
+    bottomInset: 78,
+  };
+  const detailScreen = {
+    key: props.pathname,
+    title: section?.title ?? "Repository",
+    content: (
+      <article id="main-content" className="mobile-repository-content" tabIndex={-1}>
+        <Route pathname={props.pathname} />
+      </article>
+    ),
+    bottomInset: 78,
+  };
+  return (
+    <MobileProductShell
+      org={props.org}
+      repo={props.repo}
+      activeTab={props.active}
+      screens={[rootScreen, detailScreen]}
+      onPop={() => navigate(`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}`)}
+      routeForTab={(tab) => repoSectionPath(props.org, props.repo, tab)}
+      sidebar={rootContent}
+      regularMaster={rootContent}
+      className="mobile-repository-shell"
+    />
+  );
+}
+
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
-  const immersiveRepo = /^\/orgs\/[^/]+\/repos\/[^/]+\/pulls(?:\/|$)/.test(pathname);
-  if (immersiveRepo) {
-    return (
-      <main className="app-shell-repository" data-testid="app-shell">
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
-        <article id="main-content" tabIndex={-1}>
-          <Route pathname={pathname} />
-        </article>
-      </main>
-    );
-  }
+  const compact = useCompactProductShell();
+  const repository = repositoryRoute(pathname);
+  const mobileRepository = compact && repository !== undefined && repository.active !== "pulls";
   return (
-    <main data-testid="app-shell">
+    <main className="app-shell-repository" data-testid="app-shell">
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <header>
-        <div>
-          <p className="eyebrow">electric forest</p>
-          <h1>The canopy</h1>
-        </div>
-        <form action="/auth/logout" method="post">
-          <button type="submit">Log out</button>
-        </form>
-      </header>
-      <IdentityRegion />
-      <nav aria-label="Canopy routes">
-        <RouteLink href="/">Home</RouteLink>
-        <RouteLink href="/maple">Maple</RouteLink>
-        <RouteLink href="/maple/reading-room">Reading room</RouteLink>
-        <RouteLink href="/orgs/maple/repos/reading-room/labels">Labels</RouteLink>
-        <RouteLink href="/orgs/maple/repos/reading-room/issues">Issues</RouteLink>
-        <RouteLink href="/orgs/maple/repos/reading-room/wiki">Wiki</RouteLink>
-        <RouteLink href="/maple/reading-room/tree/main">File tree</RouteLink>
-        <RouteLink href="/history/maple/reading-room/main">History</RouteLink>
-        <RouteLink href="/repositories">Repositories</RouteLink>
-        <RouteLink href="/inspect/maple/reading-room/main">Stream inspector</RouteLink>
-        <RouteLink href="/lost/deep/trail">Missing trail</RouteLink>
-      </nav>
-      <ProofReceipt />
-      <article id="main-content" tabIndex={-1}>
-        <Route pathname={pathname} />
-        <p>Stream-backed views grow here in the next canopy gates.</p>
-      </article>
+      {mobileRepository ? (
+        <MobileRepositoryRoute
+          pathname={pathname}
+          org={repository.org}
+          repo={repository.repo}
+          active={repository.active}
+        />
+      ) : (
+        <DesktopProductShell
+          pathname={pathname}
+          diagnostics={
+            <>
+              <IdentityRegion />
+              <ProofReceipt />
+            </>
+          }
+        >
+          <article id="main-content" tabIndex={-1}>
+            <Route pathname={pathname} />
+          </article>
+        </DesktopProductShell>
+      )}
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import { GitbookStreamdown } from "@brett_lamy/docstream/streamdown";
 
 const DANGEROUS_PROTOCOL = /^(?:javascript|data|vbscript):/i;
@@ -41,15 +41,23 @@ export function sanitizeMarkdownForRender(markdown: string): string {
     );
 }
 
-export function MarkdownDocument(props: { readonly source: string }): React.JSX.Element {
+export interface MarkdownProps {
+  readonly source: string;
+  readonly className?: string;
+  readonly "data-testid"?: string;
+}
+
+export function Markdown(props: MarkdownProps): React.JSX.Element {
   const markdown = useMemo(() => sanitizeMarkdownForRender(props.source), [props.source]);
+  const className = props.className ? `wiki-markdown ${props.className}` : "wiki-markdown";
+
   return (
-    <div className="wiki-markdown" data-testid="wiki-markdown" data-markdown-renderer="docstream">
+    <div
+      className={className}
+      data-testid={props["data-testid"] ?? "markdown"}
+      data-markdown-renderer="docstream"
+    >
       <GitbookStreamdown markdown={markdown} />
     </div>
   );
-}
-
-export function renderMarkdown(markdown: string): ReactNode {
-  return <MarkdownDocument source={markdown} />;
 }

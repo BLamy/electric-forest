@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "../../lib/utils.js";
 
 export interface TabItem<T extends string> {
   readonly id: T;
@@ -13,14 +14,15 @@ export function Tabs<T extends string>(props: {
   readonly onSelect: (value: T) => void;
 }): React.JSX.Element {
   return (
-    <div className="ui-tabs" role="tablist" aria-label={props.label}>
+    <div data-slot="tabs-list" className="ui-tabs" role="tablist" aria-label={props.label}>
       {props.items.map((item) => (
         <button
           key={item.id}
           type="button"
           role="tab"
+          data-slot="tabs-trigger"
           aria-selected={item.id === props.selected}
-          className={item.id === props.selected ? "ui-tab ui-tab-active" : "ui-tab"}
+          className={cn("ui-tab", item.id === props.selected && "ui-tab-active")}
           onClick={() => props.onSelect(item.id)}
         >
           <span>{item.label}</span>

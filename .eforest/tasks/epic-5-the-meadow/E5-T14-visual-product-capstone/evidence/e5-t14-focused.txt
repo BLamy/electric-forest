@@ -1,0 +1,78 @@
+E5-T14 focused verification
+
+Browser code head: eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe
+
+PASS CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
+  1 file, 3 tests, 384 ms
+
+PASS node tools/verify/e5_t14_visual_contract.mjs
+  E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5
+
+PASS pnpm --filter @eforest/web build
+  4,974 modules transformed, built in 9.17 s
+
+PASS node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
+  E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0
+  desktop viewport: 1440x900
+  mobile viewport: 390x844
+  source artifact: evidence/e5-t14-browser.json
+  Pierre assertion: both canonical file-content projections matched the StreamFS metadata
+  digests; the selected split diff exposed at least 6 real source lines, at least 6 Pierre
+  shadow-DOM rows, the expected source text, and a body taller than 120 px.
+  Trees assertion: desktop Code, mobile Code, and changed-file Pierre Trees all use
+  separate default-density path rows and minimal package icons. Every first row begins
+  below search; adjacent row rectangles do not overlap; visible text and icon boxes stay
+  inside their owning row.
+  Mobile assertion: SideDrawer and Credenza expose modal dialog semantics, inert the
+  background, close on Escape, and restore trigger focus; both list and conversation
+  IndexBars complete keyboard jumps, including focus transfer to a Docstream article.
+  Desktop interaction assertion: repository-tree search reduces and restores the visible
+  row count; Settings navigates to the canonical route with aria-current=page; Pierre
+  receives both unified and split modes before the reference-matching split capture.
+  Activity assertion: captures 05 and 07 are hash-distinct; capture 07 keeps the PR header,
+  tabs, reviewer facts, merge-readiness controls, and Docstream comment composer in frame.
+  Route assertion: every recorded route is read from page.url(), not authored evidence text.
+
+PASS node tools/verify/e5_t14_browser_evidence.mjs
+  E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0
+
+Focused repairs made while earning the final browser artifact:
+  - the preview wiki now uses canonical fs.branch.genesis and is not registered as a
+    native fork;
+  - navigation-cancelled projection bootstrap and long-poll requests are separated from
+    unexpected failures;
+  - the visual journey waits for Pierre's asynchronous shadow-DOM rows, preventing a
+    shell-only blank diff capture;
+  - the PR Changes surface joins the authorized branch blob projections to the canonical
+    changed-file metadata and only renders fetched text when its digest is exact;
+  - every Pierre Trees surface uses separate default-density path rows, minimal package
+    icons, and a shadow-DOM overflow-measure overlay that keeps labels aligned to rows;
+  - Activity owns a contained desktop scroller so the PR context remains visible while the
+    merge-readiness card and comment composer are inspected;
+  - the duplicate outer Summary heading was removed without rewriting Docstream source.
+
+Independent critic session b8111a79-2924-4d18-8af1-f2fb2a485a4a initially refuted the
+artifact because captures 05/07 were byte-identical, capture 06 contained one digest
+placeholder row, the changed-file tree appeared crowded, and Summary was duplicated. The
+final artifact above closes each cited point without rerunning any waived gate.
+
+Independent critic session 51a6737d-a379-4d71-8ad0-ad2cf256224d then found that the
+primary desktop/mobile Code tree still exposed Pierre's vertically displaced content and
+that the committed browser oracle had not crossed the mobile SideDrawer, Credenza, or
+IndexBar interaction boundaries. Browser code head 73506008 closes those exact findings:
+captures 02/06/13 show aligned, separate tree rows, the shared geometry oracle covers all
+three tree surfaces, and four mobile keyboard/focus interactions are bound in the JSON.
+
+Independent critic session c505b3a3-d7e0-4e2e-aa5e-dbe113bb7074 confirmed every prior
+blocker was closed but withheld verification because the ledger had not driven three
+documented desktop interactions: repository search, Unified/Split, and Settings. Browser
+code head eb90dbcb crosses those exact boundaries and binds all three in the JSON; no
+other gate was rerun.
+
+Inherited direct dependency evidence, not rerun:
+  E5-T13 status=verified
+  BROWSER contexts=2 identities=2 bound_ms=5000 navigations=0 console=0 requests=clean OK
+  replay/dom composite=06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae
+
+NOT RUN: root/full workspace suite, unrelated Epic verifier, dependency verifier,
+cold clone, Replay upload, or MP4 capture.

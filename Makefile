@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E5-negotiation verify-E5-issue-to-merge verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E5-negotiation verify-E5-issue-to-merge verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-e5-web-build _v-e5-browser-fixture _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -734,13 +734,24 @@ _v-e5-t07:
 	@CI=true pnpm exec vitest run --maxWorkers=1 packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts packages/platform/test/cross-entity-linking.rework.test.ts packages/platform/test/cross-entity-linking.production.test.ts packages/platform/test/cross-entity-linking.file.test.ts
 	@bash tools/verify/cross_entity_linking.sh
 
-verify-E5-T09:
-	@CI=true pnpm --filter @eforest/web build
+_v-e5-web-build:
+	@CI=true pnpm --filter @eforest/web... --if-present run build
+
+_v-e5-browser-fixture:
+	@if [ ! -f vendor/emulate/packages/@emulators/auth0/fixtures/test-keypair.private.jwk.json ]; then git submodule update --init --recursive vendor/emulate; fi
+	@if [ ! -f vendor/emulate/packages/emulate/dist/api.js ]; then CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile; fi
+	@if [ ! -f vendor/emulate/packages/emulate/dist/api.js ]; then CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate; fi
+
+verify-E5-T09: _v-e5-web-build _v-e5-browser-fixture
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-diff.test.ts packages/pr/test/pr-index-stream.test.ts packages/platform/test/pr-index.test.ts apps/web/src/prs/usePrs.test.ts
+	@node --experimental-strip-types apps/web/test/prs.pw.ts
+	@node tools/verify/e5_t09_evidence.mjs
 	@echo "verify-E5-T09: OK"
-verify-E5-T11:
-	@CI=true pnpm --filter @eforest/web build
+
+verify-E5-T11: _v-e5-web-build _v-e5-browser-fixture
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/evidence/model.test.ts
+	@node --experimental-strip-types apps/web/test/evidence.pw.ts
+	@node tools/verify/e5_t11_evidence.mjs
 	@echo "verify-E5-T11: OK"
 
 verify-E5-negotiation:
@@ -751,13 +762,21 @@ verify-E5-negotiation:
 verify-E5-T12: verify-E5-negotiation
 	@echo "verify-E5-T12: OK"
 
-verify-E5-issue-to-merge: verify-E5-negotiation
+verify-E5-issue-to-merge: verify-E5-negotiation _v-e5-web-build _v-e5-browser-fixture
 	@CI=true pnpm --filter @eforest/browser-verify build
-	@CI=true pnpm --filter @eforest/web build
 	@bash tools/verify/capstone_e5.sh
 
 verify-E5-T13: verify-E5-issue-to-merge
 	@echo "verify-E5-T13: OK"
+
+# E5-T14 deliberately reruns only its direct dependency capstone, then the
+# focused web/package contract. Do not widen this target to the root suite.
+verify-E5-T14: verify-E5-T13 _v-e5-web-build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
+	@node tools/verify/e5_t14_visual_contract.mjs
+	@node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
+	@node tools/verify/e5_t14_browser_evidence.mjs
+	@echo "verify-E5-T14: OK"
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13
 	@echo "verify-all: every defined verify target passed"
