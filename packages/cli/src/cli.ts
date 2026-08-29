@@ -200,6 +200,12 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         digestFlagSeen = true;
         digestKind = argument === "--tree-digest" ? "tree" : "worktree";
       } else if (
+        (argument === "--tree-digest" || argument === "--worktree-digest") &&
+        !digestFlagSeen
+      ) {
+        digestFlagSeen = true;
+        digestKind = argument === "--tree-digest" ? "tree" : "worktree";
+      } else if (
         argument === "--content" &&
         args[index + 1] &&
         !args[index + 1]!.startsWith("--")
