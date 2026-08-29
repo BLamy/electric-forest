@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"alice","body":"Body","title":"Stay open","v":1,"writer":{"seq":1,"sub":"alice","v":1}},"ts":10,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"alice","atOffset":"0000000000000000_0000000000000000","by":{"entity":"pr","stream":"pr:maple/reading-room/42"},"v":2,"writer":{"seq":2,"sub":"alice","v":1}},"ts":20,"type":"issue.linked"}

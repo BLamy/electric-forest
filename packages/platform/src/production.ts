@@ -141,6 +141,16 @@ export async function createPlatformProductionRuntime(
         await gateway.recoverPrMergeOperation(operationId, operation.streamId, operation.event);
         return;
       }
+      if (operation.event.type === "pr.opened") {
+        // E5_T07_PRODUCTION_RECOVERY_BOUNDARY: recovery must re-enter target
+        // admission, the source writer fence, and causal link propagation.
+        await gateway.recoverPrOpenedGrantOperation(
+          operationId,
+          operation.streamId,
+          operation.event,
+        );
+        return;
+      }
       await writers.recover(operationId, operation.streamId, operation.event);
     },
   });

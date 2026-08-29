@@ -150,6 +150,20 @@ function operationIndex(records: readonly unknown[], operationId: string): numbe
   return existingIndexes[0];
 }
 
+function operationComparableEvent(value: WriterScopedEvent, index: number): Event {
+  const record = value as WriterScopedEvent & { readonly offset?: unknown };
+  const keys = Object.keys(record).sort();
+  const expectedKeys =
+    record.offset === undefined ? ["payload", "ts", "type"] : ["offset", "payload", "ts", "type"];
+  if (canonicalJson(keys) !== canonicalJson(expectedKeys)) {
+    throw new WriterLaneCorruptionError(index);
+  }
+  if (record.offset !== undefined && record.offset !== offsetForOrdinal(index)) {
+    throw new WriterLaneCorruptionError(index);
+  }
+  return { type: record.type, payload: record.payload, ts: record.ts };
+}
+
 /**
  * Application fencing above Durable Streams' one global Stream-Seq lane.
  * Writer state is rebuilt from the stream on every attempt; the promise chain
@@ -175,7 +189,12 @@ export class WriterLaneDispatcher {
     return run;
   }
 
-  recover(operationId: string, streamId: string, event: Event): Promise<WriterDispatchReceipt> {
+  recover(
+    operationId: string,
+    streamId: string,
+    event: Event,
+    options: Omit<WriterDispatchOptions, "operationId" | "requestedSequence"> = {},
+  ): Promise<WriterDispatchReceipt> {
     const payload = event.payload;
     if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
       return Promise.reject(new WriterLaneCorruptionError(-1));
@@ -184,7 +203,7 @@ export class WriterLaneDispatcher {
     if (typeof actor !== "string" || actor.length === 0) {
       return Promise.reject(new WriterLaneCorruptionError(-1));
     }
-    return this.dispatch(streamId, event, actor, { operationId });
+    return this.dispatch(streamId, event, actor, { ...options, operationId });
   }
 
   /**
@@ -236,7 +255,10 @@ export class WriterLaneDispatcher {
             existing.payload.writer.seq,
             options.operationId,
           );
-          if (canonicalJson(existing) !== canonicalJson(expected)) {
+          if (
+            canonicalJson(operationComparableEvent(existing, existingIndex)) !==
+            canonicalJson(expected)
+          ) {
             throw new WriterLaneCorruptionError(existingIndex);
           }
           return { event: existing, globalSequence: offsetForOrdinal(existingIndex) };

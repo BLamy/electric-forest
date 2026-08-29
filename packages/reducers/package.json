@@ -15,6 +15,7 @@
   "dependencies": {
     "@eforest/evidence": "workspace:*",
     "@eforest/issues": "workspace:*",
+    "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/streamfs": "workspace:*"

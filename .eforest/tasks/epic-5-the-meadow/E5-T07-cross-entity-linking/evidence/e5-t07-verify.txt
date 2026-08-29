@@ -1,0 +1,74 @@
+E5-T07 focused post-append production-recovery verification
+date=2026-08-27
+implementation=d360812fe73ea1d8496915ad3fb0a12fa93c31e2
+
+Scope policy
+- E5-T07-owned meadow, reducers, and platform builds only.
+- E5-T07-focused tests, production operation recovery, artifacts, and mutation sentinels only.
+- No root/full suite, dependency-ticket gate, cold clone, Replay, browser, or unrelated test.
+
+Final focused target (one rerun after the first replacement exposed the offset-stamped recovery bug)
+$ make verify-E5-T07
+
+> @eforest/meadow@0.0.0 build /private/tmp/eforest-e5t07-rework.q4zGoS/packages/meadow
+> tsc -b tsconfig.build.json
+
+> @eforest/reducers@0.0.0 build /private/tmp/eforest-e5t07-rework.q4zGoS/packages/reducers
+> tsc -b tsconfig.build.json
+
+> @eforest/platform@0.0.0 build /private/tmp/eforest-e5t07-rework.q4zGoS/packages/platform
+> tsc -b tsconfig.build.json
+
+RUN  v4.1.10 /private/tmp/eforest-e5t07-rework.q4zGoS
+
+Test Files  6 passed (6)
+     Tests  38 passed (38)
+  Start at  14:30:18
+  Duration  30.96s (transform 421ms, setup 0ms, import 884ms, tests 29.61s, environment 0ms)
+
+CONTRACT block=entity-ref byte-identical OK
+CONTRACT block=propagation-rules byte-identical OK
+CONTRACT block=post-terminal-links byte-identical OK
+CONTRACT propagation=dispatch-only reducers=pure OK
+CONTRACT replay-registry=meadow-pr OK
+LINK fixture=close-on-merge digest=8d66a584f18a7985c2706e1e877d130f784f30c57cf274421d1ea45a5c1eb3c8 expected=8d66a584f18a7985c2706e1e877d130f784f30c57cf274421d1ea45a5c1eb3c8 OK
+CLOSE fixture=close-on-merge offset=0000000000000000_0000000000000002 via=0000000000000000_0000000000000002 backlink=0000000000000000_0000000000000003 issue-offset=0000000000000000_0000000000000003 OK
+REPLAY-ONCE count=1 OK
+DANGLING compatibility=recovery-only noop=dangling-reference issue-head=n/a pr-digest=d6bad98d2d53f47d88df30116accbd3fc89d681309c673c702e5db0f1cb2825e OK
+ALREADY-DONE noop=already-done issue-head=unchanged OK
+CLOSE-NO-MERGE issue-head=unchanged digest=6558061bd69149d28b95a9341e0a388b5194ee913f88bb6d65a5e5d2b7d53da4 OK
+IDEMPOTENT appended=0 OK
+DETERMINISM fixture=close-on-merge OK
+MUTATION byte=107 digest-mismatch EXPECTED-FAIL OK
+CITATION side=issue field=prMergedOffset EXPECTED-FAIL OK
+CITATION side=pr field=issueOffset EXPECTED-FAIL OK
+SENSITIVITY key=closedBy expected=append-pr-link-closed observed=append-pr-link-noop EXPECTED-FAIL OK
+SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK
+SENSITIVITY boundary=production-operation-recovery EXPECTED-FAIL OK
+verify-E5-T07: OK
+
+RESULT exit=0 builds=3/3 test-files=6/6 tests=38/38 skipped=0 expected-failures=6/6
+
+Focused recovery assertions
+- A real createPlatformProductionRuntime grant-revocation recovery started from one already-durable operation-stamped pr.opened plus one already-durable issue.linked, recovered the existing writer receipt, skipped that first backlink, appended the missing second backlink exactly once, completed the operation, and only then revoked the grant.
+- Official-stream application offsets are validated against the record ordinal and removed only for semantic operation comparison; malformed offsets and extra top-level fields still fail as writer-lane corruption.
+- A hostile target removed after recovery preflight was rejected by the source writer-fenced validator with the PR and earlier valid target byte-identical.
+- Replacing the production recovery entrypoint with the critic's direct writers.recover bypass made the production test fail at E5_T07_PRODUCTION_RECOVERY_BOUNDARY.
+
+Evidence artifact SHA-256
+573ec3e357e62a5b5b052931027a8f2c14c729203122a102c6ea965e82eb38a9  e5-t07-issue-log.jsonl
+b3e5cba165da49919e833114463e5f041717e7b959ae7b94c1bdbde8ff67bb0e  e5-t07-pr-log.jsonl
+51705c6e1bcb0a7cabce2b5e11e79fba69ac79eb20d257225d1f0a4ea1b5b21b  e5-t07-digests.txt
+be207683e50bafc2fa2329b2e54cfe30f6087439e0df3f33cb53a7f4bd5970ab  e5-t07-probes.txt
+
+Replay: N/A (protocol/reducer/production-dispatch rework with no browser-reaching surface) + mitigation: real production operation recovery, writer-fence target removal, direct-writer recovery sabotage, two file-backed golden lifecycles, canonical stream logs, pinned digests, reciprocal offsets, deterministic probes, and six causal mutation checks.
+
+Critic-requested recovery-envelope negatives
+test-head=b80faecd
+$ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/platform/test/cross-entity-linking.production.test.ts
+Test Files  1 passed (1)
+     Tests  2 passed (2)
+  Duration  855ms (tests 203ms)
+- E5_T07_RECOVERY_OFFSET_BOUNDARY: an operation-stamped record whose application offset does not equal its durable ordinal refuses with WriterLaneCorruptionError.
+- E5_T07_RECOVERY_ENVELOPE_BOUNDARY: an operation-stamped record with an extra top-level field refuses with WriterLaneCorruptionError.
+- This was the only command added after the full focused target; the already-passing 6-file target was not duplicated.

@@ -234,6 +234,9 @@ importers:
       '@eforest/issues':
         specifier: workspace:*
         version: link:../issues
+      '@eforest/meadow':
+        specifier: workspace:*
+        version: link:../meadow
       '@eforest/pr':
         specifier: workspace:*
         version: link:../pr

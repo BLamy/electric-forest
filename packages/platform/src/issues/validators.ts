@@ -1,5 +1,11 @@
 import type { Event } from "@eforest/protocol";
-import { isIssueActionType, isLegal, issueReducer, type IssueState } from "@eforest/reducers";
+import {
+  isIssueActionType,
+  isLegal,
+  issueReducer,
+  stateChangedVia,
+  type IssueState,
+} from "@eforest/reducers";
 import { isIssueEnvelopeSourceValid, isIssueEvent, type IssueEnvelopeSource } from "./envelope.js";
 
 export class IssueSchemaError extends Error {
@@ -36,6 +42,16 @@ export function validateIssueEvent(
     throw new IssueRefusalError("issue/already-opened");
   if (event.type === "issue.opened") return;
   const p = event.payload as Record<string, unknown>;
+  const via = stateChangedVia(event);
+  if (
+    via !== undefined &&
+    state.closedBy?.some(
+      (existing) =>
+        existing.prStream === via.prStream && existing.prMergedOffset === via.prMergedOffset,
+    ) === true
+  ) {
+    throw new IssueRefusalError("link/duplicate-close");
+  }
   if (!isLegal(state.state, event.type, p.to as never))
     throw new IssueRefusalError("issue/illegal-transition");
   if (
