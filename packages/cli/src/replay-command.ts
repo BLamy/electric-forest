@@ -23,6 +23,7 @@ import {
   type MergeDump,
   type FsTree,
 } from "@eforest/streamfs";
+import { streamFsReducerDefinition } from "@eforest/reducers";
 import {
   reducerById,
   reducerForStream,
@@ -62,6 +63,13 @@ function registeredReducer(definition: ReducerDefinition): ReducerModule {
       : { initialStateForStream: definition.initialStateForStream }),
   };
 }
+
+export type DigestKind = "tree" | "worktree";
+
+const STREAMFS_REDUCER: ReducerModule = {
+  reducer: streamFsReducerDefinition.reduce,
+  initialState: streamFsReducerDefinition.initialState,
+};
 
 export class ReplayCliError extends Error {
   readonly mergeRejection: boolean;
