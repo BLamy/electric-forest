@@ -1,0 +1,1 @@
+Root .ef is excluded from the worktree digest.

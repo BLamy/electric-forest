@@ -86,10 +86,11 @@ prepare_worktree() {
     done < <(git -C "$root" ls-files --others --exclude-standard)
   fi
   link_node_modules "$root/node_modules" "$scratch/node_modules"
-  for package_modules in "$root"/packages/*/node_modules; do
+  for package_modules in "$root"/packages/*/node_modules "$root"/apps/*/node_modules; do
     [ -d "$package_modules" ] || continue
-    package_name="$(basename "$(dirname "$package_modules")")"
-    link_node_modules "$package_modules" "$scratch/packages/$package_name/node_modules"
+    package_dir="$(dirname "$package_modules")"
+    package_rel="${package_dir#"$root/"}"
+    link_node_modules "$package_modules" "$scratch/$package_rel/node_modules"
   done
   if ! (cd "$scratch" && CI=true pnpm run build >"$output" 2>&1); then
     echo "E2-T06 sensitivity: worktree build failed" >&2

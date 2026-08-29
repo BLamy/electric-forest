@@ -10,6 +10,7 @@ import {
   isValidFsPath,
   patchResultSize,
   treeDigest,
+  worktreeDigest,
   withContentMap,
   type FsTree,
 } from "@eforest/streamfs";
@@ -381,6 +382,7 @@ export async function materializeDump(
     readonly at?: string;
     readonly contentPaths?: readonly string[];
     readonly reducerPath?: string;
+    readonly digestKind?: "tree" | "worktree";
   } = {},
 ): Promise<string> {
   const records = await readDump(dumpPath);
@@ -404,6 +406,8 @@ export async function materializeDump(
   const root = prepareOut(outPath);
   writeTree(root, state);
   return reducer.reducer === (fsReducer as ReducerModule["reducer"])
-    ? treeDigest(state)
+    ? options.digestKind === "worktree"
+      ? worktreeDigest(state)
+      : treeDigest(state)
     : stateDigest(state);
 }

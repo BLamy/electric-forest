@@ -15,12 +15,13 @@ import {
   ReplayCliError,
   type BranchReplayOptions,
 } from "./replay-command.js";
+import { runTreeDigest } from "./worktree-command.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
+  "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
-  "Usage: ef materialize <dump.jsonl> --out <dir> [--content <content.jsonl> ...] [--at <offset>] [--reducer <module>]";
+  "Usage: ef materialize <dump.jsonl> --out <dir> [--content <content.jsonl> ...] [--at <offset>] [--reducer <module>] [--tree-digest|--worktree-digest]";
 const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
 const MERGE_USAGE =
   "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)";
@@ -84,6 +85,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
   if (args[0] === "registry") {
     return runRegistryCommand(args.slice(1), io);
   }
+  if (args[0] === "tree-digest") {
+    return runTreeDigest(args.slice(1), io);
+  }
   if (args[0] === "merge") {
     if (args.length !== 4 || (args[3] !== "--ff-only" && args[3] !== "--three-way")) {
       io.stderr(`${MERGE_USAGE}\n`);
@@ -114,6 +118,10 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     let outPath: string | undefined;
     let at: string | undefined;
     let reducerPath: string | undefined;
+    // Preserve E1's default tree digest; E4 callers opt into the content-only
+    // projection explicitly with --worktree-digest.
+    let digestKind: "tree" | "worktree" = "tree";
+    let digestFlagSeen = false;
     const contentPaths: string[] = [];
     for (let index = 2; index < args.length; index += 1) {
       const argument = args[index]!;
@@ -139,6 +147,12 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       ) {
         reducerPath = resolve(args[++index]!);
       } else if (
+        (argument === "--tree-digest" || argument === "--worktree-digest") &&
+        !digestFlagSeen
+      ) {
+        digestFlagSeen = true;
+        digestKind = argument === "--tree-digest" ? "tree" : "worktree";
+      } else if (
         argument === "--content" &&
         args[index + 1] &&
         !args[index + 1]!.startsWith("--")
@@ -154,7 +168,12 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       return 2;
     }
     try {
-      const options: { at?: string; contentPaths?: readonly string[]; reducerPath?: string } = {};
+      const options: {
+        at?: string;
+        contentPaths?: readonly string[];
+        reducerPath?: string;
+        digestKind?: "tree" | "worktree";
+      } = { digestKind };
       if (at !== undefined) options.at = at;
       if (contentPaths.length > 0) options.contentPaths = contentPaths;
       if (reducerPath !== undefined) options.reducerPath = reducerPath;
@@ -215,10 +234,13 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
-  if (!args.includes("--digest")) {
+  const digestFlag = args.includes("--digest");
+  const worktreeDigestFlag = args.includes("--worktree-digest");
+  if (digestFlag === worktreeDigestFlag) {
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
+  const digestKind: "tree" | "worktree" = worktreeDigestFlag ? "worktree" : "tree";
   const bootstrapIndex = args.indexOf("--bootstrap");
   const tailIndex = args.indexOf("--tail");
   const reducerIndex = args.indexOf("--reducer");
@@ -244,7 +266,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     for (let index = 2; index < args.length; index += 1) {
       const argument = args[index]!;
       const value = args[index + 1];
-      if (argument === "--digest") {
+      if (argument === "--digest" || argument === "--worktree-digest") {
         continue;
       } else if (argument === "--parent" && value !== undefined && !value.startsWith("--")) {
         parentPaths.push(resolve(value));
@@ -300,7 +322,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         ...(until === undefined ? {} : { until: until as import("@eforest/protocol").Offset }),
         ...(emitLogPath === undefined ? {} : { emitLogPath }),
       };
-      io.stdout(`${await replayBranchDigest(resolve(path), options, branchReducerPath)}\n`);
+      io.stdout(
+        `${await replayBranchDigest(resolve(path), options, branchReducerPath, digestKind)}\n`,
+      );
       return 0;
     } catch (error) {
       if (error instanceof ReplayCliError && error.mergeRejection) {
@@ -335,6 +359,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         resolve(artifact),
         resolve(tail),
         reducerPath === undefined ? undefined : resolve(reducerPath),
+        digestKind,
       );
       io.stdout(`${digest}\n`);
       return 0;
@@ -346,7 +371,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       return 2;
     }
     const reducer = reducerPath === undefined ? undefined : resolve(reducerPath);
-    const digest = await replayDigest(resolve(path), reducer);
+    const digest = await replayDigest(resolve(path), reducer, digestKind);
     io.stdout(`${digest}\n`);
     return 0;
   } catch (error) {

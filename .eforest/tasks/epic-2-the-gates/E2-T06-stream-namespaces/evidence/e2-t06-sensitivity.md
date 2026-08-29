@@ -11,7 +11,7 @@ from stdout. Normal verification never modifies this evidence file.
 
 ```text
 pnpm run build && pnpm exec vitest run --reporter=json packages/platform/test/ns.test.ts
-control-green exit=0 tests=21 failed=0
+control-green exit=0 tests=22 failed=0
 ```
 
 Result: CONTROL_GREEN

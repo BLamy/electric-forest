@@ -1,0 +1,60 @@
+E4-T01 final stream-layer verification
+
+Commands:
+  CI=true pnpm format:check
+  CI=true pnpm lint
+  CI=true pnpm typecheck
+  CI=true pnpm test
+  CI=true pnpm build
+  node tools/verify/e4_t01_evidence.mjs
+  bash tools/verify/self_check.sh
+  make --no-print-directory verify-list
+
+Gate results:
+  format:check: PASS
+  lint: PASS
+  typecheck: PASS
+  test: PASS — 47 files, 503 tests
+  build: PASS — Vite production bundle and all TypeScript projects
+  self_check: PASS — CANOPY_SENSITIVITY_SPINE_OK
+  verify-list: PASS — verify-E4-T01 maps to E4-T01
+  focused conditional refusal gate: PASS — 3 files, 30 tests, zero `CONDITIONAL-SKIP:` lines
+  cold-clone: PASS — tools/verify/cold_clone.sh --keep verify-E4-T01 at commit
+  1e8843e8; fresh checkout, scrubbed NODE/NPM/MAKE environment, 47 files, 503 tests,
+  two production builds, verifier, focused refusal gate, self-check, verify-list, and
+  `verify-E4-T01: OK` marker emitted; no `SKIPPED:` or `CONDITIONAL-SKIP:` lines
+
+Golden parity:
+  expected: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  tree-digest fixture: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  replay --worktree-digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  materialize --worktree-digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  direct worktreeDigest(readWorktree): b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  repeated process invocations: byte-identical
+  MUTATION fixture=fixture-tree byte=0 digest-mismatch EXPECTED-FAIL OK
+  DETERMINISM: default cwd=repo and default cwd=tmp plus TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask=077 from /tmp match
+  FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed CLI additions
+  WORKSPACE-REFUSALS: valid, unknown-version, truncated, extra-field, wrong-type, duplicate-ledger-key
+  E4-T01 evidence: OK
+
+Forbidden-token grep evidence:
+  evidence/e4-t01-cli-token-grep.txt records the exact grep commands and empty outputs;
+  tools/verify/e4_t01_cli_tokens.sh is executed by make verify-E4-T01.
+  BASE: cefc602a3e5c5ac751edf1d50d1658658bf00447
+  COMMAND: grep -Ein 'createHash|crypto\.subtle|sha-?256|JSON\.stringify|sort_keys|\.sort[[:space:]]*\(' packages/cli/src/worktree-command.ts
+  OUTPUT: (empty)
+  COMMAND: git diff --unified=0 cefc602a3e5c5ac751edf1d50d1658658bf00447..HEAD -- packages/cli/src | grep -E '^\+' | grep -v '^\+\+\+' | grep -Ein 'createHash|crypto\.subtle|sha-?256|JSON\.stringify|sort_keys|\.sort[[:space:]]*\('
+  OUTPUT: (empty)
+
+Independent digest cross-check:
+  evidence/e4-t01-python-digest.txt records the Python derivation and matching frozen digest;
+  make verify-E4-T01 executes the same command.
+  PYTHON-DIGEST: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+
+Conditional tests:
+  CONDITIONAL-SKIP count: 0
+
+Replay: N/A (tools/replay/preflight.sh cannot complete because `npx -y replayio mcp`
+returns `error: unknown command 'mcp'`) + mitigation: this task is CLI/library-only;
+stream-layer golden parity, byte sensitivity, refusal corpus, and all five repo gates
+are committed above. No browser-reaching code was changed.

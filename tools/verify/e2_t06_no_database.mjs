@@ -8,8 +8,9 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
-const recoveryControls = [
+const legacyBase = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
+const squashedBase = "0bccd2e1fd3a35ffefb589d0ef8fc585f13791aa";
+const legacyRecoveryControls = [
   ["211384e6a81180fe2a7703b84483871fec766832", "f1f21df7ad71bb1978ef0dd12081ddc425368e3c"],
   ["6c925ef0aeee4edcb89beb27521acda3ca60a635", "441e8372e12aad69a68540cfb0e83be3fdfec114"],
   ["43527237d6863b43fc6435be679041873f6a3a7e", "f1e72dd0f40089fc1a2d62bec715ca6405e36386"],
@@ -64,9 +65,62 @@ function git(args, options = {}) {
   return result.stdout;
 }
 
-assert.equal(git(["merge-base", "--is-ancestor", base, "HEAD"]), "");
+function isAncestor(commit) {
+  return (
+    spawnSync("git", ["merge-base", "--is-ancestor", commit, "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    }).status === 0
+  );
+}
+
+function objectExists(commit) {
+  return (
+    spawnSync("git", ["cat-file", "-e", `${commit}^{commit}`], {
+      cwd: root,
+      encoding: "utf8",
+    }).status === 0
+  );
+}
+
+// GitHub's E2-T06 PR was squash-merged. The pre-squash recovery commits remain
+// useful provenance when their lineage is present, but they are not ancestors of
+// the published merge commit. Attest that merge explicitly instead of treating a
+// legitimate squash as a missing-history failure.
+const legacyLineagePresent =
+  isAncestor(legacyBase) && legacyRecoveryControls.every(([commit]) => isAncestor(commit));
+const historyMode = legacyLineagePresent ? "legacy-lineage" : "squashed-merge";
+// The scan scope remains the frozen pre-task base even when the branch carries
+// the task through GitHub's squash merge.  This keeps later standing checks from
+// silently dropping files that were reviewed before the squash.
+const base = legacyBase;
+const recoveryControls = legacyRecoveryControls;
+
+if (historyMode === "legacy-lineage") {
+  assert.equal(git(["merge-base", "--is-ancestor", base, "HEAD"]), "");
+} else {
+  assert.ok(objectExists(base), `missing frozen E2-T06 scan base ${base}`);
+}
+if (historyMode === "squashed-merge") {
+  assert.ok(isAncestor(squashedBase), `squashed E2-T06 merge ${squashedBase} is not in HEAD`);
+  assert.equal(
+    git(["show", "-s", "--format=%s", squashedBase]).trim(),
+    "E2-T06: durable stream namespaces (#32)",
+  );
+  const squashedPaths = git(["diff-tree", "--no-commit-id", "--name-only", "-r", squashedBase])
+    .trim()
+    .split("\n")
+    .filter(Boolean);
+  for (const path of recoveryControlPaths) {
+    assert.ok(squashedPaths.includes(path), `squashed E2-T06 merge omitted recovery path ${path}`);
+  }
+}
 for (const [commit, parent] of recoveryControls) {
-  assert.equal(git(["merge-base", "--is-ancestor", commit, "HEAD"]), "");
+  if (historyMode === "legacy-lineage") {
+    assert.equal(git(["merge-base", "--is-ancestor", commit, "HEAD"]), "");
+  } else {
+    assert.ok(objectExists(commit), `missing recovery provenance object ${commit}`);
+  }
   assert.equal(git(["rev-parse", `${commit}^`]).trim(), parent);
   assert.deepEqual(
     git(["diff-tree", "--no-commit-id", "--name-only", "-r", commit])
@@ -491,6 +545,7 @@ const unallowed = sortedCandidates.filter(
 const lines = [
   "E2-T06 no-database proof",
   `base=${base}`,
+  `history-mode=${historyMode}`,
   `files-scanned=${paths.length}`,
   `runtime-boundary-files=${boundaryPaths.length}`,
   `namespace-source-files=${namespaceSourcePaths.length}`,

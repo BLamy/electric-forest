@@ -16,6 +16,7 @@ export {
   type LoginDependencies,
 } from "./commands/login.js";
 export { runAuthenticatedDispatch } from "./dispatch-command.js";
+export { runTreeDigest, TREE_DIGEST_USAGE } from "./worktree-command.js";
 export { materializeDump } from "./materialize-command.js";
 export { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 export {
@@ -38,6 +39,7 @@ export {
   replayDigestLocal,
   replayBranchDigest,
   ReplayCliError,
+  type DigestKind,
   type BranchReplayOptions,
   type DumpRecord,
   type ReadDumpOptions,

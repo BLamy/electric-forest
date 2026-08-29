@@ -35,6 +35,12 @@ if (existsSync("packages/streamfs/package.json")) {
     shell: true,
   });
   if (cliBuild.status !== 0) process.exit(cliBuild.status ?? 1);
+
+  const workspaceBuild = spawnSync("pnpm", ["--filter", "@eforest/workspace", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (workspaceBuild.status !== 0) process.exit(workspaceBuild.status ?? 1);
 }
 
 const filterIndex = args.indexOf("--filter");

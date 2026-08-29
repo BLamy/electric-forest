@@ -7,8 +7,8 @@ import { URLSearchParams } from "node:url";
 import { promisify } from "node:util";
 import {
   createDurableJsonStream,
-  headDurableJsonStream,
   readDurableJson,
+  readDurableJsonSnapshot,
 } from "../../packages/client/dist/src/index.js";
 import { createDurableStreamTestServer } from "../../packages/server/dist/src/index.js";
 import {
@@ -123,12 +123,13 @@ async function truth(identity) {
 
 async function targetTruth() {
   const url = `${streamUrl}/streams/target`;
-  const items = await readDurableJson({ url });
+  const snapshot = await readDurableJsonSnapshot({ url });
+  const items = snapshot.items;
   const records = items.map((item, index) => ({
     offset: `0000000000000000_${String(index).padStart(16, "0")}`,
     ...item,
   }));
-  const head = (await headDurableJsonStream({ url })).offset ?? "-1";
+  const head = snapshot.offset ?? "-1";
   await writeFile(targetDump, records.map((record) => JSON.stringify(record)).join("\n") + "\n");
   const digest = (
     await run(

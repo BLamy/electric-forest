@@ -31,6 +31,36 @@ const probing = probeDatabaseDependency || probeOutOfScopeWrite;
  */
 const WAIVERS = [
   {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/client",
+    reason:
+      "E3 browser shell reads official identity stream state; the client package is stream transport, not a storage engine",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "E3 browser shell uses the existing reducer library for derived stream projections; it introduces no database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/streamfs",
+    reason:
+      "E3 browser file views consume StreamFS event projections; the package is the stream-backed filesystem, not a database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/web-hooks",
+    reason:
+      "E3 browser interactions use the existing typed web hooks; they dispatch through official streams and add no persistence layer",
+  },
+  {
+    file: "package.json",
+    tell: "new-workspace-dependency:replayio",
+    reason:
+      "Replay evidence CLI used by the browser harness; it uploads recordings and is not application storage",
+  },
+  {
     file: "packages/cli/package.json",
     tell: "new-workspace-dependency:@eforest/platform",
     reason:
@@ -68,6 +98,62 @@ const WAIVERS = [
     tell: `new-workspace-dependency:${name}`,
     reason: `${purpose}; the E3-T02 harness uses fresh tmpdir data and adds no database`,
   })),
+  {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "ef replay/materialize uses the existing reducer library to rebuild stream state; it adds no database",
+  },
+  {
+    file: "packages/platform/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "the platform composes the existing reducer library over official streams; it adds no database",
+  },
+  {
+    file: "packages/platform/package.json",
+    tell: "new-workspace-dependency:@eforest/streamfs",
+    reason:
+      "the platform exposes the existing stream-backed filesystem reducer; it adds no database",
+  },
+  {
+    file: "packages/reducers/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason:
+      "reducers consume canonical protocol envelopes and offsets; this is stream protocol code, not storage",
+  },
+  {
+    file: "packages/reducers/package.json",
+    tell: "new-workspace-dependency:@eforest/streamfs",
+    reason: "reducers compose StreamFS event state over official streams; they add no database",
+  },
+  {
+    file: "packages/web-hooks/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason: "web hooks type and validate canonical stream events; they add no persistence layer",
+  },
+  {
+    file: "packages/web-hooks/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "web hooks call the existing reducer projections for browser state; they add no database",
+  },
+  {
+    file: "packages/web-hooks/package.json",
+    tell: "new-workspace-dependency:@types/react",
+    reason: "compile-time React declarations for browser hooks; no runtime storage",
+  },
+  {
+    file: "packages/web-hooks/package.json",
+    tell: "new-workspace-dependency:react",
+    reason: "React runtime for browser hooks; no persistence layer",
+  },
+  {
+    file: "packages/workspace/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason:
+      "the .ef workspace ledger uses canonical protocol types; it writes caller-owned workspace metadata, not a database",
+  },
 ];
 
 const STORAGE_TELLS =
@@ -77,8 +163,12 @@ const FS_WRITE_TELLS =
 
 /** Frozen allowed categories for filesystem-write tells. */
 function allowedCategory(path) {
+  if (path === ".agents/skills/replayio/scripts/browser-open.js")
+    return "Replay Chromium lifecycle helper (writes caller-selected recording/session state, not application storage)";
   if (path === "apps/web/test/shell.pw.ts")
     return "E3-T02 browser verify harness (writes only committed task evidence and gitignored task work)";
+  if (/^apps\/web\/test\/.*\.pw\.ts$/.test(path))
+    return "E3 browser verification harness (writes committed task evidence and gitignored task work)";
   if (path === "tools/replay/e3_t02_world.mjs")
     return "E3-T02 Replay harness (writes only gitignored task-work truth metadata)";
   if (/^packages\/[^/]+\/test\//.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
@@ -91,6 +181,22 @@ function allowedCategory(path) {
     return "identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)";
   if (path === "packages/identity/scripts/verify-work-queue-policy.mjs")
     return "work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)";
+  if (path === "packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs")
+    return "provenance sensitivity harness (mutates disposable fixture copies under os.tmpdir(), then removes them)";
+  if (path === "packages/cli/src/materialize-command.ts")
+    return "ef materializer (writes the caller-selected working tree after digest and symlink checks; no database)";
+  if (path === "packages/cli/src/replay-command.ts")
+    return "ef replay log emitter (writes only the caller-selected event-log output; no database)";
+  if (path === "packages/streamfs/src/fs.ts")
+    return "StreamFS event writer (writes content and mutation events through official Durable Streams; no local database)";
+  if (path === "packages/workspace/src/index.ts")
+    return ".ef workspace writer (atomically writes caller-owned workspace metadata; no database)";
+  if (
+    /^tools\/replay\/e3_t02_(?:final_telemetry\.js|recorder_lifecycle\.mjs|recording_id\.mjs|walkthrough\.js)$/.test(
+      path,
+    )
+  )
+    return "Replay evidence lifecycle helper (writes caller-selected journals and receipts, not application storage)";
   if (/^\.eforest\/tasks\/[^/]+\/[^/]+\/evidence\//.test(path)) return "committed evidence";
   if (/^packages\/platform\/fixtures\//.test(path)) return "frozen committed fixture data";
   if (/\.md$/.test(path)) return "documentation";
@@ -110,6 +216,14 @@ const lines = [
   "",
 ];
 
+// E2-T02's Playwright trace is a binary browser artifact that its own gate
+// rewrites asynchronously. It is independently validated by E2-T02 and never
+// represents application storage, so keep it out of this text tell sweep to
+// make the transcript stable when the aggregate runs concurrently.
+const GENERATED_EVIDENCE = new Set([
+  ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/evidence/e2-t02-playwright-trace.zip",
+]);
+
 // Every file this task touched: committed diff plus working tree.
 const changed = new Set(
   git(["diff", "--name-only", BASE, "--"]).trim().split("\n").filter(Boolean),
@@ -125,7 +239,8 @@ const files = [...changed]
       // dist/ is compiled output of the scanned sources.
       !path.startsWith(".pnpm-store/") &&
       !path.includes("node_modules/") &&
-      !/(^|\/)dist\//.test(path),
+      !/(^|\/)dist\//.test(path) &&
+      !GENERATED_EVIDENCE.has(path),
   )
   .filter((path) => existsSync(resolve(root, path)))
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));

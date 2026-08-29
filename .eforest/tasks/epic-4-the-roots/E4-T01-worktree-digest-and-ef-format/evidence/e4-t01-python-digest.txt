@@ -1,0 +1,2 @@
+COMMAND: python3 tools/verify/e4_t01_python_digest.py .eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/evidence/fixture-tree .eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/evidence/golden-worktree.digest
+PYTHON-DIGEST: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
