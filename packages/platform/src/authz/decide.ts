@@ -43,6 +43,12 @@ export type AuthzPrincipal =
        * indistinguishable by construction).
        */
       readonly grantId?: string;
+      /**
+       * A validated HttpOnly web session. Session authority is intentionally
+       * distinct from grant-backed bearer authority: only repository/org
+       * owners and admins may write through this browser credential.
+       */
+      readonly session?: true;
     };
 
 export type AuthzTarget =
@@ -308,6 +314,16 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
                       )
                     ? "grant:write"
                     : undefined;
+  const sessionWriteBasis: AuthzBasis | undefined =
+    principal.kind === "identified" && principal.session === true
+      ? repo.owner === sub
+        ? "repo-owner"
+        : org.owner === sub || role === "owner"
+          ? "org-owner"
+          : role === "admin"
+            ? "membership:admin"
+            : undefined
+      : undefined;
 
   if (operation !== "dispatch") {
     if (readBasis !== undefined) return allow(readBasis, target.streamId);
@@ -315,7 +331,10 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
   }
 
   // 6. Every write requires a branch-scoped write grant on the PRESENTED
-  //    credential — membership and ownership alone never authorize a write.
+  //    credential, or a validated web session belonging to an owner/admin.
+  if (sessionWriteBasis !== undefined) {
+    return allow(sessionWriteBasis, target.streamId);
+  }
   if (
     grant !== undefined &&
     grant.scopes.some((scope) => writeScopeMatches(scope, target.org, target.repo, target.branch))

@@ -14,6 +14,7 @@ import type {
 import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
 import { humanizeRecord } from "./history.js";
+import { LabelManagement } from "./label-management.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -135,6 +136,14 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
           {projectStatus.state.status ?? "loading"}
         </span>
       </div>
+
+      <nav aria-label="Repository settings">
+        <RouteLink
+          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/labels`}
+        >
+          Manage labels
+        </RouteLink>
+      </nav>
 
       {refusal === undefined ? null : (
         <p className="projection-refusal" role="alert" data-testid="repository-home-refusal">
@@ -868,6 +877,19 @@ function DeepTrail(): React.JSX.Element {
 
 export function PageRouter(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (
+    segments.length === 5 &&
+    segments[0] === "orgs" &&
+    segments[2] === "repos" &&
+    segments[4] === "labels"
+  ) {
+    const org = decodeRouteSegment(segments[1]!);
+    const repo = decodeRouteSegment(segments[3]!);
+    if (org === undefined || repo === undefined) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return <LabelManagement org={org} repo={repo} />;
+  }
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
   }

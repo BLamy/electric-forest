@@ -145,7 +145,9 @@ export class PlatformWebApp {
         case "registry": {
           if (
             this.gateway !== undefined &&
-            (url.pathname === "/registry/me" || url.pathname.includes("/home/")) &&
+            (url.pathname === "/api/dispatch" ||
+              url.pathname === "/registry/me" ||
+              url.pathname.startsWith("/api/repos/")) &&
             !request.headers.has("authorization")
           ) {
             const identity = await resolveSessionBackedIdentity(request, {
@@ -155,13 +157,27 @@ export class PlatformWebApp {
               now: this.now,
             });
             if (identity !== null) {
-              return url.pathname === "/registry/me"
-                ? this.gateway.handleSessionRegistry(request, identity.sub, identity.snapshot.view)
-                : this.gateway.handleSessionRepositoryHome(
-                    request,
-                    identity.sub,
-                    identity.snapshot.view,
-                  );
+              if (url.pathname === "/api/dispatch") {
+                return this.gateway.handleSessionDispatch(
+                  request,
+                  identity.sub,
+                  identity.snapshot.view,
+                  identity.snapshot.offset,
+                );
+              }
+              if (url.pathname === "/registry/me") {
+                return this.gateway.handleSessionRegistry(
+                  request,
+                  identity.sub,
+                  identity.snapshot.view,
+                );
+              }
+              return this.gateway.handleSessionRepository(
+                request,
+                identity.sub,
+                identity.snapshot.view,
+                identity.snapshot.offset,
+              );
             }
           }
           return this.gateway === undefined

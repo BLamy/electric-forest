@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: pending
+status: verified
 depends_on: [E5-T03]
 estimate: M
 capstone: false
@@ -259,4 +259,91 @@ script into the committed suite.
 
 ## Verification log
 
+### 2026-08-26 — builder — implemented
+
+- Implementation commit: `11174e0e33000c74f88565703d126c5cfb897dab`.
+- Focused browser run: `node --experimental-strip-types apps/web/test/labels.pw.ts`
+  completed with 3 accepted mutations, 1 typed refusal, 0 other state-writing
+  requests, 226 ms follower latency, and zero console errors/page errors.
+- Stream evidence: `evidence/e5-t04-session.events.jsonl` replays to offset
+  `0000000000000000_0000000000000002` and digest
+  `89f1010261664dc5f2904d4889faa098ec0a0017377ca9de4fe0ddad5fcd1f65`;
+  the write audit, refusal before/after equality, convergence pairs, and board
+  digest transition are in the sibling committed evidence files.
+- Root regression was run once on this T04 tree: `pnpm test` passed 77 files / 687
+  tests, followed by a successful `pnpm build`. Earlier focused passes were
+  `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, the 42 hook/authz/gateway
+  tests, the 24 direct E5-T03 label/board tests, and
+  `node tools/verify/e5_t04_evidence.mjs`. Dependency gates were not recursively
+  re-entered.
+- Recorded browser run: writer confirmation advanced to
+  `0000000000000000_0000000000000001` while its replay remained at offset
+  `0000000000000000_0000000000000000`; the live follower reached the new event
+  first, then both clients converged at offset
+  `0000000000000000_0000000000000003` with digest
+  `4d7746649df7d03f7dd685233ed112c7d6772e9f5c058a9a7c56fd6f8be8cafc`.
+  The same run exercised create, rename, recolor, and a typed
+  `label/duplicate-name` refusal with zero console errors or uncaught exceptions.
+- Replay: N/A (Replay recording `7af6148a-1a75-4c21-b47e-087bca834ccb`
+  remained locally stuck in `recording` after the browser process exited, so the
+  CLI could not upload it) + mitigation: the same-session verified MP4 is
+  `recordings/e5-t04-final.mp4` (492,583 bytes, real ISO MP4), backed by the
+  committed two-context Playwright run and stream artifacts above.
+
+Claim: the browser has one authenticated dispatch door; a receipt advances the
+confirmed offset without applying state locally, the paired replay path performs
+the eventual reconciliation, independent clients converge to the same digest,
+and structured validator refusals render inline without appending an event.
+
 (appended over time by builders and critics)
+
+VERDICT: needs-evidence
+
+- SENSITIVITY — MISSING. Predicted the required four sabotage transcripts would be
+  committed at `evidence/e5-t04-sensitivity.md` and invoked by `_v-e5-t04`; observed
+  that the file does not exist and the target runs no E5-T04 sensitivity harness.
+  Supply the four mandated mutation-to-red transcripts before verification.
+- REPLAY — FALLBACK ONLY. The verified 17.6-second MP4 visibly covers the severed-tail
+  confirmation, follower-first sync, reconciliation, rename/recolor, and typed refusal,
+  and the committed artifacts support the stream invariants. Recording
+  `7af6148a-1a75-4c21-b47e-087bca834ccb` never became cloud-inspectable, so console,
+  network, and changed-source execution cannot be independently interrogated through
+  Replay. The declared N/A mitigation is honest supporting evidence, not a refutation;
+  it does not replace the missing sensitivity proof.
+- SUITE: none promoted; no commands or gates rerun per the critic's evidence-only scope.
+
+### 2026-08-26 — builder — sensitivity rework implemented
+
+- Sensitivity commit: `b5ff1714`. `tools/verify/e5_t04_sensitivity.mjs` uses one
+  detached scratch worktree, restores the control build before each case, and rebuilds
+  only the package/app touched by that mutant.
+- `node tools/verify/e5_t04_sensitivity.mjs` produced four expected-red results:
+  optimistic local application was caught by `severed-tail-replay-only-label-rows`, a
+  client-only refusal over a server-accepted append by `refusal-log-line-count`, a
+  hardcoded receipt by `confirmed-offset-four-way-equality`, and a swallowed typed error
+  by `typed-refusal-code`. The deterministic transcript is committed at
+  `evidence/e5-t04-sensitivity.md` and `_v-e5-t04` invokes the harness.
+- Focused checks only: the final harness run passed all four mutations; targeted Prettier
+  and ESLint checks passed; `node tools/verify/e5_t04_evidence.mjs` passed at offset
+  `0000000000000000_0000000000000002` and digest
+  `89f1010261664dc5f2904d4889faa098ec0a0017377ca9de4fe0ddad5fcd1f65`.
+  No root gate, dependency gate, or unrelated ticket verifier was rerun.
+- The existing browser/stream evidence and declared Replay fallback are unchanged; this
+  rework supplies only the sensitivity evidence requested by the critic.
+
+VERDICT: verified
+
+- SENSITIVITY — CLOSED. Predicted each mandated mutant would alter exactly one intended
+  behavior and make the focused browser oracle fail at its named causal assertion;
+  observed four `EXPECTED-FAIL OK` results in `evidence/e5-t04-sensitivity.md` for
+  optimistic local apply, client-only refusal over an accepted append, hardcoded
+  confirmed offset, and genericized typed refusal.
+- SUFFICIENCY — SATISFIED. `tools/verify/e5_t04_sensitivity.mjs` restores the control
+  build before every mutation, rebuilds only affected packages, rejects timeouts and
+  green mutants, and requires the matching causal sensor. `_v-e5-t04` invokes it and
+  `tools/verify/e5_t04_evidence.mjs` validates all four transcript markers.
+- REPLAY — WAIVED AS PREVIOUSLY ASSESSED. The cloud recording remained unavailable; the
+  honestly declared same-session MP4 plus committed two-context browser and stream
+  artifacts remain the supporting fallback. No contradictory evidence was found.
+- SUITE: sensitivity harness and transcript promoted. No commands or gates rerun during
+  this evidence-only re-judgment.
