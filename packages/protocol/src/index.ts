@@ -1,5 +1,5 @@
 export { canonicalJson, CanonicalJsonError } from "./canonical.js";
-export { stateDigest } from "./digest.js";
+export { sha256Hex, stateDigest } from "./digest.js";
 export type { Event } from "./envelope.js";
 export { isEvent } from "./envelope.js";
 export { compareOffsets, isOffsetBefore, maxOffset, OFFSET_BEFORE_FIRST } from "./offset.js";

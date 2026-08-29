@@ -19,7 +19,8 @@
   "dependencies": {
     "@eforest/client": "workspace:*",
     "@eforest/identity": "workspace:*",
-    "@eforest/protocol": "workspace:*"
+    "@eforest/protocol": "workspace:*",
+    "@eforest/reducers": "workspace:*"
   },
   "devDependencies": {
     "@eforest/server": "workspace:*"

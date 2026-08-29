@@ -8,6 +8,8 @@
     { "path": "./packages/client/tsconfig.build.json" },
     { "path": "./packages/platform/tsconfig.build.json" },
     { "path": "./packages/browser-verify/tsconfig.build.json" },
-    { "path": "./packages/streamfs/tsconfig.build.json" }
+    { "path": "./packages/reducers/tsconfig.build.json" },
+    { "path": "./packages/streamfs/tsconfig.build.json" },
+    { "path": "./packages/web-hooks/tsconfig.build.json" }
   ]
 }

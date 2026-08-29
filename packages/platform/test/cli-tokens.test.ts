@@ -2,6 +2,7 @@ import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import { createDurableJsonStream, readDurableJson } from "@eforest/client";
 import { createDurableStreamTestServer } from "@eforest/server";
 import type { Event } from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   BearerVerifier,
@@ -865,6 +866,7 @@ describe("event-backed CLI grants", () => {
     await restartedIdentity.revokeCliGrant(mint.grantId);
     const expected = {
       ...event,
+      offset: offsetForOrdinal(0),
       payload: {
         ...event.payload,
         actor: "auth0|web-user",

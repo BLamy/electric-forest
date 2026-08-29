@@ -1,11 +1,15 @@
 import {
   appendDurableJson,
+  checkpoint,
   createDurableJsonStream,
   followDurableJson,
   readDurableJson,
+  StreamReader,
   type FollowDurableJsonOptions,
+  type StreamBatch,
+  type StreamCheckpoint,
 } from "@eforest/client";
-import type { Event } from "@eforest/protocol";
+import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 
 export interface StreamAdapter {
   create(streamId: string): Promise<void>;
@@ -16,11 +20,19 @@ export interface StreamAdapter {
   ): Promise<void | StreamAppendResult>;
   read(streamId: string): Promise<readonly unknown[]>;
   follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown>;
+  applicationBootstrap?(streamId: string): Promise<StreamBatch>;
+  applicationFollow?(
+    streamId: string,
+    from: StreamCheckpoint,
+    signal?: AbortSignal,
+  ): AsyncIterable<StreamBatch>;
 }
 
 export interface StreamAppendOptions {
   readonly idempotencyKey?: string;
   readonly sequence?: string;
+  /** Product-owned checkpoint persisted in the application event body. */
+  readonly applicationOffset?: Offset;
 }
 
 export type StreamAppendResult = "appended" | "producer-duplicate-closed";
@@ -79,7 +91,9 @@ export class OfficialStreamAdapter implements StreamAdapter {
               "Producer-Seq": "0",
             },
           },
-      event,
+      appendOptions?.applicationOffset === undefined
+        ? event
+        : { ...event, offset: appendOptions.applicationOffset },
       appendOptions?.sequence,
     );
     return producerDuplicateClosed ? "producer-duplicate-closed" : "appended";
@@ -87,6 +101,38 @@ export class OfficialStreamAdapter implements StreamAdapter {
 
   async read(streamId: string): Promise<readonly unknown[]> {
     return readDurableJson(this.options(streamId));
+  }
+
+  async applicationBootstrap(streamId: string): Promise<StreamBatch> {
+    const events = [];
+    let current = checkpoint(OFFSET_BEFORE_FIRST);
+    for await (const batch of new StreamReader({
+      baseUrl: this.baseUrl,
+      streamId,
+      ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+    }).read(OFFSET_BEFORE_FIRST)) {
+      events.push(...batch.events);
+      current = batch.checkpoint;
+    }
+    return { events, checkpoint: current };
+  }
+
+  async *applicationFollow(
+    streamId: string,
+    from: StreamCheckpoint,
+    signal?: AbortSignal,
+  ): AsyncGenerator<StreamBatch> {
+    if (signal?.aborted) return;
+    try {
+      yield* new StreamReader({
+        baseUrl: this.baseUrl,
+        streamId,
+        ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+      }).tail(from, { mode: "long-poll", ...(signal === undefined ? {} : { signal }) });
+    } catch (error) {
+      if (signal?.aborted) return;
+      throw error;
+    }
   }
 
   /**

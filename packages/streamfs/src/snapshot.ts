@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import {
+  sha256Hex,
   canonicalJson,
   compareOffsets,
   isSnapshotEvent,
@@ -77,11 +77,11 @@ function streamUrl(root: SnapshotRoot, streamId: string): string {
 }
 
 function sha256(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
+  return sha256Hex(bytes);
 }
 
 function snapshotContentRef(contentRef: string, streamId: string): string {
-  return `${contentRef}:file:${sha256(Buffer.from(streamId, "utf8")).slice(0, 24)}`;
+  return `${contentRef}:file:${sha256(new TextEncoder().encode(streamId)).slice(0, 24)}`;
 }
 
 function eventWithoutOffset(record: StreamRecord): Record<string, unknown> {
