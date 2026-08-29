@@ -3,7 +3,7 @@ id: E5-T11
 epic: 5
 title: "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
 priority: 511
-status: pending
+status: verified
 depends_on: [E5-T09, E5-T10]
 estimate: M
 capstone: false
@@ -309,3 +309,64 @@ your tamper-detection probe into the committed suite.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — implemented at `f450ba7d`
+
+- Added one shared evidence region to issue and pull-request detail surfaces. It
+  reads the registered `evidence` and `evidence-content` reducers through the
+  existing stream hook, exposes frozen provenance attributes, and does not add a
+  second attachment model or server endpoint.
+- Content cards display the recorded SHA-256 independently from a Web Crypto
+  recomputation over replayed bytes, render a loud mismatch state, preview text,
+  and produce exact-byte downloads. Reference cards preserve accepted HTTPS
+  Replay hrefs verbatim and leave unsafe schemes inert.
+- Uploads use E5-T10's chunk/seal helper and append exactly one parent
+  `evidence.attached` through the authenticated dispatch hook only after sealing;
+  Replay references use the canonical frozen event constructor.
+- Focused evidence: `evidence/e5-t11-focused.txt`. The model suite passed 5/5,
+  the production web build passed, and live issue/PR inspection proved reducer
+  provenance, verified and deliberately mismatched hashes, exact download
+  metadata, verbatim Replay links, mobile `@brett_lamy/ui` list composition, no
+  horizontal overflow, and empty warning/error console sweeps.
+- Focused TypeScript was blocked only by two pre-existing NodeNext extension
+  diagnostics in published `@brett_lamy/docstream` 0.3.7 source; the Vite
+  production build emitted no E5-T11 source failure.
+- Replay: N/A (human directed no repeated recording/full-gate work here) +
+  mitigation: focused model/build evidence plus live in-app Browser DOM/hash/
+  download/link/provenance/console interrogation. No dependency verifier, root
+  suite, cold clone, or Replay gate was rerun.
+
+### 2026-08-27 — builder — focused exact-head evidence at `df260ae6`
+
+- Ticket-owned model gate: `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run
+  --maxWorkers=1 apps/web/src/evidence/model.test.ts` — 5/5 passed.
+- The exact-head two-session issue/PR browser oracle and
+  `node tools/verify/e5_t11_evidence.mjs` passed: eight authenticated dispatches,
+  two replayed evidence streams, six executed material browser sources, maximum
+  follower latency 1360 ms, exact 802-byte download parity, hostile-link and
+  corrupted-content defenses, and zero guarded browser failures/console errors.
+  Artifacts: `evidence/e5-t11-browser-transcript.json`,
+  `evidence/e5-t11-browser-source-coverage.json`, `evidence/e5-t11-digests.txt`,
+  `evidence/e5-t11-byte-parity.txt`, `evidence/e5-t11-hostile-link.txt`,
+  `evidence/e5-t11-session.events.jsonl`, and `evidence/e5-t11-write-audit.txt`.
+- Replay: N/A (installed `replayio` 1.8.2 has no MCP command) + mitigation:
+  exact-head Playwright coverage, serialized API transcript, durable stream dumps,
+  reducer digest parity, browser Web Crypto parity, and clean diagnostics. No
+  dependency ticket, root suite, cold clone, or Replay gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified
+
+- Exact-head binding reproduced: both raw browser artifacts name `df260ae6`, and the
+  verifier enforces that commit's ancestry from the current stack head.
+- Issue and PR evidence regions in both contexts literal-equal independently replayed
+  durable offsets/digests. All six live legs stay below 2000 ms (max 1360 ms).
+- Recorded attachment SHA-256, browser Web Crypto SHA-256, and Node-side source hash
+  agree for valid content; deliberately mismatched sealed content stays unverified and
+  loud. The downloaded 802 bytes equal the source exactly.
+- Eight browser mutations use `/api/dispatch` only; the unsafe `javascript:` reference
+  remains inert; transcript console, page-error, and request-failure arrays are empty;
+  all six material sources have positive browser coverage.
+- COVERAGE: complete for the focused ticket-owned scope. Replay/root/dependency/cold-
+  clone work remains explicitly waived, not silently skipped.
+- SUITE: promote `apps/web/test/evidence.pw.ts`, its hostile-link and tamper probes, and
+  `tools/verify/e5_t11_evidence.mjs` as committed regression coverage.

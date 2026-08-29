@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Event } from "@eforest/protocol";
+import { EvidencePanel } from "../evidence/index.js";
 import { RouteLink } from "../navigation.js";
 import {
   issueActions,
@@ -185,6 +186,13 @@ export function IssueDetailPage(props: {
           </ul>
         )}
       </section>
+
+      <EvidencePanel
+        org={props.org}
+        repo={props.repo}
+        entityType="issue"
+        entityId={props.issueId}
+      />
 
       {dispatchError === undefined ? null : (
         <p

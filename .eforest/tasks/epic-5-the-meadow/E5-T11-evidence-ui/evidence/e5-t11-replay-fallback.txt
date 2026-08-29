@@ -1,0 +1,5 @@
+Replay: N/A (preflight failed because installed replayio 1.8.2 exposes no mcp command)
++ mitigation: exact-head four-context Playwright transcript with source coverage,
+request-failure and long-poll accounting, console/page-error sweeps, exact-byte
+download parity, hostile/corrupt paths, write audit, and independent stream replay.
+E5_T11_REPLAY_FALLBACK_OK
