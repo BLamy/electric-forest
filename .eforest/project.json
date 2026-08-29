@@ -2,10 +2,15 @@
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
   "status": "building",
-  "statusValues": ["building", "complete", "paused", "invalid_loop"],
+  "statusValues": [
+    "building",
+    "complete",
+    "paused",
+    "invalid_loop"
+  ],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human-authorized decomposition after E3-T02 run 16: E3-T02a re-earns the app-shell contract and E3-T02b inherits every credential-scanner and atomic-publication finding; this is not a retry reset",
-  "updatedAt": "2026-07-29"
+  "statusReason": "Human authorized E3-T06 recovery on 2026-08-01 after run 8: control-plane transition and verification runs 9-9 only",
+  "updatedAt": "2026-08-01"
 }

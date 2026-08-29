@@ -178,6 +178,13 @@ is authorized to replace the enumerative storage detector with a fail-closed arc
 proof boundary; it cannot reset history, apply to another stop, or justify another syntax
 enumeration patch.
 
+The human-authorized E3-T06 bridge at stopped commit
+`c258fb003c1a735117a5fc251b38338d2a0ff8bf` may recognize only its eight exact-digest
+legacy runs, with the provisional run-4 and run-5 verifications pinned but superseded by
+their later refutations. Its lifecycle commit records both missing checkpoints as
+`insufficient-evidence` and authorizes only run 9; it cannot relabel either audit, broaden
+legacy-heading acceptance, or spend run 10.
+
 The E2-T12 scope recovery authorized on 2026-07-27 replaces its live-cloud portability
 requirement with a local-only proof against the pinned Auth0 emulator and published
 `DurableStreamTestServer`. Run 1 remains refuted under its original contract; only runs

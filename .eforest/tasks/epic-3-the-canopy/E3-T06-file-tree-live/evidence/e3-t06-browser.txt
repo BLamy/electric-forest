@@ -1,0 +1,13 @@
+E3-T06 live StreamFS tree browser
+initial rows=11 checkpoint=0000000000000000_0000000000000021 digest=263482b567e6cb93205fea831645e26706f985a7ae56c630213edede6587d610 cli=equal
+literal-percent-navigation canonical-path=percent%2Fname encoded-url=percent%252Fname decode=exactly-once
+encoded-directory-navigation pointer-space=true keyboard-unicode=true canonical-path=team docs/über no-reload=true
+unsafe-encoded-paths malformed-percent=404 encoded-separator=404 no-reload=true
+live-rename old-absent new-visible=true
+live-delete tombstone-absent=true reconnecting->live=true
+live-recreate visible=true reconnecting->live=true
+live-notes-rename visible=true reconnecting->live=true
+live-populated-dir-rename nested-empty=true reconnecting->live=true
+final displayedRows=0 canonicalRows=16 checkpoint=0000000000000000_0000000000000026 digest=997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2 cli=equal no-reload=true populated-dir-rename=true
+loading-state visible=true keyboard-docs=true
+refusal-state role=alert visible=true recovery=live

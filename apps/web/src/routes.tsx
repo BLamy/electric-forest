@@ -1,4 +1,5 @@
 import { useEffect, useState, type MouseEvent } from "react";
+import { isValidFsPath, type FsTree } from "@eforest/streamfs";
 import { useStreamReducer } from "@eforest/web-hooks";
 import type {
   RegistryRepoState,
@@ -141,10 +142,54 @@ function RouteLink(props: {
   );
 }
 
+interface TreeRoute {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+  readonly path: string;
+}
+
+function decodeRouteSegment(encoded: string): string | undefined {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(encoded);
+  } catch {
+    return undefined;
+  }
+  if (decoded.includes("/")) return undefined;
+  return decoded;
+}
+
+function parseTreeRoute(segments: readonly string[]): TreeRoute | undefined {
+  const org = decodeRouteSegment(segments[0]!);
+  const repo = decodeRouteSegment(segments[1]!);
+  const branch = decodeRouteSegment(segments[3]!);
+  if (org === undefined || repo === undefined || branch === undefined) return undefined;
+
+  const pathSegments: string[] = [];
+  for (const encoded of segments.slice(4)) {
+    const decoded = decodeRouteSegment(encoded);
+    if (decoded === undefined) return undefined;
+    pathSegments.push(decoded);
+  }
+  const path = pathSegments.join("/");
+  if (path !== "" && !isValidFsPath(path)) return undefined;
+  return { org, repo, branch, path };
+}
+
 function Route(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
+  }
+  if (segments.length >= 4 && segments[2] === "tree") {
+    const route = parseTreeRoute(segments);
+    if (route === undefined) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return (
+      <TreeBrowser org={route.org} repo={route.repo} branch={route.branch} path={route.path} />
+    );
   }
   if (segments.length === 1 && segments[0] === "repositories") {
     return <RegistryBrowse />;
@@ -284,7 +329,13 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
             <ul className="branch-list" data-testid="branch-list">
               {branchRows.map((branch) => (
                 <li key={branch.streamId} data-testid="branch-row" data-branch={branch.name}>
-                  <strong>{branch.name}</strong>
+                  <strong>
+                    <RouteLink
+                      href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(branch.name)}`}
+                    >
+                      {branch.name}
+                    </RouteLink>
+                  </strong>
                   <span data-testid={`branch-parent-${branch.name}`}>
                     {branch.parentStreamId ?? "root"}
                   </span>
@@ -465,6 +516,157 @@ function StreamInspector(props: {
   );
 }
 
+interface TreeEntry {
+  readonly kind: "directory" | "file";
+  readonly path: string;
+  readonly name: string;
+  readonly detail?: string;
+}
+
+function compareTreePaths(left: string, right: string): number {
+  const a = left.split("/");
+  const b = right.split("/");
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    if (a[index]! < b[index]!) return -1;
+    if (a[index]! > b[index]!) return 1;
+  }
+  return a.length - b.length;
+}
+
+function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
+  const normalized = prefix === "" ? "" : `${prefix}/`;
+  const directories = Object.keys(state.dirs).map((fullPath): TreeEntry | undefined => {
+    if (!fullPath.startsWith(normalized)) return undefined;
+    const remainder = fullPath.slice(normalized.length);
+    if (remainder.length === 0 || remainder.includes("/")) return undefined;
+    return { kind: "directory", path: fullPath, name: remainder };
+  });
+  const files = Object.entries(state.files).map(([fullPath, file]): TreeEntry | undefined => {
+    if (!fullPath.startsWith(normalized)) return undefined;
+    const remainder = fullPath.slice(normalized.length);
+    if (remainder.length === 0 || remainder.includes("/")) return undefined;
+    return {
+      kind: "file",
+      path: fullPath,
+      name: remainder,
+      detail: `${file.contentSha256} ${String(file.size)}`,
+    };
+  });
+  return [...directories, ...files]
+    .filter((entry): entry is TreeEntry => entry !== undefined)
+    .sort((left, right) => compareTreePaths(left.path, right.path));
+}
+
+function TreeBrowser(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+  readonly path: string;
+}): React.JSX.Element {
+  const streamId = `fs:${props.org}/${props.repo}:${props.branch}:meta`;
+  const apiPath = `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${encodeURIComponent(props.branch)}/events`;
+  const projection = useStreamReducer<FsTree>({
+    apiPath,
+    streamId,
+    reducerId: "streamfs",
+    followWaitMs: 1_000,
+    reconnectDelayMs: 1_000,
+  });
+  const prefix = props.path.replace(/^\/+|\/+$/g, "");
+  const entries = treeEntries(projection.state, prefix);
+  const pathSegments = prefix === "" ? [] : prefix.split("/");
+  const rootHref = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(props.branch)}`;
+  const breadcrumbs = pathSegments.map((segment, index) => ({
+    name: segment,
+    href: `${rootHref}/${pathSegments
+      .slice(0, index + 1)
+      .map(encodeURIComponent)
+      .join("/")}`,
+  }));
+  const status = projection.status;
+  const error = status.startsWith("error:");
+  return (
+    <section
+      className="tree-browser"
+      data-testid="tree-browser"
+      data-ef-stream={streamId}
+      data-ef-offset={projection.checkpoint}
+      data-application-checkpoint={projection.checkpoint}
+      data-state-digest={projection.digest}
+      data-tree-digest={projection.digest}
+      data-reducer-version="2"
+      data-stream-status={status}
+    >
+      <div className="tree-heading">
+        <div>
+          <p className="eyebrow">Live StreamFS tree</p>
+          <h2 data-testid="tree-title">
+            {props.org} / {props.repo} / {props.branch}
+          </h2>
+        </div>
+        <span data-testid="tree-stream-status" className="tree-status">
+          {status}
+        </span>
+      </div>
+      <dl className="tree-facts">
+        <dt>Stream</dt>
+        <dd data-testid="tree-stream">{streamId}</dd>
+        <dt>Application checkpoint</dt>
+        <dd data-testid="tree-checkpoint">{projection.checkpoint}</dd>
+        <dt>Tree digest</dt>
+        <dd data-testid="tree-digest">{projection.digest}</dd>
+      </dl>
+      <nav className="tree-breadcrumbs" aria-label="Tree path" data-testid="tree-breadcrumbs">
+        <RouteLink href={rootHref}>root</RouteLink>
+        {breadcrumbs.map((crumb) => (
+          <span key={crumb.href}>
+            <span aria-hidden="true"> / </span>
+            <RouteLink href={crumb.href}>{crumb.name}</RouteLink>
+          </span>
+        ))}
+      </nav>
+      {status === "loading" ? <p data-testid="tree-loading">Loading tree…</p> : null}
+      {error ? (
+        <p role="alert" data-testid="tree-refusal" className="projection-refusal">
+          StreamFS tree projection refused: {status.slice("error:".length)}
+        </p>
+      ) : null}
+      {!error && status !== "loading" ? (
+        entries.length === 0 ? (
+          <p data-testid="tree-empty">This directory is empty.</p>
+        ) : (
+          <ul className="tree-list" data-testid="tree-list">
+            {entries.map((entry) => (
+              <li
+                key={entry.path}
+                data-testid="tree-row"
+                data-path={entry.path}
+                data-kind={entry.kind}
+              >
+                {entry.kind === "directory" ? (
+                  <RouteLink
+                    href={`${rootHref}/${entry.path.split("/").map(encodeURIComponent).join("/")}`}
+                  >
+                    <span aria-hidden="true">▸ </span>
+                    {entry.name}/
+                  </RouteLink>
+                ) : (
+                  <span>
+                    <span aria-hidden="true">▱ </span>
+                    {entry.name}
+                  </span>
+                )}
+                {entry.detail === undefined ? null : <code>{entry.detail}</code>}
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
+    </section>
+  );
+}
+
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
   return (
@@ -483,6 +685,7 @@ export function AppRoutes(): React.JSX.Element {
         <RouteLink href="/">Home</RouteLink>
         <RouteLink href="/maple">Maple</RouteLink>
         <RouteLink href="/maple/reading-room">Reading room</RouteLink>
+        <RouteLink href="/maple/reading-room/tree/main">File tree</RouteLink>
         <RouteLink href="/repositories">Repositories</RouteLink>
         <RouteLink href="/inspect/maple/reading-room/main">Stream inspector</RouteLink>
         <RouteLink href="/lost/deep/trail">Missing trail</RouteLink>
