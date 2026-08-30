@@ -26,6 +26,7 @@ import {
   type AuthzInput,
   type AuthorizationVerifier,
   type ProjectActorRole,
+  type ProjectFencedEvent,
   type ProjectQueueProof,
   type ProjectState,
   type ProjectStatus,
@@ -1395,6 +1396,139 @@ describe("project state machine on the real dispatch door", () => {
     expect(
       outcomes.filter((outcome) => outcome === "start-fenced-complete-stale").length,
     ).toBeGreaterThan(0);
+  }, 600_000);
+
+  it("refuses a proof computed at the fenced tail while the record is in flight; only an open fence blocks", async () => {
+    // Critic run 3 (E6-T03): the lag test above is refused by the tail check alone (its proof
+    // predates the fence). This one computes the proof AT the fence-inclusive tail, so the
+    // refusal can only come from the open-fence check — disabling that check lets the
+    // completion land over a task whose record is still in flight (3/3 via HTTP, run 3).
+    let mode: "lag" | "crash" = "lag";
+    const inner = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const flaky = new Proxy(inner, {
+      get(target, prop: keyof OfficialStreamAdapter) {
+        const value = target[prop];
+        if (typeof value !== "function") return value;
+        if (prop === "append") {
+          return async (id: string, ...rest: unknown[]) => {
+            if (id.startsWith("issue:")) {
+              if (mode === "crash") throw new Error("simulated crash between fence and append");
+              await new Promise((resolve) => setTimeout(resolve, 400));
+            }
+            return (value as (...args: unknown[]) => Promise<unknown>).call(target, id, ...rest);
+          };
+        }
+        return (value as (...args: unknown[]) => unknown).bind(target);
+      },
+    });
+    const gatewayC = new PlatformGateway({
+      verifier,
+      streams: flaky,
+      decideAuthorization: decideByCredential,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      rateLimiter: new FixedWindowRateLimiter({ max: 1_000_000, windowMs: 3_600_000 }),
+    });
+    const serverC = createPlatformServer((request) => gatewayC.handle(request));
+    const urlC = await listenPlatformServer(serverC);
+    const reasonOf = (result: DispatchResult): string =>
+      (JSON.parse(result.body) as { error: { reason: string } }).error.reason;
+    const startOf = (id: string, ts: number): Event => ({
+      type: "task.started",
+      payload: {
+        v: 1,
+        by: { actor: AGENT, role: "builder" as const, run: `agent-run:${ORG}/${id}-run-1` },
+      },
+      ts,
+    });
+    try {
+      // 1. Proof computed at the fenced tail, task record in flight -> stale-proof (open fence).
+      const repo = "xopen";
+      const stream = projectStream(repo);
+      await seedTask(repo, "cap", "verified", ["capstone"]);
+      const plain = await seedTask(repo, "p", "opened");
+      const tailBefore = await projectTail(repo);
+      const startC = dispatchAs(AGENT, plain.stream, startOf("p", 1600), urlC);
+      for (let i = 0; i < 100 && (await projectTail(repo)) === tailBefore; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(await projectTail(repo)).not.toBe(tailBefore);
+      const proof = await realProof(repo); // cites the fenced tail; `p` has no task record yet
+      expect(proof.tasks.map((task) => task.id)).toEqual(["cap"]);
+      const complete = await dispatchAs(
+        AGENT,
+        stream,
+        transition(AGENT, "agent", "complete", await head(stream), "at fenced tail", 1601, proof),
+      );
+      expect(complete.status, complete.body).toBe(409);
+      expect(reasonOf(complete)).toBe("project/stale-proof");
+      expect((await startC).status).toBe(202);
+      const later = await dispatchAs(
+        AGENT,
+        stream,
+        transition(
+          AGENT,
+          "agent",
+          "complete",
+          await head(stream),
+          "after landing",
+          1602,
+          await realProof(repo),
+        ),
+      );
+      expect(reasonOf(later)).toBe("project/false-proof"); // `p` is now an in-progress member
+      expect(replayProjectLog(stream, await records(stream)).status).toBe("building");
+
+      // 2. Crash between fence and task append: the open fence blocks completion until any
+      //    append to the target stream takes the fenced offset (dead fence, ignored).
+      mode = "crash";
+      const repo2 = "xcrash";
+      const stream2 = projectStream(repo2);
+      await seedTask(repo2, "cap", "verified", ["capstone"]);
+      const plain2 = await seedTask(repo2, "p", "opened");
+      const fencesBefore = (await records(stream2)).filter(
+        (record) => record.type === "project.fenced",
+      ).length;
+      const crashed = await dispatchAs(AGENT, plain2.stream, startOf("p", 1700), urlC);
+      expect(crashed.status).toBeGreaterThanOrEqual(500);
+      const fences = (await records(stream2)).filter((record) => record.type === "project.fenced");
+      expect(fences).toHaveLength(fencesBefore + 1); // the refused-by-crash start left its fence open
+      const dangling = fences.at(-1) as ProjectFencedEvent;
+      expect(dangling.payload.target.stream).toBe(plain2.stream);
+      expect((await records(plain2.stream)).length).toBe(
+        Number(dangling.payload.target.offset.split("_")[1]),
+      );
+      const blocked = await dispatchAs(
+        AGENT,
+        stream2,
+        transition(AGENT, "agent", "complete", -1, "open fence", 1701, await realProof(repo2)),
+      );
+      expect(reasonOf(blocked)).toBe("project/stale-proof");
+      const first = await getProject(repo2);
+      const second = await getProject(repo2);
+      expect(first.text).toBe(second.text);
+      expect(first.body.state.head).toBe(OFFSET_BEFORE_FIRST);
+      expect(first.body.state.fences).toBe(fences.length);
+      await accepted(
+        dispatchAs(HUMAN, plain2.stream, {
+          type: "issue.commented",
+          payload: { v: 1, commentId: "c-1", body: "takes the fenced offset" },
+          ts: 1702,
+        }),
+      );
+      const freed = await dispatchAs(
+        AGENT,
+        stream2,
+        transition(AGENT, "agent", "complete", -1, "dead fence", 1703, await realProof(repo2)),
+      );
+      expect(freed.status, freed.body).toBe(202);
+      mode = "lag";
+      const late = await dispatchAs(AGENT, plain2.stream, startOf("p", 1704), urlC);
+      expect(reasonOf(late)).toBe("project/complete");
+      console.log("E6_T03_FENCE_HTTP open-fence=stale-proof dead-fence=ignored crash=open");
+    } finally {
+      gatewayC.terminate();
+      await closeServer(serverC);
+    }
   }, 600_000);
 
   it("never appends a task loop event after an accepted pause across two gateway processes", async () => {
