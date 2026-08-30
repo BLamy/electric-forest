@@ -3,7 +3,7 @@ id: E6-T02
 epic: 6
 title: "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 priority: 602
-status: refuted
+status: in-progress
 depends_on: [E5]
 estimate: M
 capstone: false
