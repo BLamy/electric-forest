@@ -3,7 +3,7 @@ id: E6-T03
 epic: 6
 title: "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 priority: 603
-status: in-progress
+status: implemented
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -414,3 +414,65 @@ Commands: `node work/critic/digest.mjs`; `make verify-E6-T03`; `bash tools/verif
   noted. `Makefile`, `index.ts` exports, `cold_clone_targets.txt`: waived (config).
 - SUITE: n/a until the refutations clear; harness and logs stay in `work/critic2/`.
 Commands: `node work/critic2/digest.mjs`; `make verify-E6-T03`; `bash tools/verify/cold_clone.sh verify-E6-T03`; `node work/critic2/attack.mjs`; `node work/critic2/attack2.mjs`; worktree mutants + `vitest run packages/platform/test/project-state.test.ts` / `node tools/verify/e6_t03_evidence.mjs`.
+
+### 2026-08-30 — builder — rework after critic run 2 (implemented, not yet verified)
+
+- Rework commits `3ebebbcf` + `ff95df0c` (verdict `93d46e39`). The fence design is fixed,
+  not patched around:
+- **Refusals write nothing (run-2 P2).** The task door now runs in three steps
+  (`gateway.ts` `validateTaskDispatch`): the project guard *reads* the project state — a
+  refusal writes nothing; the E6-T01 task validator runs — a refusal writes nothing; only
+  an otherwise-accepted task loop event is fenced. The matrix gained
+  `task-validator-refusal-builder-mismatch` and `task-validator-refusal-builder-verifies`
+  (409 `task/builder-mismatch`, `task/wrong-role`) and every `E6_T03_REFUSAL` row now
+  snapshots both the target stream and the project stream before/after; the verifier
+  asserts both are byte-identical on every refusal (17 rows).
+- **Completion consults fence history (run-2 P4).** A fence now binds the exact record it
+  admits — task stream, the offset it will occupy, its type, and the writer-lane identity
+  (`writer.sub`/`seq`) the door stamped — and `classifyFence` decides *landed* / *dead*
+  (offset taken by another record; can never land) / *open*. A queue proof must cite the
+  project stream's own fence-inclusive durable tail (`proof.project.offset`,
+  `project/stale-proof` otherwise) and is refused `project/stale-proof` while any fence is
+  open; dead fences are ignored. Because the completion is itself compare-and-appended at
+  the next project sequence, a fence landing after validation conflicts it and forces
+  revalidation against the newer tail — so the critic's lagging-start exploit is
+  impossible by construction. New suite test "never completes over a fenced task whose
+  record has not landed, across two gateways": gateway C delays every task-stream append
+  200 ms, A completes 60 ms after C starts a plain issue, 6 rounds —
+  `E6_T03_XGATEWAY_LAG` 6× `start-fenced-complete-stale`, never `complete` over a
+  non-verified task (also green in the cold clone). Verifier `E6_T03_FENCE_PROOF`: open
+  fence → stale-proof, older cited tail → stale-proof, dead fence ignored.
+- **Fence semantics documented** (`packages/platform/src/loop/README.md`): a fence is a
+  committed decision, not a receipt; writer-lane retries can leave dead fences; a crash
+  between the two appends leaves an open fence until the next append to that task stream
+  (any event) makes it dead; the reducer counts every well-formed fence and never moves
+  `head`, so dangling fences replay deterministically. The E6-T01 fixture digest is
+  unchanged (task payloads untouched).
+- **Moved capstone** — fixed rather than documented as a trap: membership stays
+  history-derived (non-retractable), but the capstone *flag* is the current `capstone`
+  label among members, so a human moving the label no longer makes the repository
+  permanently uncompletable; the former capstone still must be `verified`.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (18 = baseline), `pnpm typecheck` (41 = baseline), tests in foreground file groups:
+  119/120 files exercised — 116 passed, the 3 known baseline failures unchanged
+  (`issues.test.ts`, `meadow/links.plan.test.ts`, and `pr-property.fuzz.test.ts` which is
+  the baseline timeout and was not re-run), `project-state.test.ts` 8/8,
+  `evidence-contract.test.ts` 4/4; `pnpm build` green; `make verify-E6-T03` exit 0;
+  `bash tools/verify/cold_clone.sh verify-E6-T03` PASSED from pristine `ff95df0c` (exit
+  0, zero `SKIPPED:`, `DEPENDENCY_INTEGRITY_OK`).
+- Evidence (regenerated, frozen): state digest unchanged at
+  `9140f6711188cbffac0e3e79d79ac95b2cecd4563fac58d203a838472376b79b` (the completion
+  record stores the queue citation only), projection sha256 `8a308f5b…9edd`;
+  `e6-t03-project.jsonl` now carries writer-bound fence targets and the proof's project
+  tail (offset 11); `e6-t03-matrix.txt` 72 tuples + 17 refusals with both-stream
+  snapshots; `e6-t03-proofs.txt` 16 forgeries incl. `stale-project-tail`, true proof
+  accepted twice; `e6-t03-sabotage.txt` regenerated (invalid_loop arm removed →
+  `invalid_loop/human/launch` 202-vs-409, verifier red).
+- Replay: N/A (server state/guard contract; the live project controls and badge
+  integration land in E6-T06) + mitigation: the two-gateway lag and pause race
+  transcripts, both-stream refusal snapshots, writer-bound fences on the frozen log, and
+  the two-process replay digests above.
+- What the rework demonstrates: a refused dispatch is invisible on every stream; the
+  project stream is the single linear history that both loop actions and completion are
+  ordered by, so "complete with an in-progress task" cannot be produced by any
+  interleaving of gateways; and every fence's meaning is decidable from the streams alone.
