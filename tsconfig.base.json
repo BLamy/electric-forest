@@ -23,6 +23,8 @@
       "@eforest/client": ["packages/client/src/index.ts"],
       "@eforest/identity": ["packages/identity/src/index.ts"],
       "@eforest/issues": ["packages/issues/src/index.ts"],
+      "@eforest/evidence": ["packages/evidence/src/index.ts"],
+      "@eforest/tasks": ["packages/tasks/src/index.ts"],
       "@eforest/pr": ["packages/pr/src/index.ts"],
       "@eforest/platform": ["packages/platform/src/index.ts"],
       "@eforest/browser-verify": ["packages/browser-verify/src/index.ts"],
@@ -31,7 +33,10 @@
       "@eforest/streamfs/worktree-node": ["packages/streamfs/src/worktree-node.ts"],
       "@eforest/workspace": ["packages/workspace/src/index.ts"],
       "@eforest/web-hooks": ["packages/web-hooks/src/index.ts"],
-      "@eforest/sync-harness": ["packages/sync-harness/src/index.ts"]
+      "@eforest/sync-harness": ["packages/sync-harness/src/index.ts"],
+      "@brett_lamy/docstream-editor": ["apps/web/src/types/docstream-editor.d.ts"],
+      "@brett_lamy/docstream-editor/convert": ["apps/web/src/types/docstream-editor.d.ts"],
+      "@brett_lamy/docstream/gitbook": ["apps/web/src/types/docstream-editor.d.ts"]
     }
   }
 }

@@ -32,12 +32,20 @@ import {
   repositoryStatusReducer,
 } from "./repo-home.js";
 import { issueReducerDefinition } from "./issues.js";
+import { chatCatalogReducerDefinition, chatChannelReducerDefinition } from "./chat.js";
+import { membersReducerDefinition } from "./members.js";
+import { agentsReducerDefinition } from "./agents.js";
+import { tasksReducerDefinition } from "@eforest/tasks";
 
 export * from "./registry.js";
 export * from "./repo-home.js";
 export * from "./file-content.js";
 export * from "./history.js";
 export * from "./issues.js";
+export * from "./chat.js";
+export * from "./members.js";
+export * from "./agents.js";
+export { tasksReducerDefinition } from "@eforest/tasks";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -155,10 +163,15 @@ const definitions: readonly ReducerDefinition[] = [
   issueReducerDefinition,
   issueBoardReducerDefinition,
   labelReducerDefinition,
+  tasksReducerDefinition,
   prReducerDefinition,
   prIndexReducerDefinition,
   evidenceReducerDefinition,
   evidenceContentReducerDefinition,
+  chatCatalogReducerDefinition,
+  chatChannelReducerDefinition,
+  membersReducerDefinition,
+  agentsReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {

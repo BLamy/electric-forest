@@ -80,11 +80,13 @@ export {
   type SessionBackedIdentity,
   type WhoamiOptions,
 } from "./api/whoami.js";
-export { spaResponse, type SpaHandlerOptions } from "./web/spa.js";
+export { SESSION_SHELL_MARKER, spaResponse, type SpaHandlerOptions } from "./web/spa.js";
 export {
   PLATFORM_RATE_LIMIT_KEYS,
   PLATFORM_ROUTES,
+  PUBLIC_SITE_ROUTES,
   classifyPlatformRoute,
+  isPublicSiteRoute,
   type PlatformRouteDefinition,
   type PlatformRouteId,
 } from "./route-topology.js";

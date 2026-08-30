@@ -15,6 +15,7 @@
     { "path": "../protocol/tsconfig.build.json" },
     { "path": "../client/tsconfig.build.json" },
     { "path": "../identity/tsconfig.build.json" },
-    { "path": "../reducers/tsconfig.build.json" }
+    { "path": "../reducers/tsconfig.build.json" },
+    { "path": "../tasks/tsconfig.build.json" }
   ]
 }

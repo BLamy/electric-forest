@@ -197,19 +197,27 @@ let transcript = "E3-T02 shell proof\nisolation worlds=2 distinct-ports+data-dir
 let neutrality = "E3-T02 /api/whoami refusal neutrality\n";
 try {
   const before = await truth(activeWorld);
-  for (const path of ["/", "/maple", "/maple/reading-room", "/index.html"]) {
+  for (const path of ["/maple", "/maple/reading-room", "/index.html", "/settings/cli-tokens"]) {
     const response = await manual(activeWorld, path);
     assert.equal(response.status, 302, path);
     assert.equal(response.headers.get("location"), "/auth/login", path);
     transcript += `unauth ${path} status=302 location=/auth/login: OK\n`;
   }
+  // The public site (landing, roadmap, docs) is served without a session and never
+  // carries the server-stamped session marker.
+  for (const path of ["/", "/home", "/roadmap", "/docs"]) {
+    const response = await manual(activeWorld, path);
+    assert.equal(response.status, 200, path);
+    const html = await response.text();
+    assert.ok(!html.includes('name="ef-session"'), `${path} leaked a session marker`);
+    transcript += `unauth ${path} status=200 public-site no-session-marker: OK\n`;
+  }
   const index = await readFile(resolve(root, "apps/web/dist/index.html"), "utf8");
   const asset = /(?:src|href)="(\/assets\/[^"]+)"/.exec(index)?.[1];
   assert.ok(asset);
   const assetResponse = await manual(activeWorld, asset);
-  assert.equal(assetResponse.status, 302);
-  assert.equal(assetResponse.headers.get("location"), "/auth/login");
-  transcript += `unauth emitted-asset ${asset} status=302: OK\n`;
+  assert.equal(assetResponse.status, 200);
+  transcript += `unauth emitted-asset ${asset} status=200 (public bundle, no secrets): OK\n`;
 
   const absent = await manual(activeWorld, "/api/whoami");
   assert.equal(absent.status, 401);

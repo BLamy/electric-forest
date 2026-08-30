@@ -5,6 +5,7 @@ import {
   issueHasBeenOpened,
   issueInitialStateForStream,
   isIssueEventShape,
+  isIssueSiblingEvent,
   isIssueString,
   isLegal,
   issueReducer,
@@ -251,6 +252,7 @@ export function reduceIssueLog(log: IssueLog): IssueState {
   let opened = false;
   for (const record of log.events) {
     const event = cleanEvent(record);
+    if (opened && isIssueSiblingEvent(event.type)) continue;
     if (!isIssueEventShape(event)) throw new TypeError(`corrupt issue event: ${log.streamId}`);
     if (!opened && event.type !== "issue.opened")
       throw new TypeError(`issue does not open first: ${log.streamId}`);
