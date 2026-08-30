@@ -3,7 +3,7 @@ id: E6-T04
 epic: 6
 title: "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
 priority: 604
-status: implemented
+status: verified
 depends_on: [E6-T01]
 estimate: M
 capstone: false
@@ -354,3 +354,95 @@ Commands: `node tools/verify/e6_t04_queue.mjs evidence/e6-t04-sources.jsonl --sh
   a cycle, whether through task or epic references, and a deadlock of any other shape are
   invalid proofs with their members named — and the fix changed nothing about what a
   valid queue decides.
+
+### 2026-08-30 — critic run 2 — VERDICT: verified
+
+- ORIENT — HELD. Fresh process, foreign cwd, `TZ=Pacific/Chatham`, `--shuffle 909`
+  (`tools/verify/e6_t04_queue.mjs evidence/e6-t04-sources.jsonl`): queue digest
+  `1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec`, `QUEUE.md` sha256
+  `dae6f93c…cce3`, `queue.json` `6aadd71f…4aba`, `proof.json` `f64b5a21…7a35`; `cmp` against
+  the committed artifacts clean. Diff sweep `7006c7e6..HEAD`: no `.skip`/`.todo`/lint
+  disables; purity grep over `packages/tasks/src/queue` empty; `queue_differential.py`
+  copies the unmodified `tools/build_queue.py` and re-implements nothing;
+  `e6_t04_evidence.mjs` hashes every protected artifact before and after. Run-1 graphs
+  `bare-epic-cycle`/`self-epic-cycle` promoted byte-identical (`cmp`) to
+  `evidence/critic-2026-08-30/`.
+- P5 as a general invariant (rework `8963610d`) — HELD. Predicted before running
+  (`evidence/critic2-2026-08-30/attacks.mjs`, output `attacks.out`): cycle through an
+  epic with two capstones where only one is on the cycle → `dep/cycle [E1-T01, E2-T01]` +
+  `capstone/multiple [E2]` (E2-T02 not listed); capstone depending on its own two-capstone
+  epic → `dep/cycle [E1-T01]` + `capstone/multiple`; bare ref to a capstone-less epic →
+  `eligible` while a member can start, `capstone/none-in-completed-epic` when that epic is
+  all verified, `dep/deadlock` only when nothing can start (frozen
+  `deadlock-no-capstone-epic`); a non-capstone `[E1]` on its own epic → valid, `eligible`
+  the capstone, then the non-capstone once it verifies; bare ref to an epic whose capstone
+  is `refuted` → `rework` (deps met) / `in-flight` (deps unmet), `implemented` →
+  `in-flight`; a lone `refuted` task → `rework`; all-verified two epics → `exhausted`;
+  every decision digest-identical under three shuffled fetch orders. Cyclic-mode fuzz
+  (150 seeds, promoted test) never reaches `exhausted` with a pending member.
+- Boundary (non-refuting, documented in the decision doc): `dep/deadlock` is gated on
+  "no active task", so a latent deadlock behind an active task reports `in-flight` until
+  that task resolves (then `invalid {dep/deadlock}` — asserted in the promoted test), and a
+  `refuted` task whose dependencies can never be satisfied (`E1-T01 refuted [E2]`, E2
+  capstone-less) reports `in-flight E1-T01` forever
+  (`attacks.out` `refuted-unsatisfiable`). This matches `build_queue.py`'s gate and the
+  README's `in-flight` definition; it is not `exhausted`, so the claimed invariant holds.
+  Demand (follow-up, not this task): E6-T05 spec revision should decide whether a refuted
+  task with unsatisfiable deps is a deadlock.
+- A1 differential, my generator — HELD. Ten 1000-task graphs (40 epics × 25, 391–464
+  bare-epic edges each, verified-prefix, seeds 7001–7006 with an active task, 8001–8004
+  without) against the real `build_queue.py`: 0 mismatches over normalized decision and
+  markdown, decisions `rework`/`in-flight`/`eligible` with ten-entry next-up
+  (`attacks2.out`, `attacks4.out`; ~630 ms per projection).
+- A2 fencing, my inputs (`attacks3.out`) — HELD. Catalog moves (new task issue) →
+  `queue/stale-proof {repo-issues:maple/loom, …0006 → …0007}`; an unrelated *verified*
+  task's stream gains a comment → stale naming `issue:maple/loom/E1-T01 …0004 → …0005`,
+  `admitSelection` refused; the chosen task started by someone else → stale on
+  `issue:maple/loom/E2-T01`, current decision `in-flight E2-T01`; a truncated stream →
+  stale with `current` behind `cited`; a forged extra head → stale with `current: -1`;
+  tampered `tasks[]`/`finalCapstone`/`v` with true heads → `queue/false-proof`.
+- A3 two active + two capstones, my inputs — HELD. `refuted`+`implemented` across epics
+  → `queue/multiple-active` + `capstone/not-final`; two `in-progress` + two capstones in
+  E2 → `queue/multiple-active` + `capstone/multiple`; three active → one violation
+  listing all three; `admitSelection` → `queue/invalid`; no `## Current gate` rendered.
+- A4 delete-and-rebuild — HELD (my shuffle/TZ above; the cold clone's three processes,
+  `E6_T04_REBUILD processes=3 shuffled=2 byte-identical=true`).
+- A5 sabotage, both rules, in the kept cold clone (`sabotageA/B.summary.txt`) — HELD.
+  (A) `dependencyEdges` no longer expands bare-epic refs → `make verify-E6-T04` exit 2,
+  `queue-eligibility` 2 red (`bare-epic-cycle` frozen projection and the cycle test).
+  (B) deadlock rule disabled (`pending.length > 0` → `false`) → exit 2, 3 red
+  (`deadlock-no-capstone-epic` golden, `dep/deadlock` never reached, `exhausted` where
+  `invalid` expected). Both restored; clone removed.
+- Unlisted — HELD with one boundary. Dependency chains across 1000 and 20000 epics
+  (queue-order DAG) and a 5000-deep reverse-order DAG decide correctly; a 5000-deep
+  *cyclic* chain throws `RangeError: Maximum call stack size exceeded` from the recursive
+  Tarjan in `cycleMembers` (`attacks2.out`) — a crash rather than an invalid proof, but
+  only at 5× the task's stated 1000-task envelope; no budget is stated, so not raised as a
+  miss. Demand (follow-up): iterative Tarjan. Split-suffix ids (`E1-T02a`) pass
+  `QUEUE_TASK_REF_PATTERN` but E6-T02's parser refuses them → `spec/unparseable`,
+  consistent with the upstream contract.
+- Fixture honesty — HELD. `unlocks-section`'s capstone `[E1]` → `[E1-T04]` keeps the
+  fixture's purpose (gate E1-T01, next-up E1-T04, unlocks E1-T02) and removes a real
+  self-epic cycle that Python tolerated; `exhausted-all-blocked` re-frozen `invalid
+  {dep/cycle [E1-T01, E2-T01]}` is what the graph is (E1-T01 `[E2-T01]`, E2-T01 `[E1]`).
+- Cold clone — `bash tools/verify/cold_clone.sh --keep verify-E6-T04` from HEAD
+  `eccf4965`: exit 0, zero `SKIPPED:`, `E6_T04_GRAPHS valid=12 invalid=18 reasons=12/14`,
+  `E6_T04_DIFFERENTIAL graphs=52 mismatches=0`, `E6_T04_PERMUTATIONS 360`, `MUTATION …
+  EXPECTED-FAIL OK`, `DEPENDENCY_INTEGRITY_OK`, `PASSED from a pristine clone`
+  (`cold_clone.summary.txt`). Focused suite locally per file: eligibility 13 (14 with the
+  promoted test), fuzz 3, differential 2, gateway 2 — all green.
+- COVERAGE. Rework hunks in `eligibility.ts` (`dependencyEdges`, expanded-edge
+  `cycleMembers`, `dep/deadlock`): executed by the attacks, the frozen graphs, and both
+  sabotages. projector/proof/render-markdown/graph: frozen graphs, fuzz, differential, my
+  fencing attacks. `gateway.ts` `repositoryQueueRoute`: happy path + 405/404 executed by
+  `task-queue.test.ts`; the `catalog = undefined` branch and auth-refusal arms are not —
+  waived as in run 1 (projector re-reports `catalog/corrupt`; the arms mirror the sibling
+  routes). Makefile target, `queue_differential.py`, `e6_t04_queue.mjs`,
+  `e6_t04_evidence.mjs`: executed by the cold clone. Pre-existing and not raised: 18 lint
+  errors, prettier warnings in 7 files, 41 typecheck errors, the 3 failing test files.
+- SUITE: promoted `packages/tasks/test/queue-eligibility.test.ts` "critic run 2: bare-epic
+  edges, deadlock gating, and exhausted stay general invariants" (two-capstone epic
+  cycle, self-epic non-capstone, capstone-less epic with a startable member, latent
+  deadlock in-flight → invalid on verify, refuted capstone → rework, verified capstone-less
+  epic). Attack scripts and outputs committed under `evidence/critic2-2026-08-30/`.
+Commands: `TZ=Pacific/Chatham node tools/verify/e6_t04_queue.mjs evidence/e6-t04-sources.jsonl --shuffle 909 --out work/critic2/rebuild`; `node evidence/critic2-2026-08-30/attacks{,2,3,4}.mjs`; `pnpm exec vitest run --maxWorkers=1 <each of the 4 files>`; `bash tools/verify/cold_clone.sh --keep verify-E6-T04`; in the clone `sed -i '' 's|for (const member of epics.get(ref) ?? \[\]) if (member.capstone) edges.push(member.id);|/* sabotage A */|' packages/tasks/src/queue/eligibility.ts && make verify-E6-T04` and `sed -i '' 's|pending.length > 0 &&|false &&|' … && make verify-E6-T04`.

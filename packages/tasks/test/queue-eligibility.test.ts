@@ -238,6 +238,70 @@ describe("queue eligibility (E6-T04)", () => {
     });
   });
 
+  it("critic run 2: bare-epic edges, deadlock gating, and exhausted stay general invariants", () => {
+    // A cycle through an epic with two capstones names only the members on the cycle.
+    expect(
+      evaluateQueue([
+        spec("E1-T01", "pending", ["E2"], { capstone: true }),
+        spec("E2-T01", "pending", ["E1-T01"], { capstone: true }),
+        spec("E2-T02", "pending", [], { capstone: true }),
+      ]).decision,
+    ).toEqual({
+      kind: "invalid",
+      violations: [
+        { reason: "dep/cycle", refs: ["E1-T01", "E2-T01"] },
+        { reason: "capstone/multiple", refs: ["E2"] },
+      ],
+    });
+    // A non-capstone depending on its own epic is not a cycle: the capstone goes first.
+    expect(
+      evaluateQueue([
+        spec("E1-T01", "pending", ["E1"]),
+        spec("E1-T02", "pending", [], { capstone: true }),
+      ]).decision,
+    ).toEqual({ kind: "eligible", nextEligible: "E1-T02", inFlight: null });
+    // A bare reference to a capstone-less epic deadlocks only when nothing can start.
+    expect(
+      evaluateQueue([
+        spec("E1-T01", "pending", ["E2"], { capstone: true }),
+        spec("E2-T01", "pending"),
+      ]).decision,
+    ).toEqual({ kind: "eligible", nextEligible: "E2-T01", inFlight: null });
+    // A latent deadlock behind an active task is reported once that task resolves.
+    const latent = (status: QueueTaskSpec["status"]) =>
+      evaluateQueue([
+        spec("E1-T01", status, [], { capstone: true }),
+        spec("E2-T01", "pending", ["E3"], { capstone: true }),
+        spec("E3-T01", "pending", ["E2"]),
+      ]).decision;
+    expect(latent("in-progress")).toEqual({
+      kind: "in-flight",
+      nextEligible: null,
+      inFlight: "E1-T01",
+    });
+    expect(latent("verified")).toEqual({
+      kind: "invalid",
+      violations: [{ reason: "dep/deadlock", refs: ["E2-T01", "E3-T01"] }],
+    });
+    // A refuted capstone gates a bare-epic dependant as rework, never as exhausted.
+    expect(
+      evaluateQueue([
+        spec("E1-T01", "refuted", [], { capstone: true }),
+        spec("E2-T01", "pending", ["E1"], { capstone: true }),
+      ]).decision,
+    ).toEqual({ kind: "rework", nextEligible: "E1-T01", inFlight: "E1-T01" });
+    // Exhausted requires every member verified; a verified capstone-less epic is a fault.
+    expect(
+      evaluateQueue([
+        spec("E1-T01", "verified"),
+        spec("E2-T01", "verified", ["E1-T01"], { capstone: true }),
+      ]).decision,
+    ).toEqual({
+      kind: "invalid",
+      violations: [{ reason: "capstone/none-in-completed-epic", refs: ["E1"] }],
+    });
+  });
+
   it("reports a corrupt catalog as an invalid proof, not an empty queue", () => {
     const sources = sourcesOf(frozenGraph("linear-verified-prefix"));
     const corrupt = {
