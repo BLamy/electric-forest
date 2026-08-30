@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E6-T03** — "Project state machine: server-enforced building, complete, paused, and invalid_loop" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E6-T03** — "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 1. **E6-T04** — "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
+
+## Unlocks when E6-T03 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -112,7 +115,7 @@ No task is currently in progress, awaiting verification, or refuted.
 
 - [x] `601` [E6-T01](epic-6-the-loop/E6-T01-task-event-model/readme.md) — "Task event model: an issue with evidence and builder/critic verdicts" *(deps: E5)*
 - [x] `602` [E6-T02](epic-6-the-loop/E6-T02-task-folder-contract/readme.md) — "Task-folder contract: parse and render readme, work, and evidence without losing bytes" *(deps: E5)*
-- [ ] `603` [E6-T03](epic-6-the-loop/E6-T03-project-state-machine/readme.md) — "Project state machine: server-enforced building, complete, paused, and invalid_loop" *(deps: E5)*
+- [~] `603` [E6-T03](epic-6-the-loop/E6-T03-project-state-machine/readme.md) — "Project state machine: server-enforced building, complete, paused, and invalid_loop" *(deps: E5)*
 - [ ] `604` [E6-T04](epic-6-the-loop/E6-T04-task-queue-projection/readme.md) — "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs" *(deps: E6-T01)*
 - [ ] `605` [E6-T05](epic-6-the-loop/E6-T05-task-folder-stream-sync/readme.md) — "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes" *(deps: E6-T01, E6-T02, E6-T04)*
 - [ ] `606` [E6-T06](epic-6-the-loop/E6-T06-live-task-board/readme.md) — "Live task board: queue, project state, task folders, findings, and evidence in the web app" *(deps: E6-T03, E6-T04, E6-T05)*

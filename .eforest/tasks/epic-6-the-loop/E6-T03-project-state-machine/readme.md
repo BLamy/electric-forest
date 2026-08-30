@@ -3,7 +3,7 @@ id: E6-T03
 epic: 6
 title: "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 priority: 603
-status: pending
+status: in-progress
 depends_on: [E5]
 estimate: M
 capstone: false
