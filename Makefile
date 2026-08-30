@@ -778,7 +778,7 @@ verify-E5-T14: verify-E5-T13 _v-e5-web-build
 	@node tools/verify/e5_t14_browser_evidence.mjs
 	@echo "verify-E5-T14: OK"
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E6-T01 verify-E6-T02
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E6-T01 verify-E6-T02 verify-E6-T03
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
@@ -815,6 +815,22 @@ _v-e6-t02:
 	@node tools/verify/e6_t02_evidence.mjs
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E6-T02"
+
+# --- E6-T03: project state machine (building / complete / paused / invalid_loop) ---
+.PHONY: verify-E6-T03 _v-e6-t03
+verify-E6-T03: _v-e6-t03
+	@echo "verify-E6-T03: OK"
+
+_v-e6-t03:
+	@CI=true pnpm --filter @eforest/tasks build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/cli build
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|readFile|writeFile" packages/platform/src/loop; test $$? -eq 1
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/project-state.test.ts
+	@node tools/verify/e6_t03_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T03"
 
 # --- end verify section ---
 

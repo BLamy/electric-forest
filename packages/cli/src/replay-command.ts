@@ -29,6 +29,7 @@ import {
   streamFsReducerDefinition,
   type ReducerDefinition,
 } from "@eforest/reducers";
+import { projectReducerDefinition } from "@eforest/platform";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -187,7 +188,11 @@ export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
       initialState: fixtureInitialState,
     };
   }
-  const definition = reducerById(modulePath);
+  const definition =
+    reducerById(modulePath) ??
+    // E6-T03: `project/v1` lives in @eforest/platform (the registry package cannot
+    // depend on the platform), so the CLI resolves it here.
+    (modulePath === projectReducerDefinition.id ? projectReducerDefinition : undefined);
   if (definition !== undefined) return registeredReducer(definition);
   try {
     const loaded = (await import(pathToFileURL(modulePath).href)) as {

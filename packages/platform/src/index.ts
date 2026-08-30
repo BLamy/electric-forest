@@ -184,12 +184,14 @@ export {
   type BoardProvenance,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
+export * from "./loop/index.js";
 export {
   ActionValidatorRegistry,
   registerApplicationValidators,
   registerIssueValidators,
   registerLabelValidators,
   registerPrValidators,
+  registerProjectValidators,
   type ActionValidationContext,
   type ActionValidator,
 } from "./validation.js";
