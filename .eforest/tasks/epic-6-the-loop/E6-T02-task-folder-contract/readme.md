@@ -188,3 +188,11 @@ anchors, and non-flat values other than inline `depends_on` are refused.
   drops frontmatter comments (including a queue-jump reason on a fractional priority),
   and the loop-ledger keys some readmes carry are refused as unknown — where that ledger
   lives as events is E6-T03/E6-T04's decision, not a second format here.
+- Known consequence, stated rather than hidden: this task's own folder is refused by its
+  own parser (`paths/percent-escape` at
+  `evidence/fixtures/invalid/percent-escape/E9-T41-percent-escape/evidence/%2e%2e/escape.txt`,
+  and the mode-120000 symlink fixture behind it), because the hostile on-disk fixtures
+  live inside `evidence/` where the spec asked for them. The contract is doing its job on
+  the fixtures; if E6-T05 needs this folder itself to sync, those two cases must move to
+  an inline/archived form. The critic should treat that as a documented boundary, not a
+  surprise.
