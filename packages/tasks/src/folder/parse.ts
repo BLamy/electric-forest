@@ -125,18 +125,22 @@ function parseOrThrow(snapshot: TaskFolderSnapshot) {
     }
     if (seenExact.has(entry.path)) refusePath("paths/duplicate", entry.path, "listed twice");
     seenExact.add(entry.path);
-    const folded = caseFoldKey(entry.path);
-    const collision = seenFolded.get(folded);
-    if (collision !== undefined) {
-      refusePath(
-        "paths/case-collision",
-        entry.path,
-        `collides with ${JSON.stringify(collision)} on a case-folding filesystem`,
-      );
-    }
-    seenFolded.set(folded, entry.path);
-    for (let depth = 1; depth < check.segments.length; depth += 1) {
-      directoryPrefixes.add(check.segments.slice(0, depth).join("/"));
+    // Case folding covers every node on the path — each directory prefix and the leaf —
+    // so `evidence/A/x` + `evidence/a/y` (or `evidence/A` + `evidence/a/y`) are refused
+    // before a case-insensitive filesystem can merge them.
+    for (let depth = 1; depth <= check.segments.length; depth += 1) {
+      const node = check.segments.slice(0, depth).join("/");
+      const folded = caseFoldKey(node);
+      const collision = seenFolded.get(folded);
+      if (collision !== undefined && collision !== node) {
+        refusePath(
+          "paths/case-collision",
+          entry.path,
+          `${JSON.stringify(node)} collides with ${JSON.stringify(collision)} on a case-folding filesystem`,
+        );
+      }
+      seenFolded.set(folded, node);
+      if (depth < check.segments.length) directoryPrefixes.add(node);
     }
 
     const [root] = check.segments;
@@ -145,6 +149,13 @@ function parseOrThrow(snapshot: TaskFolderSnapshot) {
         refusePath("folder/readme-not-file", entry.path, "readme.md must be a regular file");
       }
       readme = entry;
+    } else if (root === "evidence" || root === "work") {
+      if (check.segments.length === 1 && entry.kind !== "directory") {
+        refusePath("folder/unexpected-entry", entry.path, `${root} must be a directory`);
+      }
+    }
+    if (root === README && check.segments.length === 1) {
+      // handled above
     } else if (root === "evidence") {
       if (entry.kind === "directory") {
         if (check.segments.length > 1) {

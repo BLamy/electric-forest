@@ -211,7 +211,7 @@ describe("E6-T02 refusals", () => {
     });
     expect(live).toEqual(transcript.map((line) => canonicalJson(line)));
     expect(transcript.every((line) => line.ok === false)).toBe(true);
-    expect(transcript.length).toBe(64);
+    expect(transcript.length).toBe(70);
   });
 
   it("pins the reason for the attack list explicitly", () => {
@@ -247,6 +247,14 @@ describe("E6-T02 refusals", () => {
     expect(reason("percent-escape")).toBe("paths/percent-escape@evidence/%2e%2e/escape.txt:0:0");
     expect(reason("percent-work")).toBe("paths/percent-escape@work/%2e%2e/x:0:0");
     expect(reason("unicode-slug")).toBe("folder/name-invalid@.:0:0");
+    expect(reason("case-collision-evidence-dir")).toBe("paths/case-collision@evidence/a/y.txt:0:0");
+    expect(reason("case-collision-evidence-file-dir")).toBe(
+      "paths/case-collision@evidence/a/y.txt:0:0",
+    );
+    expect(reason("case-collision-work-dir")).toBe("paths/case-collision@work/a/y:0:0");
+    expect(reason("case-collision-work-file-dir")).toBe("paths/case-collision@work/a/y:0:0");
+    expect(reason("root-evidence-file")).toBe("folder/unexpected-entry@evidence:0:0");
+    expect(reason("root-work-file")).toBe("folder/unexpected-entry@work:0:0");
   });
 
   it("covers every frozen refusal reason at least once", () => {
@@ -268,5 +276,36 @@ describe("E6-T02 refusals", () => {
     const result = parseTaskReadme(bytes);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.refusal.reason).toBe("frontmatter/duplicate-key");
+  });
+});
+
+describe("E6-T02 disk writer leaves no partial output", () => {
+  it("stages in a sibling directory and moves atomically; a failing write leaves nothing", async () => {
+    const { mkdtempSync, existsSync, readdirSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { writeRenderedTaskFolder, readTaskFolderSnapshot } = await import("../io/disk.js");
+    const scratch = mkdtempSync(join(tmpdir(), "e6-t02-writer-"));
+    try {
+      const folder = parseOk(validFixture("E9-T02-complete"));
+      const target = join(scratch, "E9-T02-complete");
+      writeRenderedTaskFolder(target, renderTaskFolder(folder));
+      expect(taskFolderDigest(parseOk(readTaskFolderSnapshot(target)))).toBe(
+        taskFolderDigest(folder),
+      );
+      const clashing = {
+        folderName: "E9-T02-clash",
+        files: [
+          { path: "evidence/x", bytes: encoder.encode("a") },
+          { path: "evidence/x/y", bytes: encoder.encode("b") },
+          { path: "readme.md", bytes: encoder.encode("---\n") },
+        ],
+      };
+      expect(() => writeRenderedTaskFolder(join(scratch, "clash"), clashing)).toThrow();
+      expect(existsSync(join(scratch, "clash"))).toBe(false);
+      expect(readdirSync(scratch)).toEqual(["E9-T02-complete"]);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   });
 });

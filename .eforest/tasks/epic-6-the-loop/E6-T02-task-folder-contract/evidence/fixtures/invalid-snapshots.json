@@ -373,5 +373,121 @@
         "text": "a\n"
       }
     ]
+  },
+  {
+    "name": "case-collision-evidence-dir",
+    "folderName": "E9-T75-case-collision-evidence-dir",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T75\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/A/x.txt",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "evidence/a/y.txt",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-evidence-file-dir",
+    "folderName": "E9-T76-case-collision-evidence-file-dir",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T76\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/A",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "evidence/a/y.txt",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-work-dir",
+    "folderName": "E9-T77-case-collision-work-dir",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T77\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/A/x",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "work/a/y",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-work-file-dir",
+    "folderName": "E9-T78-case-collision-work-file-dir",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T78\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/A",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "work/a/y",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "root-evidence-file",
+    "folderName": "E9-T79-root-evidence-file",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T79\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence",
+        "kind": "file",
+        "text": "not a dir\n"
+      }
+    ]
+  },
+  {
+    "name": "root-work-file",
+    "folderName": "E9-T80-root-work-file",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T80\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work",
+        "kind": "file",
+        "text": "not a dir\n"
+      }
+    ]
   }
 ]

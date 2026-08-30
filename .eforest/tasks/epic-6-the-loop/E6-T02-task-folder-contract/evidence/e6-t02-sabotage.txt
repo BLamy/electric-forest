@@ -10,7 +10,7 @@
      × readme-level parse agrees with folder-level parse 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
  FAIL  packages/tasks/test/folder-contract.test.ts > E6-T02 refusals > re-executes every frozen refusal to a byte-identical transcript line
-AssertionError: expected [ …(64) ] to deeply equal [ …(64) ]
+AssertionError: expected [ …(70) ] to deeply equal [ …(70) ]
 - Expected
 + Received
 -   "{\"folderName\":\"E9-T10-duplicate-key\",\"name\":\"duplicate-key\",\"ok\":false,\"refusal\":{\"column\":1,\"line\":5,\"message\":\"duplicate key \\\"title\\\" (first at line 4)\",\"path\":\"readme.md\",\"reason\":\"frontmatter/duplicate-key\"},\"source\":\"disk\"}",
@@ -28,7 +28,7 @@ AssertionError: expected true to be false // Object.is equality
 - Expected
 + Received
  Test Files  1 failed (1)
-      Tests  4 failed | 12 passed (16)
+      Tests  4 failed | 13 passed (17)
 exit: 1
 #
 # $ node tools/verify/e6_t02_evidence.mjs

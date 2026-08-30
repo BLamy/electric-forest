@@ -7,7 +7,18 @@
  * a half-rendered folder behind. Kept outside `src/` so the parser core stays free of
  * `node:fs` (verify-E6-T01 asserts that).
  */
-import { mkdirSync, readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join } from "node:path";
 import type { RenderedTaskFolder, FolderEntry, TaskFolderSnapshot } from "../src/folder/index.js";
 
@@ -37,7 +48,11 @@ export function readTaskFolderSnapshot(dir: string): TaskFolderSnapshot {
   return { folderName: basename(dir), entries };
 }
 
-/** Write a rendered folder into `dir` (must not exist or be empty). Returns paths written. */
+/**
+ * Write a rendered folder into `dir` (must not exist or be an empty directory). Files are
+ * staged in a sibling temporary directory and moved into place with one rename, so a
+ * failure part-way leaves nothing at `dir`.
+ */
 export function writeRenderedTaskFolder(
   dir: string,
   rendered: RenderedTaskFolder,
@@ -47,12 +62,22 @@ export function writeRenderedTaskFolder(
       throw new Error(`writeRenderedTaskFolder: ${dir} exists and is not an empty directory`);
     }
   }
+  const parent = dirname(dir);
+  mkdirSync(parent, { recursive: true });
+  const staging = mkdtempSync(join(parent, `.${basename(dir)}.staging-`));
   const written: string[] = [];
-  for (const file of rendered.files) {
-    const target = join(dir, ...file.path.split("/"));
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, file.bytes);
-    written.push(file.path);
+  try {
+    for (const file of rendered.files) {
+      const target = join(staging, ...file.path.split("/"));
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, file.bytes, { flag: "wx" });
+      written.push(file.path);
+    }
+    if (existsSync(dir)) rmdirSync(dir);
+    renameSync(staging, dir);
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true });
+    throw error;
   }
   return written;
 }
