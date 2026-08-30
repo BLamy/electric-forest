@@ -797,7 +797,7 @@ _v-e6-t01:
 	@CI=true pnpm --filter @eforest/reducers build
 	@CI=true pnpm --filter @eforest/platform build
 	@CI=true pnpm --filter @eforest/cli build
-	@! rg -n "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process" packages/tasks/src
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process" packages/tasks/src; test $$? -eq 1
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test packages/reducers/src/index.test.ts packages/platform/test/tasks.test.ts
 	@node tools/verify/e6_t01_evidence.mjs
 	@bash tools/verify/self_check.sh
