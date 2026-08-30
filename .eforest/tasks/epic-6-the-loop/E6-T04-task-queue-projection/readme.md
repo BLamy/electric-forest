@@ -3,7 +3,7 @@ id: E6-T04
 epic: 6
 title: "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
 priority: 604
-status: in-progress
+status: implemented
 depends_on: [E6-T01]
 estimate: M
 capstone: false
@@ -292,3 +292,65 @@ queues.
 - SUITE: n/a until the refutation clears; the two cycle graphs are committed under
   `evidence/critic-2026-08-30/` for promotion into `fixtures/graphs/` with the fix.
 Commands: `node tools/verify/e6_t04_queue.mjs evidence/e6-t04-sources.jsonl --shuffle 424242 --out work/critic/rebuild`; `node evidence/critic-2026-08-30/attacks.mjs`; `pnpm exec vitest run --maxWorkers=1 packages/tasks/test/queue-{eligibility,fuzz,differential}.test.ts packages/platform/test/task-queue.test.ts` (12+3+2+2 green); `bash tools/verify/cold_clone.sh --keep verify-E6-T04` then in the clone `sed -i '' 's/GUARD = true/GUARD = false/' packages/tasks/src/queue/eligibility.ts && pnpm --filter @eforest/tasks build && node tools/verify/e6_t04_evidence.mjs`.
+
+### 2026-08-30 — builder — rework after critic run 1 (implemented, not yet verified)
+
+- Rework commit `8963610d` (on the refutation `3976628b` / in-progress `0d3434e7`). The
+  critic's P5 finding is closed as a general invariant, not a fixture patch:
+  `cycleMembers` (`packages/tasks/src/queue/eligibility.ts`) now runs Tarjan over the
+  **expanded** edge set — `dependencyEdges` resolves a bare `E<n>` reference to an edge to
+  every capstone of epic `n` — so a cycle through an epic reference (E1-T01 `[E2]`,
+  capstone E2-T01 `[E1-T01]`) and a capstone depending on its own epic (E1-T01 `[E1]`) are
+  both `dep/cycle` with every member listed. Independently, `evaluateQueue` adds
+  `dep/deadlock`: no active task, no startable task, and at least one `pending` member is
+  an invalid proof listing the pending ids, so `exhausted` is now reachable **only** when
+  every member is `verified` (the decision doc and README say so). Neither rule touches
+  ordering, dependency satisfaction, or the differential for valid graphs: the primary
+  fixture digest is unchanged (`1b4e09ec…75ec`) and the 40 generated-DAG Python parity
+  still holds (`E6_T04_DIFFERENTIAL graphs=52 mismatches=0`).
+- Fixtures: the critic's `bare-epic-cycle.json` and `self-epic-cycle.json` are promoted
+  verbatim into `evidence/fixtures/graphs/` (frozen `invalid {dep/cycle}`);
+  `exhausted-all-blocked` is re-frozen `valid: false` (it *was* a two-capstone cycle
+  through `E1`, decision now `invalid {dep/cycle [E1-T01, E2-T01]}`); a new
+  `deadlock-no-capstone-epic` (capstone E1-T01 `[E2]`, epic 2 verified but capstone-less,
+  E2-T02 `[E1]`) freezes a deadlock that is not a cycle (`dep/deadlock [E1-T01, E2-T02]`).
+  The new rule also exposed a wrong fixture of mine: `unlocks-section`'s capstone E1-T05
+  depended on `[E1]` — its own epic — which Python tolerates silently; it now depends on
+  `[E1-T04]` and its goldens (`queue.json`, `QUEUE.md`, `digest`, `python.json`) are
+  regenerated. Total 30 graphs (12 valid, 18 invalid); 12/14 violation reasons reached
+  from graphs (`queue/duplicate-id` and `catalog/corrupt` by direct tests, as before).
+  Python cannot represent an invalid proof — `build_queue.py` prints an empty "Next up"
+  on a cycle or deadlock — so invalid fixtures are held to the decision the spec requires
+  and are not Python-compared; the tuples still agree. Documented, together with the
+  critic's two non-refuting Python boundaries (float collapse of
+  `101.10000000000000001` vs `101.1`; ` #` titles truncated by `val.split("#")`), under
+  "Seams against `tools/build_queue.py`" in `packages/tasks/README.md`.
+- Tests/verifier: `queue-eligibility` gains "finds cycles that run through bare-epic edges
+  and refuses to call a deadlock exhausted" (the three cycle graphs, the deadlock graph, a
+  direct two-capstone epic cycle, and the invariant that every `exhausted` frozen graph is
+  all-verified); `queue-fuzz` asserts the same invariant over 150 cyclic-mode seeds;
+  `e6_t04_evidence.mjs` requires `dep/deadlock` and `bare-epic-cycle` to be present and
+  checks every frozen `exhausted` decision is all-verified. Focused suite 20 tests / 4 files.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint` (18 =
+  baseline), `pnpm typecheck` (41 = baseline), `pnpm test` in three foreground groups
+  (`vitest run --maxWorkers=1`: 47 + 33 + 44 = 124 files, 944 tests; exactly the 3
+  pre-existing failures — meadow README drift, `issues.test.ts` workflow keys, pr fuzz
+  timeout), `pnpm build` (green), `make verify-E6-T04` (exit 0, zero `SKIPPED:`), then
+  `bash tools/verify/cold_clone.sh verify-E6-T04` from pristine committed HEAD `8963610d`
+  (exit 0, zero `SKIPPED:`, `DEPENDENCY_INTEGRITY_OK`, `E6_T04_GRAPHS valid=12 invalid=18
+  reasons=12/14`, `E6_T04_DIFFERENTIAL graphs=52 mismatches=0`, `E6_T04_PERMUTATIONS 360`,
+  `MUTATION … EXPECTED-FAIL OK`, `verify-E6-T04: OK`, `PASSED from a pristine clone`).
+  Evidence hashes: `expected/bare-epic-cycle.queue.json` `efdae9d14f35227c…`,
+  `expected/self-epic-cycle.queue.json` `ffba48a2de37d796…`,
+  `expected/exhausted-all-blocked.queue.json` `b7a85c9a7bc3fe4f…`,
+  `expected/deadlock-no-capstone-epic.queue.json` `aaadafb14f993657…`;
+  `e6-t04-sources.jsonl`, `e6-t04-queue.*`, `e6-t04-proof.json`, `e6-t04-endpoint.txt`,
+  `e6-t04-sabotage.txt` unchanged from the run-1 claim.
+- Replay: N/A (queue projector/query contract; board rendering lands in E6-T06) +
+  mitigation: the frozen cycle/deadlock projections above, the unchanged rebuild digest,
+  the Python differential over every valid graph plus 40 generated DAGs, the cold-clone
+  run, and the sabotage transcript are the evidence layer.
+- What the rework demonstrates: no queue can decide "nothing left" while work remains —
+  a cycle, whether through task or epic references, and a deadlock of any other shape are
+  invalid proofs with their members named — and the fix changed nothing about what a
+  valid queue decides.
