@@ -130,3 +130,57 @@ kind, and bytes), so the same contract applies to a disk directory today
 The loop ledger keys that `work-queue` appends to some readmes in this repository
 (`verification_run_ceiling`, …) are outside the README contract and are refused as
 unknown keys; E6-T03/E6-T04 decide where that ledger lives as events.
+
+## Queue projection (`queue/v1`, E6-T04)
+
+`packages/tasks/src/queue/` derives a repository's ordered task queue from its streams
+alone: `projectQueue({ catalog, tasks })` replays the issue catalog
+`repo-issues:<org>/<repo>` and every task stream it lists under `tasks/v1`, orders the
+members, decides "what is next", and cites every source head it consumed. There is no
+queue table: `GET /api/repos/<org>/<repo>/queue` rebuilds the projection on every call
+and returns `{ streamId, offset, digest, projection, proof, markdown }`. Deleting every
+derived artifact (`queue.json`, `QUEUE.md`, `queue.digest`, `proof.json`) loses nothing
+that replay of the sources does not rebuild byte-for-byte, in any per-stream-consistent
+fetch order (`make verify-E6-T04` rebuilds in three fresh processes, two of them shuffled).
+
+- **Membership** is E6-T03's: an issue is a task once any `task.*` event exists on it or
+  it has ever carried the `task` or `capstone` label. A plain issue is not a task.
+- **Spec** (`epic`, `priority`, `title`, `depends_on`, `capstone`) is the E6-T02 task
+  readme carried in the issue body, parsed by `parseTaskReadme`. The body's frontmatter
+  `status` is text, never authority: **status is the replayed `tasks/v1` state**. The
+  readme's `capstone` flag must agree with the `capstone` label (`capstone/label-disagrees`).
+- **Order** is ascending numeric priority (exact decimal comparison, no floats), then id.
+- **Dependencies**: `E<n>-T<nn>` is satisfied only by a `verified` task; a bare `E<n>` only
+  by that epic's unique `verified` capstone (`E6_T04_BARE_EPIC_GUARD`). Everything else
+  blocks with an exact reason on the task: `dep/unverified` (+ the dependency's status),
+  `dep/missing`, `dep/duplicate-ref`, `dep/epic-missing`, `dep/epic-no-capstone`,
+  `dep/epic-multiple-capstones`, `dep/epic-capstone-unverified`, `status/not-startable`.
+- **Decision** (`projection.decision`): `eligible {nextEligible}` when no task is active;
+  `in-flight {inFlight}` while one task is `in-progress`/`implemented` (or `refuted` with
+  unmet dependencies) — no second task is ever eligible; `rework` when the one active
+  task is `refuted` with its dependencies verified (it is the next task, exactly as
+  `build_queue.py`'s current gate); `exhausted` when nothing can start; and `invalid
+{violations}` — deliberately without a `nextEligible` key — for cycles (`dep/cycle`,
+  every member listed), missing task/epic references, duplicate ids, more than one active
+  task, more than one capstone in an epic, a capstone that is not its epic's final task,
+  a completed epic with no capstone, a fractional priority without a `Queue-jump reason:`
+  line in the Context section, an unparseable spec, an id mismatch, or a corrupt catalog.
+- **Proof** (`queueProof(projection)`): `{ v, queue: {stream, offset}, heads[], tasks[]
+({id, status, capstone}: E6-T03's `ProjectProofTask`), finalCapstone, digest, decision }`.
+  `checkQueueProof(proof, sources)` re-derives from the current sources and refuses a
+  moved head as `queue/stale-proof` (naming the stream, the cited and the current offset)
+  before anything else, and a forged digest/decision as `queue/false-proof`;
+  `admitSelection(proof, id, sources)` additionally requires the fresh, valid proof to name
+  `id` as `nextEligible` (`queue/not-eligible`, `queue/invalid`).
+- **Markdown** (`renderQueueMarkdown`) is `QUEUE.md`-shaped: for a valid graph it is
+  byte-identical to what `tools/build_queue.py` writes for the same tasks, generator line
+  aside (links are the stream-side `epic-<n>/<id>/readme.md`). An invalid queue renders
+  its violations in place of the gate/next-up/unlocks sections.
+- **Differential**: `QueueGraph` fixtures (`evidence/fixtures/graphs/*.json`) feed both
+  implementations — `queueSourcesFromGraph` builds the streams, `graphReadme` the folder
+  tree — and `tools/verify/queue_differential.py` runs the unmodified `build_queue.py`
+  over that tree and normalizes its `QUEUE.md`; `normalizeQueueDecision` is the
+  TypeScript side. `generateQueueGraph(seed, {cyclic})` is the seeded graph fuzzer.
+
+Frozen artifacts and the verifier live in
+`.eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/` (`make verify-E6-T04`).

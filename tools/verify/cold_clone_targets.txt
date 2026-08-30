@@ -77,3 +77,4 @@ verify-E5-T03
 verify-E6-T01
 verify-E6-T02
 verify-E6-T03
+verify-E6-T04
