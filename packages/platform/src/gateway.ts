@@ -82,6 +82,7 @@ import {
   compareOffsets,
   isEvent,
   OFFSET_BEFORE_FIRST,
+  stateDigest,
   type Event,
   type Offset,
 } from "@eforest/protocol";
@@ -215,6 +216,20 @@ import {
 } from "./chat/validators.js";
 import { isOrgRosterStreamId, validateOrgRosterDispatch } from "./org/validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
+import {
+  ProjectRefusalError,
+  ProjectSchemaError,
+  ProjectUnknownActionError,
+  guardTaskLoopAction,
+  isProjectActionType,
+  isProjectStreamId,
+  projectInitialStateForStream,
+  projectProjectionBytes,
+  projectReducer,
+  projectStreamId,
+  type ProjectActorRole,
+  type ProjectRecordResolver,
+} from "./loop/index.js";
 import {
   TaskRefusalError,
   TaskSchemaError,
@@ -942,6 +957,74 @@ function taskEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset):
   }
 }
 
+/**
+ * E6-T03: offset-stamped, metadata-stripped records of any stream the loop guard or a
+ * queue proof needs to replay (`project:`, `repo-issues:`, `issue:`); `undefined` when
+ * the stream does not exist. A record the task/evidence normalizer rejects is passed
+ * through untouched so the target reducer can treat it as its own no-op.
+ */
+function projectRecordResolver(streams: StreamAdapter): ProjectRecordResolver {
+  return async (targetStreamId) => {
+    let values: readonly unknown[];
+    try {
+      values = await streams.read(targetStreamId);
+    } catch (error) {
+      if (isDurableNotFound(error)) return undefined;
+      throw error;
+    }
+    return values.map((record, index) => {
+      try {
+        return evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index));
+      } catch {
+        return record as Event;
+      }
+    });
+  };
+}
+
+/** Role of the dispatching credential: an owner/admin web session is human, a grant is an agent. */
+function projectActorRoleOf(decision: AuthzDecision | undefined): ProjectActorRole | undefined {
+  if (decision === undefined || !decision.allowed) return undefined;
+  switch (decision.basis) {
+    case "repo-owner":
+    case "org-owner":
+    case "membership:admin":
+      return "human";
+    case "grant:write":
+      return "agent";
+    default:
+      return undefined;
+  }
+}
+
+async function validateProjectDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+  actorRole: ProjectActorRole | undefined,
+): Promise<void> {
+  const normalized = records.map((record, index) =>
+    taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const nextOffset = offsetForOrdinal(normalized.length);
+  const action = taskEventWithoutServerMetadata(event, nextOffset);
+  const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
+  await actionValidators.validate(action, {
+    streamId,
+    state: normalized.reduce(projectReducer, projectInitialStateForStream(streamId)),
+    headOffset: normalized.at(-1)
+      ? ((normalized.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: normalized,
+    ...(typeof stampedActor === "string" ? { actor: stampedActor } : {}),
+    ...(actorRole === undefined ? {} : { actorRole }),
+    resolveRecords: projectRecordResolver(streams),
+  });
+}
+
 async function validateTaskDispatch(
   records: readonly unknown[],
   event: Event,
@@ -949,6 +1032,10 @@ async function validateTaskDispatch(
   actionValidators: ActionValidatorRegistry,
   streams: StreamAdapter,
 ): Promise<void> {
+  // E6-T03: the project guard decides first, at the project stream head, before any
+  // task-state validation — a paused, complete, or invalid loop refuses the claim,
+  // the verdict, the start, and the rework with the project's own reason.
+  await guardTaskLoopAction(streamId, event.type, projectRecordResolver(streams));
   const normalized = records.map((record, index) =>
     taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
   );
@@ -2287,6 +2374,12 @@ export class PlatformGateway {
       ) {
         throw new LabelUnknownActionError();
       }
+      if (
+        !namespaceEvent &&
+        isProjectActionType(parsed.event.type) !== isProjectStreamId(parsed.streamId)
+      ) {
+        throw new ProjectUnknownActionError();
+      }
       if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
         throw new PrUnknownActionError();
       }
@@ -2610,6 +2703,15 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
+          if (isProjectStreamId(parsed.streamId)) {
+            // E6-T03: the project stream is minted on its first event; an unwritten
+            // stream replays to the initial `building` state.
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
           if (isChatStreamId(parsed.streamId)) {
             // The catalog is minted on the first channel; a channel stream on its
             // first message (the catalog check above already proved it exists).
@@ -2638,6 +2740,16 @@ export class PlatformGateway {
             }
             if (isRepoLabelsStreamId(parsed.streamId)) {
               await validateLabelDispatch(records, stamped, parsed.streamId, this.actionValidators);
+            }
+            if (isProjectStreamId(parsed.streamId)) {
+              await validateProjectDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.streams,
+                projectActorRoleOf(repoDecision),
+              );
             }
             if (isChatStreamId(parsed.streamId)) {
               await validateChatDispatch(records, stamped, parsed.streamId, this.actionValidators);
@@ -2744,7 +2856,10 @@ export class PlatformGateway {
             error instanceof ChatRefusalError ||
             error instanceof TaskUnknownActionError ||
             error instanceof TaskSchemaError ||
-            error instanceof TaskRefusalError
+            error instanceof TaskRefusalError ||
+            error instanceof ProjectUnknownActionError ||
+            error instanceof ProjectSchemaError ||
+            error instanceof ProjectRefusalError
           ) {
             throw error;
           }
@@ -2854,7 +2969,8 @@ export class PlatformGateway {
         error instanceof LabelUnknownActionError ||
         error instanceof EvidenceUnknownActionError ||
         error instanceof ChatUnknownActionError ||
-        error instanceof TaskUnknownActionError
+        error instanceof TaskUnknownActionError ||
+        error instanceof ProjectUnknownActionError
       ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
@@ -2866,9 +2982,15 @@ export class PlatformGateway {
         error instanceof LabelSchemaError ||
         error instanceof EvidenceSchemaError ||
         error instanceof ChatSchemaError ||
-        error instanceof TaskSchemaError
+        error instanceof TaskSchemaError ||
+        error instanceof ProjectSchemaError
       ) {
         return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof ProjectRefusalError) {
+        return json(409, {
+          error: { class: "validator-rejected", reason: error.reason, project: error.at },
+        });
       }
       if (error instanceof ChatRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
@@ -3240,16 +3362,29 @@ export class PlatformGateway {
     const applicationEvents = segments.length === 5 && segments[4] === "events";
     const boardRoute = segments.length === 4 && segments[3] === "board";
     const pullsRoute = segments.length === 4 && segments[3] === "pulls";
+    const projectRoute = segments.length === 4 && segments[3] === "project";
     const blobRoute = segments.length >= 6 && segments[4] === "blob";
     if (
       (!applicationEvents &&
         homeRegion === undefined &&
         !blobRoute &&
         !boardRoute &&
-        !pullsRoute) ||
+        !pullsRoute &&
+        !projectRoute) ||
       segments.some((s) => s === "")
     ) {
       return failure(404, "invalid_request", "not_found");
+    }
+    if (projectRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryProjectRoute(request, org, repo, trustedContext);
     }
     if (boardRoute) {
       let org: string;
@@ -3757,6 +3892,48 @@ export class PlatformGateway {
       ),
       identityOffset: decision.identityOffset,
       basis: decision.basis,
+    });
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/project` (E6-T03): the replayed `project/v1` state of
+   * `project:<org>/<repo>`, its digest, and the exact `.eforest/project.json` bytes it
+   * projects to. Read-only; the only way to change it is a dispatch on that stream.
+   */
+  private async repositoryProjectRoute(
+    request: Request,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    const streamId = projectStreamId(org, repo);
+    const records = (await projectRecordResolver(this.streams)(streamId)) ?? [];
+    const state = records.reduce(projectReducer, projectInitialStateForStream(streamId));
+    return json(200, {
+      streamId,
+      offset: state.head,
+      digest: stateDigest(state),
+      state,
+      projection: projectProjectionBytes(state),
     });
   }
 

@@ -1,0 +1,17 @@
+E6_T03_SABOTAGE sentinel=E6_T03_INVALID_LOOP_GUARD mutation='invalid_loop arm of guardLoopAction returns undefined'
+     × holds every state x role x action tuple to the frozen matrix 2929ms
+     × covers every frozen refusal reason and keeps the pure guard closed 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: invalid_loop/human/launch: {"ok":true,"actor":"human-rowan","identityOffset":"-1","offset":"0000000000000000_0000000000000001"}: expected 202 to be 409 // Object.is equality
+AssertionError: expected undefined to be 'project/invalid-loop' // Object.is equality
+      Tests  2 failed | 4 passed (6)
+--- evidence script against sabotaged build ---
+E6_T03_PROJECT_LOG stream=project:maple/loom events=7
+E6_T03_DIGEST add332a3ba1cff9a28f11cca935e2a68a45e8deef7a123e73a9eae17ea32fe48
+E6_T03_PROJECTION sha256=bdc7c02e079b0035466f7d5eea7117331f8e3556a33615652802be50c31693dc bytes=475
+E6_T03_REPLAY processes=2 digest=add332a3ba1cff9a28f11cca935e2a68a45e8deef7a123e73a9eae17ea32fe48 projection-byte-identical=true
+E6_T03_MATRIX tuples=72 refused=54 admitted=18 extra-refusals=12 head-identical=true
+E6_T03_PROOFS forged=13 accepted=2 reasons-covered=12/12
+E6_T03_PROJECTION_FILE tampered=overwritten deleted=restored guard-reads-file=false
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+evidence-exit=
