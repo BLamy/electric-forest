@@ -164,3 +164,14 @@ strings.
   `pnpm@10.15.0` (the committed lockfile's `patchedDependencies` format predated it and
   `--frozen-lockfile` refused on a pristine clone of main); `corepack enable` was run to
   expose `pnpm` for `cold_clone.sh`.
+
+### 2026-08-30 — builder — cold-clone verification
+
+- `bash tools/verify/cold_clone.sh verify-E6-T01` passed from pristine committed HEAD
+  `9a11b336` (exit 0, zero `SKIPPED:` lines, `DEPENDENCY_INTEGRITY_OK`): frozen-lockfile
+  hydration from the lockfile-verified store, package builds, purity grep, 5 focused test
+  files / 46 tests, `E6_T01_DIGEST e1ac70ae…d0be`, two-process replay and property
+  corpus byte-identical, eight `MUTATION … EXPECTED-FAIL OK` sentinels, `self_check`,
+  `verify-list`, and `verify-E6-T01: OK`. Replay: N/A (task reducer and dispatch
+  contract; no browser surface in this task) + mitigation as above. Status stays
+  `implemented` for a fresh critic.
