@@ -5,6 +5,7 @@
     { "path": "./packages/protocol/tsconfig.build.json" },
     { "path": "./packages/evidence/tsconfig.build.json" },
     { "path": "./packages/issues/tsconfig.build.json" },
+    { "path": "./packages/tasks/tsconfig.build.json" },
     { "path": "./packages/pr/tsconfig.build.json" },
     { "path": "./packages/cli/tsconfig.build.json" },
     { "path": "./packages/server/tsconfig.build.json" },

@@ -6,6 +6,7 @@ export {
   type IssueActionType,
 } from "@eforest/reducers";
 import { isIssueActionType, isIssueEventShape, isIssueStreamId } from "@eforest/reducers";
+import { isTaskActionType } from "@eforest/tasks";
 import { jsonTokenAtPath } from "./json-source.js";
 
 export const ISSUE_MAX_DISPATCH_BYTES = 10 * 1024 * 1024;
@@ -32,7 +33,7 @@ export function parseJsonWithIssueEnvelopeSource(
     typeof root?.streamId === "string" &&
     isIssueStreamId(root.streamId) &&
     typeof event?.type === "string" &&
-    isIssueActionType(event.type)
+    (isIssueActionType(event.type) || isTaskActionType(event.type))
       ? jsonTokenAtPath(source, ["event", "payload", "v"])
       : undefined;
   return {

@@ -1,5 +1,5 @@
 {
-  "name": "@eforest/reducers",
+  "name": "@eforest/tasks",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,15 +10,12 @@
     }
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json"
+    "build": "tsc -b tsconfig.build.json",
+    "test": "cd ../.. && vitest run packages/tasks/test"
   },
   "dependencies": {
     "@eforest/evidence": "workspace:*",
     "@eforest/issues": "workspace:*",
-    "@eforest/meadow": "workspace:*",
-    "@eforest/pr": "workspace:*",
-    "@eforest/protocol": "workspace:*",
-    "@eforest/streamfs": "workspace:*",
-    "@eforest/tasks": "workspace:*"
+    "@eforest/protocol": "workspace:*"
   }
 }

@@ -26,7 +26,8 @@
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/reducers": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
+    "@eforest/streamfs": "workspace:*",
+    "@eforest/tasks": "workspace:*"
   },
   "devDependencies": {
     "@eforest/server": "workspace:*"

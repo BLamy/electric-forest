@@ -216,6 +216,14 @@ import {
 import { isOrgRosterStreamId, validateOrgRosterDispatch } from "./org/validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 import {
+  TaskRefusalError,
+  TaskSchemaError,
+  TaskUnknownActionError,
+  isTaskActionType,
+  taskInitialStateForStream,
+  taskReducer,
+} from "@eforest/tasks";
+import {
   IssueBoardMaterializer,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
@@ -549,6 +557,25 @@ async function validateIssueDispatch(
   issueSource?: IssueEnvelopeSource,
   streams?: StreamAdapter,
 ): Promise<Offset | undefined> {
+  const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
+  if (identity === null) throw new IssueSchemaError();
+  if (isTaskActionType(event.type)) {
+    if (streams === undefined) throw new TaskUnknownActionError();
+    await validateTaskDispatch(records, event, streamId, actionValidators, streams);
+    try {
+      await issueBoards.assertIssueDeclared(
+        identity[1]!,
+        identity[2]!,
+        streamId,
+        offsetForOrdinal(0),
+      );
+    } catch (error) {
+      throw new IssueRefusalError(
+        error instanceof Error ? error.message : "repo-issues/migration-required",
+      );
+    }
+    return undefined;
+  }
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
   const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
@@ -563,8 +590,6 @@ async function validateIssueDispatch(
     ...(issueSource === undefined ? {} : { issueSource }),
   });
   if (streams !== undefined) await validateIssueLinkCitation(streams, streamId, action);
-  const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
-  if (identity === null) throw new IssueSchemaError();
   if (action.type === "issue.labeled" || action.type === "issue.unlabeled") {
     const labels = await issueBoards.labelsForRepo(identity[1]!, identity[2]!);
     const labelId = (action.payload as { readonly label: string }).label;
@@ -905,6 +930,53 @@ async function validateEvidenceDispatch(
         records: targetRecords,
         ...(state === undefined ? {} : { state }),
       };
+    },
+  });
+}
+
+function taskEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): Event {
+  try {
+    return evidenceEventWithoutServerMetadata(value, fallbackOffset);
+  } catch {
+    throw new TaskSchemaError();
+  }
+}
+
+async function validateTaskDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+): Promise<void> {
+  const normalized = records.map((record, index) =>
+    taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const nextOffset = offsetForOrdinal(normalized.length);
+  const action = taskEventWithoutServerMetadata(event, nextOffset);
+  const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
+  await actionValidators.validate(action, {
+    streamId,
+    state: normalized.reduce(taskReducer, taskInitialStateForStream(streamId)),
+    headOffset: normalized.at(-1)
+      ? ((normalized.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: normalized,
+    ...(typeof stampedActor === "string" ? { actor: stampedActor } : {}),
+    resolveStream: async (targetStreamId): Promise<EvidenceResolvedStream | undefined> => {
+      if (!isEvidenceStreamId(targetStreamId)) return undefined;
+      let values: readonly unknown[];
+      try {
+        values = await streams.read(targetStreamId);
+      } catch (error) {
+        if (isDurableNotFound(error)) return undefined;
+        throw error;
+      }
+      const targetRecords = values.map((record, index) =>
+        evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+      );
+      return { records: targetRecords, state: reduceEvidenceState(targetStreamId, targetRecords) };
     },
   });
 }
@@ -2203,6 +2275,13 @@ export class PlatformGateway {
       }
       if (
         !namespaceEvent &&
+        isTaskActionType(parsed.event.type) &&
+        !isIssueStreamId(parsed.streamId)
+      ) {
+        throw new TaskUnknownActionError();
+      }
+      if (
+        !namespaceEvent &&
         isLabelActionType(parsed.event.type) &&
         !isRepoLabelsStreamId(parsed.streamId)
       ) {
@@ -2269,8 +2348,21 @@ export class PlatformGateway {
       // that recovery shortcut, after authz and unknown-action classification;
       // the lane still owns full envelope and workflow validation before append.
       if (isIssueStreamId(parsed.streamId)) {
-        if (!isIssueActionType(parsed.event.type)) throw new IssueUnknownActionError();
+        if (!isIssueActionType(parsed.event.type) && !isTaskActionType(parsed.event.type))
+          throw new IssueUnknownActionError();
         if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
+      }
+      if (isIssueStreamId(parsed.streamId) && isTaskActionType(parsed.event.type)) {
+        // A loop event needs an opened task: refuse before the writer lane touches a
+        // stream that does not exist yet, with the same reason replay would give.
+        let existing: readonly unknown[];
+        try {
+          existing = await this.streams.read(parsed.streamId);
+        } catch (error) {
+          if (isDurableNotFound(error)) throw new TaskRefusalError("task/not-opened");
+          throw error;
+        }
+        if (existing.length === 0) throw new TaskRefusalError("task/not-opened");
       }
       if (isPrStreamId(parsed.streamId)) {
         if (parsed.event.type === "pr.merge") {
@@ -2649,7 +2741,10 @@ export class PlatformGateway {
             error instanceof EvidenceRefusalError ||
             error instanceof ChatUnknownActionError ||
             error instanceof ChatSchemaError ||
-            error instanceof ChatRefusalError
+            error instanceof ChatRefusalError ||
+            error instanceof TaskUnknownActionError ||
+            error instanceof TaskSchemaError ||
+            error instanceof TaskRefusalError
           ) {
             throw error;
           }
@@ -2758,7 +2853,8 @@ export class PlatformGateway {
         error instanceof PrUnknownActionError ||
         error instanceof LabelUnknownActionError ||
         error instanceof EvidenceUnknownActionError ||
-        error instanceof ChatUnknownActionError
+        error instanceof ChatUnknownActionError ||
+        error instanceof TaskUnknownActionError
       ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
@@ -2769,7 +2865,8 @@ export class PlatformGateway {
         error instanceof PrMergeSchemaError ||
         error instanceof LabelSchemaError ||
         error instanceof EvidenceSchemaError ||
-        error instanceof ChatSchemaError
+        error instanceof ChatSchemaError ||
+        error instanceof TaskSchemaError
       ) {
         return json(422, { error: { class: "schema-violation" } });
       }
@@ -2795,6 +2892,9 @@ export class PlatformGateway {
         return json(409, { error: { class: "validator-rejected", reason: error.code } });
       }
       if (error instanceof EvidenceRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof TaskRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {

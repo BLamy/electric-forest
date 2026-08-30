@@ -12,6 +12,7 @@ import {
   issueInitialStateForStream,
   isIssueBoardReplacementEvent,
   isIssueEventShape,
+  isIssueSiblingEvent,
   labelInitialState,
   reduceIssueApplicationEvent,
   reduceIssueLog,
@@ -305,34 +306,39 @@ export class IssueBoardMaterializer {
       heads.set(streamId, offset);
     } else {
       const clean = acceptedIssueEvent(cleanRecord(event));
-      if (!isIssueEventShape(clean)) return this.coldRebuild(org, repo);
       const declaredOffset = declarations.get(streamId);
-      if (clean.type === "issue.opened") {
-        if (declaredOffset !== undefined && declaredOffset !== offset)
-          return this.coldRebuild(org, repo);
-        if (declaredOffset === undefined) {
-          if (catalogOffset === undefined) return this.coldRebuild(org, repo);
-          declarations.set(streamId, offset);
-          heads.set(streamId, OFFSET_BEFORE_FIRST);
-        }
-        if (catalogOffset !== undefined) {
-          const catalogStream = repoIssuesStreamId(org, repo);
-          const previousCatalogHead = heads.get(catalogStream) ?? OFFSET_BEFORE_FIRST;
-          if (
-            catalogOffset !== previousCatalogHead &&
-            !isSingleAdvance(previousCatalogHead, catalogOffset)
-          )
+      if (isIssueSiblingEvent(clean.type)) {
+        if (declaredOffset === undefined) return this.coldRebuild(org, repo);
+        heads.set(streamId, offset);
+      } else {
+        if (!isIssueEventShape(clean)) return this.coldRebuild(org, repo);
+        if (clean.type === "issue.opened") {
+          if (declaredOffset !== undefined && declaredOffset !== offset)
             return this.coldRebuild(org, repo);
-          heads.set(catalogStream, catalogOffset);
+          if (declaredOffset === undefined) {
+            if (catalogOffset === undefined) return this.coldRebuild(org, repo);
+            declarations.set(streamId, offset);
+            heads.set(streamId, OFFSET_BEFORE_FIRST);
+          }
+          if (catalogOffset !== undefined) {
+            const catalogStream = repoIssuesStreamId(org, repo);
+            const previousCatalogHead = heads.get(catalogStream) ?? OFFSET_BEFORE_FIRST;
+            if (
+              catalogOffset !== previousCatalogHead &&
+              !isSingleAdvance(previousCatalogHead, catalogOffset)
+            )
+              return this.coldRebuild(org, repo);
+            heads.set(catalogStream, catalogOffset);
+          }
+        } else if (declaredOffset === undefined) {
+          return this.coldRebuild(org, repo);
         }
-      } else if (declaredOffset === undefined) {
-        return this.coldRebuild(org, repo);
+        const previous = issues.get(streamId) ?? issueInitialStateForStream(streamId);
+        const next = reduceIssueApplicationEvent(previous, clean);
+        if (next === previous) return this.coldRebuild(org, repo);
+        issues.set(streamId, next);
+        heads.set(streamId, offset);
       }
-      const previous = issues.get(streamId) ?? issueInitialStateForStream(streamId);
-      const next = reduceIssueApplicationEvent(previous, clean);
-      if (next === previous) return this.coldRebuild(org, repo);
-      issues.set(streamId, next);
-      heads.set(streamId, offset);
     }
 
     const nextState: MaterializedRepoState = {

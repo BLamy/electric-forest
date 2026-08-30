@@ -1,7 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist/src",
     "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo",
     "types": ["node"]
   },
@@ -10,12 +13,6 @@
   "references": [
     { "path": "../evidence/tsconfig.build.json" },
     { "path": "../issues/tsconfig.build.json" },
-    { "path": "../meadow/tsconfig.build.json" },
-    { "path": "../pr/tsconfig.build.json" },
-    { "path": "../protocol/tsconfig.build.json" },
-    { "path": "../client/tsconfig.build.json" },
-    { "path": "../identity/tsconfig.build.json" },
-    { "path": "../reducers/tsconfig.build.json" },
-    { "path": "../tasks/tsconfig.build.json" }
+    { "path": "../protocol/tsconfig.build.json" }
   ]
 }
