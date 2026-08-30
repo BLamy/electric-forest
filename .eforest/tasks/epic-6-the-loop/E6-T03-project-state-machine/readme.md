@@ -3,7 +3,7 @@ id: E6-T03
 epic: 6
 title: "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 priority: 603
-status: in-progress
+status: implemented
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -261,3 +261,74 @@ frozen timestamps.
 - SUITE: n/a until the two refutations clear; the critic harness and logs stay in
   `work/critic/` for the rework.
 Commands: `node work/critic/digest.mjs`; `make verify-E6-T03`; `bash tools/verify/cold_clone.sh verify-E6-T03`; `node work/critic/attack.mjs`; `node work/critic/attack2.mjs`; `node work/critic/authz.mjs`; worktree mutants + `make verify-E6-T03` / `vitest run packages/platform/test/project-state.test.ts`.
+
+### 2026-08-30 — builder — rework after critic run 1 (implemented, not yet verified)
+
+- Rework commit `f557cb72` (on top of the refuted `58d7132c`/`99ef1c33`; verdict
+  `39a02863`). Both refutations are closed by general invariants, not special cases:
+- **Cross-process fence (P2).** The guard decision for a task loop event is no longer an
+  unfenced read. Before `task.started` / `task.claimed` / `task.refuted` /
+  `task.rework-started` / `task.verified` is appended, the door re-decides against a
+  fresh replay of `project:<org>/<repo>` and *commits* that decision by
+  compare-and-appending a `project.fenced` record (`project-guard.ts`
+  `fenceTaskLoopAction`, appender in `gateway.ts` `projectFenceAppender`) at the project
+  stream's durable sequence (`Stream-Seq`), bound to the task stream and the exact offset
+  the event will occupy (`payload.target`). A pause — from any gateway process — that
+  wins that sequence makes the fence conflict; the door re-reads and refuses with the
+  winning state's reason (`project/paused`, …). The project stream is thus one linear
+  history in which no fence, hence no task loop event, follows an accepted pause at that
+  pause's sequence; eight lost races fail closed as `project/fence-contention`. The task
+  event's payload is untouched (E6-T01 shapes, `isEvent`, and the writer lane's
+  idempotent-recovery compare all forbid an extra field; the E6-T01 fixture digest is
+  unchanged), and the binding lives on the project stream instead — documented in
+  `packages/platform/src/loop/README.md`. Fences replay as `ProjectState.fences` and
+  never move `head`, so `expectedOffset` citations stay stable for humans. Clients cannot
+  dispatch `project.fenced` (404).
+- **Non-shrinkable proof universe (P4).** `isLoopTask` / `expectedProofTask`
+  (`project-transition.ts`) now derive membership from the task stream's append-only
+  history: an issue is a task once any `task.*` event exists on it or once it has *ever*
+  carried the `task` or `capstone` label; `issue.unlabeled` retracts nothing; capstone is
+  likewise ever-labeled. A plain issue never started and never labeled is not a task and
+  does not block completion (the critic's option 2, chosen so bug reports never gate a
+  project). Omitting a started or ever-labeled task, or citing an issue outside the
+  universe, is `project/false-proof`.
+- Hardening closed: whitespace-only `statusReason` → 422; `expectedOffset` outside the
+  strict `-1` / 16+16-digit grammar → 422; a launch citing `agent-run:<other-org>/…` →
+  409 `project/foreign-run`; `GET /api/repos/<Org>/<repo>/project` → 404 (name checked
+  before any state).
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (18 = baseline), `pnpm typecheck` (41 = baseline), tests in foreground file groups
+  (single run exceeds the session budget on this host): 119/120 files exercised — 116
+  passed; `issues.test.ts` and `meadow/links.plan.test.ts` are the known baseline
+  failures; `pr-property.fuzz.test.ts` is the known baseline timeout and was not re-run;
+  `project-state.test.ts` 7/7, `evidence-contract.test.ts` 4/4; `pnpm build` green;
+  `make verify-E6-T03` exit 0; `bash tools/verify/cold_clone.sh verify-E6-T03` PASSED
+  from pristine `f557cb72` (exit 0, zero `SKIPPED:`, `DEPENDENCY_INTEGRITY_OK`).
+- Evidence (regenerated, frozen, hashed before/after by the verifier):
+  `e6-t03-project.jsonl` — now 13 events: six fences left by the two seeded tasks
+  (offsets 0–5) then the 7-event lifecycle (6–12); state digest
+  `9140f6711188cbffac0e3e79d79ac95b2cecd4563fac58d203a838472376b79b`, `fences: 6`;
+  `e6-t03-project.json` sha256 `8a308f5beeafcc9dd40a56c5dccedd1eaf0027b836d14841aaa2915bee209edd`
+  (475 bytes); `e6-t03-matrix.txt` — 72 tuples (54 refused with identical heads, 18
+  admitted; each admitted task loop event now leaves exactly one `project.fenced`
+  record bound to its receipt offset) + 15 binding/shape/family refusals (the three
+  hardening rows added); `e6-t03-proofs.txt` — 15 forgeries refused incl.
+  `unlabel-then-omit-pending` (agent retracts the `task` label, proof still false) and
+  `cites-plain-issue`, true proof accepted twice; new suite test "never appends a task
+  loop event after an accepted pause across two gateway processes": gateway B with a
+  120 ms delayed project-stream read races A's pause over 8 rounds —
+  `E6_T03_XGATEWAY_RACE` 8× `pause-then-refused`, zero fences after the pause index
+  (also green in the cold clone); verifier `E6_T03_FENCE`: an appender that always loses
+  refuses `project/fence-contention` after exactly 8 attempts, a pause landing mid-race
+  is re-decided `project/paused`, the fence cites the task stream + target offset;
+  three `MUTATION … EXPECTED-FAIL OK` sentinels (fence `action`, launch `run`, final
+  transition `statusReason`); `e6-t03-sabotage.txt` regenerated (invalid_loop arm
+  removed → `invalid_loop/human/launch` 202-vs-409, verifier red).
+- Replay: N/A (server state/guard contract; the live project controls and badge
+  integration land in E6-T06) + mitigation: the two-gateway race transcript, fence
+  records on the frozen log, the real-HTTP matrix and forged-proof transcripts, and the
+  two-process replay digests above.
+- What the rework demonstrates: with N gateways on the same streams the pause and the
+  claim are ordered by one durable sequence, so "a launched run after the accepted pause
+  offset" is impossible by construction, not by timing; and the completion universe is a
+  function of append-only history that no proving credential can retract.
