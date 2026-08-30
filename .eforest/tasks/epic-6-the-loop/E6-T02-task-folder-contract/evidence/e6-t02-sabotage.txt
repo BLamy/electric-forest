@@ -1,0 +1,55 @@
+# Sabotage sentinel (critic attack 5): E6_T02_DUPLICATE_KEY_GUARD set to false in packages/tasks/src/folder/parse.ts,
+# packages/tasks rebuilt, then the two verify-E6-T02 steps that hold the committed ambiguous fixture
+# (evidence/fixtures/invalid/duplicate-key/E9-T10-duplicate-key, `title:` twice) were re-run. Both go red:
+# the parser now accepts the fixture (last key wins), so the frozen refusal transcript no longer matches.
+#
+# $ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/tasks/test/folder-contract.test.ts
+     × re-executes every frozen refusal to a byte-identical transcript line 
+     × pins the reason for the attack list explicitly 
+     × a refusal renders nothing: the parse result carries no folder and no rendered bytes 
+     × readme-level parse agrees with folder-level parse 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/tasks/test/folder-contract.test.ts > E6-T02 refusals > re-executes every frozen refusal to a byte-identical transcript line
+AssertionError: expected [ …(70) ] to deeply equal [ …(70) ]
+- Expected
++ Received
+-   "{\"folderName\":\"E9-T10-duplicate-key\",\"name\":\"duplicate-key\",\"ok\":false,\"refusal\":{\"column\":1,\"line\":5,\"message\":\"duplicate key \\\"title\\\" (first at line 4)\",\"path\":\"readme.md\",\"reason\":\"frontmatter/duplicate-key\"},\"source\":\"disk\"}",
++   "{\"folderName\":\"E9-T10-duplicate-key\",\"name\":\"duplicate-key\",\"ok\":true,\"refusal\":null,\"source\":\"disk\"}",
+ FAIL  packages/tasks/test/folder-contract.test.ts > E6-T02 refusals > pins the reason for the attack list explicitly
+AssertionError: duplicate-key: expected true to be false // Object.is equality
+- Expected
++ Received
+ FAIL  packages/tasks/test/folder-contract.test.ts > E6-T02 refusals > a refusal renders nothing: the parse result carries no folder and no rendered bytes
+AssertionError: expected true to be false // Object.is equality
+- Expected
++ Received
+ FAIL  packages/tasks/test/folder-contract.test.ts > E6-T02 refusals > readme-level parse agrees with folder-level parse
+AssertionError: expected true to be false // Object.is equality
+- Expected
++ Received
+ Test Files  1 failed (1)
+      Tests  4 failed | 13 passed (17)
+exit: 1
+#
+# $ node tools/verify/e6_t02_evidence.mjs
+E6_T02_FIXTURES entries=54 sha256-list-identical=true
+E6_T02_GOLDEN E9-T01 digest=e72bbecc02d37cc29a18042157f63b52d9c1fff9cf62cc8caa8d8632a707b5bb files=1 evidence=0 byte-identical=true
+E6_T02_GOLDEN E9-T02 digest=0b5465ef21a3762edcd2628c9537dc65ecc1097be5e3e3f040a48a940e2a74e3 files=8 evidence=7 byte-identical=true
+E6_T02_GOLDEN E9-T03 digest=a2c0c31aa8e7546404c476b638ef7a8ebaeaae7ba8bf27ed8082ac5a33406833 files=1 evidence=0 byte-identical=true
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: refusal transcript drifted
++ actual - expected
+... Skipped lines
+
+  [
+    'E6_T02_REFUSAL {"folderName":"E9-T12-alias","name":"alias","ok":false,"refusal":{"column":8,"line":4,"message":"anchors and aliases are refused","path":"readme.md","reason":"frontmatter/anchor"},"source":"disk"}',
+    'E6_T02_REFUSAL {"folderName":"E9-T11-anchor","name":"anchor","ok":false,"refusal":{"column":8,"line":4,"message":"anchors and aliases are refused","path":"readme.md","reason":"frontmatter/anchor"},"source":"disk"}',
+    'E6_T02_REFUSAL {"folderName":"E9-T37-bad-dependency","name":"bad-dependency","ok":false,"refusal":{"column":22,"line":7,"message":"dependency \\"main\\" is not a task or epic id","path":"readme.md","reason":"frontmatter/invalid-value"},"source":"disk"}',
+    'E6_T02_REFUSAL {"folderName":"E9-T39-bad-escape","name":"bad-escape","ok":false,"refusal":{"column":13,"line":4,"message":"unsupported escape \\\\t (only \\\\\\" and \\\\\\\\)","path":"readme.md","reason":"frontmatter/invalid-value"},"source":"disk"}',
+...
+    'E6_T02_REFUSAL {"folderName":"E9-T36-duplicate-dependency","name":"duplicate-dependency","ok":false,"refusal":{"column":22,"line":7,"message":"duplicate dependency E1-T01","path":"readme.md","reason":"frontmatter/invalid-value"},"source":"disk"}',
++   'E6_T02_REFUSAL {"folderName":"E9-T10-duplicate-key","name":"duplicate-key","ok":true,"refusal":null,"source":"disk"}',
+exit: 1

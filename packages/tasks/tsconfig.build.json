@@ -3,16 +3,22 @@
   "compilerOptions": {
     "composite": true,
     "noEmit": false,
-    "rootDir": "src",
-    "outDir": "dist/src",
+    "rootDir": ".",
+    "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "io/**/*.ts"],
   "exclude": ["test/**/*.ts", "dist"],
   "references": [
-    { "path": "../evidence/tsconfig.build.json" },
-    { "path": "../issues/tsconfig.build.json" },
-    { "path": "../protocol/tsconfig.build.json" }
+    {
+      "path": "../evidence/tsconfig.build.json"
+    },
+    {
+      "path": "../issues/tsconfig.build.json"
+    },
+    {
+      "path": "../protocol/tsconfig.build.json"
+    }
   ]
 }

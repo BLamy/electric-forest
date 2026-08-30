@@ -5,6 +5,6 @@
     "outDir": "dist",
     "types": ["node", "vitest"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "io/**/*.ts", "test/**/*.ts"],
   "exclude": ["dist"]
 }
