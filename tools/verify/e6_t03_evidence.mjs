@@ -298,7 +298,7 @@ try {
   for (const reason of PROJECT_REFUSAL_REASONS.filter((r) => r !== "project/fence-contention"))
     assert.ok(reasonsSeen.has(reason), `uncovered ${reason}`);
   console.log(
-    `E6_T03_PROOFS forged=${forged.length} accepted=${trueProofs.length} reasons-covered=${reasonsSeen.size}/${PROJECT_REFUSAL_REASONS.length}`,
+    `E6_T03_PROOFS forged=${forged.length} accepted=${trueProofs.length} reasons-covered=${[...reasonsSeen].filter((r) => r.startsWith("project/")).length}/${PROJECT_REFUSAL_REASONS.length - 1}`,
   );
 
   // 5. The projection file is output only: tamper it, delete it, replay overwrites it.
