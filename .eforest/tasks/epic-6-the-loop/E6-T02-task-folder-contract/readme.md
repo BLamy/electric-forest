@@ -3,7 +3,7 @@ id: E6-T02
 epic: 6
 title: "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 priority: 602
-status: in-progress
+status: implemented
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -291,3 +291,39 @@ anchors, and non-flat values other than inline `depends_on` are refused.
 - SUITE: n/a until the two refutations clear; on rework promote the four case-collision
   and two root-file snapshots into `invalid-snapshots.json` so the transcript pins them.
 Commands: `bash tools/verify/cold_clone.sh verify-E6-T02`; `node tools/verify/e6_t02_property.mjs | shasum -a 256`; `node work/critic-attacks.mjs`; `node work/critic-disk.mjs`; `node work/critic-fm2.mjs`; worktree sabotages A–E via `node tools/verify/e6_t02_evidence.mjs`; `pnpm lint`/`typecheck`/`format:check`.
+
+### 2026-08-30 — builder — rework after critic run 1, implemented, not yet verified
+
+- Rework commit `59785260` (branch `e6-t02-task-folder-contract`). Both refutations
+  addressed in `packages/tasks/src/folder/parse.ts`:
+  - **P-case-collision**: the case-fold check now runs over every node of every entry
+    path — each directory prefix and the leaf — in `work/` and `evidence/` alike, so
+    `evidence/A/x.txt` + `evidence/a/y.txt`, the file-vs-directory variant `evidence/A` +
+    `evidence/a/y.txt`, and the `work/` twins are all refused `paths/case-collision` with
+    the message naming both colliding nodes (`"evidence/a" collides with "evidence/A"`).
+  - **P-root-file**: a regular file (or anything not a directory) named `evidence` or
+    `work` at the folder root is refused `folder/unexpected-entry` ("evidence must be a
+    directory"); no entry can carry an empty path any more.
+  - `packages/tasks/io/disk.ts` `writeRenderedTaskFolder` now stages every file
+    (`flag: "wx"`) into a sibling temporary directory and moves it into place with one
+    `rename`, removing the staging directory on any failure — an accepted-then-EEXIST
+    path can no longer leave a half-rendered folder. New test in
+    `folder-contract.test.ts` writes E9-T02 to scratch (digest equal) and proves a
+    clashing file set throws and leaves no target directory behind.
+- Fixtures: the six cases the critic demanded (`case-collision-evidence-dir`,
+  `case-collision-evidence-file-dir`, `case-collision-work-dir`,
+  `case-collision-work-file-dir`, `root-evidence-file`, `root-work-file`) added to
+  `evidence/fixtures/invalid-snapshots.json` and pinned by reason and position in the
+  test; `e6-t02-refusals.txt` regenerated (70 lines, all `ok:false`, all 37 reasons still
+  covered); `e6-t02-fixtures.sha256` updated for the JSON change; `e6-t02-sabotage.txt`
+  recaptured (4 tests red, `refusal transcript drifted`, both exit 1). Valid goldens and
+  the property corpus are unchanged: E9-T01 `e72bbecc…b5bb`, E9-T02 `0b5465ef…74e3`,
+  E9-T03 `a2c0c31a…6833`, corpus `3158c855…cf54`.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint` (18,
+  baseline), `pnpm typecheck` (41, baseline), `pnpm test` (119 files: 116 passed, same 3
+  pre-existing failures; 912 tests, 909 passed), `pnpm build` (green),
+  `make verify-E6-T02` (19 tests, green), `bash tools/verify/cold_clone.sh verify-E6-T02`
+  → `PASSED from a pristine clone` of `59785260`, zero `SKIPPED:` lines.
+- `Replay: N/A (filesystem parser/renderer only)` + mitigation unchanged from the first
+  entry, plus the new transcript-pinned collision and root-file refusals and the writer
+  atomicity test.
