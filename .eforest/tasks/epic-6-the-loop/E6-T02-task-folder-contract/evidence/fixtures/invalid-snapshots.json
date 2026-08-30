@@ -1,0 +1,377 @@
+[
+  {
+    "name": "absolute-path",
+    "folderName": "E9-T50-absolute-path",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T50\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "/etc/passwd",
+        "kind": "file",
+        "text": "root:x\n"
+      }
+    ]
+  },
+  {
+    "name": "traversal-evidence",
+    "folderName": "E9-T51-traversal-evidence",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T51\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/../../secret.txt",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "traversal-work",
+    "folderName": "E9-T52-traversal-work",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T52\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/../readme.md",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "dot-segment",
+    "folderName": "E9-T53-dot-segment",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T53\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/./x.txt",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "backslash",
+    "folderName": "E9-T54-backslash",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T54\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence\\x.txt",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "drive-letter",
+    "folderName": "E9-T55-drive-letter",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T55\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "C:/x.txt",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-evidence",
+    "folderName": "E9-T56-case-collision-evidence",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T56\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/Log.txt",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "evidence/log.txt",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-work",
+    "folderName": "E9-T57-case-collision-work",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T57\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/A",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "work/a",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "case-collision-readme",
+    "folderName": "E9-T58-case-collision-readme",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T58\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "README.md",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "symlink-work",
+    "folderName": "E9-T59-symlink-work",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T59\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/link",
+        "kind": "symlink"
+      }
+    ]
+  },
+  {
+    "name": "percent-work",
+    "folderName": "E9-T60-percent-work",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T60\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "work/%2e%2e/x",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "unicode-slug",
+    "folderName": "E9-T61-café",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T61\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      }
+    ]
+  },
+  {
+    "name": "unicode-path",
+    "folderName": "E9-T62-unicode-path",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T62\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/café.txt",
+        "kind": "file",
+        "text": "x\n"
+      }
+    ]
+  },
+  {
+    "name": "empty-evidence-directory",
+    "folderName": "E9-T63-empty-evidence-directory",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T63\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/hollow",
+        "kind": "directory"
+      }
+    ]
+  },
+  {
+    "name": "readme-is-directory",
+    "folderName": "E9-T64-readme-is-directory",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "directory"
+      }
+    ]
+  },
+  {
+    "name": "other-kind",
+    "folderName": "E9-T65-other-kind",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T65\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/fifo",
+        "kind": "other"
+      }
+    ]
+  },
+  {
+    "name": "control-character",
+    "folderName": "E9-T66-control-character",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T66\nepic: 9\ntitle: bell\u0007here\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      }
+    ]
+  },
+  {
+    "name": "bom",
+    "folderName": "E9-T67-bom",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "﻿---\nid: E9-T67\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      }
+    ]
+  },
+  {
+    "name": "invalid-utf8",
+    "folderName": "E9-T68-invalid-utf8",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "base64": "LS0tCmlkOiBFOS1UNjgKZXBpYzogOQp0aXRsZTogTWluaW1hbCB0YXNrCnByaW9yaXR5OiA5MDEKc3RhdHVzOiBwZW5kaW5nCmRlcGVuZHNfb246IFtdCmVzdGltYXRlOiBTCmNhcHN0b25lOiBmYWxzZQotLS0K//4KIyMgR29hbApPbmUgcGFyYWdyYXBoLgoKIyMgQ29udGV4dApXaHkuCgojIyBEZWxpdmVyYWJsZXMKLSBhIHRoaW5nCgojIyBBY2NlcHRhbmNlIGNyaXRlcmlhCi0gWyBdIGV4aXQgMAoKIyMgQWR2ZXJzYXJpYWwgdmVyaWZpY2F0aW9uCjEuIGF0dGFjawoKIyMgVmVyaWZpY2F0aW9uIGxvZwo="
+      }
+    ]
+  },
+  {
+    "name": "duplicate-path",
+    "folderName": "E9-T69-duplicate-path",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T69\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/x",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "evidence/x",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "file-and-directory",
+    "folderName": "E9-T70-file-and-directory",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T70\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/x",
+        "kind": "file",
+        "text": "a\n"
+      },
+      {
+        "path": "evidence/x/y",
+        "kind": "file",
+        "text": "b\n"
+      }
+    ]
+  },
+  {
+    "name": "empty-segment",
+    "folderName": "E9-T71-empty-segment",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T71\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence//x",
+        "kind": "file",
+        "text": "a\n"
+      }
+    ]
+  },
+  {
+    "name": "trailing-dot-segment",
+    "folderName": "E9-T72-trailing-dot-segment",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T72\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/x.",
+        "kind": "file",
+        "text": "a\n"
+      }
+    ]
+  },
+  {
+    "name": "long-segment",
+    "folderName": "E9-T73-long-segment",
+    "entries": [
+      {
+        "path": "readme.md",
+        "kind": "file",
+        "text": "---\nid: E9-T73\nepic: 9\ntitle: Minimal task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nOne paragraph.\n\n## Context\nWhy.\n\n## Deliverables\n- a thing\n\n## Acceptance criteria\n- [ ] exit 0\n\n## Adversarial verification\n1. attack\n\n## Verification log\n"
+      },
+      {
+        "path": "evidence/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "file",
+        "text": "a\n"
+      }
+    ]
+  }
+]
