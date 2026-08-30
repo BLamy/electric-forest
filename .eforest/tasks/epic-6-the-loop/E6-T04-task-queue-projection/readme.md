@@ -3,7 +3,7 @@ id: E6-T04
 epic: 6
 title: "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
 priority: 604
-status: implemented
+status: refuted
 depends_on: [E6-T01]
 estimate: M
 capstone: false
@@ -210,3 +210,85 @@ queues.
   flight at a time; every structural fault is an invalid proof rather than a quiet null;
   a proof is bound to every head it consumed and dies the moment any of them moves; and
   the apparatus goes red on one byte and on the removal of the bare-epic guard.
+
+### 2026-08-30 — critic — VERDICT: refuted
+
+- ORIENT — HELD. Recomputed from `evidence/e6-t04-sources.jsonl` in a fresh process with my own
+  fetch order (`e6_t04_queue.mjs --shuffle 424242`, `TZ=Asia/Kolkata`): queue digest
+  `1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec`, `QUEUE.md` sha256
+  `dae6f93c…cce3` (1252 bytes), `queue.json` sha256 `6aadd71f…4aba`, `proof.json` sha256
+  `f64b5a21…7a35`, endpoint transcript sha256 `c9942f5a…ed85` — all equal to the committed
+  artifacts. Diff sweep: no `.skip`/`.todo`/lint-disables; `queue_differential.py` copies
+  the unmodified `tools/build_queue.py` and re-implements nothing (Makefile grep holds);
+  `e6_t04_evidence.mjs` hashes every protected artifact before and after, so no golden is
+  regenerated at test time. Cold clone `bash tools/verify/cold_clone.sh verify-E6-T04`
+  from HEAD `85ca9bf7`: exit 0, zero `SKIPPED:`, `E6_T04_DIFFERENTIAL graphs=53 mismatches=0`,
+  `E6_T04_PERMUTATIONS 360`, `MUTATION … EXPECTED-FAIL OK`, `PASSED from a pristine clone`
+  (`evidence/critic-2026-08-30/cold_clone.summary.txt`).
+- P5 cycles → invalid proof — **FAILED (refuting).** Predicted: a dependency cycle that runs
+  through a bare-epic reference decides `invalid {dep/cycle}`. Observed: `bare-epic-cycle`
+  (E1-T01 `[E2]`, capstone E2-T01 `[E1-T01]`; `evidence/critic-2026-08-30/bare-epic-cycle.json`)
+  decides `{"kind":"exhausted","nextEligible":null,"inFlight":null}`; the one-task graph
+  `self-epic-cycle` (capstone E1-T01 `[E1]`) likewise decides `exhausted` with
+  `blocked=[dep/epic-capstone-unverified E1:pending]` — a queue that can never advance
+  reported as "nothing left to do". The builder froze exactly this shape as a *valid*
+  fixture: `evidence/fixtures/graphs/exhausted-all-blocked.json` (E1-T01 capstone `[E2-T01]`,
+  E2-T01 capstone `[E1]`, `"valid": true`, decision `exhausted`). Citation:
+  `packages/tasks/src/queue/eligibility.ts` `cycleMembers` — "Tarjan over task references
+  only (bare epic refs are resolved by capstone status, not by edges)". Acceptance criterion
+  5 reads "Cycles … produce a deterministic invalid proof rather than `nextEligible: null`";
+  the claim "every structural fault is an invalid proof rather than a quiet null" is false
+  for this class. Demand: resolve bare-epic edges to the epic's capstone(s) in the cycle
+  search (or, more simply, treat `exhausted` while any member is `pending` as a deadlock
+  violation); re-freeze `exhausted-all-blocked` as invalid; add the two graphs above to
+  `fixtures/graphs/`. Not disclosed in the "known seams".
+- A1 differential, my seeds — HELD with one boundary. 120 generated DAGs + 4 cyclic-mode
+  graphs that happened to be valid (seeds 5001–5120), a 1000-task graph (40 epics × 25,
+  742 ms), equal priorities across `E9-T01`/`E10-T01`, bare-epic deps to epics with zero/
+  one/two capstones, refuted-rework, refuted-with-unmet-deps, capstone gate + unlocks,
+  twelve eligible (cap at ten): 0 mismatches against the real `build_queue.py`
+  (`evidence/critic-2026-08-30/attacks.out`). Boundary (non-refuting, Python side):
+  priorities `101.10000000000000001` vs `101.1` are both legal under
+  `TASK_PRIORITY_PATTERN` but collapse to one `float` in Python, so Python orders by path
+  (E1-T01 first) while TS orders exactly (E1-T02 first) — `selected` differs. Parity holds
+  for every priority representable as a double; document it as a seam or tighten the
+  fraction width. Also Python-side only: a title containing ` #` (`Fix regression #12 in
+  queue`) is truncated by `build_queue.py`'s `val.split("#")`, so the claimed markdown
+  byte-parity fails on that line while ids/tuples agree — the criterion is ids + tuples, so
+  not raised as a miss.
+- A2 proof fencing — HELD. Proof taken at `in-flight E1-T01`; E1-T01 verified at its head
+  (`…0003 → …0004`); old proof refused `queue/stale-proof {stream: issue:maple/loom/E1-T01,
+  cited …0003, current …0004}`, `admitSelection(old, E1-T02)` refused, fresh proof admits
+  E1-T02. A proof citing a catalog offset ahead of the head (`…0099` vs `…0002`) → stale
+  naming `repo-issues:maple/loom`; a cited head whose stream is absent now → stale with
+  `current: -1`; forged decision/digest with true heads → `queue/false-proof`.
+- A3 two active + two capstones — HELD. Same-epic → `invalid [queue/multiple-active
+  E1-T01,E1-T02; capstone/multiple E1]`; different epics (`in-progress` + `implemented`,
+  and `implemented` + `refuted`) → `invalid [queue/multiple-active]`; `admitSelection` →
+  `queue/invalid` in every case. Two capstones in *different* epics with nothing active is
+  `eligible` — that is the documented one-per-epic seam and criterion 5's own wording
+  ("per completed epic"), so a boundary, not a miss; `finalCapstone` names the last one.
+- A4 delete-and-rebuild — HELD (my shuffle/TZ above; cold clone's three processes).
+- A5 sabotage — HELD. In the kept cold clone, `E6_T04_BARE_EPIC_GUARD = false` → rebuild →
+  `e6_t04_evidence.mjs` dies on `bare-epic-noncapstone-first` (`nextEligible E2-T01` vs
+  frozen `E1-T02`), `queue-eligibility` 2 red + `queue-differential` 2 red (4/14).
+- Unlisted — HELD. Body frontmatter `status: verified`/`cancelled` on a `pending` stream →
+  status `pending` (stream wins); lowercase `id: e1-t01` → `spec/unparseable`; a catalog
+  entry with no fetched records is a non-member and `dep/missing` for whoever cites it (its
+  later appearance is caught by the extra-head fence); duplicate `depends_on` ref →
+  `spec/unparseable` (E6-T02 refuses it), so `dep/duplicate-ref` in `blockReasons` is
+  unreachable from streams — dead from the projector, reachable only by direct
+  `evaluateQueue` callers; delete or test directly. An emoji title (`arbre 🌲`) is refused
+  upstream by the issue reducer (empty replayed body → `spec/unparseable`): E6-T01/T03
+  boundary, honest here.
+- COVERAGE. projector/eligibility/proof/render-markdown/graph: executed by the frozen
+  graphs, differential, fuzz, and my attacks. `gateway.ts` `repositoryQueueRoute`: the
+  happy path and 405 are executed by `task-queue.test.ts`; the `catalog = undefined`
+  branch and the auth-refusal arms are not — waived (the projector re-reports
+  `catalog/corrupt` on the same records; the arms are the sibling routes' shapes).
+  `queue_differential.py`, `e6_t04_queue.mjs`, `e6_t04_evidence.mjs`: executed by the cold
+  clone. Pre-existing and not raised: 18 lint errors, prettier warnings in 7 files, 41
+  typecheck errors, the 3 failing test files.
+- SUITE: n/a until the refutation clears; the two cycle graphs are committed under
+  `evidence/critic-2026-08-30/` for promotion into `fixtures/graphs/` with the fix.
+Commands: `node tools/verify/e6_t04_queue.mjs evidence/e6-t04-sources.jsonl --shuffle 424242 --out work/critic/rebuild`; `node evidence/critic-2026-08-30/attacks.mjs`; `pnpm exec vitest run --maxWorkers=1 packages/tasks/test/queue-{eligibility,fuzz,differential}.test.ts packages/platform/test/task-queue.test.ts` (12+3+2+2 green); `bash tools/verify/cold_clone.sh --keep verify-E6-T04` then in the clone `sed -i '' 's/GUARD = true/GUARD = false/' packages/tasks/src/queue/eligibility.ts && pnpm --filter @eforest/tasks build && node tools/verify/e6_t04_evidence.mjs`.
