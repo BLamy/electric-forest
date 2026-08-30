@@ -15,6 +15,8 @@ import {
 import { isIssueActionType, type IssueActionType, type IssueState } from "@eforest/reducers";
 import type { IssueEnvelopeSource } from "./issues/envelope.js";
 import { IssueUnknownActionError, validateIssueEvent } from "./issues/validators.js";
+import { registerChatValidators } from "./chat/validators.js";
+import { registerOrgRosterValidators } from "./org/validators.js";
 
 export interface ActionValidationContext {
   readonly streamId: string;
@@ -128,5 +130,7 @@ export function registerApplicationValidators(
   registerLabelValidators(registry);
   registerPrValidators(registry);
   registerEvidenceValidators(registry);
+  registerChatValidators(registry);
+  registerOrgRosterValidators(registry);
   return registry;
 }

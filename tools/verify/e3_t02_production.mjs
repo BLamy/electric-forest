@@ -48,10 +48,13 @@ const platformUrl = await new Promise((resolveListening, reject) => {
 });
 
 try {
-  const response = await fetch(`${platformUrl}/`, { redirect: "manual" });
+  const response = await fetch(`${platformUrl}/maple/reading-room`, { redirect: "manual" });
   assert.equal(response.status, 302);
   assert.equal(response.headers.get("location"), "/auth/login");
   assert.equal(await response.text(), "");
+  const landing = await fetch(`${platformUrl}/`, { redirect: "manual" });
+  assert.equal(landing.status, 200);
+  assert.ok(!(await landing.text()).includes('name="ef-session"'));
   const proof = await fetch(`${platformUrl}/__proof/e3-t02`);
   assert.equal(proof.status, 404);
   assert.deepEqual(await proof.json(), {
@@ -72,7 +75,8 @@ try {
     "entrypoint=packages/platform/dist/src/bin.js\n" +
     "composition=createPlatformProductionRuntime\n" +
     "config=EF_WEB_ROOT absolute apps/web/dist\n" +
-    "unauthenticated-root status=302 location=/auth/login body-bytes=0\n" +
+    "unauthenticated-app-route status=302 location=/auth/login body-bytes=0\n" +
+    "unauthenticated-root status=200 public-landing session-marker=absent\n" +
     "test-proof-route production-status=404 env-config=absent binary-enablement=absent\n" +
     "fixture-production=one-click-refused-before-emulator-or-seed\n" +
     "E3_T02_PRODUCTION_OK\n";

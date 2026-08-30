@@ -85,7 +85,23 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { fileViewStreamId, requireReducer, type ReducerDefinition } from "@eforest/reducers";
+import {
+  agentsStreamId,
+  chatCatalogStreamId,
+  chatChannelStreamId,
+  fileViewStreamId,
+  isAgentsActionType,
+  isAgentsDispatchPayload,
+  isMembersActionType,
+  isMembersDispatchPayload,
+  membersStreamId,
+  isChatActionType,
+  isChatDispatchPayload,
+  isChatStreamId,
+  parseChatStreamId,
+  requireReducer,
+  type ReducerDefinition,
+} from "@eforest/reducers";
 import {
   isFsFileContentEvent,
   isFsEvent,
@@ -190,6 +206,14 @@ import {
   IssueSchemaError,
   IssueUnknownActionError,
 } from "./issues/validators.js";
+import {
+  ChatRefusalError,
+  ChatSchemaError,
+  ChatUnknownActionError,
+  reduceChatCatalog,
+  validateChatDispatch,
+} from "./chat/validators.js";
+import { isOrgRosterStreamId, validateOrgRosterDispatch } from "./org/validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 import {
   IssueBoardMaterializer,
@@ -388,10 +412,7 @@ function fullWriteContentStream(
   const path = payload.path;
   if (typeof path !== "string") throw new TypeError("invalid_full_write_path");
   const contentStreamId = fsContentStreams(records).get(path);
-  if (
-    contentStreamId === undefined ||
-    contentEvent.payload.contentStreamId !== contentStreamId
-  ) {
+  if (contentStreamId === undefined || contentEvent.payload.contentStreamId !== contentStreamId) {
     throw new TypeError("full_write_content_stream_mismatch");
   }
   const encoded = contentEvent.payload.contentBase64;
@@ -429,9 +450,7 @@ async function stageFullWriteContent(
       await streams.append(contentStreamId, contentEvent, {
         sequence: applicationOffset,
         applicationOffset,
-        ...(operationId === undefined
-          ? {}
-          : { idempotencyKey: `${operationId}:fs-file-content` }),
+        ...(operationId === undefined ? {} : { idempotencyKey: `${operationId}:fs-file-content` }),
       });
       return;
     } catch (error) {
@@ -1376,6 +1395,10 @@ export class PlatformGateway {
         return this.namespaceRoute(request, url);
       case "repos":
         return this.repoRoute(request, url);
+      case "chat":
+      case "members":
+      case "agents":
+        return this.chatRoute(request, url);
       case "registry":
         return this.registryRoute(request, url);
       default:
@@ -1790,6 +1813,41 @@ export class PlatformGateway {
     });
   }
 
+  /** Raw items of an org-scoped stream (empty when unminted) for platform-side doors. */
+  async readOrgStream(streamId: string): Promise<readonly unknown[]> {
+    return this.readTarget(streamId);
+  }
+
+  /** The namespace owner of an org, or undefined when the org does not exist. */
+  async orgOwner(org: string): Promise<string | undefined> {
+    const view = await this.namespaceViewFor(org);
+    return view.orgs[org]?.owner;
+  }
+
+  async handleSessionChat(
+    request: Request,
+    subject: string,
+    authView: AuthorizationView,
+    identityOffset: string,
+  ): Promise<Response> {
+    const url = new URL(request.url);
+    if (
+      !(
+        url.pathname.startsWith("/api/chat/") ||
+        url.pathname.startsWith("/api/members/") ||
+        url.pathname.startsWith("/api/agents/")
+      ) ||
+      request.headers.has("authorization")
+    ) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    return this.chatRoute(request, url, {
+      principal: { kind: "identified", sub: subject, session: true },
+      identity: authView,
+      identityOffset,
+    });
+  }
+
   async handleSessionDispatch(
     request: Request,
     subject: string,
@@ -1951,7 +2009,7 @@ export class PlatformGateway {
     // malformed counter key. The pure decision returns grant-revoked before
     // consulting the namespace view for every well-formed repo target.
     if (
-      target.kind === "repo" &&
+      (target.kind === "repo" || target.kind === "org") &&
       context.principal.kind === "identified" &&
       context.principal.grantId === ""
     ) {
@@ -1965,7 +2023,7 @@ export class PlatformGateway {
         namespace: { orgs: {} },
       });
     }
-    if (target.kind === "repo") {
+    if (target.kind === "repo" || target.kind === "org") {
       const tenantRefusal = this.tenantRefusal(context, target.org, operation);
       if (tenantRefusal !== undefined) return tenantRefusal;
       this.admitRate(
@@ -1989,7 +2047,9 @@ export class PlatformGateway {
       );
     }
     const namespace =
-      target.kind === "repo" ? await this.namespaceViewFor(target.org) : { orgs: {} };
+      target.kind === "repo" || target.kind === "org"
+        ? await this.namespaceViewFor(target.org)
+        : { orgs: {} };
     return this.decideAuthorization({
       operation,
       target,
@@ -2121,7 +2181,8 @@ export class PlatformGateway {
     }
     if (
       parsed.contentEvent !== undefined &&
-      (ownKey(parsed.contentEvent.payload, "actor") || ownKey(parsed.contentEvent.payload, "writer"))
+      (ownKey(parsed.contentEvent.payload, "actor") ||
+        ownKey(parsed.contentEvent.payload, "writer"))
     ) {
       return failure(400, "invalid_request", "client_content_writer_metadata_forbidden");
     }
@@ -2174,7 +2235,7 @@ export class PlatformGateway {
       // targets are decided purely (no reads) and keep their frozen door
       // behavior; internal and malformed targets always refuse.
       let repoDecision: AuthzDecision | undefined;
-      if (target.kind === "repo") {
+      if (target.kind === "repo" || target.kind === "org") {
         repoDecision = await this.decideRepo(
           "dispatch",
           target,
@@ -2230,6 +2291,49 @@ export class PlatformGateway {
             // this call and proves operation-id recovery would otherwise skip
             // the writer-fenced validator.
             await validatePrOpenedLinkTargets(this.streams, parsed.streamId, parsed.event);
+          }
+        }
+      }
+      if (isChatActionType(parsed.event.type) && !isChatStreamId(parsed.streamId)) {
+        throw new ChatUnknownActionError();
+      }
+      if (
+        (isMembersActionType(parsed.event.type) || isAgentsActionType(parsed.event.type)) &&
+        !isOrgRosterStreamId(parsed.streamId)
+      ) {
+        throw new ChatUnknownActionError();
+      }
+      if (isOrgRosterStreamId(parsed.streamId)) {
+        const rosterPayloadValid = isMembersActionType(parsed.event.type)
+          ? isMembersDispatchPayload(parsed.event.type, parsed.event.payload)
+          : isAgentsActionType(parsed.event.type)
+            ? isAgentsDispatchPayload(parsed.event.type, parsed.event.payload)
+            : undefined;
+        if (rosterPayloadValid === undefined) throw new ChatUnknownActionError();
+        if (!rosterPayloadValid) throw new ChatSchemaError();
+        if (
+          (isMembersActionType(parsed.event.type) && !parsed.streamId.startsWith("members:")) ||
+          (isAgentsActionType(parsed.event.type) && !parsed.streamId.startsWith("agents:"))
+        ) {
+          throw new ChatUnknownActionError();
+        }
+      }
+      if (isChatStreamId(parsed.streamId)) {
+        if (!isChatActionType(parsed.event.type)) throw new ChatUnknownActionError();
+        if (!isChatDispatchPayload(parsed.event.type, parsed.event.payload)) {
+          throw new ChatSchemaError();
+        }
+        const chatIdentity = parseChatStreamId(parsed.streamId)!;
+        if (parsed.event.type === "chat.channel.create" && chatIdentity.channel !== undefined) {
+          throw new ChatUnknownActionError();
+        }
+        if (parsed.event.type === "chat.message.post") {
+          if (chatIdentity.channel === undefined) throw new ChatUnknownActionError();
+          const catalog = reduceChatCatalog(
+            await this.readTarget(chatCatalogStreamId(chatIdentity.org)),
+          );
+          if (!Object.hasOwn(catalog.channels, chatIdentity.channel)) {
+            throw new ChatRefusalError("chat/unknown-channel");
           }
         }
       }
@@ -2303,7 +2407,7 @@ export class PlatformGateway {
           });
         }
         if (namespaceEvent) {
-          await this.namespaces.dispatch(
+          const namespaceOffset = await this.namespaces.dispatch(
             parsed.streamId,
             parsed.event,
             identity.sub,
@@ -2313,7 +2417,13 @@ export class PlatformGateway {
           // E2-T08: nudge the registry projector — the accepted source event
           // becomes a derived frame without waiting for the poll interval.
           this.registry?.poke();
-          return json(202, { ok: true, actor: identity.sub });
+          return json(202, {
+            ok: true,
+            actor: identity.sub,
+            ...(request.headers.get("x-eforest-dispatch-receipt") === "offset"
+              ? { offset: namespaceOffset }
+              : {}),
+          });
         }
         if (parsed.event.type === "pr.merge") {
           let receipt: PrMergeExecutionReceipt;
@@ -2401,6 +2511,22 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
+          if (isOrgRosterStreamId(parsed.streamId)) {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
+          if (isChatStreamId(parsed.streamId)) {
+            // The catalog is minted on the first channel; a channel stream on its
+            // first message (the catalog check above already proved it exists).
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
           let fullWriteContentStaged = false;
           const validateApplication = async (
             records: readonly unknown[],
@@ -2419,7 +2545,13 @@ export class PlatformGateway {
               );
             }
             if (isRepoLabelsStreamId(parsed.streamId)) {
-              await validateLabelDispatch(
+              await validateLabelDispatch(records, stamped, parsed.streamId, this.actionValidators);
+            }
+            if (isChatStreamId(parsed.streamId)) {
+              await validateChatDispatch(records, stamped, parsed.streamId, this.actionValidators);
+            }
+            if (isOrgRosterStreamId(parsed.streamId)) {
+              await validateOrgRosterDispatch(
                 records,
                 stamped,
                 parsed.streamId,
@@ -2514,7 +2646,10 @@ export class PlatformGateway {
             error instanceof PrLinkRefusalError ||
             error instanceof EvidenceUnknownActionError ||
             error instanceof EvidenceSchemaError ||
-            error instanceof EvidenceRefusalError
+            error instanceof EvidenceRefusalError ||
+            error instanceof ChatUnknownActionError ||
+            error instanceof ChatSchemaError ||
+            error instanceof ChatRefusalError
           ) {
             throw error;
           }
@@ -2564,7 +2699,7 @@ export class PlatformGateway {
             );
           }
         }
-        if (target.kind === "repo") {
+        if (target.kind === "repo" || target.kind === "org") {
           return json(202, {
             ok: true,
             actor: identity.sub,
@@ -2622,7 +2757,8 @@ export class PlatformGateway {
         error instanceof IssueUnknownActionError ||
         error instanceof PrUnknownActionError ||
         error instanceof LabelUnknownActionError ||
-        error instanceof EvidenceUnknownActionError
+        error instanceof EvidenceUnknownActionError ||
+        error instanceof ChatUnknownActionError
       ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
@@ -2632,9 +2768,13 @@ export class PlatformGateway {
         error instanceof PrLinkSchemaError ||
         error instanceof PrMergeSchemaError ||
         error instanceof LabelSchemaError ||
-        error instanceof EvidenceSchemaError
+        error instanceof EvidenceSchemaError ||
+        error instanceof ChatSchemaError
       ) {
         return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof ChatRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof IssueRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
@@ -2859,6 +2999,132 @@ export class PlatformGateway {
    * repo/branch stream. The same decision function gates it before any
    * official-stream access to the target.
    */
+  /**
+   * Org-scoped chat reads: `/api/chat/<org>` (channel catalog) and
+   * `/api/chat/<org>/<channel>` (messages). Projection-only, decided through the
+   * same membership authorization as chat dispatch, and served with the same
+   * bootstrap/long-poll envelope every other projection route returns.
+   */
+  private async chatRoute(
+    request: Request,
+    url: URL,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    const segments = url.pathname.split("/").filter(Boolean).slice(2);
+    if (segments.length < 1 || segments.length > 2) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    let decoded: string[];
+    try {
+      decoded = segments.map((segment) => decodeURIComponent(segment));
+    } catch {
+      return failure(400, "invalid_request", "invalid_path");
+    }
+    const family = url.pathname.split("/")[2];
+    if (family !== "chat" && decoded.length !== 1) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    const streamId =
+      family === "members"
+        ? membersStreamId(decoded[0]!)
+        : family === "agents"
+          ? agentsStreamId(decoded[0]!)
+          : decoded.length === 1
+            ? chatCatalogStreamId(decoded[0]!)
+            : chatChannelStreamId(decoded[0]!, decoded[1]!);
+    const target = classifyDispatchTarget(streamId, "application");
+    const live = url.searchParams.get("live") === "1";
+    const operation = live ? "follow" : "read";
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        operation,
+        target,
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    if (url.searchParams.get("projection") !== "1") {
+      return failure(400, "invalid_request", "projection_required");
+    }
+    let reducer: ReturnType<typeof requireReducer>;
+    try {
+      reducer = requireReducer(url.searchParams.get("reducer") ?? "", decision.streamId);
+    } catch {
+      return failure(400, "invalid_request", "invalid_reducer");
+    }
+    const envelope = (batch: StreamBatch): Response => {
+      validateProjectionReducer(reducer, batch.events, decision.streamId);
+      return json(200, {
+        ok: true,
+        events: batch.events,
+        checkpoint: batch.checkpoint.offset,
+        reducer: { id: reducer.id, version: reducer.version },
+        identityOffset: decision.identityOffset,
+        basis: decision.basis,
+      });
+    };
+    try {
+      if (!live) return envelope(await this.bootstrapProjection(decision.streamId));
+      const from = url.searchParams.get("checkpoint");
+      const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+      if (
+        !isWellFormedOffset(from) ||
+        !Number.isSafeInteger(waitMs) ||
+        waitMs < 0 ||
+        waitMs > MAX_FOLLOW_WAIT_MS
+      ) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      // A catalog or channel stream is minted by its first event. Until then an
+      // honest long-poll waits for it to appear instead of returning instantly.
+      const deadline = Date.now() + waitMs;
+      const exists = this.streams.exists;
+      const isMinted = async (): Promise<boolean> =>
+        exists === undefined ? true : await exists.call(this.streams, decision.streamId);
+      let minted = await isMinted();
+      while (!minted && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, Math.min(250, deadline - Date.now())));
+        minted = await isMinted();
+      }
+      if (!minted) {
+        return envelope({ events: [], checkpoint: applicationCheckpoint(from) });
+      }
+      return envelope(
+        await this.followProjection(
+          decision.streamId,
+          applicationCheckpoint(from),
+          Math.max(0, deadline - Date.now()),
+        ),
+      );
+    } catch (error) {
+      if (error instanceof ApplicationProjectionError) {
+        return json(422, {
+          error: {
+            class: "malformed_application_event",
+            offset: error.offset,
+            reason: error.message,
+          },
+        });
+      }
+      throw error;
+    }
+  }
+
   private async repoRoute(
     request: Request,
     url: URL,

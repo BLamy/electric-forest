@@ -8,6 +8,7 @@ import {
   OidcClient,
   OidcTransactions,
   PlatformWebApp,
+  SESSION_SHELL_MARKER,
   signedSessionCookie,
 } from "../src/index.js";
 
@@ -27,7 +28,10 @@ describe("E3 authenticated SPA and whoami door", () => {
     await identity.ensure();
     webRoot = await mkdtemp(resolve(tmpdir(), "e3-t02-spa-test-"));
     await mkdir(resolve(webRoot, "assets"));
-    await writeFile(resolve(webRoot, "index.html"), "<!doctype html><main>canopy shell</main>");
+    await writeFile(
+      resolve(webRoot, "index.html"),
+      "<!doctype html><html><head><title>ef</title></head><body><main>canopy shell</main></body></html>",
+    );
     await writeFile(resolve(webRoot, "assets/app.js"), "globalThis.__CANOPY__=true;");
     app = new PlatformWebApp({
       oidc: new OidcClient({
@@ -49,12 +53,43 @@ describe("E3 authenticated SPA and whoami door", () => {
     await rm(webRoot, { recursive: true, force: true });
   });
 
-  it("keeps app routes and emitted assets behind the replayed session gate", async () => {
-    for (const path of ["/", "/maple", "/maple/reading-room", "/index.html", "/assets/app.js"]) {
+  it("keeps app routes behind the replayed session gate and serves the public site without one", async () => {
+    for (const path of [
+      "/maple",
+      "/maple/reading-room",
+      "/index.html",
+      "/settings",
+      "/inspect/a/b/c",
+    ]) {
       const response = await app.handle(new Request(`http://platform.test${path}`));
       expect(response.status, path).toBe(302);
       expect(response.headers.get("location"), path).toBe("/auth/login");
     }
+    for (const path of [
+      "/",
+      "/home",
+      "/roadmap",
+      "/roadmap/E5-T14",
+      "/docs",
+      "/docs/concepts/streams",
+    ]) {
+      const response = await app.handle(new Request(`http://platform.test${path}`));
+      expect(response.status, path).toBe(200);
+      expect(response.headers.get("content-type"), path).toBe("text/html; charset=utf-8");
+      const html = await response.text();
+      expect(html, path).toContain("canopy shell");
+      expect(html, path).not.toContain(SESSION_SHELL_MARKER);
+    }
+    // Public-site prefixes do not leak into look-alike application paths.
+    for (const path of ["/docsy", "/roadmapper", "/homer"]) {
+      const response = await app.handle(new Request(`http://platform.test${path}`));
+      expect(response.status, path).toBe(302);
+    }
+    const publicAsset = await app.handle(new Request("http://platform.test/assets/app.js"));
+    expect(publicAsset.status).toBe(200);
+    expect(await publicAsset.text()).toContain("__CANOPY__");
+    const missingAsset = await app.handle(new Request("http://platform.test/assets/missing.js"));
+    expect(missingAsset.status).toBe(404);
 
     await identity.login("auth0|ada", "ada@example.test", "session-ada");
     const cookie = signedSessionCookie(secret, "session-ada", 60).split(";")[0]!;
@@ -62,7 +97,9 @@ describe("E3 authenticated SPA and whoami door", () => {
     const index = await app.handle(new Request("http://platform.test/", { headers }));
     expect(index.status).toBe(200);
     expect(index.headers.get("content-type")).toBe("text/html; charset=utf-8");
-    expect(await index.text()).toContain("canopy shell");
+    const indexHtml = await index.text();
+    expect(indexHtml).toContain("canopy shell");
+    expect(indexHtml).toContain(SESSION_SHELL_MARKER);
     const deep = await app.handle(
       new Request("http://platform.test/maple/reading-room", { headers }),
     );
