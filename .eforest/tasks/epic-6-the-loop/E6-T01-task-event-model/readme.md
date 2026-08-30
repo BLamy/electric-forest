@@ -3,7 +3,7 @@ id: E6-T01
 epic: 6
 title: "Task event model: an issue with evidence and builder/critic verdicts"
 priority: 601
-status: in-progress
+status: implemented
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -88,3 +88,79 @@ strings.
    architectural contract.
 
 ## Verification log
+
+### 2026-08-30 — builder — implemented, not yet verified
+
+- Implementation commit `903390a2` (branch `e6-t01-task-event-model`). **A task is an
+  issue with evidence, literally:** the task stream is the issue stream
+  `issue:<org>/<repo>/<taskId>`; the loop family `task.started` / `task.claimed` /
+  `task.refuted` / `task.rework-started` / `task.verified` (envelope `v: 1`; the spec's
+  `task/x` prose names these dot-typed events, `task/<reason>` names refusals) rides that
+  stream beside the frozen E5-T01 issue actions, and evidence lives on the task's E5-T10
+  attachment list `evidence:<org>/<repo>/issue/<taskId>`. No second attachment schema, no
+  task table, no KV sidecar: `TaskState` is `replay(log)` under the registered `tasks/v1`
+  reducer (`packages/tasks/src/{version,events,state,reducer,validation,generate}.ts`),
+  and the `issue` projection of the same log is unchanged (E5 goldens untouched; the
+  issue reducer and board skip the sibling family as deterministic no-ops, the precedent
+  being `streamfs` + `history` over one `fs:` meta stream). The E5-T01 workflow validator
+  core moved to `@eforest/issues` (`validateIssueWorkflowEvent`) so the task validator
+  reuses it instead of duplicating it; platform `validateIssueEvent` wraps it unchanged.
+- Dispatch contract (`packages/platform/src/gateway.ts` `validateTaskDispatch`,
+  `packages/platform/src/validation.ts` `registerTaskValidators`): actor role per event,
+  `by.actor` bound to the authenticated identity, legal predecessor state, current-claim
+  linkage (claim offset + branch head + task stream), builder/critic separation per claim,
+  append-only attempt history, attachment existence on the task's attachment list, and a
+  `task/not-opened` pre-check before the writer lane. Only `task.claimed` yields
+  `implemented`; only `task.verified` yields `verified`; `task.refuted` carries 1–64
+  findings with a stable slug fingerprint and an evidence citation, and replay retains
+  every finding (`attempts[0].verdict.findings`, 2 entries in the golden state).
+- Exact commands: `pnpm format:check` (7 pre-existing files flagged on main, none mine),
+  `pnpm lint` (18 errors, byte-identical to the main baseline list modulo one shifted
+  line number), `pnpm typecheck` (41 errors = 47 baseline − 6 duplicate-declaration
+  errors in `packages/cli/src/replay-command.ts` that broke `tsc -b` on main and were
+  removed), `pnpm test` (116 files: 113 passed; 3 failures pre-existing and untouched —
+  `packages/meadow/test/links.plan.test.ts` README drift, `packages/platform/test/issues.test.ts`
+  7-vs-8 workflow keys since E5-T07, `packages/pr/test/pr-property.fuzz.test.ts` 120 s
+  timeout under load), `pnpm build` (green; it was red on main because of the CLI
+  duplicates), `make verify-E6-T01` (green, zero `SKIPPED:` lines).
+- Evidence (all in `evidence/`, hashed before/after by the verifier so nothing regenerates
+  at test time): `e6-t01-task.jsonl` — the 10-event frozen valid log produced through the
+  real `/api/dispatch` door with distinct bearer identities (builder-ash / critic-fern /
+  builder-birch), byte-identical to the in-memory door's log; `e6-t01-task.state.json` +
+  `e6-t01-task.digest` = `e1ac70aecfaa6ad41df98885a8c62d65504b1a0fe2cf8a0c243197ca7062d0be`
+  (status `verified`, two attempts preserved, `verification.claim` = offset
+  `0000000000000000_0000000000000008` = the second claim, `verification.critic.run` =
+  `agent-run:maple/E6-T01-golden-run-4`); `e6-t01-invalid.jsonl` — 25 frozen refusal
+  scenarios covering all 15 `TASK_REFUSAL_REASONS` plus 422/404 cases;
+  `e6-t01-refusals.txt` — the 25 real-door transcripts, every `before` equal to `after`
+  (head offset + dump SHA-256), including builder-verifies → `task/wrong-role`,
+  verify-before-claim → `task/no-claim`, verify-stale-claim → `task/stale-claim`,
+  verify-after-terminal → `task/terminal`, foreign-claim → `task/foreign-claim`;
+  `e6-t01-property.txt` — seed `e6010000`, 1,000 generated legal sequences,
+  corpus SHA-256 `ec93258099eeec1f53a99e7e59dba8cf710d8f344f42f04ba01a21fdd69d8d41`;
+  `e6-t01-sabotage.txt` — with `E6_T01_CRITIC_ROLE_GUARD` removed, exactly the
+  builder-verifies checks go red (real door 202-instead-of-409, pure validator silent),
+  27 other checks still pass.
+- `make verify-E6-T01` = `tools/verify/e6_t01_evidence.mjs` + focused suites (5 files,
+  46 tests): dumps the task log, replays the fixture in two fresh `ef replay --digest
+  --reducer tasks/v1 --stream-id …` processes (foreign cwd + `Pacific/Kiritimati` vs
+  repo cwd + UTC) to the frozen digest, re-executes the 25 refusals against the pure
+  validator and holds every transcript to identical head/dump, runs the 1,000-sequence
+  corpus in two fresh processes to byte-identical output matching the frozen corpus
+  digest, and prints eight `MUTATION … EXPECTED-FAIL OK` sentinels — one byte changed in
+  every frozen event kind (`issue.opened/labeled/commented`, all five `task.*`) changes
+  the digest. Purity grep over `packages/tasks/src` (no clock, RNG, env, fs, net) and
+  `self_check`/`verify-list` close the target. Cold clone: see the next entry.
+- Replay: N/A (task reducer and dispatch contract; no browser surface in this task) +
+  mitigation: the frozen task log, real-door refusal transcripts, two-process independent
+  replay, property corpus, digest/sensitivity proof, and sabotage transcript above are the
+  evidence layer.
+- What the run demonstrates: replay of the task's own issue stream under `tasks/v1` is the
+  sole source of task status; the door refuses every illegal transition, role, identity,
+  and stale/foreign linkage before append without moving the log; the frozen lifecycle
+  reaches `verified` only through a critic verdict against the current (second) claim;
+  and the measuring apparatus is sensitive to a single byte and to the removal of the
+  critic-role guard. Environment note: `pnpm-lock.yaml` was regenerated by the pinned
+  `pnpm@10.15.0` (the committed lockfile's `patchedDependencies` format predated it and
+  `--frozen-lockfile` refused on a pristine clone of main); `corepack enable` was run to
+  expose `pnpm` for `cold_clone.sh`.
