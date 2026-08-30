@@ -37,6 +37,17 @@ export type ProjectActorRole = (typeof PROJECT_ACTOR_ROLES)[number];
 export const PROJECT_ACTION_TYPES = ["project.transitioned", "loop.launch.requested"] as const;
 export type ProjectActionType = (typeof PROJECT_ACTION_TYPES)[number];
 
+/**
+ * The fence record the door itself appends to the project stream — never a client
+ * action — immediately before a guarded task loop event is appended to its task stream.
+ * It is placed with a compare-and-append at the project stream's durable sequence, so a
+ * pause (or any project event) racing for the same sequence has exactly one winner
+ * across any number of gateway processes; a fence that loses is re-decided against the
+ * winning state. `target` binds the fence to the exact task-stream offset the event
+ * occupies. Fences replay as `fences` and never move `head`.
+ */
+export const PROJECT_FENCE_EVENT = "project.fenced" as const;
+
 /** Loop actions the project guard decides for, on this stream and on task streams. */
 export const PROJECT_GUARDED_ACTIONS = [
   "loop.launch.requested",
@@ -73,15 +84,22 @@ export const PROJECT_REFUSAL_REASONS = [
   "project/actor-mismatch",
   /** `by.role` differs from the role the door derived from the credential. */
   "project/role-mismatch",
+  /** A launch cites an `agent-run:` stream of another org. */
+  "project/foreign-run",
+  /** The project-stream fence lost eight consecutive compare-and-append races. */
+  "project/fence-contention",
 ] as const;
 export type ProjectRefusalReason = (typeof PROJECT_REFUSAL_REASONS)[number];
 
 export const PROJECT_ACTOR_MAX_CODE_UNITS = 256;
 export const PROJECT_REASON_MAX_CODE_UNITS = 4096;
 export const PROJECT_PROOF_MAX_TASKS = 4096;
+export const PROJECT_STREAM_REF_MAX = 512;
 export const PROJECT_STREAM_PATTERN =
   /^project:([a-z0-9](?:-?[a-z0-9])*)\/([a-z0-9](?:-?[a-z0-9])*)$/;
 const TASK_ID_PATTERN = /^[A-Za-z0-9._~-]+$/;
+/** The only offset grammar a project event may cite (`-1` or the 16+16 digit form). */
+const STRICT_OFFSET_PATTERN = /^[0-9]{16}_[0-9]{16}$/;
 
 export interface ProjectActorRef {
   readonly actor: string;
@@ -137,6 +155,16 @@ export interface LoopLaunchRequestedEvent extends Event {
 
 export type ProjectEvent = ProjectTransitionedEvent | LoopLaunchRequestedEvent;
 
+export interface ProjectFencedEvent extends Event {
+  readonly type: typeof PROJECT_FENCE_EVENT;
+  readonly payload: {
+    readonly v: typeof PROJECT_EVENT_VERSION;
+    readonly by: ProjectActorRef;
+    readonly action: ProjectGuardedAction;
+    readonly target: { readonly stream: string; readonly offset: Offset };
+  };
+}
+
 export function isProjectActionType(value: string): value is ProjectActionType {
   return (PROJECT_ACTION_TYPES as readonly string[]).includes(value);
 }
@@ -188,11 +216,21 @@ function boundedText(value: unknown, max: number): value is string {
 }
 
 function isExpectedOffset(value: unknown): value is Offset | typeof OFFSET_BEFORE_FIRST {
-  return value === OFFSET_BEFORE_FIRST || (typeof value === "string" && isWellFormedOffset(value));
+  return value === OFFSET_BEFORE_FIRST || isEventOffset(value);
 }
 
 function isEventOffset(value: unknown): value is Offset {
-  return typeof value === "string" && value !== OFFSET_BEFORE_FIRST && isWellFormedOffset(value);
+  return (
+    typeof value === "string" &&
+    STRICT_OFFSET_PATTERN.test(value) &&
+    isWellFormedOffset(value) &&
+    value !== OFFSET_BEFORE_FIRST
+  );
+}
+
+/** Nonempty after trimming: a reason made of whitespace is not a reason. */
+function isReasonText(value: unknown): value is string {
+  return boundedText(value, PROJECT_REASON_MAX_CODE_UNITS) && value.trim().length > 0;
 }
 
 export function isProjectActorRef(value: unknown): value is ProjectActorRef {
@@ -249,7 +287,7 @@ export function isProjectEventShape(event: Event): event is ProjectEvent {
       return (
         exactObject(payload, fields) &&
         isProjectStatus(payload.to) &&
-        boundedText(payload.statusReason, PROJECT_REASON_MAX_CODE_UNITS) &&
+        isReasonText(payload.statusReason) &&
         (!withProof || isProjectQueueProof(payload.proof))
       );
     }
@@ -259,6 +297,23 @@ export function isProjectEventShape(event: Event): event is ProjectEvent {
         isAgentRunStreamId(payload.run)
       );
   }
+}
+
+export function isProjectFencedEventShape(event: Event): event is ProjectFencedEvent {
+  if (event.type !== PROJECT_FENCE_EVENT) return false;
+  const p = event.payload;
+  if (p === null || typeof p !== "object" || Array.isArray(p)) return false;
+  const payload = p as Record<string, unknown>;
+  return (
+    exactObject(payload, ["v", "by", "action", "target"]) &&
+    payload.v === PROJECT_EVENT_VERSION &&
+    isProjectActorRef(payload.by) &&
+    typeof payload.action === "string" &&
+    isProjectGuardedAction(payload.action) &&
+    exactObject(payload.target, ["stream", "offset"]) &&
+    boundedText(payload.target.stream, PROJECT_STREAM_REF_MAX) &&
+    isEventOffset(payload.target.offset)
+  );
 }
 
 export function projectEventOffset(event: Event): Offset | undefined {

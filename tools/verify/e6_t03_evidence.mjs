@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { canonicalJson, stateDigest } from "../../packages/protocol/dist/src/index.js";
 import {
   PROJECT_REFUSAL_REASONS,
+  fenceTaskLoopAction,
   guardLoopAction,
   projectProjectionBytes,
   replayProjectLog,
@@ -108,10 +109,11 @@ assert.equal(stateDigest(state), expectedDigest);
 assert.equal(state.status, "complete");
 assert.equal(state.transitions, 5);
 assert.equal(state.launches, 2);
+assert.equal(state.fences, 6, "six task fences precede the lifecycle");
 assert.equal(state.completion.capstone, "loom-cap");
-assert.equal(state.updatedAt, log[6].ts);
-assert.equal(state.actor, log[6].payload.by.actor);
-assert.equal(state.head, log[6].offset);
+assert.equal(state.updatedAt, log[12].ts);
+assert.equal(state.actor, log[12].payload.by.actor);
+assert.equal(state.head, log[12].offset);
 const projection = readFileSync(artifact("e6-t03-project.json"), "utf8");
 assert.equal(projectProjectionBytes(state), projection);
 const projected = JSON.parse(projection);
@@ -164,7 +166,7 @@ try {
   const rows = matrix.filter((entry) => entry.prefix === "E6_T03_MATRIX");
   const extras = matrix.filter((entry) => entry.prefix === "E6_T03_REFUSAL");
   assert.equal(rows.length, 72, "state x role x action rows");
-  assert.equal(extras.length, 12, "binding/shape/family refusals");
+  assert.equal(extras.length, 15, "binding/shape/family refusals");
   const reasonsSeen = new Set();
   const tuples = new Set();
   let refused = 0;
@@ -193,6 +195,13 @@ try {
       assert.equal(row.status, 202, row.name);
       assert.equal(row.after.target.headOffset, body.offset, `${row.name}: receipt offset`);
       assert.notEqual(row.after.target.dumpSha256, row.before.target.dumpSha256);
+      // A task loop event leaves exactly one fence on the project stream; a project
+      // event moves the project head itself.
+      assert.notEqual(
+        row.after.project.headOffset,
+        row.before.project.headOffset,
+        `${row.name}: unfenced`,
+      );
       assert.ok(
         row.name.startsWith("building/") ||
           row.name.endsWith("/to:building") ||
@@ -279,7 +288,9 @@ try {
   assert.equal(forgedReason("tampers-pending-to-verified"), "project/false-proof");
   assert.equal(forgedReason("stale-queue-head"), "project/stale-proof");
   assert.equal(forgedReason("stale-after-new-task"), "project/stale-proof");
-  for (const reason of PROJECT_REFUSAL_REASONS)
+  // `project/fence-contention` is reachable only after eight lost compare-and-append
+  // races; it cannot be produced deterministically and is exercised by the pure guard below.
+  for (const reason of PROJECT_REFUSAL_REASONS.filter((r) => r !== "project/fence-contention"))
     assert.ok(reasonsSeen.has(reason), `uncovered ${reason}`);
   console.log(
     `E6_T03_PROOFS forged=${forged.length} accepted=${trueProofs.length} reasons-covered=${reasonsSeen.size}/${PROJECT_REFUSAL_REASONS.length}`,
@@ -306,7 +317,7 @@ try {
   assert.equal(guardLoopAction("complete", "loop.launch.requested"), "project/complete");
   assert.equal(guardLoopAction("invalid_loop", "loop.launch.requested"), "project/invalid-loop");
   assert.equal(guardLoopAction("invalid_loop", "task.claimed"), "project/invalid-loop");
-  const invalid = replayProjectLog(streamId, log.slice(0, 4));
+  const invalid = replayProjectLog(streamId, log.slice(0, 10));
   assert.equal(invalid.status, "invalid_loop");
   let launchRefusal;
   try {
@@ -325,8 +336,8 @@ try {
         streamId,
         state: invalid,
         headOffset: invalid.head,
-        nextOffset: "0000000000000000_0000000000000004",
-        records: log.slice(0, 4),
+        nextOffset: "0000000000000000_0000000000000010",
+        records: log.slice(0, 10),
         actor: "agent-ash",
         actorRole: "agent",
       },
@@ -340,11 +351,88 @@ try {
   console.log(
     `E6_T03_GUARD invalid_loop launch=refused reason=${launchRefusal.reason} at=${launchRefusal.at.offset}`,
   );
+  // The cross-process fence, pure: an appender that always loses the compare-and-append
+  // refuses `project/fence-contention` after eight attempts; a pause that lands between
+  // the read and the append is re-decided as `project/paused`. The task-stream records
+  // are never touched by the fence path (it only appends to the project stream).
+  const by = { actor: "agent-ash", role: "agent" };
+  const taskStream = "issue:maple/loom/loom-t9";
+  let attempts = 0;
+  let contention;
+  try {
+    await fenceTaskLoopAction(
+      taskStream,
+      "task.claimed",
+      "0000000000000000_0000000000000003",
+      by,
+      1,
+      {
+        resolve: async () => [],
+        appendAt: async () => {
+          attempts += 1;
+          return false;
+        },
+      },
+    );
+  } catch (error) {
+    contention = error;
+  }
+  assert.equal(contention?.reason, "project/fence-contention");
+  assert.equal(attempts, 8);
+  let paused;
+  let pauseLanded = false;
+  try {
+    await fenceTaskLoopAction(
+      taskStream,
+      "task.claimed",
+      "0000000000000000_0000000000000003",
+      by,
+      1,
+      {
+        resolve: async () => (pauseLanded ? log.slice(0, 8) : []),
+        appendAt: async () => {
+          pauseLanded = true;
+          return false;
+        },
+      },
+    );
+  } catch (error) {
+    paused = error;
+  }
+  assert.equal(paused?.reason, "project/paused");
+  assert.equal(paused?.at.status, "paused");
+  const fenced = [];
+  const citation = await fenceTaskLoopAction(
+    taskStream,
+    "task.claimed",
+    "0000000000000000_0000000000000003",
+    by,
+    1,
+    {
+      resolve: async () => [],
+      appendAt: async (stream, event, ordinal) => {
+        fenced.push({ stream, ordinal, target: event.payload.target });
+        return true;
+      },
+    },
+  );
+  assert.equal(citation.status, "building");
+  assert.deepEqual(fenced, [
+    {
+      stream: streamId,
+      ordinal: 0,
+      target: { stream: taskStream, offset: "0000000000000000_0000000000000003" },
+    },
+  ]);
+  console.log(
+    "E6_T03_FENCE contention=refused-after-8 pause-mid-race=project/paused bound-target=true",
+  );
 
   // 7. One-byte mutation of every frozen event kind must change the digest.
   const targets = {
     "loop.launch.requested": ["run"],
     "project.transitioned": ["statusReason"],
+    "project.fenced": ["action"],
   };
   const kinds = new Map();
   // The state keeps the latest transition's fields, so the LAST event of each kind is

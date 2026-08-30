@@ -35,6 +35,7 @@ import {
   CRITIC,
   HUMAN,
   LIFECYCLE_EVENTS,
+  LIFECYCLE_FENCES,
   LIFECYCLE_PROOF,
   LIFECYCLE_REPO,
   LIFECYCLE_STREAM,
@@ -253,9 +254,12 @@ describe("project state machine on the real dispatch door", () => {
       : `${found.map((record) => canonicalJson(cleanEvent(record))).join("\n")}\n`;
   }
 
+  /** The offset a dispatcher must cite: `state.head` for a project stream (fences do not move it). */
   async function head(streamId: string): Promise<number> {
     const found = await records(streamId);
-    return found.length - 1;
+    if (!streamId.startsWith("project:")) return found.length - 1;
+    const state = replayProjectLog(streamId, found);
+    return state.head === OFFSET_BEFORE_FIRST ? -1 : Number(state.head.split("_")[1]);
   }
 
   async function getProject(repo: string, sub = AGENT, url = baseUrl) {
@@ -406,16 +410,19 @@ describe("project state machine on the real dispatch door", () => {
       }));
       const { replayTaskLog } = await import("@eforest/tasks");
       const state = replayTaskLog(stream, raw);
+      const ever = (label: string) =>
+        raw.some(
+          (record) =>
+            record.type === "issue.labeled" &&
+            (record.payload as { readonly label?: string }).label === label,
+        );
       const isTask =
         state.attempts.length > 0 ||
-        state.issue.labels.includes("task") ||
-        state.issue.labels.includes("capstone");
+        raw.some((record) => record.type.startsWith("task.")) ||
+        ever("task") ||
+        ever("capstone");
       if (!isTask) continue;
-      tasks.push({
-        id: state.taskId,
-        status: state.status,
-        capstone: state.issue.labels.includes("capstone"),
-      });
+      tasks.push({ id: state.taskId, status: state.status, capstone: ever("capstone") });
     }
     return {
       queue: { stream: catalogStream(repo), offset: offsetForOrdinal(catalog.length - 1) },
@@ -431,9 +438,12 @@ describe("project state machine on the real dispatch door", () => {
     expect(fresh.status).toBe(200);
     expect(fresh.body.state.status).toBe("building");
     expect(fresh.body.offset).toBe(OFFSET_BEFORE_FIRST);
+    // The two seeded tasks left six fences (started/claimed/verified each) at offsets 0-5.
+    const fences = (await records(LIFECYCLE_STREAM)).length;
+    expect(fences).toBe(LIFECYCLE_FENCES);
     for (const [index, action] of LIFECYCLE_EVENTS.entries()) {
       const offset = await accepted(dispatchAs(actorOf(action), LIFECYCLE_STREAM, action));
-      expect(offset).toBe(offsetForOrdinal(index));
+      expect(offset).toBe(offsetForOrdinal(LIFECYCLE_FENCES + index));
     }
     const dump = await cleanDump(LIFECYCLE_STREAM);
     expectFrozen("e6-t03-project.jsonl", dump);
@@ -446,6 +456,7 @@ describe("project state machine on the real dispatch door", () => {
     expect(state.status).toBe("complete");
     expect(state.transitions).toBe(5);
     expect(state.launches).toBe(2);
+    expect(state.fences).toBe(LIFECYCLE_FENCES);
     expect(state.completion).toEqual({
       queue: LIFECYCLE_PROOF.queue,
       tasks: 2,
@@ -460,7 +471,7 @@ describe("project state machine on the real dispatch door", () => {
     expect(view.body.digest).toBe(stateDigest(state));
     expect(canonicalJson(view.body.state)).toBe(canonicalJson(state));
     expect(view.body.projection).toBe(projection);
-    expect(view.body.offset).toBe(offsetForOrdinal(6));
+    expect(view.body.offset).toBe(offsetForOrdinal(LIFECYCLE_FENCES + 6));
   });
 
   it("holds every state x role x action tuple to the frozen matrix", async () => {
@@ -663,8 +674,18 @@ describe("project state machine on the real dispatch door", () => {
         const name = `${row.state}/${row.role}/${row.action}`;
         if (row.expect === "accepted") {
           expect(response.status, `${name}: ${response.body}`).toBe(202);
-          expect(after.project.headOffset === before.project.headOffset).toBe(isTaskAction);
+          // A project event advances the project head; an accepted task loop event
+          // advances the task stream AND leaves one `project.fenced` record behind.
+          expect(after.project.headOffset, name).not.toBe(before.project.headOffset);
           expect(after.target.headOffset).toBe(response.offset);
+          if (isTaskAction) {
+            const fence = (await records(stream)).at(-1) as Event;
+            expect(fence.type).toBe("project.fenced");
+            expect((fence.payload as { target: unknown }).target).toEqual({
+              stream: targetStream,
+              offset: response.offset,
+            });
+          }
         } else {
           expect(response.status, `${name}: ${response.body}`).toBe(409);
           const body = JSON.parse(response.body) as {
@@ -748,6 +769,46 @@ describe("project state machine on the real dispatch door", () => {
         streamId: stream,
         event: transition(HUMAN, "human", "done" as ProjectStatus, expected, "bogus", 604),
         status: 422,
+      },
+      {
+        name: "transition-whitespace-reason",
+        sub: HUMAN,
+        streamId: stream,
+        event: transition(HUMAN, "human", "paused", expected, "   \t", 612),
+        status: 422,
+      },
+      {
+        name: "launch-loose-expected-offset",
+        sub: AGENT,
+        streamId: stream,
+        event: {
+          type: "loop.launch.requested",
+          payload: {
+            v: 1,
+            by: { actor: AGENT, role: "agent" },
+            expectedOffset: "3",
+            run: `agent-run:${ORG}/loose`,
+          },
+          ts: 613,
+        },
+        status: 422,
+      },
+      {
+        name: "launch-foreign-org-run",
+        sub: AGENT,
+        streamId: stream,
+        event: {
+          type: "loop.launch.requested",
+          payload: {
+            v: 1,
+            by: { actor: AGENT, role: "agent" },
+            expectedOffset: expected < 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(expected),
+            run: "agent-run:otherorg/z",
+          },
+          ts: 614,
+        },
+        status: 409,
+        reason: "project/foreign-run",
       },
       {
         name: "actor-mismatch",
@@ -840,6 +901,10 @@ describe("project state machine on the real dispatch door", () => {
         })}`,
       );
     }
+    const malformed = await fetch(`${baseUrl}/api/repos/Maple/${repo}/project`, {
+      headers: { authorization: `Bearer ${AGENT}` },
+    });
+    expect(malformed.status).toBe(404);
     const text = `${transcript.join("\n")}\n`;
     expectFrozen("e6-t03-matrix.txt", text);
   }, 600_000);
@@ -869,7 +934,7 @@ describe("project state machine on the real dispatch door", () => {
       const after = await snapshot(stream);
       if (expectReason === undefined) {
         expect(response.status, `${name}: ${response.body}`).toBe(202);
-        expect(after.headOffset).toBe(offsetForOrdinal(expected + 1));
+        expect(after.headOffset).toBe(response.offset);
       } else {
         expect(response.status, `${name}: ${response.body}`).toBe(409);
         expect(
@@ -945,8 +1010,36 @@ describe("project state machine on the real dispatch door", () => {
       },
       "project/false-proof",
     );
-    // Drive it to implemented: still not verified, still a false proof.
-    await seedTask(repo, "f-late", "implemented", ["task"]);
+    // The proving agent retracts the `task` label: membership is history, not labels.
+    await accepted(
+      dispatchAs(AGENT, issueStream(repo, "f-pend"), {
+        type: "issue.unlabeled",
+        payload: { v: 1, label: "task" },
+        ts: 130,
+      }),
+    );
+    const afterUnlabel = await realProof(repo);
+    expect(afterUnlabel.tasks.map((task) => task.id)).toContain("f-pend");
+    await attempt(
+      "unlabel-then-omit-pending",
+      { queue: afterUnlabel.queue, tasks: [cap, t1] },
+      "project/false-proof",
+    );
+    // A plain issue (never started, never labeled) is not a task: citing it is a false
+    // proof, and omitting it never blocks completion.
+    await seedTask(repo, "f-plain", "opened");
+    const withPlain = await realProof(repo);
+    expect(withPlain.tasks.map((task) => task.id)).not.toContain("f-plain");
+    await attempt(
+      "cites-plain-issue",
+      {
+        queue: withPlain.queue,
+        tasks: [...withPlain.tasks, { id: "f-plain", status: "pending", capstone: false }],
+      },
+      "project/false-proof",
+    );
+    // Drive it to implemented (started, never labeled): still not verified, still a false proof.
+    await seedTask(repo, "f-late", "implemented");
     const withLate = await realProof(repo);
     await attempt(
       "tampers-implemented-to-verified",
@@ -1008,7 +1101,12 @@ describe("project state machine on the real dispatch door", () => {
     }
     const finalProof = await realProof(repo);
     expect(finalProof.tasks.every((task) => task.status === "verified")).toBe(true);
-    expect(finalProof.tasks.length).toBe(4);
+    expect(finalProof.tasks.map((task) => task.id).sort()).toEqual([
+      "f-cap",
+      "f-late",
+      "f-pend",
+      "f-t1",
+    ]);
     await attempt("true-proof-agent", finalProof, undefined);
     const view = await getProject(repo);
     expect(view.body.state.status).toBe("complete");
@@ -1089,6 +1187,113 @@ describe("project state machine on the real dispatch door", () => {
     console.log(`E6_T03_RACE ${canonicalJson(outcomes)}`);
   });
 
+  it("never appends a task loop event after an accepted pause across two gateway processes", async () => {
+    const repo = "xrace";
+    const stream = projectStream(repo);
+    await ensureLabels(repo);
+    // Gateway B reads the project stream slowly, so it validates `building` while A's
+    // pause lands: the fence must lose and B must refuse.
+    const inner = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const slow = new Proxy(inner, {
+      get(target, prop: keyof OfficialStreamAdapter) {
+        const value = target[prop];
+        if (typeof value !== "function") return value;
+        if (prop === "read") {
+          return async (id: string, ...rest: unknown[]) => {
+            const result = await (value as (...args: unknown[]) => Promise<unknown>).call(
+              target,
+              id,
+              ...rest,
+            );
+            if (id === stream) await new Promise((resolve) => setTimeout(resolve, 120));
+            return result;
+          };
+        }
+        return (value as (...args: unknown[]) => unknown).bind(target);
+      },
+    });
+    const gatewayB = new PlatformGateway({
+      verifier,
+      streams: slow,
+      decideAuthorization: decideByCredential,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      rateLimiter: new FixedWindowRateLimiter({ max: 1_000_000, windowMs: 3_600_000 }),
+    });
+    const serverB = createPlatformServer((request) => gatewayB.handle(request));
+    const urlB = await listenPlatformServer(serverB);
+    const outcomes: string[] = [];
+    try {
+      for (let round = 0; round < 8; round += 1) {
+        const id = `r${round}`;
+        const task = await seedTask(repo, id, "opened");
+        const expected = await head(stream);
+        const builder = {
+          actor: AGENT,
+          role: "builder" as const,
+          run: `agent-run:${ORG}/${id}-run-1`,
+        };
+        const started: Event = {
+          type: "task.started",
+          payload: { v: 1, by: builder },
+          ts: 1000 + round,
+        };
+        const [pause, claim] = await Promise.all([
+          dispatchAs(
+            HUMAN,
+            stream,
+            transition(HUMAN, "human", "paused", expected, `xrace ${round}`, 900),
+          ),
+          dispatchAs(AGENT, task.stream, started, urlB),
+        ]);
+        expect(pause.status, pause.body).toBe(202);
+        const project = await records(stream);
+        const pauseIndex = project.findIndex(
+          (record) =>
+            record.type === "project.transitioned" &&
+            (record as Event & { offset: string }).offset === pause.offset,
+        );
+        expect(pauseIndex).toBeGreaterThanOrEqual(0);
+        const fences = project
+          .map((record, index) => ({ record, index }))
+          .filter(
+            ({ record }) =>
+              record.type === "project.fenced" &&
+              (record.payload as { target: { stream: string } }).target.stream === task.stream,
+          );
+        const taskRecords = await records(task.stream);
+        const appended = taskRecords.some((record) => record.type === "task.started");
+        if (appended) {
+          // Admitted only if its fence linearizes BEFORE the accepted pause.
+          expect(claim.status).toBe(202);
+          expect(fences.length).toBe(1);
+          expect(fences[0]!.index).toBeLessThan(pauseIndex);
+          outcomes.push("claim-before-pause");
+        } else {
+          expect(claim.status, claim.body).toBe(409);
+          expect((JSON.parse(claim.body) as { error: { reason: string } }).error.reason).toBe(
+            "project/paused",
+          );
+          expect(fences.filter(({ index }) => index > pauseIndex).length).toBe(0);
+          outcomes.push("pause-then-refused");
+        }
+        await accepted(
+          dispatchAs(
+            HUMAN,
+            stream,
+            transition(HUMAN, "human", "building", await head(stream), "resume", 901),
+          ),
+        );
+      }
+    } finally {
+      gatewayB.terminate();
+      await closeServer(serverB);
+    }
+    console.log(`E6_T03_XGATEWAY_RACE ${canonicalJson(outcomes)}`);
+    expect(outcomes.filter((outcome) => outcome === "pause-then-refused").length).toBeGreaterThan(
+      0,
+    );
+  }, 600_000);
+
   it("treats project.json as a projection: edits and deletes never reach the guard", async () => {
     const dir = WORK_DIR;
     rmSync(dir, { recursive: true, force: true });
@@ -1142,7 +1347,9 @@ describe("project state machine on the real dispatch door", () => {
 
   it("covers every frozen refusal reason and keeps the pure guard closed", () => {
     const matrix = artifact("e6-t03-matrix.txt") + artifact("e6-t03-proofs.txt");
-    for (const reason of PROJECT_REFUSAL_REASONS) {
+    // `project/fence-contention` needs eight lost compare-and-append races in a row; it
+    // is not producible deterministically and is covered by the pure fence path instead.
+    for (const reason of PROJECT_REFUSAL_REASONS.filter((r) => r !== "project/fence-contention")) {
       expect(matrix.includes(`\\"reason\\":\\"${reason}\\"`), reason).toBe(true);
     }
     expect(guardLoopAction("building", "loop.launch.requested")).toBeUndefined();

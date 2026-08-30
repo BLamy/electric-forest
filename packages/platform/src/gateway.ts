@@ -220,7 +220,7 @@ import {
   ProjectRefusalError,
   ProjectSchemaError,
   ProjectUnknownActionError,
-  guardTaskLoopAction,
+  fenceTaskLoopAction,
   isProjectActionType,
   isProjectStreamId,
   projectInitialStateForStream,
@@ -228,6 +228,7 @@ import {
   projectReducer,
   projectStreamId,
   type ProjectActorRole,
+  type ProjectFenceAppender,
   type ProjectRecordResolver,
 } from "./loop/index.js";
 import {
@@ -571,12 +572,13 @@ async function validateIssueDispatch(
   issueBoards: IssueBoardMaterializer,
   issueSource?: IssueEnvelopeSource,
   streams?: StreamAdapter,
+  actorRole?: ProjectActorRole,
 ): Promise<Offset | undefined> {
   const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
   if (identity === null) throw new IssueSchemaError();
   if (isTaskActionType(event.type)) {
     if (streams === undefined) throw new TaskUnknownActionError();
-    await validateTaskDispatch(records, event, streamId, actionValidators, streams);
+    await validateTaskDispatch(records, event, streamId, actionValidators, streams, actorRole);
     try {
       await issueBoards.assertIssueDeclared(
         identity[1]!,
@@ -982,6 +984,30 @@ function projectRecordResolver(streams: StreamAdapter): ProjectRecordResolver {
   };
 }
 
+/**
+ * E6-T03 fence appender: compare-and-append at the project stream's durable sequence.
+ * The stream is minted on demand; a lost race (`Stream-Seq` conflict) reports `false`.
+ */
+function projectFenceAppender(streams: StreamAdapter): ProjectFenceAppender {
+  return async (streamId, event, ordinal) => {
+    if (ordinal === 0) {
+      try {
+        await streams.create(streamId);
+      } catch (error) {
+        if (!isDurableExistsConflict(error)) throw error;
+      }
+    }
+    const sequence = offsetForOrdinal(ordinal);
+    try {
+      await streams.append(streamId, event, { sequence, applicationOffset: sequence });
+      return true;
+    } catch (error) {
+      if (isDurableConflict(error)) return false;
+      throw error;
+    }
+  };
+}
+
 /** Role of the dispatching credential: an owner/admin web session is human, a grant is an agent. */
 function projectActorRoleOf(decision: AuthzDecision | undefined): ProjectActorRole | undefined {
   if (decision === undefined || !decision.allowed) return undefined;
@@ -1031,17 +1057,28 @@ async function validateTaskDispatch(
   streamId: string,
   actionValidators: ActionValidatorRegistry,
   streams: StreamAdapter,
+  actorRole: ProjectActorRole | undefined,
 ): Promise<void> {
-  // E6-T03: the project guard decides first, at the project stream head, before any
-  // task-state validation — a paused, complete, or invalid loop refuses the claim,
-  // the verdict, the start, and the rework with the project's own reason.
-  await guardTaskLoopAction(streamId, event.type, projectRecordResolver(streams));
   const normalized = records.map((record, index) =>
     taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
   );
   const nextOffset = offsetForOrdinal(normalized.length);
   const action = taskEventWithoutServerMetadata(event, nextOffset);
   const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
+  // E6-T03: the project guard decides first, at the project stream head, before any
+  // task-state validation — a paused, complete, or invalid loop refuses the claim,
+  // the verdict, the start, and the rework with the project's own reason — and the
+  // decision is committed as a `project.fenced` record at the project stream's durable
+  // sequence, bound to the offset this event will occupy, so a pause racing from another
+  // gateway process has exactly one winner (see `fenceTaskLoopAction`).
+  await fenceTaskLoopAction(
+    streamId,
+    event.type,
+    nextOffset,
+    { actor: typeof stampedActor === "string" ? stampedActor : "", role: actorRole ?? "agent" },
+    action.ts,
+    { resolve: projectRecordResolver(streams), appendAt: projectFenceAppender(streams) },
+  );
   await actionValidators.validate(action, {
     streamId,
     state: normalized.reduce(taskReducer, taskInitialStateForStream(streamId)),
@@ -2736,6 +2773,7 @@ export class PlatformGateway {
                 this.issueBoards,
                 parsed.issueSource,
                 this.streams,
+                projectActorRoleOf(repoDecision),
               );
             }
             if (isRepoLabelsStreamId(parsed.streamId)) {
@@ -3907,6 +3945,10 @@ export class PlatformGateway {
     trustedContext?: AuthorizationContext,
   ): Promise<Response> {
     if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    // A malformed name is a 404 before any state is touched (the pure decision refuses
+    // the malformed target; an allowing test oracle must not turn it into a 500).
+    if (!isAuthzName(org) || !isAuthzName(repo))
+      return failure(404, "invalid_request", "not_found");
     let decision: AuthzDecision;
     try {
       decision = await this.decideRepo(

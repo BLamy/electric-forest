@@ -2,8 +2,12 @@ import type { Event, Offset } from "@eforest/protocol";
 import { OFFSET_BEFORE_FIRST } from "@eforest/protocol";
 import { parseTaskStreamId } from "@eforest/tasks";
 import {
+  PROJECT_EVENT_VERSION,
+  PROJECT_FENCE_EVENT,
   isProjectGuardedAction,
   projectStreamId,
+  type ProjectActorRef,
+  type ProjectFencedEvent,
   type ProjectGuardedAction,
   type ProjectRefusalReason,
   type ProjectStatus,
@@ -94,4 +98,64 @@ export async function guardTaskLoopAction(
   const reason = guardLoopAction(state.status, eventType);
   if (reason !== undefined) throw new ProjectRefusalError(reason, projectCitation(state));
   return projectCitation(state);
+}
+
+/** Compare-and-append: `true` when the record landed at `ordinal`, `false` on a lost race. */
+export type ProjectFenceAppender = (
+  streamId: string,
+  event: ProjectFencedEvent,
+  ordinal: number,
+) => Promise<boolean>;
+
+export interface ProjectFenceIo {
+  readonly resolve: ProjectRecordResolver;
+  readonly appendAt: ProjectFenceAppender;
+}
+
+export const PROJECT_FENCE_ATTEMPTS = 8;
+
+/**
+ * The cross-process fence for a guarded task loop event. The guard decision is re-made
+ * against a fresh replay of the project stream and then *committed* by appending a
+ * `project.fenced` record at that stream's current durable sequence. Any other append to
+ * the project stream — a human pause, an invalid_loop stop — that wins the same sequence
+ * makes this append conflict; the door then re-reads and refuses with the winning
+ * state's own reason (`project/paused`, …). N gateways on the same streams therefore
+ * agree on one linear history: no fence, and so no task loop event, can follow an
+ * accepted pause at that pause's sequence. `target` binds the fence to the task-stream
+ * offset the event will occupy. Eight consecutive lost races refuse
+ * `project/fence-contention` (fail closed, never silently admit).
+ */
+export async function fenceTaskLoopAction(
+  taskStreamId: string,
+  eventType: string,
+  targetOffset: Offset,
+  by: ProjectActorRef,
+  ts: number,
+  io: ProjectFenceIo,
+): Promise<ProjectGuardCitation | undefined> {
+  if (!isProjectGuardedAction(eventType)) return undefined;
+  const identity = parseTaskStreamId(taskStreamId);
+  if (identity === undefined) return undefined;
+  const stream = projectStreamId(identity.org, identity.repo);
+  let state = replayProjectLog(stream, []);
+  for (let attempt = 0; attempt < PROJECT_FENCE_ATTEMPTS; attempt += 1) {
+    const records = (await io.resolve(stream)) ?? [];
+    state = replayProjectLog(stream, records);
+    // E6_T03_TASK_FENCE_GUARD: the guard decision the fence commits.
+    const reason = guardLoopAction(state.status, eventType);
+    if (reason !== undefined) throw new ProjectRefusalError(reason, projectCitation(state));
+    const fence: ProjectFencedEvent = {
+      type: PROJECT_FENCE_EVENT,
+      payload: {
+        v: PROJECT_EVENT_VERSION,
+        by,
+        action: eventType,
+        target: { stream: taskStreamId, offset: targetOffset },
+      },
+      ts,
+    };
+    if (await io.appendAt(stream, fence, records.length)) return projectCitation(state);
+  }
+  throw new ProjectRefusalError("project/fence-contention", projectCitation(state));
 }

@@ -1,7 +1,7 @@
 import type { Event, Offset } from "@eforest/protocol";
 import { OFFSET_BEFORE_FIRST } from "@eforest/protocol";
 import { repoIssuesStreamId, replayIssueCatalog } from "@eforest/issues";
-import { replayTaskLog, type TaskState } from "@eforest/tasks";
+import { isTaskActionType, replayTaskLog, type TaskState } from "@eforest/tasks";
 import {
   isProjectActionType,
   isProjectEventShape,
@@ -106,6 +106,8 @@ export function decideProjectTransition(
   if (event.type === "loop.launch.requested") {
     const reason = guardLoopAction(state.status, "loop.launch.requested");
     if (reason !== undefined) return refuse(reason);
+    if (!event.payload.run.startsWith(`agent-run:${state.org}/`))
+      return refuse("project/foreign-run");
     return {
       ok: true,
       next: {
@@ -141,6 +143,7 @@ export function decideProjectTransition(
     head: offset,
     transitions: state.transitions + 1,
     launches: state.launches,
+    fences: state.fences,
     ...(state.lastLaunch === undefined ? {} : { lastLaunch: state.lastLaunch }),
   };
   return { ok: true, next: completion === undefined ? base : { ...base, completion } };
@@ -164,20 +167,36 @@ function headOf(records: readonly Event[]): Offset | typeof OFFSET_BEFORE_FIRST 
   return last?.offset ?? OFFSET_BEFORE_FIRST;
 }
 
-/** A task, for completion purposes: an issue the loop has touched or one labeled as one. */
-export function isLoopTask(task: TaskState): boolean {
+function everLabeled(records: readonly Event[], label: string): boolean {
+  return records.some((record) => {
+    if (record.type !== "issue.labeled") return false;
+    const payload = record.payload as { readonly label?: unknown } | null;
+    return payload !== null && typeof payload === "object" && payload.label === label;
+  });
+}
+
+/**
+ * The completion universe is derived from the task stream's append-only history, so no
+ * credential can shrink it: an issue is a task once any `task.*` event has been appended
+ * to it (E6-T01: a task is an issue with evidence) or once it has ever carried the
+ * `task` or `capstone` label — an `issue.unlabeled` later does not retract membership.
+ * A plain issue never started and never labeled is not a task and does not block
+ * completion.
+ */
+export function isLoopTask(task: TaskState, records: readonly Event[]): boolean {
   return (
     task.attempts.length > 0 ||
-    task.issue.labels.includes("task") ||
-    task.issue.labels.includes("capstone")
+    records.some((record) => isTaskActionType(record.type)) ||
+    everLabeled(records, "task") ||
+    everLabeled(records, "capstone")
   );
 }
 
-export function expectedProofTask(task: TaskState): ProjectProofTask {
+export function expectedProofTask(task: TaskState, records: readonly Event[]): ProjectProofTask {
   return {
     id: task.taskId,
     status: task.status,
-    capstone: task.issue.labels.includes("capstone"),
+    capstone: everLabeled(records, "capstone"),
   };
 }
 
@@ -209,8 +228,9 @@ export async function verifyQueueProof(
   }
   const expected = new Map<string, ProjectProofTask>();
   for (const issueStream of Object.keys(catalog.issues).sort()) {
-    const task = replayTaskLog(issueStream, (await resolve(issueStream)) ?? []);
-    if (isLoopTask(task)) expected.set(task.taskId, expectedProofTask(task));
+    const records = (await resolve(issueStream)) ?? [];
+    const task = replayTaskLog(issueStream, records);
+    if (isLoopTask(task, records)) expected.set(task.taskId, expectedProofTask(task, records));
   }
   const claimed = new Map<string, ProjectProofTask>();
   for (const task of proof.tasks) {

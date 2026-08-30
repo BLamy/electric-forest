@@ -37,11 +37,29 @@ cites `expectedOffset` — the project stream head the dispatcher observed — a
 human pause and an agent launch racing at the same offset have exactly one winner.
 
 A queue proof cites the repository issue catalog (`repo-issues:<org>/<repo>`) at its
-current head and lists every loop task (an issue with any `task.*` event, or labeled
-`task`/`capstone`) with its replayed status and capstone flag (label `capstone`). The
+current head and lists every loop task with its replayed status and capstone flag. The
+task universe is derived from append-only history so the proving credential cannot
+shrink it: an issue is a task once any `task.*` event exists on it or once it has ever
+carried the `task` or `capstone` label (`issue.unlabeled` does not retract membership);
+`capstone` likewise means ever-labeled. A plain issue never started and never labeled is
+not a task and does not block completion. The
 door replays each task stream: a stale head is `project/stale-proof`; an omitted,
 invented, duplicated, or misreported task, a missing or doubled capstone, or any
 non-`verified` status is `project/false-proof`.
+
+## The cross-process fence (`project.fenced`)
+
+A guard decision on a task stream is only as good as its ordering against the project
+stream, and the single-process writer lane is not a fence across gateway processes. So
+before a guarded task loop event is appended, the door commits its decision by
+compare-and-appending a `project.fenced` record at the project stream's current durable
+sequence (`Stream-Seq`), citing the task stream and the exact offset the event will
+occupy. A human pause racing for that sequence from any other process makes the fence
+conflict; the door re-reads and refuses with the winning state's reason. The project
+stream is therefore one linear history in which no fence — hence no task loop event —
+follows an accepted pause at that pause's sequence. Fences replay as `fences` and never
+move `head`, so `expectedOffset` citations stay stable. Eight lost races refuse
+`project/fence-contention` (fail closed). Clients cannot dispatch `project.fenced`.
 
 ## The loop guard
 

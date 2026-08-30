@@ -1,9 +1,11 @@
 import { stateDigest, type Event, type Offset, OFFSET_BEFORE_FIRST } from "@eforest/protocol";
 import {
   PROJECT_EVENT_VERSION,
+  PROJECT_FENCE_EVENT,
   PROJECT_REDUCER_ID,
   isProjectActionType,
   isProjectEventShape,
+  isProjectFencedEventShape,
   isProjectStreamId,
   parseProjectStreamId,
   projectEventOffset,
@@ -45,6 +47,8 @@ export interface ProjectState {
   readonly head: Offset | typeof OFFSET_BEFORE_FIRST;
   readonly transitions: number;
   readonly launches: number;
+  /** Door-appended fences (guarded task loop events bound to this stream); never move `head`. */
+  readonly fences: number;
   readonly completion?: ProjectCompletion;
   readonly lastLaunch?: ProjectLaunch;
 }
@@ -63,6 +67,7 @@ export function projectInitialStateFor(stream: string, org: string, repo: string
     head: OFFSET_BEFORE_FIRST,
     transitions: 0,
     launches: 0,
+    fences: 0,
   };
 }
 
@@ -93,6 +98,11 @@ function cleanPayload(event: Event): Event {
 export function projectReducer(state: ProjectState, rawEvent: Event): ProjectState {
   if (state.v !== PROJECT_EVENT_VERSION) return state;
   const event = cleanPayload(rawEvent);
+  if (event.type === PROJECT_FENCE_EVENT) {
+    if (!isProjectFencedEventShape(event) || projectEventOffset(rawEvent) === undefined)
+      return state;
+    return { ...state, fences: state.fences + 1 };
+  }
   if (!isProjectActionType(event.type) || !isProjectEventShape(event)) return state;
   const offset = projectEventOffset(rawEvent);
   if (offset === undefined) return state;

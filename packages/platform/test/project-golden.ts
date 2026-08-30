@@ -71,23 +71,27 @@ export const LIFECYCLE_PROOF: ProjectQueueProof = {
   ],
 };
 
+/** Fences the two seeded tasks (started, claimed, verified each) leave on the project stream. */
+export const LIFECYCLE_FENCES = 6;
+
 /**
- * The frozen valid lifecycle on `project:maple/loom`, offsets 0..6:
+ * The frozen valid lifecycle on `project:maple/loom`, offsets 6..12 (after six fences;
+ * `expectedOffset` cites `state.head`, which fences never move):
  * launch (agent) -> paused (human) -> building (human) -> invalid_loop (agent) ->
  * building (human) -> launch (human) -> complete (agent, with the real queue proof).
  */
 export const LIFECYCLE_EVENTS: readonly Event[] = [
   launch(AGENT, "agent", -1, "loom-run-1", 2000),
-  transition(HUMAN, "human", "paused", 0, "human halted the loop for review", 2001),
-  transition(HUMAN, "human", "building", 1, "review finished; loop may resume", 2002),
-  transition(AGENT, "agent", "invalid_loop", 2, "progress critic: death-spiral after run 3", 2003),
-  transition(HUMAN, "human", "building", 3, "human authorized recovery: runs 4-6 only", 2004),
-  launch(HUMAN, "human", 4, "loom-run-2", 2005),
+  transition(HUMAN, "human", "paused", 6, "human halted the loop for review", 2001),
+  transition(HUMAN, "human", "building", 7, "review finished; loop may resume", 2002),
+  transition(AGENT, "agent", "invalid_loop", 8, "progress critic: death-spiral after run 3", 2003),
+  transition(HUMAN, "human", "building", 9, "human authorized recovery: runs 4-6 only", 2004),
+  launch(HUMAN, "human", 10, "loom-run-2", 2005),
   transition(
     AGENT,
     "agent",
     "complete",
-    5,
+    11,
     "every task verified including the capstone loom-cap",
     2006,
     LIFECYCLE_PROOF,
@@ -95,7 +99,10 @@ export const LIFECYCLE_EVENTS: readonly Event[] = [
 ];
 
 export const LIFECYCLE_OFFSET_EVENTS: readonly (Event & { readonly offset: Offset })[] =
-  LIFECYCLE_EVENTS.map((record, index) => ({ ...record, offset: offsetForOrdinal(index) }));
+  LIFECYCLE_EVENTS.map((record, index) => ({
+    ...record,
+    offset: offsetForOrdinal(LIFECYCLE_FENCES + index),
+  }));
 
 export const MATRIX_ACTIONS = [
   "launch",
