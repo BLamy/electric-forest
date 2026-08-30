@@ -3,7 +3,7 @@ id: E6-T04
 epic: 6
 title: "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
 priority: 604
-status: pending
+status: in-progress
 depends_on: [E6-T01]
 estimate: M
 capstone: false
