@@ -3,7 +3,7 @@ id: E6-T03
 epic: 6
 title: "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 priority: 603
-status: implemented
+status: refuted
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -332,3 +332,85 @@ Commands: `node work/critic/digest.mjs`; `make verify-E6-T03`; `bash tools/verif
   claim are ordered by one durable sequence, so "a launched run after the accepted pause
   offset" is impossible by construction, not by timing; and the completion universe is a
   function of append-only history that no proving credential can retract.
+
+### 2026-08-30 — critic run 2 — VERDICT: refuted
+
+- ORIENT — recomputed independently before reading evidence (`work/critic2/digest.mjs`,
+  TZ=Asia/Kathmandu, LANG=tr_TR): state digest `9140f671…b79b`, projection sha256
+  `8a308f5b…9edd` (475 bytes), 13 events / 6 fences / `complete` / `updatedAt` 2006 —
+  all match the committed artifacts. E6-T01 fixture untouched by the diff and replays to
+  `e1ac70ae…d0be` via `ef replay --reducer tasks/v1`. No `.skip`/`.todo`/lint-disable in
+  the diff; goldens frozen (hashed before/after by the verifier). `make verify-E6-T03`
+  exit 0 (`work/critic2/verify.log`, zero `SKIPPED:`); cold clone PASSED from pristine
+  `61d5b4db` (`work/critic2/cold.log`: `DEPENDENCY_INTEGRITY_OK`, three `MUTATION …
+  EXPECTED-FAIL OK`, `E6_T03_XGATEWAY_RACE` 8× refused). Criterion 1 holds.
+- P4 completion vs a concurrently fenced task (criterion 4; run-1 P4 reopened in
+  compositional form) — **FAILED.** Predicted: with two gateways, a `building ->
+  complete` whose proof lists only the verified capstone cannot be accepted once the door
+  has fenced a `task.started` on a plain issue of the same repo. Observed
+  (`work/critic2/attack.mjs` A1, log `work/critic2/attack.log`, `EXPLOIT round=0..5`):
+  gateway C fences `task.started` on `issue:cedar/cmpN/bug-N` (`project.fenced` lands at
+  project seq N), its task-stream append lags 250 ms; gateway A validates the completion
+  60 ms later — `verifyQueueProof` (`project-transition.ts`) re-derives the universe from
+  the *task streams only*, `bug-N` still has no `task.*` record, the proof passes, the
+  transition lands at seq N+1 (202) — then C's `task.started` lands (202). Final state
+  **6 of 6 rounds: `status: complete` with an `in-progress` task**, i.e. the door accepted
+  a proof its own project stream already contradicted (fence at N cites the task stream
+  and action). Without injected lag the natural window closed 30/30 (`attack2.log` A1n,
+  all `project/false-proof`), and inside one gateway the writer lane serializes it
+  (A6g). Root cause: the fence is committed before the task event exists
+  (`fenceTaskLoopAction` runs inside the writer-lane `validate`, `gateway.ts`
+  `validateTaskDispatch`), but completion consults task streams and never the fence
+  history it just wrote. Demand: make the proof universe a function of the project
+  stream too — any `project.fenced` whose `target` has not landed (or whose target
+  stream is absent from / misreported in the proof) is `project/false-proof`/
+  `stale-proof` — and add a two-gateway complete-vs-start race with a post-fence append
+  lag to the suite.
+- P2 refusal purity (criterion 2 "each refusal leaves all relevant stream heads
+  byte-identical") — **FAILED for task-validator refusals.** Predicted: a `task.claimed`
+  refused by the E6-T01 validator leaves the project stream untouched. Observed
+  (`attack.log` A2/A2c, repo `cedar/fr`): `409 task/illegal-transition` left one
+  `project.fenced` record (project records 0 → 1, `fences` 0 → 1, `/project` digest
+  changed, `head` unchanged); 20 more refused claims → 21 records, `fences: 21`. The fence
+  is appended before `actionValidators.validate` runs (`gateway.ts` `validateTaskDispatch`),
+  so any write-grant agent can grow the project stream and move its state digest with
+  refused requests, each fence bound to an offset nothing ever occupies. Demand: fence
+  only after the task validator's decision (or compensate), and assert in the matrix that
+  every refused task loop event leaves the project stream dump identical.
+- Fence binding (README: "the exact offset the event will occupy") — observation, not
+  blocking: same-task double `task.started` across two gateways (`attack2.log` A9,
+  `cedar/ff`) leaves three fences (`01:agent-brook`, `01:agent-fern`, `02:agent-brook`)
+  for one landed event; writer-lane retries re-run the fence. Fences are decisions, not
+  receipts — state that, or bind at append.
+- Held with my own inputs (`attack.log`, `attack2.log`): pause vs two claims across three
+  gateways, 25 rounds no delay + 6 rounds with 150/40 ms delayed project reads — zero
+  violations, every refused claim `project/paused`, no fence after the accepted pause
+  (A3a/A3b); two human pauses at one `expectedOffset` across gateways — exactly one 202,
+  loser `project/stale-offset` (A4); `project.fenced` from agent/human on the project,
+  issue, or catalog stream → 404, zero records (A5); unlabel-then-omit, honest pending,
+  started-then-closed, capstone moved (all listings refused), foreign id, stale/future
+  head, foreign catalog, duplicate id, two/no capstones, empty proof, no proof, proof on
+  a pause — all refused at an unchanged head, true proof 202, agent self-resume
+  `project/unauthorized-resume`, human replan 202 (A6a–A6f); hardening rows — whitespace
+  reason 422, `"3"`/15-digit/numeric offsets 422, `agent-run:otherorg/…` and
+  `agent-run:cedarx/…` `project/foreign-run`, `/api/repos/Cedar/…` and `…/HD/project`
+  404 (A7); `project.json` edited to `building` + cold gateway: identical `/project`
+  body, launch and `task.started` `project/paused`, file restored byte-for-byte (A8);
+  `head` stays `-1` across 3 fences and citing a fence offset is `project/stale-offset`
+  (A10); matrix spot-check incl. human `task.started` under `paused` and human launch
+  under `invalid_loop` refused with identical dumps (A11). Note: `Task` is a different
+  label id from `task` (A6b, accepted by design); an ever-labeled capstone that is moved
+  makes the repo permanently uncompletable (A6d) — a consequence worth documenting.
+- Sabotage — sensitive, scratch worktree at `61d5b4db`: mutant A (invalid_loop arm →
+  `undefined`) fails the matrix (`invalid_loop/human/launch … expected 202 to be 409`),
+  the pure-guard test, and the verifier (`work/critic2/sabA-*.log`); mutant B (fence
+  appender reports success without appending) fails 5/7 tests incl. the two-gateway
+  race and the frozen lifecycle `fences` count (`sabB-test.log`).
+- COVERAGE — every hunk executed: guard/fence/reducer/transition/projection by the frozen
+  suite and my runs; gateway wiring, 404/422/409 mapping, `/project` route, validation
+  registry, authz `project:` target by HTTP; CLI `project/v1` fallback by the verifier
+  (`E6_T03_REPLAY processes=2`). `project/fence-contention` is reachable only through
+  the verifier's always-losing appender (unit path), never observed via HTTP — covered,
+  noted. `Makefile`, `index.ts` exports, `cold_clone_targets.txt`: waived (config).
+- SUITE: n/a until the refutations clear; harness and logs stay in `work/critic2/`.
+Commands: `node work/critic2/digest.mjs`; `make verify-E6-T03`; `bash tools/verify/cold_clone.sh verify-E6-T03`; `node work/critic2/attack.mjs`; `node work/critic2/attack2.mjs`; worktree mutants + `vitest run packages/platform/test/project-state.test.ts` / `node tools/verify/e6_t03_evidence.mjs`.
