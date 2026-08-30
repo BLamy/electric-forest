@@ -3,7 +3,7 @@ id: E6-T03
 epic: 6
 title: "Project state machine: server-enforced building, complete, paused, and invalid_loop"
 priority: 603
-status: implemented
+status: refuted
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -184,3 +184,80 @@ frozen timestamps.
   from every task stream at the cited catalog head; the projection file is output only;
   and the measuring apparatus is sensitive to one byte and to the removal of the
   invalid-loop guard.
+
+### 2026-08-30 — critic — VERDICT: refuted
+
+- ORIENT — digest recomputed independently (`work/critic/digest.mjs`, TZ=Asia/Kolkata,
+  LANG=fr_FR): state digest `add332a3…fe48`, projection sha256 `bdc7c02e…93dc` (475 bytes),
+  `updatedAt` 2006 = `log[6].ts`; matches the committed artifacts. No `.skip`/`.todo`/
+  `eslint-disable` in the diff; goldens are frozen (verifier hashes them before/after).
+  `make verify-E6-T03` exit 0 locally and `bash tools/verify/cold_clone.sh verify-E6-T03`
+  PASSED from pristine `99ef1c33` (`work/critic/cold.log`: zero `SKIPPED:`,
+  `DEPENDENCY_INTEGRITY_OK`, both `MUTATION … EXPECTED-FAIL OK`). Criterion 1 holds.
+- P2 pause-vs-launch atomicity (criterion 2 / attack 2) — **FAILED across gateways.**
+  Predicted: after an accepted `building -> paused` on `project:maple/race`, no
+  `task.claimed` on `issue:maple/race/*` is appended. Observed (`work/critic/attack.mjs`,
+  log `work/critic/attack.log`): with two `PlatformGateway` instances on the same durable
+  server — the exact configuration the builder's own cold-restart test runs — gateway B
+  validates `task.claimed` (reads `project:` = `building`), gateway A appends the pause
+  (202), then B appends the claim (202): append order
+  `A:project.transitioned > B:task.claimed`, final state `project=paused`,
+  `task tx=implemented`. Deterministic with a 200 ms read delay on B; **24 of 30** rounds
+  with no delay at all. Within one process the single global `WriterLaneDispatcher.serial`
+  (`packages/platform/src/writer-lanes.ts:174`) serializes the two streams, so the
+  same-stream race (20 rounds, exactly one winner, loser `project/stale-offset`, late
+  launch `project/paused`) and the single-gateway cross-stream race (0/10) are clean.
+  Root cause: `guardTaskLoopAction` (`project-guard.ts:96-107`, called from
+  `gateway.ts` `validateTaskDispatch`) decides on an unfenced read of the project stream
+  and stamps nothing on the task event — the builder's own caveat "documented, not
+  stamped". Demand: make every guarded task event cite the project head it was decided at
+  (e.g. stamp `project: {stream, offset}` on the accepted task event, and refuse at append
+  if the project head moved, or fence task-stream appends on the project stream) so the
+  refusal holds for N gateways, and add a two-gateway race to the suite.
+- P4 completion proof (criterion 4 / attack 3, "pending optional-looking task") —
+  **FAILED.** Predicted: a repo with a pending task cannot reach `complete`. Observed on
+  `project:maple/proofs` (cap verified+capstone, t1 verified, t2 opened+labeled `task`):
+  the honest proof, tampered status, omitted t2, missing/doubled capstone, duplicate id,
+  foreign catalog, invented task, empty proof, stale/future head are all refused with the
+  frozen reasons and unchanged heads (`attack.log`, `work/critic/attack2.mjs`) — but the
+  agent token then dispatched `issue.unlabeled {label:"task"}` on t2 and the same
+  agent's proof listing only cap+t1 was **accepted (202)**; and on `project:maple/plain`
+  (cap verified, `bug-7` opened with no label) the proof listing only cap was **accepted
+  (202)**. `isLoopTask` (`project-transition.ts:181-187`) defines the completion universe
+  by agent-mutable labels, while E6-T01 defines a task as any issue (`replayTaskLog`
+  status `pending`). Demand: the set of tasks a proof must cover cannot be shrinkable by
+  the proving credential — either every catalog issue is a task (E6-T01 identity) or
+  membership is derived from something an agent cannot retract; add both forgeries
+  (agent unlabel-then-complete, unlabeled pending issue) to `e6-t03-proofs.txt`.
+- P3 human-only resume — held. Real `decideStreamAuthorization` audited for a dispatch on
+  `project:maple/loom` over 14 principal classes (`work/critic/authz.mjs`): the only allowed
+  bases are `repo-owner`/`org-owner` (session) and `grant:write` (bearer; also for a
+  subject who is an org owner but presents a grant), so `projectActorRoleOf` is exhaustive.
+  Through HTTP: unauthenticated launch 401; agent `by.role:"human"` and human
+  `by.role:"agent"` `project/role-mismatch`; agent with a human-looking `by.actor`
+  `project/actor-mismatch`; agent self-resume from paused/complete
+  `project/unauthorized-resume`; admin/org-owner sessions pause/resume as `human`; all with
+  heads unchanged.
+- P5/P6 — held: `ts` is client-supplied and replayed (`updatedAt` = event `ts`); no clock/
+  fs/env in `src/loop` (fail-closed grep in the target); a `project.json` on disk saying
+  `building` changes nothing (launch still `project/paused`); a cold second gateway returns
+  the byte-identical `/project` body and refusal.
+- Sabotage — sensitive: worktree mutant 1 (invalid_loop arm returns `undefined`) turns
+  `make verify-E6-T03` red (`invalid_loop/human/launch … expected 202 to be 409`, exit 2,
+  `work/critic/sab1.log`); mutant 2 (drop the `guardTaskLoopAction` call in `gateway.ts`)
+  fails the matrix test (`paused/human/task.started … expected 202 to be 409`,
+  `work/critic/sab2.log`).
+- COVERAGE — gateway dispatch wiring, `validateTaskDispatch` hook, 404/422/409 mapping,
+  `/api/repos/<org>/<repo>/project`, validation registry, authz `project:` target, CLI
+  `project/v1` fallback, projector: all executed by the frozen suite/verifier and my runs.
+  `Makefile`, `index.ts` exports, `cold_clone_targets.txt`: waived (config).
+- Hardening, not blocking (outside the stated contract): a whitespace-only `statusReason`
+  (`"   \t"`) is accepted (literal "nonempty" holds; consider trimming); a launch citing
+  `agent-run:otherorg/z` under `project:maple/misc` is accepted (the run stream should be
+  the project's org); `GET /api/repos/Maple/roles/project` is a 500 under an allowing
+  authz oracle because `projectInitialStateForStream` throws before the name is checked
+  (the real decision refuses the malformed target first); `expectedOffset:"3"` is
+  refused as `project/stale-offset` rather than a 422.
+- SUITE: n/a until the two refutations clear; the critic harness and logs stay in
+  `work/critic/` for the rework.
+Commands: `node work/critic/digest.mjs`; `make verify-E6-T03`; `bash tools/verify/cold_clone.sh verify-E6-T03`; `node work/critic/attack.mjs`; `node work/critic/attack2.mjs`; `node work/critic/authz.mjs`; worktree mutants + `make verify-E6-T03` / `vitest run packages/platform/test/project-state.test.ts`.
