@@ -309,3 +309,76 @@ describe("E6-T02 disk writer leaves no partial output", () => {
     }
   });
 });
+
+describe("E6-T02 critic run 2: case folding is a general prefix invariant", () => {
+  const readme = validFixture("E9-T01-minimal").entries.find(
+    (entry) => entry.path === "readme.md",
+  )!;
+  const file = (path: string, text = "x") => ({
+    path,
+    kind: "file" as const,
+    bytes: encoder.encode(text),
+  });
+  const refusal = (entries: TaskFolderSnapshot["entries"]) => {
+    const result = parseTaskFolder({ folderName: "E9-T01-minimal", entries: [readme, ...entries] });
+    return result.ok ? "ok" : `${result.refusal.reason}@${result.refusal.path}`;
+  };
+
+  it("refuses collisions at any depth, in either sort order, and on listed empty directories", () => {
+    expect(refusal([file("evidence/A/B/c.txt"), file("evidence/a/x.txt")])).toBe(
+      "paths/case-collision@evidence/a/x.txt",
+    );
+    expect(refusal([file("evidence/x/y/Z/q"), file("evidence/x/y/z/w")])).toBe(
+      "paths/case-collision@evidence/x/y/z/w",
+    );
+    expect(refusal([file("evidence/a/B"), file("evidence/A/b/c")])).toBe(
+      "paths/case-collision@evidence/a/B",
+    );
+    expect(refusal([file("work/Probe/x"), file("work/probe")])).toBe(
+      "paths/case-collision@work/probe",
+    );
+    expect(refusal([{ path: "evidence/a", kind: "directory" }, file("evidence/A")])).toBe(
+      "paths/case-collision@evidence/a",
+    );
+    expect(refusal([file("evidence/A/x"), file("evidence/A/y"), file("evidence/AB/z")])).toBe("ok");
+  });
+
+  it("refuses any non-directory root evidence/work, and non-ASCII folds never reach the folder", () => {
+    expect(refusal([{ path: "evidence", kind: "other" }])).toBe("paths/unsupported-kind@evidence");
+    expect(refusal([{ path: "work", kind: "symlink" }])).toBe("paths/symlink@work");
+    expect(refusal([{ path: "evidence", kind: "directory" }])).toBe("ok");
+    for (const path of ["evidence/straße", "evidence/STRAẞE", "evidence/İ", "evidence/café"]) {
+      expect(refusal([file(path)])).toBe(`paths/forbidden-character@${path}`);
+    }
+  });
+
+  it("orders a large evidence tree deterministically regardless of input order", () => {
+    let state = 0xc2c2c2;
+    const next = () => (state = (Math.imul(state, 1103515245) + 12345) >>> 0) / 2 ** 32;
+    const entries = Array.from({ length: 3000 }, (_, index) => {
+      const depth = Math.floor(next() * 4);
+      const segments = Array.from({ length: depth }, () => `d${Math.floor(next() * 20)}`);
+      segments.push(`f${index.toString(36)}.bin`);
+      const bytes = new Uint8Array(1 + Math.floor(next() * 16));
+      for (let at = 0; at < bytes.length; at += 1) bytes[at] = Math.floor(next() * 256);
+      return { path: `evidence/${segments.join("/")}`, kind: "file" as const, bytes };
+    });
+    const digests = [1, 2, 3].map((seed) => {
+      let shuffleState = seed;
+      const random = () =>
+        (shuffleState = (Math.imul(shuffleState, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+      const shuffled = [...entries];
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const other = Math.floor(random() * (index + 1));
+        [shuffled[index], shuffled[other]] = [shuffled[other]!, shuffled[index]!];
+      }
+      const folder = parseOk({ folderName: "E9-T01-minimal", entries: [...shuffled, readme] });
+      const manifest = evidenceManifest(folder);
+      expect(manifest.every((entry, at) => at === 0 || manifest[at - 1]!.path < entry.path)).toBe(
+        true,
+      );
+      return taskFolderDigest(folder);
+    });
+    expect(new Set(digests).size).toBe(1);
+  });
+});
