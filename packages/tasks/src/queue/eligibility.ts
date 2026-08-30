@@ -93,8 +93,16 @@ export const QUEUE_VIOLATION_REASONS = [
   "dep/missing",
   /** A bare epic dependency names an epic with no queue member. */
   "dep/epic-missing",
-  /** Task dependencies form a cycle; `refs` lists every member of the cycle, sorted. */
+  /**
+   * Dependencies form a cycle; `refs` lists every member, sorted. A bare epic reference
+   * is an edge to each capstone of that epic, so a cycle through `E<n>` is found too.
+   */
   "dep/cycle",
+  /**
+   * No task is active, nothing can start, and at least one task is still `pending`: the
+   * queue can never advance. `refs` lists every pending member, sorted.
+   */
+  "dep/deadlock",
   /** An epic has more than one capstone. */
   "capstone/multiple",
   /** An epic's capstone is not that epic's final task in queue order. */
@@ -232,12 +240,38 @@ export function dependenciesSatisfied(reasons: readonly QueueBlockReason[]): boo
   return reasons.every((reason) => reason.reason === "status/not-startable");
 }
 
+/**
+ * The dependency edges of one task with bare epic references expanded: `E<n>` is an
+ * edge to every capstone of epic `n` (a capstone-less epic contributes no edge; it blocks
+ * as `dep/epic-no-capstone` and, if nothing else can move, deadlocks).
+ */
+export function dependencyEdges(
+  spec: QueueTaskSpec,
+  byId: ReadonlyMap<string, QueueTaskSpec>,
+  epics: ReadonlyMap<string, readonly QueueTaskSpec[]>,
+): readonly string[] {
+  const edges: string[] = [];
+  for (const ref of spec.dependsOn) {
+    if (QUEUE_EPIC_REF_PATTERN.test(ref)) {
+      for (const member of epics.get(ref) ?? []) if (member.capstone) edges.push(member.id);
+    } else if (byId.has(ref)) {
+      edges.push(ref);
+    }
+  }
+  return edges;
+}
+
 function cycleMembers(
   ordered: readonly QueueTaskSpec[],
   byId: ReadonlyMap<string, QueueTaskSpec>,
+  epics: ReadonlyMap<string, readonly QueueTaskSpec[]>,
 ): string[] {
-  // Tarjan over task references only (bare epic refs are resolved by capstone status,
-  // not by edges). Any strongly connected component with a cycle is reported whole.
+  // Tarjan over the expanded edge set (task references and bare epic references resolved
+  // to that epic's capstones). Every strongly connected component with a cycle — including
+  // a self-loop such as a capstone depending on its own epic — is reported whole.
+  const edges = new Map<string, readonly string[]>();
+  for (const spec of ordered)
+    if (!edges.has(spec.id)) edges.set(spec.id, dependencyEdges(spec, byId, epics));
   let index = 0;
   const indices = new Map<string, number>();
   const low = new Map<string, number>();
@@ -250,9 +284,7 @@ function cycleMembers(
     index += 1;
     stack.push(id);
     onStack.add(id);
-    const spec = byId.get(id)!;
-    for (const ref of spec.dependsOn) {
-      if (!byId.has(ref)) continue;
+    for (const ref of edges.get(id) ?? []) {
       if (!indices.has(ref)) {
         connect(ref);
         low.set(id, Math.min(low.get(id)!, low.get(ref)!));
@@ -268,7 +300,7 @@ function cycleMembers(
         onStack.delete(top);
         component.push(top);
       } while (top !== id);
-      const selfLoop = component.length === 1 && spec.dependsOn.includes(id);
+      const selfLoop = component.length === 1 && (edges.get(id) ?? []).includes(id);
       if (component.length > 1 || selfLoop) for (const member of component) members.add(member);
     }
   };
@@ -312,7 +344,7 @@ export function queueViolations(ordered: readonly QueueTaskSpec[]): readonly Que
   if (missing.size > 0) violations.push({ reason: "dep/missing", refs: [...missing].sort() });
   if (missingEpics.size > 0)
     violations.push({ reason: "dep/epic-missing", refs: [...missingEpics].sort() });
-  const cycle = cycleMembers(ordered, byId);
+  const cycle = cycleMembers(ordered, byId, epics);
   if (cycle.length > 0) violations.push({ reason: "dep/cycle", refs: cycle });
   const multiple: string[] = [];
   const notFinal: string[] = [];
@@ -347,7 +379,7 @@ export type QueueDecision =
   | { readonly kind: "in-flight"; readonly nextEligible: null; readonly inFlight: string }
   /** One task is `refuted` with its dependencies verified: it is the next task, for rework. */
   | { readonly kind: "rework"; readonly nextEligible: string; readonly inFlight: string }
-  /** No task is active and no startable task has its dependencies verified. */
+  /** No task is active and nothing is pending: every member is verified. */
   | { readonly kind: "exhausted"; readonly nextEligible: null; readonly inFlight: null }
   /** The queue cannot be decided; there is deliberately no `nextEligible` key. */
   | { readonly kind: "invalid"; readonly violations: readonly QueueViolation[] };
@@ -374,8 +406,19 @@ export function evaluateQueue(
   const blocked = new Map<string, readonly QueueBlockReason[]>();
   for (const spec of ordered) blocked.set(spec.id, blockReasons(spec, byId, epics));
   const violations = [...specViolations, ...queueViolations(ordered)];
-  if (violations.length > 0) return { ordered, blocked, decision: { kind: "invalid", violations } };
   const active = ordered.find((spec) => QUEUE_ACTIVE_STATUSES.includes(spec.status));
+  const pending = ordered.filter((spec) => spec.status === "pending");
+  if (
+    violations.length === 0 &&
+    active === undefined &&
+    pending.length > 0 &&
+    !pending.some((spec) => blocked.get(spec.id)!.length === 0)
+  ) {
+    // Nothing active, nothing startable, work left: a queue that can never advance is a
+    // fault to be reported, never "nothing left to do".
+    violations.push({ reason: "dep/deadlock", refs: pending.map((spec) => spec.id).sort() });
+  }
+  if (violations.length > 0) return { ordered, blocked, decision: { kind: "invalid", violations } };
   if (active !== undefined) {
     const reasons = blocked.get(active.id)!;
     if (active.status === "refuted" && dependenciesSatisfied(reasons)) {

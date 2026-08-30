@@ -1,5 +1,5 @@
 {
-  "name": "exhausted-all-blocked",
+  "name": "deadlock-no-capstone-epic",
   "valid": false,
   "tasks": [
     {
@@ -9,7 +9,7 @@
       "title": "Task E1-T01 does one thing",
       "status": "pending",
       "depends_on": [
-        "E2-T01"
+        "E2"
       ],
       "estimate": "M",
       "capstone": true
@@ -19,12 +19,22 @@
       "epic": 2,
       "priority": "201",
       "title": "Task E2-T01 does one thing",
+      "status": "verified",
+      "depends_on": [],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E2-T02",
+      "epic": 2,
+      "priority": "202",
+      "title": "Task E2-T02 does one thing",
       "status": "pending",
       "depends_on": [
         "E1"
       ],
       "estimate": "M",
-      "capstone": true
+      "capstone": false
     }
   ]
 }

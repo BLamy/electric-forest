@@ -203,6 +203,19 @@ try {
     if (reason === "queue/duplicate-id" || reason === "catalog/corrupt") continue;
     assert.ok(reasons.has(reason), `violation reason never reached: ${reason}`);
   }
+  assert.ok(
+    reasons.has("dep/deadlock") && graphs.some((graph) => graph.name === "bare-epic-cycle"),
+    "critic run-1 graphs",
+  );
+  for (const graph of graphs) {
+    const derived = projectQueue(queueSourcesFromGraph(ORG, REPO, graph));
+    if (derived.decision.kind === "exhausted") {
+      assert.ok(
+        derived.tasks.every((task) => task.status === "verified"),
+        `${graph.name}: exhausted with pending work`,
+      );
+    }
+  }
   console.log(
     `E6_T04_GRAPHS valid=${valid} invalid=${invalid} reasons=${reasons.size}/${QUEUE_VIOLATION_REASONS.length}`,
   );

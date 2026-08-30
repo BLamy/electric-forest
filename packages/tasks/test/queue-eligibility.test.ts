@@ -47,7 +47,7 @@ const spec = (
 describe("queue eligibility (E6-T04)", () => {
   it("holds every frozen graph to its committed projection, markdown, and digest", () => {
     const names = frozenGraphNames();
-    expect(names.length).toBeGreaterThanOrEqual(27);
+    expect(names.length).toBeGreaterThanOrEqual(30);
     for (const name of names) {
       const graph = frozenGraph(name);
       const projection = projectionOf(graph);
@@ -198,6 +198,44 @@ describe("queue eligibility (E6-T04)", () => {
       if (reason === "catalog/corrupt") continue;
       expect(seen.has(reason), reason).toBe(true);
     }
+  });
+
+  it("finds cycles that run through bare-epic edges and refuses to call a deadlock exhausted", () => {
+    for (const [name, refs] of [
+      ["bare-epic-cycle", ["E1-T01", "E2-T01"]],
+      ["self-epic-cycle", ["E1-T01"]],
+      ["exhausted-all-blocked", ["E1-T01", "E2-T01"]],
+    ] as const) {
+      const projection = projectionOf(frozenGraph(name));
+      expect(projection.decision, name).toEqual({
+        kind: "invalid",
+        violations: [{ reason: "dep/cycle", refs: [...refs] }],
+      });
+    }
+    const deadlock = projectionOf(frozenGraph("deadlock-no-capstone-epic"));
+    expect(deadlock.decision).toEqual({
+      kind: "invalid",
+      violations: [{ reason: "dep/deadlock", refs: ["E1-T01", "E2-T02"] }],
+    });
+    // `exhausted` is reachable only when nothing is pending.
+    for (const name of frozenGraphNames()) {
+      const projection = projectionOf(frozenGraph(name));
+      if (projection.decision.kind === "exhausted") {
+        expect(
+          projection.tasks.every((task) => task.status === "verified"),
+          name,
+        ).toBe(true);
+      }
+    }
+    // Built directly: a two-epic cycle through both capstones.
+    const { decision } = evaluateQueue([
+      spec("E1-T01", "pending", ["E2"], { capstone: true }),
+      spec("E2-T01", "pending", ["E1"], { capstone: true }),
+    ]);
+    expect(decision).toEqual({
+      kind: "invalid",
+      violations: [{ reason: "dep/cycle", refs: ["E1-T01", "E2-T01"] }],
+    });
   });
 
   it("reports a corrupt catalog as an invalid proof, not an empty queue", () => {

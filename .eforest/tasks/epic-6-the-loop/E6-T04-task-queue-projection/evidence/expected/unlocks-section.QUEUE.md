@@ -25,4 +25,4 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [ ] `102` [E1-T02](epic-1/E1-T02/readme.md) — Task E1-T02 does one thing *(deps: E1-T01)*
 - [ ] `103` [E1-T03](epic-1/E1-T03/readme.md) — Task E1-T03 does one thing *(deps: E1-T01, E1-T02)*
 - [ ] `104` [E1-T04](epic-1/E1-T04/readme.md) — Task E1-T04 does one thing *(deps: —)*
-- [ ] `105` [E1-T05](epic-1/E1-T05/readme.md) — Task E1-T05 does one thing **[CAPSTONE]** *(deps: E1)*
+- [ ] `105` [E1-T05](epic-1/E1-T05/readme.md) — Task E1-T05 does one thing **[CAPSTONE]** *(deps: E1-T04)*

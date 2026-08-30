@@ -54,7 +54,7 @@
       "title": "Task E1-T05 does one thing",
       "status": "pending",
       "depends_on": [
-        "E1"
+        "E1-T04"
       ],
       "estimate": "M",
       "capstone": true

@@ -75,6 +75,12 @@ describe("queue graph fuzz (E6-T04)", () => {
       const cyclic = projectQueue(
         queueSourcesFromGraph(ORG, REPO, generateQueueGraph(seed, { cyclic: true })),
       );
+      if (cyclic.decision.kind === "exhausted") {
+        expect(
+          cyclic.tasks.every((task) => task.status === "verified"),
+          `cyclic-${seed}`,
+        ).toBe(true);
+      }
       if (cyclic.decision.kind === "invalid") {
         invalid += 1;
         expect("nextEligible" in cyclic.decision).toBe(false);

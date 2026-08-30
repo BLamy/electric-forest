@@ -159,9 +159,8 @@ fetch order (`make verify-E6-T04` rebuilds in three fresh processes, two of them
   `in-flight {inFlight}` while one task is `in-progress`/`implemented` (or `refuted` with
   unmet dependencies) — no second task is ever eligible; `rework` when the one active
   task is `refuted` with its dependencies verified (it is the next task, exactly as
-  `build_queue.py`'s current gate); `exhausted` when nothing can start; and `invalid
-{violations}` — deliberately without a `nextEligible` key — for cycles (`dep/cycle`,
-  every member listed), missing task/epic references, duplicate ids, more than one active
+  `build_queue.py`'s current gate); `exhausted` only when every member is `verified`; and `invalid
+{violations}` — deliberately without a `nextEligible` key — for cycles (`dep/cycle`, every member listed; a bare `E<n>` reference is an edge to each capstone of that epic, so a cycle through an epic — or a capstone depending on its own epic — is a cycle), a deadlock (`dep/deadlock`: nothing active, nothing startable, work still `pending` — a queue that can never advance is never reported as "nothing left"), missing task/epic references, duplicate ids, more than one active
   task, more than one capstone in an epic, a capstone that is not its epic's final task,
   a completed epic with no capstone, a fractional priority without a `Queue-jump reason:`
   line in the Context section, an unparseable spec, an id mismatch, or a corrupt catalog.
@@ -181,6 +180,20 @@ fetch order (`make verify-E6-T04` rebuilds in three fresh processes, two of them
   tree — and `tools/verify/queue_differential.py` runs the unmodified `build_queue.py`
   over that tree and normalizes its `QUEUE.md`; `normalizeQueueDecision` is the
   TypeScript side. `generateQueueGraph(seed, {cyclic})` is the seeded graph fuzzer.
+
+### Seams against `tools/build_queue.py` (documented, not hidden)
+
+- Python cannot represent an invalid proof: on a cycle or a deadlock it prints an empty
+  "Next up" and selects nothing. Invalid frozen graphs are therefore held to the decision
+  the spec requires (`invalid`) and are not compared to Python; the tuples still agree.
+- Python parses priorities as `float`, so two legal priorities that collapse to one double
+  (`101.10000000000000001` vs `101.1`) tie there and fall back to path order, while the
+  projector compares the decimals exactly. Parity holds for every priority representable
+  as a double.
+- Python strips everything after `#` in a frontmatter value, so a title containing ` #`
+  (`Fix regression #12`) is truncated in its `QUEUE.md` line; ids, statuses, priorities,
+  and dependencies still agree. The differential criterion is the decision and the ordered
+  task/status/dependency tuples, so this only affects markdown byte parity.
 
 Frozen artifacts and the verifier live in
 `.eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/` (`make verify-E6-T04`).

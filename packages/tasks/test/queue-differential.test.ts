@@ -87,7 +87,7 @@ describe("Python/TypeScript queue differential (E6-T04)", () => {
       );
       compared += 1;
     }
-    expect(compared).toBeGreaterThanOrEqual(13);
+    expect(compared).toBeGreaterThanOrEqual(12);
   });
 
   it("agrees with build_queue.py on random DAGs", () => {
