@@ -16,6 +16,7 @@ import {
   PROJECT_REFUSAL_REASONS,
   fenceTaskLoopAction,
   guardLoopAction,
+  verifyQueueProof,
   projectProjectionBytes,
   replayProjectLog,
   validateProjectEvent,
@@ -166,7 +167,7 @@ try {
   const rows = matrix.filter((entry) => entry.prefix === "E6_T03_MATRIX");
   const extras = matrix.filter((entry) => entry.prefix === "E6_T03_REFUSAL");
   assert.equal(rows.length, 72, "state x role x action rows");
-  assert.equal(extras.length, 15, "binding/shape/family refusals");
+  assert.equal(extras.length, 17, "binding/shape/family refusals");
   const reasonsSeen = new Set();
   const tuples = new Set();
   let refused = 0;
@@ -257,6 +258,10 @@ try {
   expectReason("building/human/to:complete", "project/proof-required");
   for (const extra of extras) {
     assert.deepEqual(extra.after, extra.before, `${extra.name}: a refusal moved a stream head`);
+    assert.ok(
+      "project" in extra.before && "target" in extra.before,
+      `${extra.name}: both snapshots`,
+    );
     assert.ok([404, 409, 422].includes(extra.status), extra.name);
     if (extra.status === 409) reasonsSeen.add(JSON.parse(extra.responseBody).error.reason);
   }
@@ -363,7 +368,7 @@ try {
     await fenceTaskLoopAction(
       taskStream,
       "task.claimed",
-      "0000000000000000_0000000000000003",
+      { offset: "0000000000000000_0000000000000003", writer: { sub: "agent-ash", seq: 1 } },
       by,
       1,
       {
@@ -385,7 +390,7 @@ try {
     await fenceTaskLoopAction(
       taskStream,
       "task.claimed",
-      "0000000000000000_0000000000000003",
+      { offset: "0000000000000000_0000000000000003", writer: { sub: "agent-ash", seq: 1 } },
       by,
       1,
       {
@@ -405,7 +410,7 @@ try {
   const citation = await fenceTaskLoopAction(
     taskStream,
     "task.claimed",
-    "0000000000000000_0000000000000003",
+    { offset: "0000000000000000_0000000000000003", writer: { sub: "agent-ash", seq: 1 } },
     by,
     1,
     {
@@ -421,11 +426,96 @@ try {
     {
       stream: streamId,
       ordinal: 0,
-      target: { stream: taskStream, offset: "0000000000000000_0000000000000003" },
+      target: {
+        stream: taskStream,
+        offset: "0000000000000000_0000000000000003",
+        type: "task.claimed",
+        writer: { sub: "agent-ash", seq: 1 },
+      },
     },
   ]);
   console.log(
     "E6_T03_FENCE contention=refused-after-8 pause-mid-race=project/paused bound-target=true",
+  );
+  // Completion consults fence history: an open fence (target not yet landed) makes the
+  // proof stale; a proof citing an older project tail is stale; a dead fence (its offset
+  // taken by another record) is ignored.
+  const openFence = {
+    type: "project.fenced",
+    payload: {
+      v: 1,
+      by,
+      action: "task.started",
+      target: {
+        stream: taskStream,
+        offset: "0000000000000000_0000000000000001",
+        type: "task.started",
+        writer: { sub: "agent-ash", seq: 1 },
+      },
+    },
+    ts: 1,
+    offset: "0000000000000000_0000000000000000",
+  };
+  const building = replayProjectLog(streamId, [openFence]);
+  assert.equal(building.fences, 1);
+  const catalogRecords = [
+    {
+      type: "repo.issue-observed",
+      payload: {
+        v: 1,
+        issueStreamId: taskStream,
+        sourceOffset: "0000000000000000_0000000000000000",
+      },
+      ts: 1,
+      offset: "0000000000000000_0000000000000000",
+    },
+  ];
+  const opened = {
+    type: "issue.opened",
+    payload: { v: 1, title: "t", body: "b" },
+    ts: 1,
+    offset: "0000000000000000_0000000000000000",
+  };
+  const proofFor = (tail) => ({
+    queue: { stream: "repo-issues:maple/loom", offset: "0000000000000000_0000000000000000" },
+    project: { offset: tail },
+    tasks: [],
+  });
+  const resolver = (taskRecords) => async (id) =>
+    id === "repo-issues:maple/loom" ? catalogRecords : id === taskStream ? taskRecords : undefined;
+  const refusalOf = async (proof, taskRecords) => {
+    try {
+      await verifyQueueProof(building, proof, resolver(taskRecords), [openFence]);
+    } catch (error) {
+      return error.reason;
+    }
+    return undefined;
+  };
+  assert.equal(
+    await refusalOf(proofFor("0000000000000000_0000000000000000"), [opened]),
+    "project/stale-proof",
+    "open fence",
+  );
+  assert.equal(
+    await refusalOf(proofFor("-1"), [opened]),
+    "project/stale-proof",
+    "older project tail",
+  );
+  const dead = {
+    type: "issue.commented",
+    payload: { v: 1, commentId: "c", body: "x", writer: { v: 1, sub: "someone", seq: 1 } },
+    ts: 2,
+    offset: "0000000000000000_0000000000000001",
+  };
+  // The dead fence is ignored and the (empty) universe matches the empty listing here;
+  // an empty proof is refused by the pure transition table, not by fence history.
+  assert.equal(
+    await refusalOf(proofFor("0000000000000000_0000000000000000"), [opened, dead]),
+    undefined,
+    "dead fence must be ignored",
+  );
+  console.log(
+    "E6_T03_FENCE_PROOF open-fence=stale-proof stale-tail=stale-proof dead-fence=ignored",
   );
 
   // 7. One-byte mutation of every frozen event kind must change the digest.

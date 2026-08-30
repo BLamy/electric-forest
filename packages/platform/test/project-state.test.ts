@@ -426,14 +426,26 @@ describe("project state machine on the real dispatch door", () => {
     }
     return {
       queue: { stream: catalogStream(repo), offset: offsetForOrdinal(catalog.length - 1) },
+      project: { offset: await projectTail(repo) },
       tasks,
     };
+  }
+
+  /** The project stream's fence-inclusive durable tail (what a completion proof must cite). */
+  async function projectTail(repo: string): Promise<Offset | typeof OFFSET_BEFORE_FIRST> {
+    const found = await records(projectStream(repo));
+    return found.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(found.length - 1);
   }
 
   it("drives the frozen lifecycle end to end and dumps the committed project log", async () => {
     await seedTask(LIFECYCLE_REPO, "loom-t1", "verified", ["task"]);
     await seedTask(LIFECYCLE_REPO, "loom-cap", "verified", ["capstone"]);
-    expect(await realProof(LIFECYCLE_REPO)).toEqual(LIFECYCLE_PROOF);
+    // Before the lifecycle the tail is the last seeded fence (5); the frozen proof cites
+    // the tail at completion time (11).
+    expect(await realProof(LIFECYCLE_REPO)).toEqual({
+      ...LIFECYCLE_PROOF,
+      project: { offset: offsetForOrdinal(LIFECYCLE_FENCES - 1) },
+    });
     const fresh = await getProject(LIFECYCLE_REPO);
     expect(fresh.status).toBe(200);
     expect(fresh.body.state.status).toBe("building");
@@ -620,6 +632,7 @@ describe("project state machine on the real dispatch door", () => {
 
     const dummyProof = (repo: string): ProjectQueueProof => ({
       queue: { stream: catalogStream(repo), offset: offsetForOrdinal(0) },
+      project: { offset: OFFSET_BEFORE_FIRST },
       tasks: [{ id: "cap", status: "verified", capstone: true }],
     });
 
@@ -681,10 +694,15 @@ describe("project state machine on the real dispatch door", () => {
           if (isTaskAction) {
             const fence = (await records(stream)).at(-1) as Event;
             expect(fence.type).toBe("project.fenced");
-            expect((fence.payload as { target: unknown }).target).toEqual({
-              stream: targetStream,
-              offset: response.offset,
-            });
+            const target = (
+              fence.payload as {
+                target: { stream: string; offset: string; type: string; writer: { sub: string } };
+              }
+            ).target;
+            expect(target.stream).toBe(targetStream);
+            expect(target.offset).toBe(response.offset);
+            expect(target.type).toBe(row.action);
+            expect(target.writer.sub).toBe(sub);
           }
         } else {
           expect(response.status, `${name}: ${response.body}`).toBe(409);
@@ -843,6 +861,49 @@ describe("project state machine on the real dispatch door", () => {
         reason: "project/stale-offset",
       },
       {
+        name: "task-validator-refusal-builder-mismatch",
+        sub: AGENT,
+        streamId: seeded.get(repo)!.get("t-open-h")!.stream,
+        event: {
+          type: "task.claimed",
+          payload: {
+            v: 1,
+            by: { actor: AGENT, role: "builder", run: `agent-run:${ORG}/t-open-h-run-9` },
+            branch: seeded.get(repo)!.get("t-open-h")!.branch,
+            evidence: {
+              stream: seeded.get(repo)!.get("t-open-h")!.evidence,
+              attachmentIds: ["log-1"],
+            },
+            summary: "claim by an agent on a task the human started",
+          },
+          ts: 615,
+        },
+        status: 409,
+        reason: "task/builder-mismatch",
+      },
+      {
+        name: "task-validator-refusal-builder-verifies",
+        sub: AGENT,
+        streamId: seeded.get(repo)!.get("t-open-h")!.stream,
+        event: {
+          type: "task.verified",
+          payload: {
+            v: 1,
+            by: { actor: AGENT, role: "builder", run: `agent-run:${ORG}/t-open-run-9` },
+            claim: { stream: seeded.get(repo)!.get("t-open")!.stream, offset: offsetForOrdinal(2) },
+            branch: seeded.get(repo)!.get("t-open")!.branch,
+            evidence: {
+              stream: seeded.get(repo)!.get("t-open")!.evidence,
+              attachmentIds: ["log-1"],
+            },
+            summary: "builder verifies",
+          },
+          ts: 616,
+        },
+        status: 409,
+        reason: "task/wrong-role",
+      },
+      {
         name: "stale-offset-pause",
         sub: HUMAN,
         streamId: stream,
@@ -872,6 +933,7 @@ describe("project state machine on the real dispatch door", () => {
         streamId: stream,
         event: transition(AGENT, "agent", "complete", expected, "empty proof", 611, {
           queue: { stream: catalogStream(repo), offset: offsetForOrdinal(0) },
+          project: { offset: await projectTail(repo) },
           tasks: [],
         }),
         status: 409,
@@ -879,9 +941,9 @@ describe("project state machine on the real dispatch door", () => {
       },
     ];
     for (const scenario of extra) {
-      const before = await snapshot(scenario.streamId);
+      const before = { target: await snapshot(scenario.streamId), project: await snapshot(stream) };
       const response = await dispatchAs(scenario.sub, scenario.streamId, scenario.event);
-      const after = await snapshot(scenario.streamId);
+      const after = { target: await snapshot(scenario.streamId), project: await snapshot(stream) };
       expect(response.status, `${scenario.name}: ${response.body}`).toBe(scenario.status);
       if (scenario.reason !== undefined) {
         expect((JSON.parse(response.body) as { error: { reason: string } }).error.reason).toBe(
@@ -922,11 +984,18 @@ describe("project state machine on the real dispatch door", () => {
 
     async function attempt(
       name: string,
-      proof: ProjectQueueProof,
+      partial: Omit<ProjectQueueProof, "project"> & {
+        readonly project?: ProjectQueueProof["project"];
+      },
       expectReason: string | undefined,
       sub = AGENT,
       role: ProjectActorRole = "agent",
     ): Promise<void> {
+      const proof: ProjectQueueProof = {
+        queue: partial.queue,
+        project: partial.project ?? { offset: await projectTail(repo) },
+        tasks: partial.tasks,
+      };
       const expected = await head(stream);
       const event = transition(sub, role, "complete", expected, `forge: ${name}`, 700, proof);
       const before = await snapshot(stream);
@@ -958,6 +1027,11 @@ describe("project state machine on the real dispatch door", () => {
 
     const queue = truth.queue;
     await attempt("missing-capstone", { queue, tasks: [t1] }, "project/false-proof");
+    await attempt(
+      "stale-project-tail",
+      { queue, project: { offset: OFFSET_BEFORE_FIRST }, tasks: [cap, t1] },
+      "project/stale-proof",
+    );
     await attempt(
       "capstone-flag-stripped",
       { queue, tasks: [{ ...cap, capstone: false }, t1] },
@@ -1132,7 +1206,13 @@ describe("project state machine on the real dispatch door", () => {
         transition(HUMAN, "human", "building", await head(stream), "epic 7 planned", 702),
       ),
     );
-    await attempt("true-proof-human", finalProof, undefined, HUMAN, "human");
+    await attempt(
+      "true-proof-human",
+      { queue: finalProof.queue, tasks: finalProof.tasks },
+      undefined,
+      HUMAN,
+      "human",
+    );
     const text = `${transcript.join("\n")}\n`;
     expectFrozen("e6-t03-proofs.txt", text);
   }, 600_000);
@@ -1186,6 +1266,136 @@ describe("project state machine on the real dispatch door", () => {
     }
     console.log(`E6_T03_RACE ${canonicalJson(outcomes)}`);
   });
+
+  it("never completes over a fenced task whose record has not landed, across two gateways", async () => {
+    const repo = "xlag";
+    const stream = projectStream(repo);
+    await ensureLabels(repo);
+    await seedTask(repo, "cap", "verified", ["capstone"]);
+    // Gateway C appends to task streams slowly: its fence lands, its task record lags.
+    const inner = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const lagging = new Proxy(inner, {
+      get(target, prop: keyof OfficialStreamAdapter) {
+        const value = target[prop];
+        if (typeof value !== "function") return value;
+        if (prop === "append") {
+          return async (id: string, ...rest: unknown[]) => {
+            if (id.startsWith("issue:")) await new Promise((resolve) => setTimeout(resolve, 200));
+            return (value as (...args: unknown[]) => Promise<unknown>).call(target, id, ...rest);
+          };
+        }
+        return (value as (...args: unknown[]) => unknown).bind(target);
+      },
+    });
+    const gatewayC = new PlatformGateway({
+      verifier,
+      streams: lagging,
+      decideAuthorization: decideByCredential,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      rateLimiter: new FixedWindowRateLimiter({ max: 1_000_000, windowMs: 3_600_000 }),
+    });
+    const serverC = createPlatformServer((request) => gatewayC.handle(request));
+    const urlC = await listenPlatformServer(serverC);
+    const outcomes: string[] = [];
+    try {
+      for (let round = 0; round < 6; round += 1) {
+        const id = `bug-${round}`;
+        const task = await seedTask(repo, id, "opened");
+        const proof = await realProof(repo); // computed before the start: lists only verified tasks
+        const builder = {
+          actor: AGENT,
+          role: "builder" as const,
+          run: `agent-run:${ORG}/${id}-run-1`,
+        };
+        const started: Event = {
+          type: "task.started",
+          payload: { v: 1, by: builder },
+          ts: 1100 + round,
+        };
+        const startC = dispatchAs(AGENT, task.stream, started, urlC);
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        const complete = await dispatchAs(
+          AGENT,
+          stream,
+          transition(
+            AGENT,
+            "agent",
+            "complete",
+            await head(stream),
+            `xlag ${round}`,
+            1200 + round,
+            proof,
+          ),
+        );
+        const start = await startC;
+        console.log(
+          `E6_T03_XLAG_ROUND ${round} complete=${complete.status} ${complete.body} start=${start.status} ${start.body} tail=${await projectTail(repo)} cited=${proof.project.offset}`,
+        );
+        const state = replayProjectLog(stream, await records(stream));
+        const taskRaw = (await records(task.stream)).map((record, index) => ({
+          ...cleanEvent(record),
+          offset: offsetForOrdinal(index),
+        }));
+        const { replayTaskLog } = await import("@eforest/tasks");
+        const taskState = replayTaskLog(task.stream, taskRaw);
+        // The invariant: never `complete` while a task is in progress.
+        expect(
+          !(state.status === "complete" && taskState.status !== "verified"),
+          `${id}: complete over an in-progress task`,
+        ).toBe(true);
+        if (complete.status === 202) {
+          expect(start.status, start.body).toBe(409);
+          expect((JSON.parse(start.body) as { error: { reason: string } }).error.reason).toBe(
+            "project/complete",
+          );
+          outcomes.push("complete-then-start-refused");
+          await accepted(
+            dispatchAs(
+              HUMAN,
+              stream,
+              transition(HUMAN, "human", "building", await head(stream), "replan", 1300 + round),
+            ),
+          );
+        } else {
+          expect(start.status, start.body).toBe(202);
+          expect((JSON.parse(complete.body) as { error: { reason: string } }).error.reason).toBe(
+            "project/stale-proof",
+          );
+          outcomes.push("start-fenced-complete-stale");
+          // Bring the started task to `verified` so the next round's proof is honest.
+          const evidence = { stream: task.evidence, attachmentIds: ["log-1"] };
+          const claimOffset = await accepted(
+            dispatchAs(AGENT, task.stream, {
+              type: "task.claimed",
+              payload: { v: 1, by: builder, branch: task.branch, evidence, summary: `claim ${id}` },
+              ts: 1400 + round,
+            }),
+          );
+          await accepted(
+            dispatchAs(CRITIC, task.stream, {
+              type: "task.verified",
+              payload: {
+                v: 1,
+                by: { actor: CRITIC, role: "critic", run: `agent-run:${ORG}/${id}-run-2` },
+                claim: { stream: task.stream, offset: claimOffset },
+                branch: task.branch,
+                evidence,
+                summary: `verified ${id}`,
+              },
+              ts: 1500 + round,
+            }),
+          );
+        }
+      }
+    } finally {
+      gatewayC.terminate();
+      await closeServer(serverC);
+    }
+    console.log(`E6_T03_XGATEWAY_LAG ${canonicalJson(outcomes)}`);
+    expect(
+      outcomes.filter((outcome) => outcome === "start-fenced-complete-stale").length,
+    ).toBeGreaterThan(0);
+  }, 600_000);
 
   it("never appends a task loop event after an accepted pause across two gateway processes", async () => {
     const repo = "xrace";

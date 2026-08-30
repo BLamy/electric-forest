@@ -41,8 +41,11 @@ current head and lists every loop task with its replayed status and capstone fla
 task universe is derived from append-only history so the proving credential cannot
 shrink it: an issue is a task once any `task.*` event exists on it or once it has ever
 carried the `task` or `capstone` label (`issue.unlabeled` does not retract membership);
-`capstone` likewise means ever-labeled. A plain issue never started and never labeled is
-not a task and does not block completion. The
+A plain issue never started and never labeled is not a task and does not block
+completion. The capstone _flag_ is the current `capstone` label among members, so a
+capstone label moved by a human to another task does not make the repository permanently
+uncompletable: the former capstone stays in the universe and must still be `verified`,
+and exactly one member must currently carry the label. The
 door replays each task stream: a stale head is `project/stale-proof`; an omitted,
 invented, duplicated, or misreported task, a missing or doubled capstone, or any
 non-`verified` status is `project/false-proof`.
@@ -51,15 +54,36 @@ non-`verified` status is `project/false-proof`.
 
 A guard decision on a task stream is only as good as its ordering against the project
 stream, and the single-process writer lane is not a fence across gateway processes. So
-before a guarded task loop event is appended, the door commits its decision by
-compare-and-appending a `project.fenced` record at the project stream's current durable
-sequence (`Stream-Seq`), citing the task stream and the exact offset the event will
-occupy. A human pause racing for that sequence from any other process makes the fence
-conflict; the door re-reads and refuses with the winning state's reason. The project
-stream is therefore one linear history in which no fence — hence no task loop event —
-follows an accepted pause at that pause's sequence. Fences replay as `fences` and never
-move `head`, so `expectedOffset` citations stay stable. Eight lost races refuse
-`project/fence-contention` (fail closed). Clients cannot dispatch `project.fenced`.
+the task door runs in three steps: (1) the guard reads the project state — a refusal
+writes nothing; (2) the E6-T01 task validator runs — a refusal writes nothing; (3) only
+an otherwise-accepted task loop event is fenced: the door compare-and-appends a
+`project.fenced` record at the project stream's current durable sequence (`Stream-Seq`),
+binding the exact record the event becomes — task stream, the offset it will occupy, its
+type, and the writer-lane identity (`sub`, `seq`) the door stamped. A pause racing for
+that sequence from any other process makes the fence conflict; the door re-reads and
+refuses with the winning state's reason. The project stream is therefore one linear
+history in which no fence — hence no task loop event — follows an accepted pause at that
+pause's sequence. Eight lost races refuse `project/fence-contention`. Clients cannot
+dispatch `project.fenced` (404).
+
+**What a fence guarantees and what it does not.** A fence is a committed _decision_, not
+a receipt. Against its target records it is exactly one of: _landed_ (the record at
+`target.offset` has the fenced type and writer identity), _dead_ (that offset holds a
+different record — the compare-and-append can never succeed there again), or _open_
+(the offset is not yet written). A writer-lane retry re-fences with a new target, so a
+double start from two gateways can leave dead fences; a crash between the two appends
+leaves an open fence until the next append to that task stream (any event — a comment
+suffices) makes it dead. The reducer counts every well-formed fence (`fences`) and never
+moves `head`, so `expectedOffset` citations stay stable and dangling fences replay
+deterministically.
+
+**Completion consults fence history.** A queue proof must cite the project stream's own
+fence-inclusive durable tail (`proof.project.offset`; `project/stale-proof` otherwise), and
+is refused `project/stale-proof` while any fence is _open_ — an admitted task loop event
+whose record has not yet landed is a task the proof cannot have accounted for. Dead
+fences are ignored. Because the completion itself is compare-and-appended at the next
+project sequence, a fence landing after validation conflicts it and forces revalidation
+against the newer tail, closing the window entirely.
 
 ## The loop guard
 

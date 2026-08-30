@@ -126,10 +126,38 @@ export const PROJECT_FENCE_ATTEMPTS = 8;
  * offset the event will occupy. Eight consecutive lost races refuse
  * `project/fence-contention` (fail closed, never silently admit).
  */
+export interface ProjectFenceTarget {
+  readonly offset: Offset;
+  readonly writer: { readonly sub: string; readonly seq: number };
+}
+
+/**
+ * Classify one fence against its target stream's records: `landed` when the record at
+ * `target.offset` is the fenced event (same type and writer identity), `dead` when that
+ * offset holds another record, `open` when the offset is not yet written.
+ */
+export function classifyFence(
+  fence: ProjectFencedEvent,
+  targetRecords: readonly Event[] | undefined,
+): "landed" | "dead" | "open" {
+  const ordinal = Number(fence.payload.target.offset.split("_")[1]);
+  const record = targetRecords?.[ordinal] as
+    | (Event & { readonly payload: { readonly writer?: { sub?: unknown; seq?: unknown } } })
+    | undefined;
+  if (record === undefined) return "open";
+  const writer = record.payload?.writer;
+  return record.type === fence.payload.target.type &&
+    writer !== undefined &&
+    writer.sub === fence.payload.target.writer.sub &&
+    writer.seq === fence.payload.target.writer.seq
+    ? "landed"
+    : "dead";
+}
+
 export async function fenceTaskLoopAction(
   taskStreamId: string,
   eventType: string,
-  targetOffset: Offset,
+  target: ProjectFenceTarget,
   by: ProjectActorRef,
   ts: number,
   io: ProjectFenceIo,
@@ -151,7 +179,12 @@ export async function fenceTaskLoopAction(
         v: PROJECT_EVENT_VERSION,
         by,
         action: eventType,
-        target: { stream: taskStreamId, offset: targetOffset },
+        target: {
+          stream: taskStreamId,
+          offset: target.offset,
+          type: eventType,
+          writer: target.writer,
+        },
       },
       ts,
     };

@@ -65,6 +65,8 @@ export function launch(
 /** Two tasks opened in this order on `loom`: the catalog head is ordinal 1. */
 export const LIFECYCLE_PROOF: ProjectQueueProof = {
   queue: { stream: `repo-issues:${ORG}/${LIFECYCLE_REPO}`, offset: offsetForOrdinal(1) },
+  /** Six fences (0-5) + launch, pause, resume, stop, resume, launch (6-11): tail 11. */
+  project: { offset: offsetForOrdinal(11) },
   tasks: [
     { id: "loom-cap", status: "verified", capstone: true },
     { id: "loom-t1", status: "verified", capstone: false },

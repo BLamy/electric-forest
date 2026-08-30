@@ -17,10 +17,12 @@ import {
   ProjectRefusalError,
   ProjectSchemaError,
   ProjectUnknownActionError,
+  classifyFence,
   guardLoopAction,
   projectCitation,
   type ProjectRecordResolver,
 } from "./project-guard.js";
+import { PROJECT_FENCE_EVENT, isProjectFencedEventShape } from "./project-events.js";
 import type { ProjectCompletion, ProjectState } from "./project-reducer.js";
 
 export type ProjectTransition =
@@ -192,11 +194,18 @@ export function isLoopTask(task: TaskState, records: readonly Event[]): boolean 
   );
 }
 
+/**
+ * Membership is history (non-retractable); the capstone flag is the CURRENT `capstone`
+ * label among members, so a capstone label moved to another task by a human does not
+ * make the repository permanently uncompletable — the ever-labeled former capstone stays
+ * in the universe and must still be `verified`.
+ */
 export function expectedProofTask(task: TaskState, records: readonly Event[]): ProjectProofTask {
+  void records;
   return {
     id: task.taskId,
     status: task.status,
-    capstone: everLabeled(records, "capstone"),
+    capstone: task.issue.labels.includes("capstone"),
   };
 }
 
@@ -211,9 +220,25 @@ export async function verifyQueueProof(
   state: ProjectState,
   proof: ProjectQueueProof,
   resolve: ProjectRecordResolver | undefined,
+  projectRecords: readonly Event[],
 ): Promise<void> {
   const at = projectCitation(state);
   if (resolve === undefined) throw new ProjectRefusalError("project/false-proof", at);
+  // The proof must be computed at the project stream's own fence-inclusive tail: a fence
+  // that landed after it (a task loop event in flight) makes the proof stale.
+  if (headOf(projectRecords) !== proof.project.offset)
+    throw new ProjectRefusalError("project/stale-proof", at);
+  // No fence may still be open: an admitted task loop event whose record has not yet
+  // landed is a task the proof cannot have accounted for. Dead fences (their offset was
+  // taken by another record) can never land and are ignored.
+  const targets = new Map<string, readonly Event[] | undefined>();
+  for (const record of projectRecords) {
+    if (record.type !== PROJECT_FENCE_EVENT || !isProjectFencedEventShape(record)) continue;
+    const stream = record.payload.target.stream;
+    if (!targets.has(stream)) targets.set(stream, await resolve(stream));
+    if (classifyFence(record, targets.get(stream)) === "open")
+      throw new ProjectRefusalError("project/stale-proof", at);
+  }
   const catalogStream = repoIssuesStreamId(state.org, state.repo);
   if (proof.queue.stream !== catalogStream)
     throw new ProjectRefusalError("project/false-proof", at);
@@ -288,6 +313,7 @@ export async function validateProjectEvent(
       context.state,
       (action as ProjectTransitionedEvent).payload.proof!,
       context.resolveRecords,
+      context.records,
     );
   }
 }

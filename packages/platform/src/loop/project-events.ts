@@ -126,6 +126,13 @@ export interface ProjectProofTask {
  */
 export interface ProjectQueueProof {
   readonly queue: ProjectQueueRef;
+  /**
+   * The project stream's own durable tail the proof was computed at — the last record
+   * INCLUDING fences (`-1` for an unwritten stream), distinct from `expectedOffset`
+   * (`state.head`, which fences never move). Any fence landing after it makes the proof
+   * stale; the completion's compare-and-append at the next sequence closes the window.
+   */
+  readonly project: { readonly offset: Offset | typeof OFFSET_BEFORE_FIRST };
   readonly tasks: readonly ProjectProofTask[];
 }
 
@@ -161,7 +168,18 @@ export interface ProjectFencedEvent extends Event {
     readonly v: typeof PROJECT_EVENT_VERSION;
     readonly by: ProjectActorRef;
     readonly action: ProjectGuardedAction;
-    readonly target: { readonly stream: string; readonly offset: Offset };
+    /**
+     * The exact record this fence admits: task stream, the offset it will occupy, its
+     * type, and the writer-lane identity (`sub`, `seq`) the door stamped. A fence is
+     * *landed* when that record exists; *dead* when its offset holds a different record
+     * (the compare-and-append can never succeed there again); *open* otherwise.
+     */
+    readonly target: {
+      readonly stream: string;
+      readonly offset: Offset;
+      readonly type: string;
+      readonly writer: { readonly sub: string; readonly seq: number };
+    };
   };
 }
 
@@ -254,7 +272,9 @@ export function isProjectProofTask(value: unknown): value is ProjectProofTask {
 
 /** Shape only: duplicate ids, missing capstones, and false statuses are 409 refusals. */
 export function isProjectQueueProof(value: unknown): value is ProjectQueueProof {
-  if (!exactObject(value, ["queue", "tasks"])) return false;
+  if (!exactObject(value, ["queue", "project", "tasks"])) return false;
+  if (!exactObject(value.project, ["offset"]) || !isExpectedOffset(value.project.offset))
+    return false;
   const queue = value.queue;
   if (
     !exactObject(queue, ["stream", "offset"]) ||
@@ -310,9 +330,15 @@ export function isProjectFencedEventShape(event: Event): event is ProjectFencedE
     isProjectActorRef(payload.by) &&
     typeof payload.action === "string" &&
     isProjectGuardedAction(payload.action) &&
-    exactObject(payload.target, ["stream", "offset"]) &&
+    exactObject(payload.target, ["stream", "offset", "type", "writer"]) &&
     boundedText(payload.target.stream, PROJECT_STREAM_REF_MAX) &&
-    isEventOffset(payload.target.offset)
+    isEventOffset(payload.target.offset) &&
+    boundedText(payload.target.type, PROJECT_STREAM_REF_MAX) &&
+    exactObject(payload.target.writer, ["sub", "seq"]) &&
+    boundedText(payload.target.writer.sub, PROJECT_ACTOR_MAX_CODE_UNITS) &&
+    typeof payload.target.writer.seq === "number" &&
+    Number.isSafeInteger(payload.target.writer.seq) &&
+    payload.target.writer.seq >= 1
   );
 }
 

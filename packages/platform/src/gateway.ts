@@ -221,6 +221,7 @@ import {
   ProjectSchemaError,
   ProjectUnknownActionError,
   fenceTaskLoopAction,
+  guardTaskLoopAction,
   isProjectActionType,
   isProjectStreamId,
   projectInitialStateForStream,
@@ -1065,20 +1066,11 @@ async function validateTaskDispatch(
   const nextOffset = offsetForOrdinal(normalized.length);
   const action = taskEventWithoutServerMetadata(event, nextOffset);
   const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
-  // E6-T03: the project guard decides first, at the project stream head, before any
-  // task-state validation — a paused, complete, or invalid loop refuses the claim,
-  // the verdict, the start, and the rework with the project's own reason — and the
-  // decision is committed as a `project.fenced` record at the project stream's durable
-  // sequence, bound to the offset this event will occupy, so a pause racing from another
-  // gateway process has exactly one winner (see `fenceTaskLoopAction`).
-  await fenceTaskLoopAction(
-    streamId,
-    event.type,
-    nextOffset,
-    { actor: typeof stampedActor === "string" ? stampedActor : "", role: actorRole ?? "agent" },
-    action.ts,
-    { resolve: projectRecordResolver(streams), appendAt: projectFenceAppender(streams) },
-  );
+  // E6-T03: the project guard decides first (a read; nothing is written), so a paused,
+  // complete, or invalid loop refuses the claim, the verdict, the start, and the rework
+  // with the project's own reason before any task-state validation.
+  const resolveProject = projectRecordResolver(streams);
+  await guardTaskLoopAction(streamId, event.type, resolveProject);
   await actionValidators.validate(action, {
     streamId,
     state: normalized.reduce(taskReducer, taskInitialStateForStream(streamId)),
@@ -1103,6 +1095,26 @@ async function validateTaskDispatch(
       return { records: targetRecords, state: reduceEvidenceState(targetStreamId, targetRecords) };
     },
   });
+  // Only an otherwise-accepted task loop event is fenced: the guard decision is
+  // committed as a `project.fenced` record at the project stream's durable sequence,
+  // bound to the record this event becomes (stream, offset, type, writer identity), so a
+  // pause racing from another gateway process has exactly one winner and a refused
+  // dispatch never writes anywhere (see `fenceTaskLoopAction`).
+  const writer = (event.payload as { readonly writer?: { sub?: unknown; seq?: unknown } }).writer;
+  await fenceTaskLoopAction(
+    streamId,
+    event.type,
+    {
+      offset: nextOffset,
+      writer: {
+        sub: typeof writer?.sub === "string" ? writer.sub : "",
+        seq: typeof writer?.seq === "number" ? writer.seq : 0,
+      },
+    },
+    { actor: typeof stampedActor === "string" ? stampedActor : "", role: actorRole ?? "agent" },
+    action.ts,
+    { resolve: resolveProject, appendAt: projectFenceAppender(streams) },
+  );
 }
 
 interface BranchProjectionMetadata {
