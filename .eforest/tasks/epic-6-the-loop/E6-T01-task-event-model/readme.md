@@ -3,7 +3,7 @@ id: E6-T01
 epic: 6
 title: "Task event model: an issue with evidence and builder/critic verdicts"
 priority: 601
-status: pending
+status: in-progress
 depends_on: [E5]
 estimate: M
 capstone: false

@@ -8,13 +8,16 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E6-T01** — "Task event model: an issue with evidence and builder/critic verdicts" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E6-T01** — "Task event model: an issue with evidence and builder/critic verdicts"
 1. **E6-T02** — "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 1. **E6-T03** — "Project state machine: server-enforced building, complete, paused, and invalid_loop"
+
+## Unlocks when E6-T01 verifies
+
+1. **E6-T04** — "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -111,7 +114,7 @@ No task is currently in progress, awaiting verification, or refuted.
 
 ## Epic 6 — `epic-6-the-loop`
 
-- [ ] `601` [E6-T01](epic-6-the-loop/E6-T01-task-event-model/readme.md) — "Task event model: an issue with evidence and builder/critic verdicts" *(deps: E5)*
+- [~] `601` [E6-T01](epic-6-the-loop/E6-T01-task-event-model/readme.md) — "Task event model: an issue with evidence and builder/critic verdicts" *(deps: E5)*
 - [ ] `602` [E6-T02](epic-6-the-loop/E6-T02-task-folder-contract/readme.md) — "Task-folder contract: parse and render readme, work, and evidence without losing bytes" *(deps: E5)*
 - [ ] `603` [E6-T03](epic-6-the-loop/E6-T03-project-state-machine/readme.md) — "Project state machine: server-enforced building, complete, paused, and invalid_loop" *(deps: E5)*
 - [ ] `604` [E6-T04](epic-6-the-loop/E6-T04-task-queue-projection/readme.md) — "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs" *(deps: E6-T01)*
