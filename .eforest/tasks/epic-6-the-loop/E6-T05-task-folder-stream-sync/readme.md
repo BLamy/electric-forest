@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: in-progress
+status: implemented
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -576,3 +576,109 @@ Commands: `make verify-E6-T05`; `make verify-E6-T02`;
 `bash tools/verify/cold_clone.sh verify-E6-T05`;
 `node .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic2/probe-parser.mjs`;
 `cp .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic2/zz-critic2-probe.test.ts.txt packages/tasks/test/zz-critic2-probe.test.ts && CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC2" packages/tasks/test/zz-critic2-probe.test.ts`
+
+### 2026-08-31 — builder — rework after critic run 2 (implemented)
+
+- Rework commit `2242697c`, on `e6-t05-task-folder-stream-sync` (parent `bfdaa8fd`).
+  **The refutation is accepted in full, and so is its diagnosis: run 1's fix was a syntax
+  special case wearing the language of an invariant.** Swapping the wrapper for
+  `<!-- -->` or `<pre>` reproduced both repros verbatim, including terminal `verified`
+  from a block marked *"EXAMPLE ONLY"*; and the HTML-comment variant is worse than the
+  fence it replaced, because a comment renders as nothing, so the projected `readme.md`
+  carried a status with **no visible entry anywhere** — folder and stream disagreeing in
+  the rendered bytes, which is exactly the drift this task's title forbids.
+- **Fix — one scanner over block structure, not a third quoting syntax.** `scanFences` is
+  replaced by **`scanInertBlocks`** (`packages/tasks/src/folder/parse.ts`), and **both**
+  readers consume it — `parseSections` for `##` and `parseVerificationLogEntries` for
+  `###` — so a readme keeps agreeing with itself about what is inert. It classifies every
+  construct that can swallow a line beginning at column 0, which is the only line either
+  heading rule can match: **fenced code** (3+ backticks or tildes, longer-or-equal
+  closer, no info string on the closer); **HTML blocks 1-5**, which swallow arbitrary
+  content to an explicit end condition — `<pre>`/`<script>`/`<style>`/`<textarea>`,
+  `<!-- -->`, `<? ?>`, `<!DECLARATION>`, `<![CDATA[ ]]>`; and **HTML blocks 6-7**
+  (block-level tags, and any complete tag alone on a line), which end at a blank line.
+  Constructs that indent or prefix their content — indented code, block quotes, list
+  items — cannot produce a column-0 heading line at all, so they need no state, and that
+  is stated in the scanner's contract rather than left implicit. An unterminated block
+  stays inert to end of input: ambiguous text is never structure, so a swallowed section
+  is refused `sections/missing` and a swallowed log entry simply does not exist —
+  **fail closed in both directions**.
+- **The run-2 observation is fixed by the same change, not patched around.** Per
+  CommonMark a backtick fence's info string may not contain a backtick, so an inline code
+  span quoting a fence in prose is no longer read as an opener. This task's own
+  `readme.md` now parses through the engine it builds, and it has joined E6-T04's in the
+  fixture, which additionally asserts the **E6-T02 round trip** (`render(parse(x))` is a
+  fixed point of `parse` after `render`) rather than only that it parses.
+- **Coverage now varies block KIND, as demanded.** `CRITIC-A/A2` runs run 1's text over a
+  code fence, `<!--`, `<pre>`, `<script>`, `<![CDATA[`; `CRITIC-D/E/F` runs the
+  two-branch verdict-quoting shape over a code fence, `<!--`, `<pre>`. The parser test
+  covers 20 wrapper variants across both families (including `<PRE>` case-insensitivity,
+  `<pre class="x">`, indented `<!--`, `<?php`, `<!DOCTYPE`, `<div>`, `<table>`), the
+  unterminated-HTML fail-closed case, and the inline-code-span case. The doctrine fixture
+  grew from two files to five — `AGENTS.md`, `.eforest/tasks/README.md`, `CLAUDE.md`,
+  `.eforest/loop.md`, `packages/tasks/README.md` — all yielding **zero** lifecycle
+  entries, and it now asserts `AGENTS.md` really ships HTML comments so the fixture
+  cannot quietly stop testing anything. Schedule **step 6b** wraps example entries in an
+  HTML comment and a `<pre>` block beside the two fences
+  (`step6b-inert lifecycle-events-added=0 status=implemented`,
+  `text-revised-only=true refusal-artifacts=3`).
+- **Sensitivity.** Deleting the HTML-comment branch turns **3** tests red (the wrapper
+  matrix, the unterminated-HTML case, and the `<!--` case of `CRITIC-A/A2`). Running the
+  critic's own probe file unmodified reports `CRITIC2-A2 "<!--" status= pending … extra= 1
+  artifacts= 0`, the same for `<pre>` and the code-fence control, and
+  `CRITIC2-E`/`CRITIC2-F` `status= implemented verification= undefined`; 7 passed.
+  One honest note: **lint**, not my own reading, caught that my first parameterisation of
+  `CRITIC-D/E/F` had substituted the wrappers into `CRITIC-A`'s body, leaving the D family
+  still hardcoded to one syntax. It is fixed and the wrappers genuinely vary; had the
+  unused-parameter rule not fired, that family would have shipped looking parameterised
+  while testing a single case.
+- **No E6-T02 regression, proven not asserted.** `make verify-E6-T02` green after the
+  shared-scanner change: `E6_T02_FIXTURES entries=54 sha256-list-identical=true`, three
+  goldens `byte-identical=true`, `E6_T02_REFUSALS scenarios=70 reasons=37
+  transcript-identical=true`, `E6_T02_PROPERTY cases=1000 corpus-sha256=3158c855…
+  byte-identical=true`, `E6_T02_ARTIFACTS protected=10 unchanged=true`.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (18 = baseline; it transiently read 20 with the two real errors above, now cleared),
+  `pnpm typecheck` (41 = baseline), focused suites in the foreground —
+  `packages/tasks/test` 10 files/114 tests green, `platform/test/{task-folder-sync,tasks,
+  task-queue}` plus `reducers` 8 files/33 tests green — `pnpm build` green,
+  `make verify-E6-T02` green, `make verify-E6-T05` green, then
+  `bash tools/verify/cold_clone.sh verify-E6-T05` from pristine committed HEAD
+  `2242697c`: **exit 0, zero `SKIPPED:`**, **37/37** focused tests,
+  `E6_T05_SCHEDULE summary-byte-identical=true`,
+  `E6_T05_JOURNALS … audited-branch-offsets=70 violations=0`,
+  `MUTATION … EXPECTED-FAIL OK`, `SABOTAGE … EXPECTED-FAIL OK`,
+  `DEPENDENCY_INTEGRITY_OK`, `PASSED from a pristine clone`.
+- Evidence re-recorded: `e6-t05-summary.txt` (sha256 `d155f866e751b5cb0e1532f2a53ee62aa1d8b536272c1508935a668ece32ea5b`) — **task-state digest
+  `a3de03ff21507fca156df43cf8bf17f8bd698e0ec2fa8555e4d87d9979bf360c`** (moved from run 1
+  because step 6b's note now carries the HTML blocks too), **queue digest
+  `aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66`** (unchanged — the
+  queue does not depend on log prose), final sequence `issue.opened, task.spec-revised x3,
+  task.started, task.claimed, task.spec-revised x4, task.verified` (11 records,
+  `final-status verified`), `replay-deterministic true`,
+  `projection-parity … byte-equal-on-both-branches=true`,
+  `step11-idle window-at-least-ms=12000 measured-ok=true` with `heads-frozen=true
+  write-lines-frozen=true`, both journal audits `ok=true violations=0`,
+  `warnings … unexpected=0`; `e6-t05-sabotage.txt` (sha256 `bc79dddf05a2bc50ff7d11a2ee61a63e0021c6098abf92129640e037290e8622`) unchanged.
+- **Scope boundary, stated plainly.** This is a scanner over the block constructs that can
+  swallow a column-0 line, not a full CommonMark implementation: it does not model link
+  reference definitions, tables, or setext headings, none of which can hide a heading line
+  at column 0. Anything it cannot classify is ordinary prose *for heading recognition
+  only* — which is why the positive rules above are exhaustive over that one question, and
+  why an unterminated block is inert rather than optimistically reopened. The `by.actor`
+  provenance limitation recorded in run 1 is unchanged and still bounded by the
+  `task/stale-spec` fence; signed authorship remains E6-T07's.
+- Replay: N/A (task-folder sync engine; the dedicated browser task surface lands in E6-T06)
+  + mitigation: the two-client real-server schedule including step 6b's four block kinds,
+  the measured >=10 s idle window with frozen heads, the verifier's own journal audits,
+  byte hashes, projection/replay/queue digest parity, the evidence-byte mutation, a
+  source-level origin-filter sabotage, and `verify-E6-T02`'s frozen corpus proving the
+  shared scanner changed no E6-T02 behavior.
+- Claim: quoted documentation is inert **as a property of block structure**, not of a list
+  of syntaxes. A `### <date> — <role> — <kind>` inside a code fence, an HTML comment,
+  `<pre>`, `<script>`, `<style>`, `<textarea>`, CDATA, a processing instruction, a
+  declaration, or a block tag revises text and dispatches nothing — on the parser, on the
+  real dispatch door, and in a live two-client schedule — with the critic's run-1 and
+  run-2 cases as permanent regression tests and this repository's own doctrine files as
+  the fixture. This is a builder claim; independent critic verification remains required
+  before `verified`.
