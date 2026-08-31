@@ -8,6 +8,7 @@ import { OidcClient, OidcTransactions } from "./auth/oidc.js";
 import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
 import { PlatformGateway, type PlatformGatewayOptions } from "./gateway.js";
+import { AgentRunCoordinator } from "./agent-runs.js";
 import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
@@ -41,6 +42,7 @@ export interface PlatformProductionRuntime {
   readonly bearer: BearerVerifier;
   readonly namespaces: NamespaceDispatcher;
   readonly gateway: PlatformGateway;
+  readonly agentRuns: AgentRunCoordinator;
   readonly registry: RegistryProjector;
   readonly rateLimiter: FixedWindowRateLimiter;
   readonly app: PlatformWebApp;
@@ -157,6 +159,11 @@ export async function createPlatformProductionRuntime(
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
+  const agentRuns = new AgentRunCoordinator({
+    streams,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.random === undefined ? {} : { random: options.random }),
+  });
   let gateway!: PlatformGateway;
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
@@ -205,6 +212,7 @@ export async function createPlatformProductionRuntime(
     streams,
     namespaces,
     registry,
+    agentRuns,
     rateLimiter,
     prMerge: {
       resolveBranch: async (streamId) => {
@@ -265,6 +273,7 @@ export async function createPlatformProductionRuntime(
     bearer,
     namespaces,
     gateway,
+    agentRuns,
     registry,
     rateLimiter,
     app,

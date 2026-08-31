@@ -282,6 +282,7 @@ export class PlatformWebApp {
         case "chat":
         case "members":
         case "agents":
+        case "agent-runs":
         case "registry": {
           if (
             this.gateway !== undefined &&

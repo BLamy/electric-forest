@@ -22,6 +22,7 @@
     "@eforest/evidence": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/issues": "workspace:*",
+    "@eforest/loop": "workspace:*",
     "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",

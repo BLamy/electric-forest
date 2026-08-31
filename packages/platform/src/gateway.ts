@@ -245,13 +245,25 @@ import {
   renderQueueMarkdown,
   taskInitialStateForStream,
   taskReducer,
+  type QueueProof,
   type QueueSourceStream,
+  type TaskBranchRef,
+  type TaskRole,
 } from "@eforest/tasks";
+import type { RunAppendEvent } from "@eforest/loop";
 import {
   IssueBoardMaterializer,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
 import { PrIndexMaterializer } from "./pr/index-store.js";
+import {
+  AgentRunCoordinator,
+  AgentRunError,
+  type AgentRunAcquireInput,
+  type AgentRunEventInput,
+  type AgentRunLeaseInput,
+  type AgentRunMutationInput,
+} from "./agent-runs.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -272,6 +284,8 @@ export interface PlatformGatewayOptions {
   readonly boardCacheDir?: IssueBoardMaterializerOptions["cacheDir"];
   /** E5-T06 merge machinery. Production resolves these to StreamFs repositories. */
   readonly prMerge?: PlatformPrMergeOptions;
+  /** E6-T07 durable agent-run lease and evidence protocol. */
+  readonly agentRuns?: AgentRunCoordinator;
 }
 
 export interface PlatformPrMergeOptions {
@@ -1453,6 +1467,36 @@ function failure(status: number, code: ErrorCode, reason: string): Response {
   return json(status, { error: { code, reason } });
 }
 
+function bodyRecord(value: unknown): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("request body must be an object");
+  }
+  return value as Record<string, unknown>;
+}
+
+function bodyString(body: Record<string, unknown>, key: string): string {
+  const value = body[key];
+  if (typeof value !== "string" || value.length === 0) throw new TypeError(`missing ${key}`);
+  return value;
+}
+
+function bodyOffset(body: Record<string, unknown>, key: string): Offset | "-1" {
+  const value = body[key];
+  if (typeof value !== "string" || (value !== "-1" && !isWellFormedOffset(value))) {
+    throw new TypeError(`invalid ${key}`);
+  }
+  return value as Offset | "-1";
+}
+
+async function requestBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    return bodyRecord(await request.json());
+  } catch (error) {
+    if (error instanceof TypeError && error.message.startsWith("missing ")) throw error;
+    throw new TypeError("malformed_json", { cause: error });
+  }
+}
+
 /**
  * Map a pure refusal to its transport response. Private-unauthorized and
  * nonexistent targets share one refusal (`authz/not-found`), so their
@@ -1573,6 +1617,7 @@ export class PlatformGateway {
   private readonly issueBoards: IssueBoardMaterializer;
   private readonly prIndexes: PrIndexMaterializer;
   private readonly prMerge: PlatformPrMergeOptions | undefined;
+  private readonly agentRuns: AgentRunCoordinator;
   private readonly prMergeTails = new Map<string, Promise<void>>();
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
@@ -1591,6 +1636,7 @@ export class PlatformGateway {
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
     this.actionValidators = options.actionValidators ?? registerApplicationValidators();
     this.prMerge = options.prMerge;
+    this.agentRuns = options.agentRuns ?? new AgentRunCoordinator({ streams: options.streams });
     this.issueBoards =
       options.issueBoards ??
       new IssueBoardMaterializer({
@@ -1616,6 +1662,8 @@ export class PlatformGateway {
         return this.chatRoute(request, url);
       case "registry":
         return this.registryRoute(request, url);
+      case "agent-runs":
+        return this.agentRunRoute(request, url);
       default:
         return failure(404, "invalid_request", "not_found");
     }
@@ -1623,6 +1671,169 @@ export class PlatformGateway {
 
   terminate(): void {
     this.views?.terminate?.();
+  }
+
+  /**
+   * E6-T07's authenticated runtime door. Agent-run requests intentionally do not
+   * reuse the general dispatch classifier: a capability is narrower than a grant,
+   * and every branch/evidence/verdict mutation is checked against the replayed lease.
+   */
+  private async agentRunRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "POST" && request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    let context: AuthorizationContext;
+    try {
+      context = await this.authzContext(request.headers.get("authorization"));
+    } catch (error) {
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      return failure(401, "unauthorized", "malformed_token");
+    }
+    if (
+      context.principal.kind !== "identified" ||
+      context.principal.sub.length === 0 ||
+      typeof context.principal.grantId !== "string" ||
+      context.principal.grantId.length === 0
+    ) {
+      return failure(401, "unauthorized", "missing_agent_credential");
+    }
+    const actor = context.principal.sub;
+    try {
+      const parts = url.pathname.split("/").filter(Boolean);
+      if (request.method === "POST" && url.pathname === "/api/agent-runs/leases") {
+        const body = await requestBody(request);
+        const input: AgentRunAcquireInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: bodyString(body, "runId"),
+          actor,
+          role: body.role as TaskRole,
+          branch: body.branch as TaskBranchRef,
+          projectOffset: bodyOffset(body, "projectOffset"),
+          queueProof: body.queueProof as QueueProof,
+        };
+        return canonicalResponse(201, await this.agentRuns.acquire(input));
+      }
+
+      if (parts[2] === "leases" && parts.length === 4 && request.method === "POST") {
+        throw new AgentRunError("invalid_request");
+      }
+      if (parts[2] === "leases" && parts.length === 5 && request.method === "POST") {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunLeaseInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          leaseId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+        };
+        const action = parts[4];
+        if (action === "heartbeat")
+          return canonicalResponse(200, await this.agentRuns.heartbeat(input));
+        if (action === "release")
+          return canonicalResponse(200, await this.agentRuns.release(input));
+        if (action === "revoke") {
+          return canonicalResponse(
+            200,
+            await this.agentRuns.revoke({ ...input, reason: bodyString(body, "reason") }),
+          );
+        }
+        throw new AgentRunError("invalid_request");
+      }
+
+      if (
+        parts[2] === "runs" &&
+        parts.length === 5 &&
+        parts[4] === "events" &&
+        request.method === "POST"
+      ) {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunEventInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+          expectedOffset: bodyOffset(body, "expectedOffset"),
+          event: body.event as RunAppendEvent,
+        };
+        return canonicalResponse(200, await this.agentRuns.appendRunEvent(input));
+      }
+
+      if (
+        parts[2] === "runs" &&
+        parts.length === 5 &&
+        parts[4] === "mutations" &&
+        request.method === "POST"
+      ) {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunMutationInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+          expectedOffset: bodyOffset(body, "expectedOffset"),
+          event: body.event as RunAppendEvent,
+          operationId: bodyString(body, "operationId"),
+          target: body.target as AgentRunMutationInput["target"],
+          stream: bodyString(body, "stream"),
+          expectedTargetOffset: bodyOffset(body, "expectedTargetOffset"),
+          mutation: body.mutation as Event,
+        };
+        return canonicalResponse(200, await this.agentRuns.appendMutation(input));
+      }
+
+      if (parts[2] === "runs" && parts.length === 4 && request.method === "GET") {
+        const org = url.searchParams.get("org");
+        const repo = url.searchParams.get("repo");
+        const taskId = url.searchParams.get("taskId");
+        if (org === null || repo === null || taskId === null) {
+          throw new TypeError("missing run identity query");
+        }
+        return canonicalResponse(
+          200,
+          await this.agentRuns.inspect({
+            org,
+            repo,
+            taskId,
+            runId: decodeURIComponent(parts[3]!),
+          }),
+        );
+      }
+      return failure(404, "invalid_request", "not_found");
+    } catch (error) {
+      if (error instanceof AgentRunError) {
+        const status =
+          error.code === "missing_agent_credential"
+            ? 401
+            : error.code === "invalid_request"
+              ? 400
+              : 409;
+        return json(status, { error: { code: "agent_run_refused", reason: error.code } });
+      }
+      if (error instanceof SyntaxError || error instanceof TypeError) {
+        return failure(
+          400,
+          "invalid_request",
+          error instanceof TypeError ? error.message : "malformed_json",
+        );
+      }
+      throw error;
+    }
   }
 
   /**
