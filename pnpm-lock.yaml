@@ -229,6 +229,15 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/loop:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@eforest/tasks':
+        specifier: workspace:*
+        version: link:../tasks
+
   packages/meadow:
     dependencies:
       '@eforest/evidence':
@@ -258,6 +267,9 @@ importers:
       '@eforest/issues':
         specifier: workspace:*
         version: link:../issues
+      '@eforest/loop':
+        specifier: workspace:*
+        version: link:../loop
       '@eforest/meadow':
         specifier: workspace:*
         version: link:../meadow

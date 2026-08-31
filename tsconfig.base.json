@@ -25,6 +25,7 @@
       "@eforest/issues": ["packages/issues/src/index.ts"],
       "@eforest/evidence": ["packages/evidence/src/index.ts"],
       "@eforest/tasks": ["packages/tasks/src/index.ts"],
+      "@eforest/loop": ["packages/loop/src/index.ts"],
       "@eforest/pr": ["packages/pr/src/index.ts"],
       "@eforest/platform": ["packages/platform/src/index.ts"],
       "@eforest/browser-verify": ["packages/browser-verify/src/index.ts"],

@@ -7,6 +7,7 @@ export type PlatformRouteId =
   | "chat"
   | "members"
   | "agents"
+  | "agent-runs"
   | "org-api"
   | "device-grants"
   | "cli-tokens"
@@ -27,6 +28,7 @@ export interface PlatformRouteDefinition {
     | "namespace.lookup"
     | "application.read-follow"
     | "registry.query"
+    | "agent-run"
     | "cli-token.issue";
 }
 
@@ -62,6 +64,8 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   { id: "chat", match: "prefix", path: "/api/chat/", operation: "application.read-follow" },
   { id: "members", match: "prefix", path: "/api/members/", operation: "application.read-follow" },
   { id: "agents", match: "prefix", path: "/api/agents/", operation: "application.read-follow" },
+  { id: "agent-runs", match: "exact", path: "/api/agent-runs", operation: "agent-run" },
+  { id: "agent-runs", match: "prefix", path: "/api/agent-runs/", operation: "agent-run" },
   { id: "org-api", match: "prefix", path: "/api/orgs/", operation: "page" },
   { id: "auth-callback", match: "exact", path: "/auth/callback", operation: "page" },
   { id: "auth-login", match: "exact", path: "/auth/login", operation: "page" },
