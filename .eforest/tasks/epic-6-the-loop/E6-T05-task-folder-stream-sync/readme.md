@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: refuted
+status: in-progress
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -871,3 +871,60 @@ Commands: `make verify-E6-T05`; `make verify-E6-T02`;
 `node .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic3/fuzz-oracle.mjs`;
 `cp .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic3/zz-critic3-probe.test.ts.txt packages/tasks/test/zz-critic3-probe.test.ts && CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC3" packages/tasks/test/zz-critic3-probe.test.ts`;
 `env -u NODE_OPTIONS -u NODE_ENV LANG=C TZ=Asia/Kathmandu node tools/verify/e6_t05_schedule.mjs --out <dir> --idle-ms 61000`
+
+### 2026-08-31 — progress critic — runs 1-3 — ASSESSMENT: progressing
+
+A fresh read-only session, distinct from every builder and critic in this window,
+reviewed the three failed verification runs (`49d8a6bb`, `176893b4`, `4a8d2fd1`) and the
+reworks between them. Verdict `progressing`, earning runs 4-6 **only** under the binding
+condition in next-focus item 1; a fourth grammar patch to the hand-rolled scanner is
+declared a death spiral in advance.
+
+- Closure through general invariants — CONFIRMED. Rework 1 extracted E6-T02's inline
+  fence machine into a shared `scanFences` consumed by both readers rather than adding a
+  fence check to the log parser (`git diff 49d8a6bb..176893b4 -- packages/tasks/src/folder/parse.ts`);
+  rework 2 replaced it wholesale with `scanInertBlocks` over block structure
+  (`parse.ts:672`), which also closed run 2's inline-code-span observation. The
+  vulnerable surface narrowed from all quoting constructs, to all HTML blocks, to
+  type-7 tags with a quoted `>` plus the five-byte `<!-->`. Run 3's own controls show
+  runs 1 and 2 stayed closed. No allowlist or per-syntax exception anywhere.
+- Deeper counterexamples — CONFIRMED on method: run 3 replaced hand-picked cases with a
+  micromark/`mdast-util-from-markdown` differential (12/56 shapes, 132/4000 seeded), and
+  raised a new inverse class (`<!-->` as a poison pill that silences every later real
+  entry) and a new sufficiency class (five frozen refusal reasons exercised by nothing,
+  independently reproduced by the audit). The exploit *narrative* is the third repetition
+  of "quote a verdict, reach `verified`", which is why the window is conditional.
+- Compounding corpus — CONFIRMED: focused cold-clone tests 21 -> 28 -> 37;
+  `folder-sync.test.ts` 818 -> 1015 -> 1108 lines; doctrine fixture 0 -> 2 -> 5 files with
+  an anti-rot guard asserting `AGENTS.md` still ships HTML comments; schedule step 6b
+  2 -> 4 block kinds; three apparatus sentinels repaired in rework 1 and re-proven
+  sensitive by two later hostile critics; `verify-E6-T05` added to `verify-all` and
+  `cold_clone_targets.txt`.
+- Regression / gate weakening — NONE. Rework 2's three deleted `it(` declarations are
+  subsumed by parameterised families that retain the fence case
+  (`folder-sync.test.ts:1001-1003`); E6-T02's frozen corpus is byte-identical across both
+  reworks (54 fixtures, 3 goldens, 70/37 refusals, 1000 property cases at
+  `3158c855...cf54`); cold clone green from all three checkpoints; no skips, inline
+  disables, or `@ts-ignore` in the diff.
+- Structural diagnosis — the audit's own micromark differential (`work/progress/probe.mjs`,
+  `probe2.mjs`; 11/16 hand-built cases diverge) reproduces run 3's P1 and P2 and finds a
+  **third class run 3 did not raise**: CommonMark HTML block type 7 cannot interrupt a
+  paragraph, and `scanInertBlocks` has no paragraph state, so `prose` / `<br>` / a real
+  `### ... VERDICT: verified` is an ordinary-looking poison pill that neither of run 3's
+  demanded fixes closes. Agreeing with CommonMark on "is this line a heading" requires the
+  tag grammar *and* paragraph-continuation state *and* container state — that is a
+  CommonMark block parser, and each rework has been converging on reimplementing one by
+  hand. Correction of record: micromark is **not** a committed dependency (workspace
+  importers declare it nowhere; `require.resolve('micromark')` fails from the repo root;
+  run 3's oracle reached it through a hard-coded `node_modules/.pnpm/...` path), so
+  promoting the oracle requires declaring it first.
+- Next focus (runs 4-6): (1) binding — change the shape, either (A) declare a real
+  CommonMark block parser as a dependency of `packages/tasks` and derive the inert-block
+  scan from it, or (B) invert to positive recognition so anything the engine cannot
+  classify is inert by construction; a third grammar patch is refused in advance.
+  (2) promote the differential oracle to a permanent `verify-E6-T05` step with a frozen
+  seeded corpus, requiring zero divergence. (3) permanent tests for run 3's cases plus the
+  audit's `para-then-<span>` class as must-still-dispatch. (4) drive all five unexercised
+  `task/spec-*` refusal reasons through the real door or delete them. (5) state the
+  inert-block contract in `packages/tasks/README.md`, not only in a doc comment.
+  (6) carry forward untouched the `by.actor` boundary and the `task/stale-spec` fence.
