@@ -859,6 +859,8 @@ _v-e6-t05:
 	@CI=true pnpm --filter @eforest/tasks build
 	@CI=true pnpm --filter @eforest/reducers build
 	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/server build
+	@CI=true pnpm --filter @eforest/streamfs build
 	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|setTimeout|setInterval" packages/tasks/src/folder; test $$? -eq 1
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test/folder-sync.test.ts packages/platform/test/task-folder-sync.test.ts
 	@node tools/verify/e6_t05_evidence.mjs
