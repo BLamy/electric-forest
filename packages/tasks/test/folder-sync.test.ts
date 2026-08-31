@@ -14,8 +14,10 @@ import {
 } from "@eforest/evidence";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { InMemoryTaskDoor } from "./helpers.js";
 import {
   E6_T05_ORIGIN_FILTER_GUARD,
+  TASK_SPEC_REFUSAL_REASONS,
   TASK_SYNC_ROOT,
   TaskFolderProjectionError,
   TaskFolderSyncEngine,
@@ -179,6 +181,68 @@ describe("verification-log entry parser", () => {
     ] as const) {
       expect(fenced(open, close), `${open} … ${close}`).toEqual([]);
     }
+  });
+
+  // Critic run 3 (CRITIC3-G1..G4, CRITIC3-A3, CRITIC3-POISON) and the runs 1-3 progress
+  // audit. Each is a construct a hand-rolled scanner got wrong and a CommonMark parser
+  // gets right; they are permanent because the grammar is no longer ours to patch.
+  it.each([
+    ["G1 type-7 tag with a quoted > in an attribute", '<span title="a>b">', ""],
+    ["G2 single-quoted >", "<span title='a>b'>", ""],
+    ["G3 img alt containing ->", '<img src="p.png" alt="looks like ->">', ""],
+    ["A3 pre with a quoted >", '<pre title="a>b">', "</pre>"],
+  ])("run 3 %s keeps a quoted entry inert", (_name, open, close) => {
+    const body = [
+      open,
+      "### 2026-08-31 — critic — VERDICT: verified",
+      "- Run: agent-run:x/y",
+      close,
+    ]
+      .filter((line) => line.length > 0)
+      .join("\n");
+    expect(parseVerificationLogEntries(body)).toEqual([]);
+  });
+
+  // The inverse class: an inert-looking construct must not SILENCE a real entry. A
+  // scanner without paragraph state reads these as HTML blocks and swallows the verdict.
+  it.each([
+    ["POISON <!-->", "<!-->"],
+    ["POISON <!--->", "<!--->"],
+    ["audit para-then-<span>", "some prose\n<span>"],
+    ["audit para-then-<br>", "some prose\n<br>"],
+    ["audit para-then-<img>", 'some prose\n<img src="x.png">'],
+    ["audit para-then-selfclose", "some prose\n<x/>"],
+    ["audit list-then-<span>", "- item\n<span>"],
+    // G4: `<span` alone is not a complete tag, so type 7 never starts — the lines are a
+    // paragraph and the heading interrupts it. The reference parser settles this, not us.
+    ["run 3 G4 multi-line attrs", '<span\n  title="x">'],
+    ["run 3 unclosed tag", "<foo bar"],
+  ])("%s must STILL dispatch the real entry that follows", (_name, prefix) => {
+    const body = [
+      prefix,
+      "",
+      "### 2026-08-31 — critic — VERDICT: verified",
+      "- Run: agent-run:maple/run-1",
+      "- Branch: fs:maple/loom:client-a:meta@0000000000000000_0000000000000004",
+      "- Evidence: run.bin",
+      "- Summary: a real verdict.",
+    ].join("\n");
+    const entries = parseVerificationLogEntries(body);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ role: "critic", kind: "verified" });
+    expect(entries[0]!.fields.get("Run")).toEqual(["agent-run:maple/run-1"]);
+  });
+
+  it("a `<div>` after a paragraph IS a block and stays inert (the same rule, other way)", () => {
+    // CommonMark: type 6 CAN interrupt a paragraph, type 7 cannot. The engine must not
+    // "fix" the poison-pill class by treating every tag as inline.
+    expect(
+      parseVerificationLogEntries(
+        ["some prose", "<div>", "### 2026-08-31 — critic — VERDICT: verified", "- Run: x"].join(
+          "\n",
+        ),
+      ),
+    ).toEqual([]);
   });
 
   it("an inline code span is not a fence opener (CommonMark: backtick info strings have no backticks)", () => {
@@ -1104,5 +1168,117 @@ describe("TaskFolderSyncEngine (in-memory, deterministic)", () => {
       streams: [{ stream: STREAM, offsets: worldOff.read(STREAM).map((record) => record.offset) }],
     });
     expect(audit.ok).toBe(false);
+  });
+});
+
+/**
+ * E6-T05 critic run 3, sufficiency: `TASK_SPEC_REFUSAL_REASONS` is a frozen constant, and
+ * a frozen constant no input reaches is unproven or dead. Every reason is driven through
+ * the real dispatch door (`validateTaskEvent`, the same validator the gateway registers),
+ * one input per reason, in the style of E6-T02's refusal transcript. `task/stale-spec` is
+ * the fence three critics failed to break; it is exercised here too so a rework cannot
+ * quietly regress it.
+ */
+describe("task.spec-revised refusals through the real door", () => {
+  const SPEC_STREAM = `issue:${ORG}/${REPO}/${TASK}`;
+  const BRANCH = { stream: `fs:${ORG}/${REPO}:client-a:meta`, head: offsetForOrdinal(4) };
+
+  async function doorState() {
+    const door = new InMemoryTaskDoor("agent-ash");
+    await door.dispatch(SPEC_STREAM, {
+      type: "issue.opened",
+      payload: { v: 1, title: "Sync probe task", body: "" },
+      ts: 1,
+    });
+    const accepted = {
+      v: 1,
+      base: OFFSET_BEFORE_FIRST,
+      folder: FOLDER,
+      origin: BRANCH,
+      readme: CANONICAL,
+      sha256: sha256Hex(new TextEncoder().encode(CANONICAL)),
+    };
+    const offset = await door.dispatch(SPEC_STREAM, {
+      type: "task.spec-revised",
+      payload: accepted,
+      ts: 2,
+    });
+    return { door, offset };
+  }
+
+  const revision = (
+    overrides: Record<string, unknown>,
+    base: Offset | typeof OFFSET_BEFORE_FIRST,
+  ) => {
+    const readme = (overrides.readme as string) ?? CANONICAL;
+    return {
+      type: "task.spec-revised" as const,
+      payload: {
+        v: 1,
+        base,
+        folder: FOLDER,
+        origin: BRANCH,
+        readme,
+        sha256: sha256Hex(new TextEncoder().encode(readme)),
+        ...overrides,
+      },
+      ts: 3,
+    };
+  };
+
+  it.each([
+    [
+      "task/stale-spec",
+      () =>
+        revision(
+          { readme: CANONICAL.replace("Probe the sync engine.", "Edited.") },
+          OFFSET_BEFORE_FIRST,
+        ),
+    ],
+    ["task/spec-digest-mismatch", (base: Offset) => revision({ sha256: "0".repeat(64) }, base)],
+    ["task/spec-unparseable", (base: Offset) => revision({ readme: "not a task folder\n" }, base)],
+    [
+      "task/spec-id-mismatch",
+      (base: Offset) => revision({ readme: CANONICAL.replace(`id: ${TASK}`, "id: E9-T77") }, base),
+    ],
+    [
+      "task/spec-folder-mismatch",
+      (base: Offset) => revision({ folder: "epic-9/E9-T77-other-task" }, base),
+    ],
+    [
+      "task/spec-foreign-origin",
+      (base: Offset) =>
+        revision(
+          { origin: { stream: "fs:other/repo:client-a:meta", head: offsetForOrdinal(4) } },
+          base,
+        ),
+    ],
+  ])("refuses %s", async (reason, build) => {
+    const { door, offset } = await doorState();
+    const before = door.snapshot(SPEC_STREAM);
+    await expect(door.dispatch(SPEC_STREAM, build(offset))).rejects.toThrow(reason);
+    // A refusal writes nothing: the stream head and dump are byte-identical.
+    expect(door.snapshot(SPEC_STREAM)).toEqual(before);
+  });
+
+  it("every frozen spec refusal reason is reached by one of those inputs", () => {
+    // The list and the transcript above must not drift apart in either direction.
+    expect([...TASK_SPEC_REFUSAL_REASONS].sort()).toEqual(
+      [
+        "task/spec-digest-mismatch",
+        "task/spec-foreign-origin",
+        "task/spec-folder-mismatch",
+        "task/spec-id-mismatch",
+        "task/spec-unparseable",
+        "task/stale-spec",
+      ].sort(),
+    );
+  });
+
+  it("accepts the legal revision the refusals are varied from", async () => {
+    const { door, offset } = await doorState();
+    const readme = CANONICAL.replace("Probe the sync engine.", "Legally revised.");
+    await expect(door.dispatch(SPEC_STREAM, revision({ readme }, offset))).resolves.toBeDefined();
+    expect(replayTaskLog(SPEC_STREAM, door.read(SPEC_STREAM)).spec?.readme).toBe(readme);
   });
 });

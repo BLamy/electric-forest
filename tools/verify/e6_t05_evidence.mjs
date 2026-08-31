@@ -29,7 +29,11 @@ const evidence = join(
   ".eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/evidence",
 );
 const schedule = join(root, "tools/verify/e6_t05_schedule.mjs");
-const protectedNames = ["e6-t05-summary.txt", "e6-t05-sabotage.txt"];
+const protectedNames = [
+  "e6-t05-summary.txt",
+  "e6-t05-sabotage.txt",
+  "e6-t05-differential.txt",
+];
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const artifact = (name) => join(evidence, name);
 const before = new Map(protectedNames.map((name) => [name, sha256(readFileSync(artifact(name)))]));

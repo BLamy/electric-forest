@@ -227,6 +227,28 @@ node/real-server glue is `@eforest/tasks/sync-node` (`io/sync-node.ts`, beside
   is exactly the live content attachments; every rendered path re-passes
   `checkRelativePath` before any writer sees it. Deleting the derived folder and
   projecting again recreates identical bytes.
+- **What counts as structure is CommonMark's answer, not ours.** A `##` section heading
+  (E6-T02) and a `###` Verification-log entry heading (E6-T05) are recognised **only where
+  a CommonMark block parser says a heading is**. `scanMarkdownStructure`
+  (`src/folder/parse.ts`) derives that from `mdast-util-from-markdown` — a declared
+  dependency of this package, over micromark — and both readers consume it, so a readme
+  agrees with itself, and with any renderer, about what is prose and what is quoted
+  documentation. Concretely: a `### <date> — <role> — <kind>` a reader renders as code or
+  raw HTML (fenced block, HTML comment, `<pre>`/`<script>`/`<style>`/`<textarea>`, CDATA,
+  processing instruction, declaration, block tag, or a type-7 tag with a quoted `>` in an
+  attribute) **dispatches nothing**; one a reader renders as a heading **is a claim**,
+  including after constructs that only look inert — `<!-->`, or a type-7 tag such as
+  `<br>`/`<span>` that _cannot interrupt a paragraph_ and therefore does not open a block
+  at all. Both directions matter: silencing a real verdict is as much a defect as
+  dispatching a quoted one.
+  This replaced three generations of hand-written scanner. The rule is not a list of
+  quoting syntaxes to extend but a delegation, and it is enforced by a differential in
+  `make verify-E6-T05` (`tools/verify/e6_t05_differential.mjs`): 33 frozen hand-built
+  cases plus 4,000 seeded ones, requiring **zero** divergence from the reference parser,
+  with a committed transcript. `sections/unterminated-fence` is the one hand-computed
+  detail, kept solely so E6-T02's frozen refusal transcript stays byte-identical; it takes
+  no part in the heading decision.
+
 - **Provenance journal** (`TaskSyncJournal`, frozen v1 canonical JSON lines with per-line
   checksums): echo suppression is _only_ provenance — a projected write's receipt offset
   is journaled `projected` before any later tail batch is processed, and the tail

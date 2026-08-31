@@ -40,7 +40,7 @@ import {
 import { applyTaskEvent, taskReducer } from "../reducer.js";
 import { taskInitialStateFor, type TaskState } from "../state.js";
 import { TASK_EVENT_VERSION } from "../version.js";
-import { parseTaskFolder, scanInertBlocks } from "./parse.js";
+import { parseTaskFolder, scanMarkdownStructure } from "./parse.js";
 import { renderTaskReadme } from "./render.js";
 import type { TaskSyncIngestKind } from "./journal.js";
 import type {
@@ -159,25 +159,26 @@ const KIND_BY_TOKEN = new Map<string, VerificationLogEntry["kind"]>([
 const FIELD_PATTERN = /^- (Run|Branch|Evidence|Summary|Finding): (.*)$/;
 
 /**
- * Split a Verification-log section body into entries at `### ` headings, recognised only
- * in ordinary block position (E6-T05 critic runs 1 and 2). The block scanner is E6-T02's
- * own (`scanInertBlocks`), so a readme agrees with itself about what is inert: exactly as
- * an inert `## Goal` is ordinary body text to the section parser, a
- * `### <date> — <role> — <kind>` inside a code fence **or an HTML block** — an HTML
- * comment, `<pre>`, CDATA, a processing instruction, a declaration, a block tag — is
- * documentation, never a lifecycle claim. This is one invariant over block structure,
- * not a list of quoting syntaxes: this repository's own `AGENTS.md`,
- * `.eforest/tasks/README.md`, `CLAUDE.md`, and `.eforest/loop.md` ship both fenced
- * examples and HTML comments. An unterminated block swallows the rest of the body, which
- * fails closed: ambiguous text dispatches nothing.
+ * Split a Verification-log section body into entries at `### ` headings — where a
+ * CommonMark reader says a heading is, and nowhere else (E6-T05 critic runs 1-3 and the
+ * runs 1-3 progress audit). The structure comes from `scanMarkdownStructure`, i.e. from
+ * `mdast-util-from-markdown`, the same block parser a renderer uses, so this is not a
+ * list of quoting syntaxes to keep extending: a `### <date> — <role> — <kind>` that a
+ * reader renders as code or raw HTML is documentation, and one a reader renders as a
+ * heading is a claim — including the cases three hand-rolled generations got wrong
+ * (`<span title="a>b">`, `<!-->`, and a type-7 tag that cannot interrupt a paragraph).
+ * This repository's own `AGENTS.md`, `.eforest/tasks/README.md`, `CLAUDE.md`, and
+ * `.eforest/loop.md` ship both fenced examples and HTML comments and yield no claims.
  */
 export function parseVerificationLogEntries(body: string): readonly VerificationLogEntry[] {
   const lines = body.split("\n");
-  const { inert } = scanInertBlocks(lines);
+  const { headings, inert } = scanMarkdownStructure(lines);
   const entries: VerificationLogEntry[] = [];
   let current: { lines: string[]; inert: boolean[] } | undefined;
   for (const [index, line] of lines.entries()) {
-    if (!inert[index] && line.startsWith("### ")) {
+    // CommonMark decides: a `### ` line is an entry heading only where a reader's
+    // renderer would render one. Depth 3 keeps the E6-T05 entry shape.
+    if (headings.get(index) === 3 && line.startsWith("### ")) {
       if (current !== undefined) entries.push(entryOf(current.lines, current.inert));
       current = { lines: [line], inert: [false] };
     } else if (current !== undefined) {

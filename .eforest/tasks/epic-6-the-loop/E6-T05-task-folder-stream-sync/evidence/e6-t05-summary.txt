@@ -18,7 +18,7 @@ step11-idle heads-frozen=true write-lines-frozen=true
 step11-heads task=0000000000000000_0000000000000010 evidence=0000000000000000_0000000000000002
 final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
 final-status verified
-task-state-digest a3de03ff21507fca156df43cf8bf17f8bd698e0ec2fa8555e4d87d9979bf360c
+task-state-digest 10721ceb758f52940cec2b121a21cc2e2816032f30cb6e3b41822233ad0480bf
 replay-deterministic true
 projection-parity files=2 byte-equal-on-both-branches=true
 evidence-manifest [{"name":"run.bin","sha256":"9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af"}]

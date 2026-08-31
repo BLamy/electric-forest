@@ -22,10 +22,11 @@
     "test": "cd ../.. && vitest run packages/tasks/test"
   },
   "dependencies": {
+    "@eforest/client": "workspace:*",
     "@eforest/evidence": "workspace:*",
     "@eforest/issues": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/streamfs": "workspace:*",
-    "@eforest/client": "workspace:*"
+    "mdast-util-from-markdown": "^2.0.3"
   }
 }
