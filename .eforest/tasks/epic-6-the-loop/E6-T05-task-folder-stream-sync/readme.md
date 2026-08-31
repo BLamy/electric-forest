@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: implemented
+status: refuted
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -226,3 +226,94 @@ sync origin and may not re-dispatch themselves.
   once in its frozen disposition; and deleting the derived folder and projecting from the
   streams recreates the exact readme and evidence bytes. This is a builder claim;
   independent critic verification remains required before `verified`.
+
+### 2026-08-31 — critic — VERDICT: refuted
+
+- **P2/P3 fenced-code-block log entries — FAILED (blocking).** Predicted, before running:
+  `parseVerificationLogEntries` would track fence state the way E6-T02's section parser
+  does ("fenced `## Goal` lines are ordinary body text", packages/tasks/README.md), so a
+  ```` ``` ````-fenced quotation of the documented entry format inside `## Verification
+  log` would be ordinary prose and dispatch nothing. Observed: it splits on any line
+  starting with `### ` with no fence state at all —
+  `packages/tasks/src/folder/ingest.ts:162-176` (this diff) — so quoted documentation
+  becomes a real lifecycle event.
+  - **CRITIC-A** (single engine, real `validateTaskEvent` door): a readme whose
+    Verification log contains only the prose *"This task has not started. The entry
+    format, quoted from the docs:"* followed by a fenced block containing
+    `### 2026-08-31 — builder — started` / `- Run: agent-run:maple/run-doc`, then
+    *"Nothing above is a real claim."*, appends
+    `issue.opened, task.spec-revised, task.spec-revised, task.started` and moves the
+    replayed status `pending → in-progress`.
+  - **CRITIC-D** (the builder's own two-branch / two-principal shape: `agent-ash` on
+    `fs:maple/loom:client-a:meta`, `agent-fern` on `fs:maple/loom:client-b:meta`): with
+    the task at `implemented`, the critic appends a *`### … — critic — in-progress
+    notes`* entry whose body says *"Still reviewing. For reference, a finished verdict
+    looks like this:"* and then quotes, inside a fence, a complete
+    `### 2026-08-31 — critic — VERDICT: verified` entry marked
+    `- Summary: EXAMPLE ONLY — not a verdict.` Observed final task log
+    `issue.opened, task.spec-revised, task.spec-revised, task.started, task.spec-revised,
+    task.claimed, task.spec-revised, task.verified`, replayed `status: verified`,
+    `verification = {attempt:1, claim:…_0000000000000005, critic:{actor:"agent-fern",
+    run:"agent-run:maple/run-b"}, offset:…_0000000000000007}`. The task reached the
+    terminal state from text that explicitly declares itself an example, with no verdict
+    having been made.
+  This refutes acceptance criterion 2 ("exactly one validated task event" per *logical*
+  change — a quoted example is not one) and adversarial angle 2's refutation condition
+  ("Any path to verified without a valid critic event refutes the sole mutation door"),
+  and it breaks the E6-T02 fence invariant this task composes. **Demand:** make
+  `parseVerificationLogEntries` fence-aware (track ```` ``` ````/`~~~` openers exactly as
+  `parse.ts` does for `## ` headings, including an unterminated fence), re-record, and
+  add both cases above as permanent tests — the existing forgery test
+  (`packages/tasks/test/folder-sync.test.ts:184`) only covers an unfenced
+  `— builder — verified` heading, and neither the 21-test focused suite nor
+  `tools/verify/e6_t05_schedule.mjs` ever puts a code fence in a Verification log.
+- **COVERAGE fence path — INSUFFICIENT.** `ingest.ts:162-176` and the whole
+  `entryOf`/`buildLifecycleEvent` path are executed only against unfenced bodies. No
+  hunk in the diff, no committed evidence line, and no schedule step exercises a readme
+  whose Verification log contains a code fence, although this repository's own doctrine
+  (`AGENTS.md`, `.eforest/tasks/README.md`) ships exactly such fenced examples. Add the
+  coverage with the fix.
+- **ORIENT digests — CONFIRMED (no finding).** Recomputed independently before reading
+  the builder's prose: `node tools/verify/e6_t05_evidence.mjs` → task-state digest
+  `c414054b6e2df7b1f3f38a1262923d43f028b0854107d030b5ad0c6b89ec505e`, queue digest
+  `167a4f73c76dee8ec49b112f26b88d36ce7cb595ecd87bfb066ef6012043e5b3`,
+  `summary-byte-identical=true`; committed artifacts re-hash to
+  `d3c21172…b2541` / `08e9bfc8…7aa3` unchanged. `git diff a16cf4e1..HEAD` contains no
+  `.skip`/`.todo`, no inline lint disable, no `@ts-ignore`, and no golden regenerated at
+  test time.
+- **MOCK & ENV — CONFIRMED (no finding).** `bash tools/verify/cold_clone.sh
+  verify-E6-T05` run by this session from pristine committed HEAD `ebaf4c5c`: exit 0,
+  zero `SKIPPED:`, 21/21 focused tests, `E6_T05_SCHEDULE summary-byte-identical=true`
+  with the same two digests, `MUTATION … EXPECTED-FAIL OK`, `SABOTAGE … exit=1
+  EXPECTED-FAIL OK`, `CANOPY_SENSITIVITY_SPINE_OK`, `DEPENDENCY_INTEGRITY_OK`,
+  `verify-E6-T05 PASSED from a pristine clone` (2m45s). The `e815658b` fix is real, not
+  target-narrowing.
+- **APPARATUS (non-blocking, fix while reworking).** (a) The origin-filter sentinel is
+  exercised only through the schedule's `--origin-filter off` flag
+  (`tools/verify/e6_t05_schedule.mjs:52,201`), which the schedule always passes
+  explicitly; flipping `E6_T05_ORIGIN_FILTER_GUARD` to `false` in source therefore does
+  not move the schedule at all, and `verify-E6-T05` goes red only on
+  `assert.equal(E6_T05_ORIGIN_FILTER_GUARD, true)`
+  (`tools/verify/e6_t05_evidence.mjs:160`) — not "on exact event count or quiescence" as
+  angle 5 requires. (b) `tools/verify/e6_t05_evidence.mjs:178` accepts *any* nonzero exit
+  as sabotage success, so an unrelated crash satisfies the sentinel. (c)
+  `tools/verify/e6_t05_evidence.mjs:140` imports `auditTaskSyncJournal` and only asserts
+  it is a function — the live journals are parsed but never audited by the verifier
+  itself. Not raised as blocking: the flag drives the identical branch
+  (`packages/tasks/src/folder/sync.ts:299`) and the frozen summary pins the audits.
+- **Observation, not a finding.** `packages/tasks/src/folder/ingest.ts:273` builds every
+  ingested lifecycle event's `by.actor` from the *observing engine's* principal, not from
+  the author of the branch bytes, so a verdict's actor is not provenance for who wrote
+  the entry. I attempted three exploits (two watchers sharing one branch, both drain
+  orders, and a shared-tail pair) and all three were stopped by the `task/stale-spec`
+  fence aborting the loser's queued lifecycle dispatches
+  (`packages/tasks/src/folder/sync.ts:466-468`). Recorded so the rework does not
+  regress that fence; no refutation claimed.
+- **SUITE: n/a until the refutation clears.** The two failing probes are kept verbatim
+  (reusing the builder's `MemoryWorld`/`makeEngine` harness) at
+  `.eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic/zz-critic-probe.test.ts.txt`;
+  copy to `packages/tasks/test/` to reproduce.
+
+Commands: `node tools/verify/e6_t05_evidence.mjs`;
+`bash tools/verify/cold_clone.sh verify-E6-T05`;
+`cp work/critic/zz-critic-probe.test.ts.txt packages/tasks/test/zz-critic-probe.test.ts && CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC" packages/tasks/test/zz-critic-probe.test.ts`
