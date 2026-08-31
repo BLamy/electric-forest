@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: implemented
+status: refuted
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -430,3 +430,149 @@ Commands: `node tools/verify/e6_t05_evidence.mjs`;
   the critic used as permanent regression tests and a fixture over the real files. The
   remaining E6-T05 behavior is unchanged and re-proven from a pristine clone. This is a
   builder claim; independent critic verification remains required before `verified`.
+
+### 2026-08-31 — critic run 2 — VERDICT: refuted
+
+- **P1 quoted-documentation inertness — FAILED (blocking).** Predicted, before running:
+  the rework's stated invariant ("a readme agrees with itself about what is code";
+  "quoted documentation is inert") would hold for every construct a markdown reader
+  renders as non-structure, not only for the two the fence scanner knows. Observed: the
+  shared scanner recognises exactly ``` / ~~~ fences
+  (`FENCE_PATTERN`, `packages/tasks/src/folder/parse.ts:46,637-664`) and
+  `parseVerificationLogEntries` splits on any unfenced line starting `### `
+  (`packages/tasks/src/folder/ingest.ts:171-186`, this diff). Markdown **HTML blocks**
+  are not tracked at all, so a `### <date> — <role> — <kind>` line inside an HTML
+  comment or a `<pre>` block — text that CommonMark renders as an invisible comment or
+  as literal preformatted code, never as a heading — is still a lifecycle claim. Both of
+  critic run 1's repros reproduce verbatim with the fence swapped for `<!-- -->` or
+  `<pre>`:
+  - **CRITIC2-A2** (single engine, real dispatch door, run 1's CRITIC-A text unchanged):
+    a readme whose Verification log says *"This task has not started. The entry format,
+    quoted from the docs:"*, then an HTML comment containing
+    `### 2026-08-31 — builder — started` / `- Run: agent-run:maple/run-doc`, then
+    *"Nothing above is a real claim."* appends
+    `issue.opened, task.spec-revised, task.spec-revised, task.started` and moves the
+    replayed status `pending → in-progress`. Identical with `<pre>`/`</pre>`. The
+    committed ``` control stays inert (`extra=1`, `status=pending`), which is exactly
+    the point: the fix is a syntax special case, not the invariant it claims.
+  - **CRITIC2-E / CRITIC2-F** (run 1's CRITIC-D shape: `agent-ash` on
+    `fs:maple/loom:client-a:meta`, `agent-fern` on `fs:maple/loom:client-b:meta`, task at
+    `implemented`): the critic appends an honest
+    `### 2026-08-31 — critic — in-progress notes` entry whose body says *"Still
+    reviewing. For reference, a finished verdict looks like this:"* and then wraps a
+    complete `### 2026-08-31 — critic — VERDICT: verified` (marked
+    `- Summary: EXAMPLE ONLY — not a verdict.`) in `<!-- -->` instead of a fence.
+    Observed final log `issue.opened, task.spec-revised, task.spec-revised, task.started,
+    task.claimed, task.spec-revised, task.verified`, replayed `status: verified`,
+    `verification = {attempt:1, claim:…_0000000000000004, critic:{actor:"agent-fern",
+    run:"agent-run:maple/run-b"}, offset:…_0000000000000006}`. Same with `<pre>`; the
+    ``` control stays `implemented`, `verification: undefined`.
+  This refutes adversarial angle 2's refutation condition ("Any path to verified without
+  a valid critic event refutes the sole mutation door") and acceptance criterion 2
+  ("exactly one validated task event" per *logical* change — a block marked EXAMPLE ONLY
+  is not one), on the same evidence standard run 1's refutation was accepted under. The
+  HTML-comment variant is strictly worse than the fenced one it replaces: the comment
+  **renders as nothing**, and projection re-renders the accepted spec verbatim, so the
+  projected `readme.md` carries `status: verified` (or `in-progress`) with **no visible
+  entry anywhere in its Verification log** — folder and stream disagree in the rendered
+  bytes, which is the "drift" this task's own title forbids. Repro (both files kept
+  verbatim, reusing the builder's `MemoryWorld`/`makeEngine` harness):
+  `work/critic2/zz-critic2-probe.test.ts.txt` (`CRITIC2-A2`, `CRITIC2-E`, `CRITIC2-F`,
+  plus a passing ``` control in each group) and the standalone parser probe
+  `work/critic2/probe-parser.mjs`. **Demand:** close this as a general invariant rather
+  than a third syntax patch — recognise a `### ` entry heading only where a CommonMark
+  block parser would (HTML blocks 1-6 included, at minimum `<!-- … -->` and the raw-text
+  tags), or invert the rule so an entry is a lifecycle claim only when it appears in a
+  positively-recognised structural position; then commit CRITIC2-A2/E/F as permanent
+  tests beside CRITIC-A/CRITIC-D and add the construct to `tools/verify/e6_t05_schedule.mjs`
+  step 6b the way the fence was added.
+- **COVERAGE HTML-block path — INSUFFICIENT.** `ingest.ts:171-186` and
+  `parse.ts:637-664` are exercised only against ``` / ~~~ input: the 28-test focused
+  suite (`packages/tasks/test/folder-sync.test.ts:139-198`), the doctrine fixture
+  (`:201-229`) and schedule step 6b all vary the fence character, never the block
+  *kind*. No hunk in the diff, no committed evidence line, and no schedule step puts an
+  HTML comment or a `<pre>` block in a Verification log — although `AGENTS.md` itself
+  ships HTML comments (`AGENTS.md:8-9`). Add the coverage with the fix.
+- **ORIENT digests — CONFIRMED (no finding).** Recomputed independently before reading
+  the builder's prose: `make verify-E6-T05` from a full source rebuild →
+  `E6_T05_SCHEDULE summary-byte-identical=true task-digest=`
+  `7926e4ddd95c8ef7f42355d186c85803c31ee633a914dd7d594e408e9d2dfd5b`
+  `queue-digest=aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66`;
+  `shasum -a 256` of the committed artifacts after the run =
+  `2532248e…f995f1` (summary) and `bc79dddf…290e8622` (sabotage), unchanged — nothing
+  regenerated at test time. `git diff a16cf4e1..HEAD` contains no `.skip`/`.todo`, no
+  inline eslint disable, and no `@ts-ignore`/`@ts-expect-error`.
+- **Stale-`dist` incident — CONFIRMED CLEAN (no finding).** The builder's disclosed
+  stale-`dist` summary left no blessed bytes: `make verify-E6-T05` rebuilds
+  tasks/reducers/platform/server/streamfs from source before the schedule and still
+  reports `summary-byte-identical=true`, and `bash tools/verify/cold_clone.sh
+  verify-E6-T05` run by this session from pristine committed HEAD `fba13c81` reproduces
+  both digests: exit 0, zero `SKIPPED:`, 28/28 focused tests,
+  `E6_T05_JOURNALS … violations=0`, `MUTATION … EXPECTED-FAIL OK`,
+  `SABOTAGE … exit=1 EXPECTED-FAIL OK`, `CANOPY_SENSITIVITY_SPINE_OK`,
+  `DEPENDENCY_INTEGRITY_OK`, `PASSED from a pristine clone`.
+- **E6-T02 not regressed by the shared scanner — CONFIRMED (no finding).** Predicted the
+  `scanFences` extraction is behaviour-preserving for `parseSections` (old code
+  `continue`d on opener/body/closer lines; the new code marks the same three cases
+  `fenced` and skips them). `make verify-E6-T02` green: `E6_T02_FIXTURES entries=54
+  sha256-list-identical=true`, three goldens `byte-identical=true`,
+  `E6_T02_REFUSALS scenarios=70 reasons=37 transcript-identical=true`,
+  `E6_T02_PROPERTY cases=1000 corpus-sha256=3158c855… byte-identical=true`.
+- **Apparatus fixes (a)(b)(c) — ALL THREE CONFIRMED REAL (no finding).** (a) I flipped
+  `E6_T05_ORIGIN_FILTER_GUARD` to `false` **in source**
+  (`packages/tasks/src/folder/sync.ts:61`), rebuilt, and ran
+  `node tools/verify/e6_t05_evidence.mjs`: it fails on the schedule itself —
+  `Error: schedule timed out waiting for step5 implemented`
+  (`tools/verify/e6_t05_schedule.mjs:304`), i.e. non-convergence of the exact event
+  schedule, which is what angle 5 demands; source restored and rebuilt. (b) I made the
+  sabotaged run fail a *different* way (a `ReferenceError` thrown from the schedule's
+  flag parsing under `--origin-filter off`): the verifier rejected it —
+  `AssertionError … expected: /TIMEOUT step\d|schedule timed out waiting for/`,
+  `sabotage must fail by non-convergence, not by an unrelated error`
+  (`tools/verify/e6_t05_evidence.mjs:225-236`). (c) I injected a violation into a live
+  journal (dropped the tail record of `journal-a.jsonl` after the schedule wrote it, so
+  the schedule's own `journal-a ok=true violations=0` line and the whole frozen summary
+  stayed byte-identical): the verifier's independent audit went red —
+  `journal-a violates the frozen multiplicity:
+  ["fs:maple/loop:client-a:meta@0000000000000000_0000000000000034: projected"]`
+  (`tools/verify/e6_t05_evidence.mjs:170`). All three probe patches were applied to
+  copies and reverted with `cp` from `work/critic2/*.orig`; `git status` shows no
+  task-path modification.
+- **Parser edge cases beyond the finding — CONFIRMED (no finding).** `work/critic2/probe-parser.mjs`
+  drove `parseVerificationLogEntries` directly with my own inputs: a `~~~` fence
+  containing ``` (and the converse), an info string containing `###`, a 4-backtick fence
+  containing 3-backtick lines, 3-space-indented fences, a closer carrying an info string,
+  an unterminated fence at EOF, an entry heading immediately after an unterminated fence,
+  fences inside blockquotes and list items, and `` ``` ``` `` (not a CommonMark opener) —
+  all inert, none dispatching. Structured fields are genuinely unfenced-only: a fenced
+  `- Run: agent-run:spoof/x` inside a real `started` entry does not supply or override
+  that entry's `- Run:`, and a real entry whose `- Run:` appears only *after* a fenced
+  block is still read correctly. Kind/role binding holds: `— builder — verified` is
+  refused `log/role-kind-mismatch`, `— critic — refuted` is accepted only for a critic,
+  hyphen-separated headings and the prefix kind `verifiedly` produce no kind and are
+  silently inert, and `— critic — VERIFIED` (case) is recognised. CRLF never reaches the
+  log parser (`readme/crlf` refuses it upstream, `parse.ts:279-281`). This repository's
+  `AGENTS.md`, `.eforest/tasks/README.md`, `CLAUDE.md`, `.eforest/loop.md` and
+  `packages/tasks/README.md` all yield **zero** lifecycle entries through the parser,
+  while all 62 live task readmes still yield their real unfenced entries.
+- **Observation, not a blocking finding.** This task's own `readme.md` does not parse
+  through the engine it builds: at HEAD `parseTaskReadme` refuses it
+  `sections/unterminated-fence` at line 235 — critic run 1's prose contains an inline
+  code span whose backtick run the shared `FENCE_PATTERN`
+  (`packages/tasks/src/folder/parse.ts:46`) reads as a 4-backtick fence opener, which
+  CommonMark does not (a backtick fence's info string may not contain backticks). The
+  effect is fail-closed (everything after it, including the builder's rework entry, is
+  invisible and dispatches nothing), so no forged claim follows from it — but it means
+  the rework's regression fixture proves round-tripping only for E6-T04's readme
+  (`packages/tasks/test/folder-sync.test.ts:223-229`), not for E6-T05's. Extend that
+  fixture to this folder's own readme when reworking; 26 other task readmes are refused
+  for pre-existing frontmatter/section drift unrelated to this diff and are not raised.
+- **SUITE: n/a until the refutation clears.** The three failing probes plus their passing
+  backtick-fence controls are kept verbatim at
+  `.eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic2/zz-critic2-probe.test.ts.txt`;
+  copy to `packages/tasks/test/` to reproduce.
+
+Commands: `make verify-E6-T05`; `make verify-E6-T02`;
+`bash tools/verify/cold_clone.sh verify-E6-T05`;
+`node .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic2/probe-parser.mjs`;
+`cp .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic2/zz-critic2-probe.test.ts.txt packages/tasks/test/zz-critic2-probe.test.ts && CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC2" packages/tasks/test/zz-critic2-probe.test.ts`
