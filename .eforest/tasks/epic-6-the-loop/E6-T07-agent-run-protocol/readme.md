@@ -3,7 +3,7 @@ id: E6-T07
 epic: 6
 title: "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
 priority: 607
-status: pending
+status: in-progress
 depends_on: [E6-T03, E6-T04]
 estimate: L
 capstone: false
