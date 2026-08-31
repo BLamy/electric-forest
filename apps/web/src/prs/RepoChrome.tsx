@@ -73,6 +73,7 @@ export function RepoHeader(props: {
         className="repo-settings-quick"
         type="button"
         aria-label="Repository display settings"
+        onClick={() => navigate(repoSectionPath(props.org, props.repo, "settings"))}
       >
         <SlidersHorizontal size={16} />
       </button>

@@ -21,6 +21,7 @@ import {
   type StreamReducerResult,
 } from "@eforest/web-hooks";
 import type { MeadowPrState } from "@eforest/meadow";
+import { getWhoami } from "../chat/useWhoami.js";
 
 export { branchNameFromStream, openedEvent } from "./model.js";
 
@@ -42,25 +43,20 @@ function branchStreamId(org: string, repo: string, branch: string): string {
 function useActor(): string {
   const [actor, setActor] = useState("current-user");
   useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/whoami", { credentials: "same-origin", signal: controller.signal })
-      .then(async (response) => (response.ok ? (response.json() as Promise<unknown>) : undefined))
+    let active = true;
+    void getWhoami()
       .then((value) => {
-        if (value === undefined || value === null || typeof value !== "object") return;
-        const user = (value as { readonly user?: unknown }).user;
-        if (user === null || typeof user !== "object") return;
-        const candidate = user as { readonly email?: unknown; readonly sub?: unknown };
-        if (typeof candidate.email === "string" && candidate.email !== "") {
-          setActor(candidate.email);
-        } else if (typeof candidate.sub === "string" && candidate.sub !== "") {
-          setActor(candidate.sub);
+        if (!active || value === null) return;
+        if (value.user.email !== "") {
+          setActor(value.user.email);
+        } else if (value.user.sub !== "") {
+          setActor(value.user.sub);
         }
       })
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === "AbortError"))
-          setActor("current-user");
-      });
-    return () => controller.abort();
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, []);
   return actor;
 }

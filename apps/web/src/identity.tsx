@@ -1,47 +1,26 @@
 import { useEffect, useState } from "react";
+import { getWhoami, type Whoami } from "./chat/useWhoami.js";
 
-export interface Whoami {
-  readonly user: { readonly sub: string; readonly email: string };
-  readonly stream: string;
-  readonly offset: string;
-  readonly digest: string;
-}
-
-function isWhoami(value: unknown): value is Whoami {
-  if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Partial<Whoami>;
-  return (
-    typeof candidate.user === "object" &&
-    candidate.user !== null &&
-    typeof candidate.user.sub === "string" &&
-    typeof candidate.user.email === "string" &&
-    typeof candidate.stream === "string" &&
-    typeof candidate.offset === "string" &&
-    typeof candidate.digest === "string"
-  );
-}
+export type { Whoami } from "./chat/useWhoami.js";
 
 export function IdentityRegion(): React.JSX.Element {
   const [identity, setIdentity] = useState<Whoami | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/whoami", {
-      credentials: "same-origin",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`whoami refused with ${String(response.status)}`);
-        const value: unknown = await response.json();
-        if (!isWhoami(value)) throw new Error("whoami returned an invalid identity view");
-        return value;
+    let active = true;
+    void getWhoami()
+      .then((value) => {
+        if (!active) return;
+        if (value === null) setFailed(true);
+        else setIdentity(value);
       })
-      .then(setIdentity, (error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setFailed(true);
+      .catch(() => {
+        if (active) setFailed(true);
       });
-    return () => controller.abort();
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (failed) return <p role="alert">Identity could not be replayed.</p>;

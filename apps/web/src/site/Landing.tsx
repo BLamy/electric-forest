@@ -167,7 +167,12 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
                 </span>
               </RouteLink>
             ) : (
-              <a className="site-btn site-btn-lg" href="/auth/login" data-testid="hero-login">
+              <a
+                className="site-btn site-btn-lg"
+                href="/auth/login"
+                data-testid="hero-login"
+                aria-label="Log in"
+              >
                 Log in <span className="site-arrow">→</span>
               </a>
             )}
@@ -374,7 +379,7 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
                   </span>
                 </RouteLink>
               ) : (
-                <a className="site-btn site-btn-lg" href="/auth/login">
+                <a className="site-btn site-btn-lg" href="/auth/login" aria-label="Log in">
                   Log in <span className="site-arrow">→</span>
                 </a>
               )}

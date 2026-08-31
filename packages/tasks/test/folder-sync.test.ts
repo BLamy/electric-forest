@@ -1282,3 +1282,248 @@ describe("task.spec-revised refusals through the real door", () => {
     expect(replayTaskLog(SPEC_STREAM, door.read(SPEC_STREAM)).spec?.readme).toBe(readme);
   });
 });
+
+// ---------------------------------------------------------------------------
+// critic run 4 probes — my own inputs, driven through the REAL dispatch door.
+// The rework promoted run 3's G1/G2/G3/A3 and POISON only as parser-level unit
+// tests; the door-level families (CRITIC-A/A2, CRITIC-D/E/F) still carry no
+// HTML block type 7 wrapper. These close that gap and add the inverse case.
+// ---------------------------------------------------------------------------
+describe("CRITIC4 (run 4): block type 7 at the dispatch door", () => {
+  const README_PATH = `${TASK_SYNC_ROOT}/${FOLDER}/readme.md`;
+  it.each([
+    ['<span title="a>b">', "</span>"],
+    ["<span title='a>b'>", "</span>"],
+    ['<a href="x?y=1>2">', "</a>"],
+    ['<img src="p.png" alt="what a verdict looks like ->">', ""],
+  ])("CRITIC4-A7: %s-quoted entry format dispatches zero events", async (open, close) => {
+    const world = new MemoryWorld();
+    const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+    await a.userWrite(README_PATH, CANONICAL);
+    const before = world.read(STREAM).length;
+    const quoted = [
+      "",
+      "",
+      "This task has not started. The entry format, quoted from the docs:",
+      "",
+      open,
+      "### 2026-08-31 — builder — started",
+      "- Run: agent-run:maple/run-doc",
+      close,
+      "",
+      "Nothing above is a real claim.",
+      "",
+    ]
+      .filter((line) => line !== undefined)
+      .join("\n");
+    await a.userWrite(README_PATH, README("pending", "Created by client A.", quoted) + "\n");
+    const types = world.read(STREAM).map((record) => record.type);
+    expect(types).not.toContain("task.started");
+    expect(world.read(STREAM).length).toBe(before + 1);
+    expect(replayTaskLog(STREAM, world.read(STREAM)).status).toBe("pending");
+    const artifacts = [...world.filesAtBranch(ORIGIN.stream).keys()].filter((path) =>
+      path.includes("work/.sync/"),
+    );
+    expect(artifacts).toEqual([]);
+  });
+
+  it.each([
+    ['<span title="a>b">', "</span>"],
+    ['<a href="x?y=1>2">', "</a>"],
+  ])(
+    "CRITIC4-G7: a two-branch note quoting a verdict inside %s never reaches verified",
+    async (open, close) => {
+      const world = new MemoryWorld();
+      const branchB = `fs:${ORG}/${REPO}:client-b:meta`;
+      const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+      const b = makeEngine(world, branchB, "agent-fern");
+      await a.userWrite(README_PATH, CANONICAL);
+      await a.userWrite(`${TASK_SYNC_ROOT}/${FOLDER}/evidence/run.bin`, new Uint8Array([1, 2, 3]));
+      const claimLog = [
+        "",
+        "",
+        "### 2026-08-30 — builder — started",
+        "- Run: agent-run:maple/run-a",
+        "",
+        "### 2026-08-30 — builder — claimed",
+        "- Run: agent-run:maple/run-a",
+        `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+        "- Evidence: run.bin",
+        "- Summary: did the work.",
+        "",
+      ].join("\n");
+      await a.userWrite(README_PATH, README("pending", "Created by client A.", claimLog) + "\n");
+      expect(replayTaskLog(STREAM, world.read(STREAM)).status).toBe("implemented");
+      await b.engine.refreshAll();
+      await b.drainTail();
+      const quotedVerdict = [
+        claimLog.replace(/\n$/, ""),
+        "",
+        "### 2026-08-31 — critic — in-progress notes",
+        "Still reviewing. For reference, a finished verdict looks like this:",
+        "",
+        open,
+        "### 2026-08-31 — critic — VERDICT: verified",
+        "- Run: agent-run:maple/run-b",
+        `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+        "- Evidence: run.bin",
+        "- Summary: EXAMPLE ONLY — not a verdict.",
+        close,
+        "",
+      ].join("\n");
+      const bText = new TextDecoder().decode(world.filesAtBranch(branchB).get(README_PATH));
+      await b.userWrite(
+        README_PATH,
+        bText.replace(/## Verification log[\s\S]*$/, `## Verification log${quotedVerdict}`),
+      );
+      const state = replayTaskLog(STREAM, world.read(STREAM));
+      expect(state.status).toBe("implemented");
+      expect(state.verification).toBeUndefined();
+      expect(world.read(STREAM).map((record) => record.type)).not.toContain("task.verified");
+    },
+  );
+
+  it("CRITIC4-LIVE: a real verdict after an ordinary-looking type-7 tag STILL reaches verified", async () => {
+    // The inverse direction at the door: `prose` / `<br>` / real entry must not be
+    // silenced. A scanner without paragraph state swallows this verdict.
+    const world = new MemoryWorld();
+    const branchB = `fs:${ORG}/${REPO}:client-b:meta`;
+    const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+    const b = makeEngine(world, branchB, "agent-fern");
+    await a.userWrite(README_PATH, CANONICAL);
+    await a.userWrite(`${TASK_SYNC_ROOT}/${FOLDER}/evidence/run.bin`, new Uint8Array([9, 9]));
+    const claimLog = [
+      "",
+      "",
+      "### 2026-08-30 — builder — started",
+      "- Run: agent-run:maple/run-a",
+      "",
+      "### 2026-08-30 — builder — claimed",
+      "- Run: agent-run:maple/run-a",
+      `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+      "- Evidence: run.bin",
+      "- Summary: did the work.",
+      "",
+    ].join("\n");
+    await a.userWrite(README_PATH, README("pending", "Created by client A.", claimLog) + "\n");
+    expect(replayTaskLog(STREAM, world.read(STREAM)).status).toBe("implemented");
+    await b.engine.refreshAll();
+    await b.drainTail();
+    const verdictLog = [
+      claimLog.replace(/\n$/, ""),
+      "",
+      "Formatting noise a hand-rolled scanner would swallow:",
+      "<br>",
+      "<!-->",
+      "",
+      "### 2026-08-31 — critic — VERDICT: verified",
+      "- Run: agent-run:maple/run-b",
+      `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+      "- Evidence: run.bin",
+      "- Summary: a real verdict.",
+      "",
+    ].join("\n");
+    const bText = new TextDecoder().decode(world.filesAtBranch(branchB).get(README_PATH));
+    await b.userWrite(
+      README_PATH,
+      bText.replace(/## Verification log[\s\S]*$/, `## Verification log${verdictLog}`),
+    );
+    const state = replayTaskLog(STREAM, world.read(STREAM));
+    expect(world.read(STREAM).map((record) => record.type)).toContain("task.verified");
+    expect(state.status).toBe("verified");
+  });
+});
+
+describe("CRITIC4 race (run 4, my own interleaving)", () => {
+  const README_PATH = `${TASK_SYNC_ROOT}/${FOLDER}/readme.md`;
+
+  it("CRITIC4-RACE: B loses a combined spec+log+status+evidence edit; nothing forged, both converge", async () => {
+    const world = new MemoryWorld();
+    const branchB = `fs:${ORG}/${REPO}:client-b:meta`;
+    const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+    const b = makeEngine(world, branchB, "agent-fern");
+    await a.userWrite(README_PATH, CANONICAL);
+    await b.engine.refreshAll();
+    await b.drainTail();
+
+    // A: a plain prose revision. B: prose + a forged critic verdict + a raw status edit
+    // + a new evidence file, all in one write, staged from the same base as A.
+    const editA = CANONICAL.replace("Probe the sync engine.", "Goal per client A (race).");
+    const forged = [
+      "",
+      "",
+      "### 2026-08-31 — critic — VERDICT: verified",
+      "- Run: agent-run:maple/forged",
+      `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+      "- Evidence: b.bin",
+      "- Summary: forged by the loser of the race.",
+      "",
+    ].join("\n");
+    const editB = README("verified", "Goal per client B (race).", forged).replace(/\n$/, "") + "\n";
+
+    const receiptsB = world.writeBranch(branchB, [
+      {
+        kind: "write",
+        path: `${TASK_SYNC_ROOT}/${FOLDER}/evidence/b.bin`,
+        bytes: new Uint8Array([4, 2]),
+      },
+      { kind: "write", path: README_PATH, bytes: new TextEncoder().encode(editB) },
+    ]);
+    const receiptsA = world.writeBranch(ORIGIN.stream, [
+      { kind: "write", path: README_PATH, bytes: new TextEncoder().encode(editA) },
+    ]);
+    // Drain in the reverse order the writes were staged.
+    a.pendingTail.push(...world.changeRecords(receiptsA));
+    b.pendingTail.push(...world.changeRecords(receiptsB));
+    await a.drainTail();
+    await b.drainTail();
+    await b.engine.refreshAll();
+    await b.drainTail();
+    await a.engine.refreshAll();
+    await a.drainTail();
+
+    const types = world.read(STREAM).map((record) => record.type);
+    expect(types).not.toContain("task.verified");
+    const state = replayTaskLog(STREAM, world.read(STREAM));
+    expect(state.status).toBe("pending");
+    expect(state.verification).toBeUndefined();
+    // No lost bytes: the loser's text is retained verbatim in a conflict artifact.
+    const filesA = world.filesAtBranch(ORIGIN.stream);
+    const filesB = world.filesAtBranch(branchB);
+    const retained = [...filesB].filter(([path]) => path.endsWith(".retained"));
+    expect(retained.length).toBeGreaterThanOrEqual(1);
+    expect(
+      retained.some(([, bytes]) =>
+        new TextDecoder().decode(bytes).includes("Goal per client B (race)."),
+      ),
+    ).toBe(true);
+    // Both branches converge on the same readme bytes, and A's edit is the winner.
+    expect(new TextDecoder().decode(filesB.get(README_PATH))).toBe(
+      new TextDecoder().decode(filesA.get(README_PATH)),
+    );
+    expect(new TextDecoder().decode(filesA.get(README_PATH))).toContain(
+      "Goal per client A (race).",
+    );
+    // Every accepted input/output is journaled exactly once in its frozen disposition.
+    for (const [engine, branchStream] of [
+      [a, ORIGIN.stream],
+      [b, branchB],
+    ] as const) {
+      const audit = auditTaskSyncJournal(engine.journal.state, {
+        branch: {
+          stream: branchStream,
+          offsets: world.branchOf(branchStream).log.map((entry) => entry.offset),
+        },
+        streams: [
+          { stream: STREAM, offsets: world.read(STREAM).map((record) => record.offset) },
+          {
+            stream: EVIDENCE_STREAM,
+            offsets: world.read(EVIDENCE_STREAM).map((record) => record.offset),
+          },
+        ],
+      });
+      expect(audit.violations).toEqual([]);
+      expect(audit.ok).toBe(true);
+    }
+  });
+});
