@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: in-progress
+status: implemented
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -928,3 +928,141 @@ declared a death spiral in advance.
   `task/spec-*` refusal reasons through the real door or delete them. (5) state the
   inert-block contract in `packages/tasks/README.md`, not only in a doc comment.
   (6) carry forward untouched the `by.actor` boundary and the `task/stale-spec` fence.
+
+### 2026-08-31 — builder — rework after critic run 3 + progress audit (implemented)
+
+- Rework commits `bfe7c35d` and `af73bc88`, on `e6-t05-task-folder-stream-sync` (parent
+  `59681cbd`). **Shape chosen: (A) — declare a real CommonMark block parser and derive
+  the structural read from it.** The audit's condition was binding and correct: a fourth
+  grammar patch was refused in advance, and it proved that fixing only run 3's two demands
+  still leaves a refutation at run 4, because HTML block type 7 cannot interrupt a
+  paragraph and a hand-rolled scanner has no paragraph state — so `prose` / `<br>` / a
+  real `### … VERDICT: verified` is an ordinary-looking poison pill. Agreeing with
+  CommonMark on "is this line a heading" needs the tag grammar *and* paragraph
+  continuation *and* container state; that is a CommonMark block parser, and each of my
+  three previous reworks was converging on writing one by hand. So the engine now uses
+  one instead of approximating one.
+- **Why (A) and not (B).** (B) — inverting to "a `###` line is a claim only when the
+  Verification-log section round-trips through E6-T02's canonical render" — was asked for
+  by run 2's critic and declined twice, so it deserved a real answer rather than a third
+  decline. I considered it and chose (A) deliberately: E6-T02's canonical render is
+  *byte-preserving for section bodies* (it re-emits the preamble and every body verbatim),
+  so a round-trip through it accepts any body a folder can carry and would have decided
+  nothing about which `###` lines inside that body are headings — the very question at
+  issue. (B) would have had to grow its own notion of "classifiable", i.e. a second
+  structural reader, which is the failure mode the audit named. (A) puts the question to
+  the implementation a reader's renderer already uses, which is both a smaller contract
+  and a falsifiable one — hence the differential in item 2, which (B) could not have had
+  an oracle for.
+- **The dependency is real and declared.** `mdast-util-from-markdown@^2.0.3` is now a
+  dependency of `packages/tasks/package.json`, installed with `corepack pnpm` 10.15.0; the
+  lockfile gains it as a **declared importer** (`+3` lines under `packages/tasks`), not the
+  deep transitive the audit corrected the record about. `DEPENDENCY_INTEGRITY_MANIFEST`
+  records `entries=86265` and the cold clone reports `DEPENDENCY_INTEGRITY_OK`. The verify
+  target's fail-closed purity grep over `packages/tasks/src/folder` still passes: the parse
+  is pure — no filesystem, clock, network, or randomness.
+- **What replaced what.** `scanInertBlocks` and roughly ninety lines of hand-written HTML
+  grammar (`HTML_RAWTEXT_OPEN`, `HTML_ANY_TAG_ONLY`, the end-condition table) are
+  **deleted** — lint caught the last of them as dead code, which is the right epitaph.
+  `scanMarkdownStructure` walks the mdast tree and returns `headings` (0-based line ->
+  depth) and `inert` (lines a reader renders as code or raw HTML). **Both** readers consume
+  it: E6-T02's `##` sections and E6-T05's `###` entries. One hand-computed detail survives,
+  `unterminatedFence`, and it is deliberately *not* part of the heading decision — it exists
+  only so E6-T02's frozen `sections/unterminated-fence` transcript stays byte-identical.
+- **The differential is now the gate (audit item 2).** `tools/verify/e6_t05_differential.mjs`
+  is a permanent step of `make verify-E6-T05`: **33 frozen hand-built cases + 4,000 seeded
+  cases, `divergences=0`**, with a committed transcript (`e6-t05-differential.txt`, sha256
+  `67b3d74ce3c57104334762eeaa5c7786e23eb9229cabac11e28955b36c614faf`, `transcript-sha256=67b3d74ce3c57104334762eeaa5c7786e23eb9229cabac11e28955b36c614faf`).
+  It resolves the reference through `@eforest/tasks`' own declared dependency — run 3's
+  hard-coded `/Users/blamy` and `node_modules/.pnpm/...` paths are gone. Running the
+  audit's own probes unmodified now reports **0 divergences of 19** (`probe.mjs`) and
+  **0/16** (`probe2.mjs`), against 11/16 and 12/56 before. One honest correction I made to
+  my own oracle: matching entries to lines by *text* double-counted a repeated heading and
+  reported 16 false divergences; entries are now consumed in order against positions, and
+  I verified the engine really returns one entry for the case that flagged it.
+- **Permanent tests (audit item 3).** Run 3's `G1`/`G2`/`G3`/`A3` and `POISON`
+  (`<!-->`, `<!--->`) as inert; the audit's `para-then-<span>/<br>/<img>/selfclose` and
+  `list-then-<span>` as **must-still-dispatch** — silencing a real verdict is as much a
+  defect as dispatching a quoted one. Two of run 3's cases are recorded as
+  must-dispatch rather than inert, because CommonMark says so: `G4` (`<span` with
+  attributes on the next line) and `<foo bar` are *incomplete* tags, so type 7 never
+  starts and the lines are a paragraph the heading interrupts. My first draft asserted
+  `G4` inert and the suite went red — the reference settled it against me, which is the
+  point of having one. A `<div>` after a paragraph stays inert (type 6 *can* interrupt),
+  so the fix cannot degrade into "every tag is inline". Schedule **step 6b** now carries a
+  type-7 wrapper with a quoted `>` beside the fences, the HTML comment and the `<pre>`
+  block, so that matcher decides in the live two-client run
+  (`step6b-inert lifecycle-events-added=0`).
+- **Frozen constants are now executed (audit item 4).** All six
+  `TASK_SPEC_REFUSAL_REASONS` are driven through the real dispatch door
+  (`validateTaskEvent`), one input per reason, each asserting the stream head **and** dump
+  are byte-unchanged after the refusal, plus a control proving the legal revision the six
+  are varied from is accepted: `task/stale-spec`, `task/spec-digest-mismatch`,
+  `task/spec-unparseable`, `task/spec-id-mismatch`, `task/spec-folder-mismatch`,
+  `task/spec-foreign-origin`. Nothing was deleted; nothing is now unexercised.
+- **Contract stated where a reader will find it (audit item 5).** `packages/tasks/README.md`
+  carries the inert-block contract — both directions, the delegation to CommonMark, the
+  differential that enforces it, and the `unterminatedFence` exception — not only a doc
+  comment.
+- **Carried forward untouched (audit item 6).** The `by.actor` provenance boundary
+  (an ingested event's actor is the observing engine's principal, never proof of who typed
+  the paragraph; signed authorship is E6-T07's), `task.spec-revised` carrying no `by`, the
+  `task/stale-spec` fence that three critics failed to break — now with its own permanent
+  refusal test so a rework cannot regress it — and all three apparatus sentinels.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (**18 = baseline**; it read 26 mid-rework because the hand-rolled grammar had become
+  dead code, and deleting it restored the baseline), `pnpm typecheck` (**41 = baseline**),
+  focused suites in the foreground — `packages/tasks/test` 10 files/**136** tests green,
+  `platform/test/{task-folder-sync,tasks,task-queue}` + `reducers` 8 files/33 green,
+  `evidence`+`issues`+`apps/web` 83 green — `pnpm build` green, **`make verify-E6-T02`
+  green** (54 fixtures, 3 goldens, 70 refusal scenarios / 37 reasons, 1000-case corpus at
+  `3158c855…cf54`, all byte-identical — swapping section-heading recognition to CommonMark
+  regressed nothing), `make verify-E6-T05` green, then
+  `bash tools/verify/cold_clone.sh verify-E6-T05` from pristine committed HEAD
+  `af73bc88`: **exit 0, zero `SKIPPED:`**, **59/59** focused tests,
+  `E6_T05_DIFFERENTIAL fixed=33 generated=4000 divergences=0`,
+  `E6_T05_SCHEDULE summary-byte-identical=true`,
+  `E6_T05_JOURNALS … violations=0`, `MUTATION … EXPECTED-FAIL OK`,
+  `SABOTAGE … EXPECTED-FAIL OK`, `DEPENDENCY_INTEGRITY_OK`,
+  `PASSED from a pristine clone`.
+- **One apparatus repair the cold clone forced, disclosed.** My first cold clone of this
+  rework **failed**: with the origin filter off, a fast host drowns the transport in
+  runaway self-ingested writes (`UND_ERR_HEADERS_OVERFLOW`) instead of timing out, and the
+  run-1 sentinel — which demands one specific failure shape — correctly rejected it. The
+  fix widens the accepted shapes to those *caused by the echo* (non-convergence or a
+  transport collapse) while keeping the harness-level rejection list
+  (`ERR_MODULE_NOT_FOUND`, `SyntaxError`, `ReferenceError`, `TypeError:`) that run 1's
+  critic probed, so an unrelated crash still cannot satisfy the sentinel. The proof
+  remains the contrast: identical inputs, guard on -> byte-identical green run; guard off
+  -> failure.
+- Evidence re-recorded: `e6-t05-summary.txt` (sha256 `dc0d595100755f59461b7a6d0b0e30da18aec33b6eda7938366ba69a88e03616`) — **task-state digest
+  `10721ceb758f52940cec2b121a21cc2e2816032f30cb6e3b41822233ad0480bf`** (moved: step 6b's
+  note now carries the type-7 block too), **queue digest
+  `aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66`** (unchanged across
+  all three reworks — the queue does not depend on log prose), final sequence
+  `issue.opened, task.spec-revised x3, task.started, task.claimed, task.spec-revised x4,
+  task.verified`, `final-status verified`, `replay-deterministic true`,
+  `projection-parity … byte-equal-on-both-branches=true`, `step11-idle
+  window-at-least-ms=12000 measured-ok=true` with `heads-frozen=true
+  write-lines-frozen=true`, both journal audits `ok=true violations=0`,
+  `warnings … unexpected=0`; `e6-t05-differential.txt` (sha256 `67b3d74ce3c57104334762eeaa5c7786e23eb9229cabac11e28955b36c614faf`);
+  `e6-t05-sabotage.txt` (sha256 `bc79dddf05a2bc50ff7d11a2ee61a63e0021c6098abf92129640e037290e8622`) unchanged.
+- **Scope boundary, restated for the new shape.** The engine now inherits CommonMark's
+  answer for heading recognition, so the old caveat about which constructs I modelled is
+  gone. What remains bounded: `mdast-util-from-markdown` is pinned at `^2.0.3` and the
+  differential re-proves agreement on every run, so a parser upgrade cannot silently move
+  the semantics; and the depth-3 plus `startsWith("### ")` shape check is still E6-T05's
+  own, deliberately, so an indented or blockquoted heading is inert (fail closed) rather
+  than a claim.
+- Replay: N/A (task-folder sync engine; the dedicated browser task surface lands in E6-T06)
+  + mitigation: the CommonMark differential (4,033 cases, zero divergence), the two-client
+  real-server schedule including step 6b's five block kinds, the measured >=10 s idle
+  window with frozen heads, the verifier's own journal audits, byte hashes,
+  projection/replay/queue digest parity, the evidence-byte mutation, a source-level
+  origin-filter sabotage, and `verify-E6-T02`'s frozen corpus.
+- Claim: the engine no longer has an opinion about Markdown. "Is this line a lifecycle
+  claim?" is answered by the block parser a renderer uses, enforced every run by a
+  zero-divergence differential over 4,033 cases, so the class of defect that produced
+  three refutations — a construct the hand-rolled grammar classified differently from a
+  reader — is closed by construction rather than by enumeration, in both directions. This
+  is a builder claim; independent critic verification remains required before `verified`.
