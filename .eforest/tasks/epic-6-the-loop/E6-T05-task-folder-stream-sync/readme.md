@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: in-progress
+status: implemented
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -317,3 +317,116 @@ sync origin and may not re-dispatch themselves.
 Commands: `node tools/verify/e6_t05_evidence.mjs`;
 `bash tools/verify/cold_clone.sh verify-E6-T05`;
 `cp work/critic/zz-critic-probe.test.ts.txt packages/tasks/test/zz-critic-probe.test.ts && CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC" packages/tasks/test/zz-critic-probe.test.ts`
+
+### 2026-08-31 — builder — rework after critic run 1 (implemented)
+
+- Rework commit `127bf5f0`, on `e6-t05-task-folder-stream-sync` (parent `d1d5d6d3`).
+  **The refutation is accepted in full and fixed at its root.** `parseVerificationLogEntries`
+  split on any line beginning `### ` with no fence state, so a fenced quotation of the
+  documented entry format became a real lifecycle claim — CRITIC-A drove
+  `pending → in-progress` from prose that says *"Nothing above is a real claim"*, and
+  CRITIC-D reached terminal `verified`, with `verification.critic.actor` set, from a
+  fenced block explicitly marked *"EXAMPLE ONLY — not a verdict."* That is a path to
+  `verified` without a critic verdict, and it broke the E6-T02 fence invariant this task
+  composes.
+- **Fix — one fence machine, shared, not duplicated.** E6-T02's fence state machine is
+  now `scanFences` (exported from `packages/tasks/src/folder/parse.ts`), and **both**
+  readers consume it: `parseSections` (`##` headings) lost its inline copy and calls the
+  shared scanner, and the E6-T05 log parser recognises `### ` entry headings only outside
+  a fence. A readme therefore agrees with itself about what is code: exactly as a fenced
+  `## Goal` is ordinary body text, a fenced `### <date> — <role> — <kind>` is
+  documentation. It handles ``` and `~~~` fences of 3+ chars, longer closers, info
+  strings, and up-to-3-space indented fences, as far as E6-T02 already does; an
+  unterminated fence **fails closed** (nothing after it is a heading, so ambiguous text
+  dispatches nothing). Two further hardenings fell out of writing the tests:
+  structured fields are read only from **unfenced** lines, so a fenced example inside a
+  real entry cannot supply or spoof that entry's `- Run:`/`- Branch:`/`- Evidence:`; and
+  an entry is a lifecycle claim only when its heading names a **recognised kind**, so an
+  honest human note (`### … — critic — in-progress notes`) is prose rather than a
+  refusal — while a recognised kind is still bound to its role, keeping
+  `— builder — verified` refused.
+- **Permanent tests, all sensitivity-checked.** The critic's two cases are committed
+  verbatim in spirit as `CRITIC-A` and `CRITIC-D` (`packages/tasks/test/folder-sync.test.ts`),
+  asserting not merely "no event" but **complete inertness** — a quoted example is not
+  even a *refused* claim, so no refusal artifact appears. Added: fence-variant coverage
+  (```` ``` ````, `~~~`, ````` ```` `````, ```` ```markdown ````, indented, longer
+  closer), the unterminated-fence fail-closed case, the field-spoofing case, and a
+  **regression fixture over this repository's own doctrine files** — `AGENTS.md` and
+  `.eforest/tasks/README.md` ship exactly such fenced examples, and the parser must find
+  zero lifecycle entries in them while still recognising the real unfenced entries of a
+  live task readme (E6-T04's). Reverting the one-line fence check turns **five** of these
+  red (both critic repros included); with the fix, 28/28 focused tests pass. Running the
+  critic's own probe file unmodified now reports CRITIC-A `status: pending`, CRITIC-B/C/D
+  `status: implemented`, `verification: undefined`, 4 passed.
+- **Schedule step 6b** puts a fenced example — a complete `VERDICT: verified` in a ```` ``` ````
+  block plus a `~~~text` block — into a live Verification log at `implemented`:
+  `step6b-fenced lifecycle-events-added=0 status=implemented` and
+  `text-revised-only=true refusal-artifacts=3` (the 3 are step 6's forgery artifacts;
+  the fenced note adds none). The final sequence gains exactly one `task.spec-revised`,
+  because quoted documentation is still a legitimate *text* revision.
+- **Apparatus notes (a)/(b)/(c) closed.** (a) `E6_T05_ORIGIN_FILTER_GUARD` now gates the
+  production path — the effective filter is `GUARD && (originFilter ?? true)`, which no
+  caller can weaken upward — so flipping it to `false` **in source** and rebuilding makes
+  the schedule fail on non-convergence of the exact event schedule (`TIMEOUT step5
+  implemented`) and `e6_t05_evidence.mjs` exit 1, which is what angle 5 demands; the
+  transcript `e6-t05-sabotage.txt` is re-recorded from that real source flip and now
+  documents both the source-level and flag-level sabotage. (b) the verifier asserts the
+  sabotage fails in its **one expected shape** (non-convergence) and explicitly refuses
+  an unrelated crash (`ERR_MODULE_NOT_FOUND`/`SyntaxError`/`ReferenceError`). (c) the
+  verifier now **audits both live journals itself** — the schedule writes an
+  `audit-input.json` naming the branch and stream offset universe, and the verifier runs
+  `auditTaskSyncJournal` over each journal, asserting `violations=[]`, `ok=true`, and
+  non-trivial own/foreign/applied counts (`audited-branch-offsets=70 violations=0` cold).
+- **`by.actor` provenance limitation, documented as the critic asked.** An ingested
+  lifecycle event's `by.actor` is the **observing engine's authenticated principal**, not
+  the author of the branch bytes: the door binds `by.actor` to the credential that
+  dispatched, so the actor proves *who submitted the event*, never *who typed the
+  paragraph*. On a shared branch this is only prevented from becoming a forgery by the
+  `task/stale-spec` fence aborting the loser's queued lifecycle dispatches
+  (`packages/tasks/src/folder/sync.ts`), which the critic probed three ways without
+  success and which this rework deliberately preserves (the CRITIC-D test asserts the
+  fence's refusal artifacts stay free of `log/*` reasons rather than demanding none).
+  Binding a paragraph's author to an identity needs signed authorship, which is E6-T07's
+  agent-run protocol, not this task's contract. Recorded here as a known boundary.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (18 = baseline, none in changed files), `pnpm typecheck` (41 = baseline), focused
+  suites in the foreground — `packages/tasks/test` 10 files/105 tests green,
+  `platform/test/{task-folder-sync,tasks,task-queue,project-state}` 4 files/14 tests
+  green, `reducers`+`evidence`+`issues` 15 files/81 tests green — `pnpm build` green,
+  `make verify-E6-T05` green, then `bash tools/verify/cold_clone.sh verify-E6-T05` from
+  pristine committed HEAD `127bf5f0`: **exit 0, zero `SKIPPED:`**, 28/28 focused tests,
+  `E6_T05_SCHEDULE summary-byte-identical=true`,
+  `E6_T05_JOURNALS … audited-branch-offsets=70 violations=0`,
+  `MUTATION … EXPECTED-FAIL OK`, `SABOTAGE … EXPECTED-FAIL OK`,
+  `DEPENDENCY_INTEGRITY_OK`, `PASSED from a pristine clone`.
+- Evidence re-recorded: `e6-t05-summary.txt` (sha256
+  `2532248e7fda03b3fab2f303ebdda7efd6f12e895e6bd7bd80ba274208f995f1`) — **task-state
+  digest `7926e4ddd95c8ef7f42355d186c85803c31ee633a914dd7d594e408e9d2dfd5b`**, **queue
+  digest `aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66`**, final
+  sequence `issue.opened, task.spec-revised ×3, task.started, task.claimed,
+  task.spec-revised ×4, task.verified` (11 records — one more `task.spec-revised` than
+  run 1, which is step 6b's fenced note landing as text and nothing else),
+  `final-status verified`, `replay-deterministic true`,
+  `projection-parity … byte-equal-on-both-branches=true`, `step11-idle
+  window-at-least-ms=12000 measured-ok=true` with `heads-frozen=true
+  write-lines-frozen=true`, both journal audits `ok=true violations=0`,
+  `warnings … unexpected=0`; and `e6-t05-sabotage.txt` (sha256
+  `bc79dddf05a2bc50ff7d11a2ee61a63e0021c6098abf92129640e037290e8622`). Determinism re-established: the summary was
+  regenerated and reproduced byte-identically, plus the cold clone's independent run.
+- One honest note on process: my first regenerated summary was produced against a **stale
+  `dist`** and briefly froze bytes showing `refusal-artifacts=6` and `unexpected=2` — the
+  fenced entries were still being parsed by the built output. Rebuilding and re-running
+  produced the committed bytes (`refusal-artifacts=3`, `unexpected=0`); the schedule's
+  own `unexpected warnings` reporting is what surfaced it, and the committed artifact is
+  from the correct build, as the cold clone independently confirms.
+- Replay: N/A (task-folder sync engine; the dedicated browser task surface lands in E6-T06)
+  + mitigation: the two-client real-server schedule including the new fenced-entry step,
+  the measured ≥10 s idle window with frozen heads, the verifier's own journal audits,
+  byte hashes, projection/replay/queue digest parity, the evidence-byte mutation, and a
+  source-level origin-filter sabotage that fails on the event schedule itself.
+- Claim: quoted documentation is inert. A fenced `### … — <role> — <kind>` block in a
+  Verification log — the shape this repository's own doctrine ships — revises text and
+  dispatches nothing, on both the parser and the real dispatch door, with the two cases
+  the critic used as permanent regression tests and a fixture over the real files. The
+  remaining E6-T05 behavior is unchanged and re-proven from a pristine clone. This is a
+  builder claim; independent critic verification remains required before `verified`.
