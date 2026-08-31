@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: in-progress
+status: implemented
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -85,3 +85,144 @@ sync origin and may not re-dispatch themselves.
    event count or quiescence; green refutes sensitivity.
 
 ## Verification log
+
+### 2026-08-31 — builder — implemented, not yet verified
+
+- Implementation commits `452cf0d2` (engine) and `e815658b` (cold-clone target fix), on
+  branch `e6-t05-task-folder-stream-sync`, stacked on the verified E6-T04 tip `a16cf4e1`.
+  **The folder is the stream, both ways.** `packages/tasks/src/folder/{sync,ingest,project,journal}.ts`
+  join the `.eforest/tasks` subtree of one StreamFS branch to the task streams;
+  `packages/tasks/io/sync-node.ts` (`@eforest/tasks/sync-node`, beside `io/disk.ts`) is
+  the only node/network boundary, so the engine core stays free of `node:fs`, sockets,
+  clocks, and timers (the target greps for it fail-closed).
+  **Ingest** classifies every foreign branch record under the root and turns a parseable
+  folder change into validated events through the dispatch door: creation =
+  `issue.opened` (body = canonical readme) + one `task.spec-revised` (base `-1`); any
+  later readme write = exactly one `task.spec-revised` fenced on the revision the branch
+  bytes descend from, carrying the E6-T02 canonical render, the folder path, and its
+  provenance (`origin` = branch stream + fs offset); evidence files diff by path into E5
+  content uploads + `evidence.attached`/`evidence.detached` (content stream addressed by
+  the bytes' SHA-256; a removed reference never deletes shared content); a new
+  Verification-log entry with a structured heading dispatches its lifecycle event **only**
+  when the fields parse *and* the transition is legal on the simulated state.
+  **`task.spec-revised`** joins the E6-T01 family versioned (`v: 1`, exact keys
+  `base, folder, origin, readme, sha256`), refusing `task/stale-spec`,
+  `task/spec-digest-mismatch`, `task/spec-unparseable`, `task/spec-id-mismatch`,
+  `task/spec-folder-mismatch`, `task/spec-foreign-origin`; the E6-T04 queue projector now
+  reads the accepted revision as the spec (`task.spec?.readme ?? issue.body`).
+  **Projection** (`projectTaskFolder`) is a pure function of replayed `tasks/v1` state +
+  live attachment list + content bytes: the readme is the accepted spec re-rendered with
+  `status` forced to the replayed status, `evidence/**` is exactly the live content
+  attachments, and every rendered path re-passes `checkRelativePath` before any writer
+  sees it — closing the E6-T02 run-2 critic's observation that `writeRenderedTaskFolder`
+  trusts its input (a hostile attachment name `../../evil.txt` is refused, with a test).
+  **Echo suppression is provenance only:** a projected write's receipt offset is journaled
+  `projected` before any later tail batch is processed, and the tail suppresses exactly
+  those offsets. No debounce, mtime, or content-recency heuristic participates;
+  `E6_T05_ORIGIN_FILTER_GUARD` is the sabotage sentinel. **Refusals** are stable
+  artifacts under `work/.sync/{refused,conflicts}/<offset>-<n>.json` (+ `.retained`
+  bytes) for malformed folders, illegal status edits, forged verdicts, and stale
+  concurrent revisions.
+- **Frozen provenance-journal format** (`TaskSyncJournal`, v1 canonical JSON lines, one
+  SHA-256 checksum per line, contiguous `seq`): a branch offset under the root is
+  `ingested` exactly once when foreign, or exactly twice (`projected` then `suppressed`)
+  when own; a task/evidence record is `applied` once, plus `dispatched` once when the
+  engine itself appended it. `auditTaskSyncJournal` refuses any offset outside that
+  multiplicity, and any journaled offset absent from the streams. Content streams are
+  digest-bound through `evidence.attached` (sealed SHA-256 = attachment SHA-256 = folder
+  bytes), so they are audited by digest parity rather than per-record lines — stated as a
+  deliberate scope line in `journal.ts`.
+- Exact commands: `pnpm format:check` (7 pre-existing files flagged, none mine),
+  `pnpm lint` (18 errors = baseline, none in changed files), `pnpm typecheck` (41 =
+  baseline), `pnpm test` in foreground groups (`vitest run --maxWorkers=1`):
+  protocol/client/identity/issues/evidence/streamfs/workspace/server 27 files 248 tests
+  green; tasks+reducers 126 tests (the single red was `critic-attacks.test.ts` timing out
+  at 1071s under host saturation — it passes solo in 662ms, 3/3); cli 229/229 green;
+  apps/web 30/30 green; meadow/browser-verify/sync-harness/seed/web-hooks 67/68 (the one
+  red is the pre-existing `meadow/test/links.plan.test.ts` README drift); pr 55/56 (the
+  pre-existing `pr-property.fuzz.test.ts` 120s timeout); platform 248/249 (the
+  pre-existing `issues.test.ts` workflow key count). Exactly the three known baseline
+  failures, nothing new. `pnpm build` green. `make verify-E6-T05` green three consecutive
+  runs, then `bash tools/verify/cold_clone.sh verify-E6-T05` from pristine committed HEAD
+  `e815658b`: **exit 0, zero `SKIPPED:`**, `DEPENDENCY_INTEGRITY_OK`,
+  `E6_T05_SCHEDULE summary-byte-identical=true`, `MUTATION … EXPECTED-FAIL OK`,
+  `SABOTAGE guard=E6_T05_ORIGIN_FILTER_GUARD … EXPECTED-FAIL OK`, `verify-E6-T05: OK`,
+  `PASSED from a pristine clone`. The first cold clone (against `452cf0d2`) **failed**
+  and caught a real gap — the schedule imports the published server and StreamFS from
+  `dist`, which no build step in the target produced from a pristine checkout; `e815658b`
+  adds those two builds and is the commit the passing run is bound to.
+- Evidence (in `evidence/`, hashed before/after by the verifier so nothing regenerates at
+  test time): `e6-t05-summary.txt` (sha256
+  `d3c211723fda5f03c368ee9d5bcb0eddbd3cf3dd53a1721a87a3ae9b0f3b2541`, 28 lines) — the
+  frozen two-client schedule summary, and `e6-t05-sabotage.txt` (sha256
+  `08e9bfc82ec4b0c6a9c653d65171f114a50fbcc927128397a593088a97b97aa3`) — the red
+  origin-filter run. Key frozen facts inside the summary: the complete event sequence is
+  exactly **`issue.opened, task.spec-revised ×3, task.started, task.claimed,
+  task.spec-revised ×3, task.verified`** (10 records; one validated event per logical
+  change, no echo); `final-status verified`; **task-state digest
+  `c414054b6e2df7b1f3f38a1262923d43f028b0854107d030b5ad0c6b89ec505e`**; **queue digest
+  `167a4f73c76dee8ec49b112f26b88d36ce7cb595ecd87bfb066ef6012043e5b3`** with
+  `queue-independent-replay-equal true`; `replay-deterministic true`;
+  `projection-parity files=2 byte-equal-on-both-branches=true`; evidence manifest
+  `[{"name":"run.bin","sha256":"9a76b8af…43af"}]`;
+  `step6-forgery` ends at `task.spec-revised` with **no `task.verified`** and
+  `step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit`;
+  `step7-workshop task-events-unchanged=true evidence-events-unchanged=true`;
+  `step8-loser conflict-artifacts=2 retained-has-loser-bytes=true`;
+  `step10-restore readme-byte-equal=true evidence-byte-equal=true detach-events=1`;
+  `step11-idle window-at-least-ms=12000 measured-ok=true` with
+  `heads-frozen=true write-lines-frozen=true`; `journal-a ok=true violations=0` and
+  `journal-b ok=true violations=0`; `warnings … unexpected=0`.
+- `make verify-E6-T05` = builds tasks/reducers/platform/server/streamfs; a fail-closed
+  purity grep over `packages/tasks/src/folder` (`command grep …; test $? -eq 1`: no clock,
+  RNG, env, fs, net, child_process, **or timers** — suppression may not smuggle in a
+  debounce); the focused suite (21 tests in 2 files: 20 deterministic in-memory engine /
+  ingest / journal / projection tests, 1 real-server two-client integration test); then
+  `tools/verify/e6_t05_evidence.mjs`, which (1) re-runs the whole two-client schedule in a
+  **fresh scrubbed process** (`LANG=C`, `TZ=Pacific/Kiritimati`, `NODE_ENV`/`NODE_OPTIONS`
+  unset) against real servers and holds its stdout byte-for-byte to the committed summary,
+  printing a line-by-line diff on drift; (2) re-asserts the load-bearing lines
+  structurally; (3) parses both live journals under the frozen v1 format; (4) flips **one
+  byte** of the staged evidence and requires the evidence digest and manifest to move
+  (`MUTATION … EXPECTED-FAIL OK`); (5) runs the schedule with the origin filter **off**
+  and requires red — either a moved event sequence/broken audit or a non-zero exit; and
+  (6) re-hashes both committed artifacts to prove verification regenerated nothing.
+  The schedule (`tools/verify/e6_t05_schedule.mjs`) is a mixed local/remote script over
+  two branches and two principals: creation with non-canonical frontmatter → remote
+  revision from B → binary evidence → a second evidence file added then removed (proving
+  detach leaves the content stream sealed and its bytes reconstructable) → builder
+  `started`+`claimed` in one append → the forged critic paragraph plus a raw
+  `status: verified` frontmatter edit → a `work/` write → two clients revising from one
+  base → the real critic verdict from B → deleting the derived folder on B → the idle
+  window. Each step ends at a **quiescence barrier** (both engines settled, every branch
+  record terminally journaled, two identical consecutive observations), which is what
+  makes the summary deterministic: 8 consecutive identical runs (3 concurrent, 5
+  sequential with scrubbed env) plus the cold clone.
+- Determinism note, stated rather than hidden: raw branch head offsets and the per-client
+  `own`/`foreign` journal counts depend on poll interleaving (how many intermediate
+  projections client B observes), so the frozen summary asserts their **invariants** —
+  heads frozen across the idle window, audits `ok=true violations=0` — not their raw
+  values; the exact per-client counts go to stderr. Transient long-poll hiccups under host
+  contention are likewise reported to stderr and excluded from the frozen warnings line:
+  they are retried on the next tick and cannot hide misbehavior, because a missed
+  projection would redden the parity, digest, and audit lines.
+- Replay: N/A (task-folder sync engine; the dedicated browser task surface lands in E6-T06)
+  + mitigation: the two-client real-server schedule, the measured ≥10 s idle window with
+  frozen heads and frozen journal write-lines, the total journal audit under a frozen
+  multiplicity, byte hashes on every evidence file and readme, projection/replay/tree
+  digest parity across both branches and an independent replay, the derived-queue digest,
+  the evidence-byte mutation, and the origin-filter sabotage sentinel.
+- Claim: task folders and task streams are one thing in both directions. A valid local
+  creation or prose revision appends exactly one validated event and its projection
+  appends no echo; a Verification-log paragraph produces a lifecycle event only when its
+  structured fields validate and the transition is legal, so a builder claiming a critic
+  verdict — with or without a matching raw frontmatter edit — cannot reach `verified` and
+  is refused with a stable artifact while authority is projected back; binary evidence
+  becomes one SHA-256-addressed content stream plus one attachment reference, and removing
+  the reference leaves the content replayable; `work/` moves nothing durable; two clients
+  revising from one base produce one fenced winner and a deterministic conflict file that
+  retains the loser's bytes, after which both branches and an independent replay agree
+  byte-for-byte; every accepted input and output appears in the provenance journal exactly
+  once in its frozen disposition; and deleting the derived folder and projecting from the
+  streams recreates the exact readme and evidence bytes. This is a builder claim;
+  independent critic verification remains required before `verified`.
