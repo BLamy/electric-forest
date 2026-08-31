@@ -345,6 +345,9 @@ importers:
 
   packages/tasks:
     dependencies:
+      '@eforest/client':
+        specifier: workspace:*
+        version: link:../client
       '@eforest/evidence':
         specifier: workspace:*
         version: link:../evidence
@@ -354,6 +357,9 @@ importers:
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../streamfs
 
   packages/web-hooks:
     dependencies:

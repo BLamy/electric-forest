@@ -11,6 +11,10 @@
     "./disk": {
       "types": "./dist/io/disk.d.ts",
       "default": "./dist/io/disk.js"
+    },
+    "./sync-node": {
+      "types": "./dist/io/sync-node.d.ts",
+      "default": "./dist/io/sync-node.js"
     }
   },
   "scripts": {
@@ -20,6 +24,8 @@
   "dependencies": {
     "@eforest/evidence": "workspace:*",
     "@eforest/issues": "workspace:*",
-    "@eforest/protocol": "workspace:*"
+    "@eforest/protocol": "workspace:*",
+    "@eforest/streamfs": "workspace:*",
+    "@eforest/client": "workspace:*"
   }
 }

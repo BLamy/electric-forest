@@ -1,0 +1,39 @@
+E6-T05 sabotage sentinel transcript (2026-08-30)
+guard: E6_T05_ORIGIN_FILTER_GUARD (packages/tasks/src/folder/sync.ts) set to false via --origin-filter off
+mutation: provenance-based echo suppression disabled in both engines
+command: node tools/verify/e6_t05_schedule.mjs --origin-filter off --idle-ms 1500
+exit=1 (the schedule itself goes red: re-ingested own projections break the exact
+event counts and the spec fences, so the deterministic schedule cannot complete)
+EXPECTED-FAIL OK
+--- stderr (first 30 lines) ---
+TIMEOUT step5 implemented
+warnings: ["client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000010: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000026: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000031: task/stale-spec"]
+readmeA: "---\nid: E9-T01\nepic: 9\ntitle: Folder sync schedule task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nThe folder is the stream.\n\n## Context\nCreated by A; revised by B.\n\n## Deliverables\n- Bidirectional projection without echo.\n\n## Acceptanc
+readmeB: "---\nid: E9-T01\nepic: 9\ntitle: Folder sync schedule task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nThe folder is the stream.\n\n## Context\nCreated by A; revised by B.\n\n## Deliverables\n- Bidirectional projection without echo.\n\n## Acceptanc
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000026-1.retained","o":"0000000000000000_0000000000000030","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/readme.md","o":"0000000000000000_0000000000000031","k":["refused","revised"],"r":"task/stale-spec"}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.json","o":"0000000000000000_0000000000000032","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.json","o":"0000000000000000_0000000000000033","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.retained","o":"0000000000000000_0000000000000034","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.retained","o":"0000000000000000_0000000000000035","k":[],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.json","o":"0000000000000000_0000000000000032","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.json","o":"0000000000000000_0000000000000033","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.retained","o":"0000000000000000_0000000000000034","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000031-1.retained","o":"0000000000000000_0000000000000035","k":["workshop"],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000011","k":["awaiting-content"],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000012","k":["unchanged"],"r":""}
+Jb {"d":"applied","s":"evidence.attached","o":"0000000000000000_0000000000000001","k":[],"r":""}
+Jb {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/notes.txt","o":"0000000000000000_0000000000000013","k":[],"r":""}
+Jb {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/notes.txt","o":"0000000000000000_0000000000000014","k":[],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/notes.txt","o":"0000000000000000_0000000000000013","k":["awaiting-content"],"r":""}
+Jb {"d":"applied","s":"evidence.detached","o":"0000000000000000_0000000000000002","k":[],"r":""}
+Jb {"d":"dispatched","s":"evidence.attached","o":"0000000000000000_0000000000000003","k":[],"r":""}
+Jb {"d":"applied","s":"evidence.attached","o":"0000000000000000_0000000000000003","k":[],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/notes.txt","o":"0000000000000000_0000000000000014","k":["evidence-added"],"r":""}
+file:///Users/blamy/Documents/Codex/electric-forest/tools/verify/e6_t05_schedule.mjs:292
+      throw new Error(`schedule timed out waiting for ${what}`);
+            ^
+
+Error: schedule timed out waiting for step5 implemented
+    at waitFor (file:///Users/blamy/Documents/Codex/electric-forest/tools/verify/e6_t05_schedule.mjs:292:13)
+--- partial stdout ---

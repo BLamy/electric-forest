@@ -197,3 +197,49 @@ fetch order (`make verify-E6-T04` rebuilds in three fresh processes, two of them
 
 Frozen artifacts and the verifier live in
 `.eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/` (`make verify-E6-T04`).
+
+## Task folders on streams (E6-T05)
+
+`packages/tasks/src/folder/{sync,ingest,project,journal}.ts` joins the `.eforest/tasks`
+subtree of one StreamFS branch to the task streams, both directions, without echo. The
+node/real-server glue is `@eforest/tasks/sync-node` (`io/sync-node.ts`, beside
+`io/disk.ts`, so the engine core stays free of `node:fs`, clocks, and sockets).
+
+- **Ingest (branch → streams).** Every foreign fs record under the root is classified
+  and journaled. A parseable folder change becomes validated events through the dispatch
+  door: creation = `issue.opened` (body = canonical readme) + one `task.spec-revised`
+  (base `-1`); any later readme write = one `task.spec-revised` fenced on the revision
+  the branch bytes descend from (`base`), carrying the E6-T02 canonical render, the
+  folder path, and its provenance (`origin` = branch stream + fs offset); evidence files
+  are diffed by path into E5 content uploads + `evidence.attached` / `evidence.detached`
+  (content streams addressed by the bytes' SHA-256; detach never deletes content); a new
+  Verification-log entry with a structured heading (`### <date> — <role> — <kind>` plus
+  `- Run:` / `- Branch:` / `- Evidence:` / `- Summary:` / `- Finding:` bullets)
+  dispatches its lifecycle event only when the fields parse AND the transition is legal
+  on the simulated state — a builder heading claiming a critic verdict is refused
+  (`log/role-kind-mismatch`) and can never produce `verified`. The frontmatter `status`
+  is a request: an edit not backed by a legal event is refused (`status/illegal-edit`)
+  with a conflict artifact under `work/.sync/` and the authoritative status projected
+  back. `work/**` changes are journaled and cause zero events.
+- **Projection (streams → branch).** `projectTaskFolder` is a pure function of the
+  replayed `tasks/v1` state + live attachment list + content bytes: the readme is the
+  accepted spec re-rendered with `status` forced to the replayed status, `evidence/**`
+  is exactly the live content attachments; every rendered path re-passes
+  `checkRelativePath` before any writer sees it. Deleting the derived folder and
+  projecting again recreates identical bytes.
+- **Provenance journal** (`TaskSyncJournal`, frozen v1 canonical JSON lines with per-line
+  checksums): echo suppression is _only_ provenance — a projected write's receipt offset
+  is journaled `projected` before any later tail batch is processed, and the tail
+  suppresses exactly those offsets (`suppressed`). Foreign branch records are `ingested`
+  exactly once; stream records the engine consumed are `applied`, its own additionally
+  `dispatched`. `auditTaskSyncJournal` refuses any offset outside that multiplicity.
+  `E6_T05_ORIGIN_FILTER_GUARD` is the sabotage sentinel: with it off, `verify-E6-T05`
+  goes red on exact event counts and journal multiplicity.
+- **Conflicts.** Two clients revising from one base cannot silently overwrite: the
+  engine fences on the branch readme's revision lineage, the loser's dispatch is refused
+  `task/stale-spec`, its bytes are retained in a deterministic
+  `work/.sync/conflicts/<offset>-<n>` artifact, and both branches project the winner.
+
+Frozen artifacts and the verifier live in
+`.eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/` (`make verify-E6-T05`;
+the two-client schedule is `tools/verify/e6_t05_schedule.mjs`).

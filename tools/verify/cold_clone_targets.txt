@@ -78,3 +78,4 @@ verify-E6-T01
 verify-E6-T02
 verify-E6-T03
 verify-E6-T04
+verify-E6-T05

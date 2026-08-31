@@ -1,0 +1,28 @@
+step1-create events=issue.opened,task.spec-revised
+step1-readme-sha256=1f43019dd2fa9116b06da4e781309d10ee3df313eafef767e06be4deaa7b9bf2
+step2-revise events=issue.opened,task.spec-revised,task.spec-revised
+step3-evidence sha256=9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af sealed=true content-digest-match=true
+step4-detach evidence=evidence.attached,evidence.attached,evidence.detached detached-content-sealed=true bytes-reconstructable=true
+step5-claim events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed
+step6-forgery events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised
+step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit
+step7-workshop task-events-unchanged=true evidence-events-unchanged=true
+step8-conflict events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised
+step8-loser conflict-artifacts=2 retained-has-loser-bytes=true
+step9-verified events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
+step10-restore readme-byte-equal=true evidence-byte-equal=true detach-events=1
+step11-idle window-at-least-ms=12000 measured-ok=true
+step11-idle heads-frozen=true write-lines-frozen=true
+step11-heads task=0000000000000000_0000000000000009 evidence=0000000000000000_0000000000000002
+final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
+final-status verified
+task-state-digest c414054b6e2df7b1f3f38a1262923d43f028b0854107d030b5ad0c6b89ec505e
+replay-deterministic true
+projection-parity files=2 byte-equal-on-both-branches=true
+evidence-manifest [{"name":"run.bin","sha256":"9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af"}]
+queue-digest 167a4f73c76dee8ec49b112f26b88d36ce7cb595ecd87bfb066ef6012043e5b3
+queue-decision {"kind":"invalid","violations":[{"reason":"capstone/none-in-completed-epic","refs":["E9"]}]}
+queue-independent-replay-equal true
+journal-a ok=true violations=0
+journal-b ok=true violations=0
+warnings expected=5 unexpected=0
