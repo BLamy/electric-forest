@@ -22,6 +22,7 @@ import { agentsStreamId } from "@eforest/reducers";
 import { MobileCredenza } from "../mobile/MobileOverlays.js";
 import { DesktopTouchKit } from "../touchkit/DesktopTouchKit.js";
 import { repositoryRoute } from "./repository-route.js";
+import { RegistryProvider } from "../../registry-context.js";
 
 /**
  * The Discord-style product frame from TouchKit's chatkit: a workspace rail (one tile
@@ -44,7 +45,9 @@ function useRegistry() {
     apiPath: "/registry/me",
     streamId: "__registry__",
     reducerId: "registry",
-    followWaitMs: 1_000,
+    // Keep the single shared tail quiet when the registry is idle. A one-second
+    // poll multiplied by route remounts created a long-poll waterfall in Replay.
+    followWaitMs: 10_000,
   });
 }
 
@@ -493,103 +496,105 @@ export function ForestShell(props: {
       : repoSectionPath(repository.org, repository.repo, "code");
 
   return (
-    <>
-      <ChatShell breakpoint={0} className="forest-shell">
-        <ChatShell.Rail>
-          <WorkspaceRail
-            workspaces={workspaces}
-            tint="var(--accent-primary)"
-            onSelect={(id) => navigate(`/organizations/${encodeURIComponent(id)}`)}
-            onAdd={() => setSheet("create-workspace")}
-          />
-        </ChatShell.Rail>
-        <ChatShell.Nav>
-          {org === undefined ? (
-            <div className="forest-nav-empty" data-testid="workspace-nav-empty" />
-          ) : (
-            <WorkspaceNav
-              org={org}
-              current={current}
-              codebaseActive={codebaseActive}
-              membersActive={props.pathname.startsWith("/members/")}
-              codebaseHref={codebaseHref}
-              repoCount={repos.length}
-              onSheet={setSheet}
+    <RegistryProvider value={registry}>
+      <>
+        <ChatShell breakpoint={0} className="forest-shell">
+          <ChatShell.Rail>
+            <WorkspaceRail
+              workspaces={workspaces}
+              tint="var(--accent-primary)"
+              onSelect={(id) => navigate(`/organizations/${encodeURIComponent(id)}`)}
+              onAdd={() => setSheet("create-workspace")}
             />
-          )}
-        </ChatShell.Nav>
-        <ChatShell.Main>
-          <div className="product-stage forest-main ck-scroll">
-            {props.header}
-            <div className="product-content">{props.children}</div>
-            {props.diagnostics === undefined ? null : (
-              <details className="product-diagnostics">
-                <summary>Stream diagnostics</summary>
-                {props.diagnostics}
-              </details>
+          </ChatShell.Rail>
+          <ChatShell.Nav>
+            {org === undefined ? (
+              <div className="forest-nav-empty" data-testid="workspace-nav-empty" />
+            ) : (
+              <WorkspaceNav
+                org={org}
+                current={current}
+                codebaseActive={codebaseActive}
+                membersActive={props.pathname.startsWith("/members/")}
+                codebaseHref={codebaseHref}
+                repoCount={repos.length}
+                onSheet={setSheet}
+              />
             )}
-          </div>
-        </ChatShell.Main>
-      </ChatShell>
-      {/* ChatShell renders only its slot children; overlays live beside it. */}
-      <DesktopTouchKit>
-        <MobileCredenza
-          open={sheet === "create-workspace"}
-          onClose={() => setSheet("none")}
-          label="New workspace"
-          compact
-        >
-          <CreateWorkspaceForm onComplete={() => setSheet("none")} />
-        </MobileCredenza>
-        <MobileCredenza
-          open={sheet === "workspace-menu"}
-          onClose={() => setSheet("none")}
-          label={org ?? "Workspace"}
-          compact
-        >
-          {org === undefined ? null : (
-            <WorkspaceMenu
-              org={org}
-              onInvite={() => setSheet("invite")}
-              onClose={() => setSheet("none")}
-            />
-          )}
-        </MobileCredenza>
-        <MobileCredenza
-          open={sheet === "invite"}
-          onClose={() => setSheet("none")}
-          label="Invite people"
-          compact
-        >
-          {org === undefined ? null : <InvitePeople org={org} />}
-        </MobileCredenza>
-        <MobileCredenza
-          open={sheet === "create-channel"}
-          onClose={() => setSheet("none")}
-          label="New channel"
-          compact
-        >
-          {org === undefined || sheet !== "create-channel" ? null : (
-            <CreateChannelForm
-              org={org}
-              onComplete={(channel) => {
-                setSheet("none");
-                navigate(`/chat/${encodeURIComponent(org)}/${encodeURIComponent(channel)}`);
-              }}
-            />
-          )}
-        </MobileCredenza>
-        <MobileCredenza
-          open={sheet === "search"}
-          onClose={() => setSheet("none")}
-          label="Search repositories"
-          compact
-        >
-          {sheet === "search" ? (
-            <RepositorySearch rows={rows} onClose={() => setSheet("none")} />
-          ) : null}
-        </MobileCredenza>
-      </DesktopTouchKit>
-    </>
+          </ChatShell.Nav>
+          <ChatShell.Main>
+            <div className="product-stage forest-main ck-scroll">
+              {props.header}
+              <div className="product-content">{props.children}</div>
+              {props.diagnostics === undefined ? null : (
+                <details className="product-diagnostics">
+                  <summary>Stream diagnostics</summary>
+                  {props.diagnostics}
+                </details>
+              )}
+            </div>
+          </ChatShell.Main>
+        </ChatShell>
+        {/* ChatShell renders only its slot children; overlays live beside it. */}
+        <DesktopTouchKit>
+          <MobileCredenza
+            open={sheet === "create-workspace"}
+            onClose={() => setSheet("none")}
+            label="New workspace"
+            compact
+          >
+            <CreateWorkspaceForm onComplete={() => setSheet("none")} />
+          </MobileCredenza>
+          <MobileCredenza
+            open={sheet === "workspace-menu"}
+            onClose={() => setSheet("none")}
+            label={org ?? "Workspace"}
+            compact
+          >
+            {org === undefined ? null : (
+              <WorkspaceMenu
+                org={org}
+                onInvite={() => setSheet("invite")}
+                onClose={() => setSheet("none")}
+              />
+            )}
+          </MobileCredenza>
+          <MobileCredenza
+            open={sheet === "invite"}
+            onClose={() => setSheet("none")}
+            label="Invite people"
+            compact
+          >
+            {org === undefined ? null : <InvitePeople org={org} />}
+          </MobileCredenza>
+          <MobileCredenza
+            open={sheet === "create-channel"}
+            onClose={() => setSheet("none")}
+            label="New channel"
+            compact
+          >
+            {org === undefined || sheet !== "create-channel" ? null : (
+              <CreateChannelForm
+                org={org}
+                onComplete={(channel) => {
+                  setSheet("none");
+                  navigate(`/chat/${encodeURIComponent(org)}/${encodeURIComponent(channel)}`);
+                }}
+              />
+            )}
+          </MobileCredenza>
+          <MobileCredenza
+            open={sheet === "search"}
+            onClose={() => setSheet("none")}
+            label="Search repositories"
+            compact
+          >
+            {sheet === "search" ? (
+              <RepositorySearch rows={rows} onClose={() => setSheet("none")} />
+            ) : null}
+          </MobileCredenza>
+        </DesktopTouchKit>
+      </>
+    </RegistryProvider>
   );
 }

@@ -6,6 +6,7 @@
  * rather than silently resolved the way a general YAML library would.
  */
 import { sha256Hex } from "@eforest/protocol";
+import { fromMarkdown } from "mdast-util-from-markdown";
 import { caseFoldKey, checkRelativePath, comparePaths, pathRefusal } from "./paths.js";
 import {
   TASK_DEPENDENCY_PATTERN,
@@ -610,31 +611,125 @@ interface HeadingHit {
   readonly index: number;
 }
 
+/** An unterminated fence: the char, its length, and the 1-based line it opened on. */
+export interface OpenInertBlock {
+  readonly kind: "fence";
+  readonly marker: string;
+  readonly length: number;
+  readonly line: number;
+}
+
+export interface MarkdownStructure {
+  /**
+   * 0-based line number -> heading depth, exactly as a CommonMark reader parses it.
+   * A `##`/`###` line that CommonMark reads as raw HTML, code, or paragraph text is
+   * absent; a line CommonMark reads as a heading is present even when a hand-rolled
+   * matcher would have missed it.
+   */
+  readonly headings: ReadonlyMap<number, number>;
+  /** 0-based lines a CommonMark reader renders as code or raw HTML rather than prose. */
+  readonly inert: readonly boolean[];
+  /** An unterminated fenced block, kept for E6-T02's frozen refusal (see below). */
+  readonly unterminatedFence?: OpenInertBlock;
+}
+
+/**
+ * The one structural reader of the task-folder contract, and the reason E6-T05 stopped
+ * hand-rolling one.
+ *
+ * "Is this line a heading?" is answered by **the same implementation a Markdown reader's
+ * renderer uses** — `mdast-util-from-markdown`, a declared dependency of this package,
+ * over micromark's CommonMark block parser. Three hostile critics in a row broke a
+ * hand-written scanner on constructs a real parser gets right for free: HTML block type 7
+ * with a quoted `>` in an attribute, the five-byte `<!-->` end condition, and — the class
+ * no grammar patch reaches — the fact that type 7 **cannot interrupt a paragraph**, which
+ * makes `prose` / `<br>` / a real verdict entry a poison pill in any scanner without
+ * paragraph state. Agreeing with CommonMark on that question requires a CommonMark block
+ * parser, so this uses one instead of approximating one.
+ *
+ * Both readers consume this: E6-T02's `##` section headings (`parseSections`) and
+ * E6-T05's `###` Verification-log entry headings. A readme therefore agrees with itself,
+ * and with any renderer, about what is structure and what is quoted documentation.
+ *
+ * `unterminatedFence` is the one hand-computed field, and it is deliberately NOT part of
+ * the heading decision: it exists only so E6-T02's frozen `sections/unterminated-fence`
+ * refusal keeps its exact byte-for-byte transcript. Security rests on `headings`/`inert`,
+ * which are CommonMark's.
+ *
+ * Pure: a parse over an in-memory string. No filesystem, clock, network, or randomness.
+ */
+export function scanMarkdownStructure(lines: readonly string[], from = 0): MarkdownStructure {
+  const inert: boolean[] = new Array<boolean>(lines.length).fill(false);
+  const headings = new Map<number, number>();
+  const text = lines.slice(from).join("\n");
+  const tree = fromMarkdown(text);
+  const mark = (node: MarkdownNode): void => {
+    const position = node.position;
+    if (position !== undefined) {
+      const startLine = position.start.line - 1 + from;
+      if (node.type === "code" || node.type === "html") {
+        const endLine = position.end.line - 1 + from;
+        for (let index = startLine; index <= endLine && index < inert.length; index += 1) {
+          inert[index] = true;
+        }
+      } else if (node.type === "heading") {
+        headings.set(startLine, node.depth ?? 0);
+      }
+    }
+    for (const child of node.children ?? []) mark(child);
+  };
+  mark(tree as MarkdownNode);
+  const fence = unterminatedFenceOf(lines, from);
+  return fence === undefined ? { headings, inert } : { headings, inert, unterminatedFence: fence };
+}
+
+interface MarkdownNode {
+  readonly type: string;
+  readonly depth?: number;
+  readonly children?: readonly MarkdownNode[];
+  readonly position?: {
+    readonly start: { readonly line: number };
+    readonly end: { readonly line: number };
+  };
+}
+
+/**
+ * E6-T02 froze `sections/unterminated-fence` as a distinct refusal, so the opener/closer
+ * bookkeeping survives for that message alone. CommonMark simply treats the rest of the
+ * document as code, which `inert` already reflects.
+ */
+function unterminatedFenceOf(lines: readonly string[], from: number): OpenInertBlock | undefined {
+  let open: OpenInertBlock | undefined;
+  for (let index = from; index < lines.length; index += 1) {
+    const fenceMatch = FENCE_PATTERN.exec(lines[index]!);
+    if (fenceMatch === null) continue;
+    const char = fenceMatch[1]![0]!;
+    if (open === undefined) {
+      // CommonMark: a backtick fence's info string may not contain a backtick.
+      if (char === "`" && fenceMatch[2]!.includes("`")) continue;
+      open = { kind: "fence", marker: char, length: fenceMatch[1]!.length, line: index + 1 };
+    } else if (
+      char === open.marker &&
+      fenceMatch[1]!.length >= open.length &&
+      fenceMatch[2]!.trim() === ""
+    ) {
+      open = undefined;
+    }
+  }
+  return open;
+}
+
 function parseSections(
   lines: readonly string[],
   bodyStart: number,
   lineStartBytes: readonly number[],
 ): TaskReadmeV1 {
   const headings: HeadingHit[] = [];
-  let fence: { char: string; length: number; line: number } | undefined;
+  const scan = scanMarkdownStructure(lines, bodyStart);
   for (let index = bodyStart; index < lines.length; index += 1) {
     const line = lines[index]!;
-    const fenceMatch = FENCE_PATTERN.exec(line);
-    if (fence) {
-      if (
-        fenceMatch &&
-        fenceMatch[1]![0] === fence.char &&
-        fenceMatch[1]!.length >= fence.length &&
-        fenceMatch[2]!.trim() === ""
-      ) {
-        fence = undefined;
-      }
-      continue;
-    }
-    if (fenceMatch) {
-      fence = { char: fenceMatch[1]![0]!, length: fenceMatch[1]!.length, line: index + 1 };
-      continue;
-    }
+    // CommonMark decides what is a heading; the `## ` shape check below is E6-T02's.
+    if (scan.headings.get(index) !== 2) continue;
     if (H2_PATTERN.test(line)) {
       if (!line.startsWith("## ")) {
         refuseText(
@@ -647,10 +742,10 @@ function parseSections(
       headings.push({ name: line.slice(3), index });
     }
   }
-  if (fence)
+  if (scan.unterminatedFence !== undefined)
     refuseText(
       "sections/unterminated-fence",
-      fence.line,
+      scan.unterminatedFence.line,
       1,
       "code fence never closed; headings after it are ambiguous",
     );

@@ -655,6 +655,10 @@ body {
   font-size: 13px;
 }
 
+.tree-surface {
+  min-height: min(620px, calc(100vh - 310px));
+}
+
 .tree-browser {
   gap: 0.5rem;
 }
@@ -1096,6 +1100,11 @@ body {
   width: 100%;
 }
 
+.registry-search-form {
+  min-width: 0;
+  width: 100%;
+}
+
 .repository-search {
   display: grid;
   gap: 0.75rem;
@@ -1529,7 +1538,7 @@ body:has(.forest-shell) #root {
 }
 
 .forest-tab-new {
-  color: var(--ef-subtle, #747977);
+  color: var(--ef-muted, #a6aaa8);
   font-weight: 500;
   cursor: pointer;
 }

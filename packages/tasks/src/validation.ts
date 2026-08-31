@@ -66,7 +66,7 @@ async function assertAttachmentsExist(
   context: TaskActionValidationContext,
 ): Promise<void> {
   if (context.resolveStream === undefined || event.type === "task.started") return;
-  if (event.type === "task.rework-started") return;
+  if (event.type === "task.rework-started" || event.type === "task.spec-revised") return;
   const wanted = new Map<string, Set<string>>();
   const cite = (stream: string, attachmentId: string): void => {
     const ids = wanted.get(stream) ?? new Set<string>();
@@ -108,7 +108,11 @@ export async function validateTaskEvent(
   }
   if (!isTaskActionType(action.type)) throw new TaskUnknownActionError();
   if (!isTaskEventShape(action)) throw new TaskSchemaError();
-  if (context.actor !== undefined && action.payload.by.actor !== context.actor)
+  if (
+    context.actor !== undefined &&
+    action.type !== "task.spec-revised" &&
+    action.payload.by.actor !== context.actor
+  )
     throw new TaskRefusalError("task/actor-mismatch");
   const transition = applyTaskEvent(context.state, action, context.nextOffset);
   if (!transition.ok) throw new TaskRefusalError(transition.reason);

@@ -8,6 +8,7 @@ import {
   OidcClient,
   OidcTransactions,
   PlatformWebApp,
+  PROOF_RECEIPT_SHELL_MARKER,
   SESSION_SHELL_MARKER,
   signedSessionCookie,
 } from "../src/index.js";
@@ -100,6 +101,7 @@ describe("E3 authenticated SPA and whoami door", () => {
     const indexHtml = await index.text();
     expect(indexHtml).toContain("canopy shell");
     expect(indexHtml).toContain(SESSION_SHELL_MARKER);
+    expect(indexHtml).not.toContain(PROOF_RECEIPT_SHELL_MARKER);
     const deep = await app.handle(
       new Request("http://platform.test/maple/reading-room", { headers }),
     );
@@ -111,7 +113,18 @@ describe("E3 authenticated SPA and whoami door", () => {
     expect(await blob.text()).toContain("canopy shell");
     const asset = await app.handle(new Request("http://platform.test/assets/app.js", { headers }));
     expect(asset.headers.get("content-type")).toBe("text/javascript; charset=utf-8");
+    expect(asset.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(await asset.text()).toContain("__CANOPY__");
+  });
+
+  it("advertises the proof receipt only when the test harness installs it", async () => {
+    await identity.login("auth0|ada", "ada@example.test", "session-ada");
+    app.installTestProofReceiptForHarness(async () => undefined);
+    const cookie = signedSessionCookie(secret, "session-ada", 60).split(";")[0]!;
+    const response = await app.handle(
+      new Request("http://platform.test/", { headers: { cookie } }),
+    );
+    expect(await response.text()).toContain(PROOF_RECEIPT_SHELL_MARKER);
   });
 
   it("answers whoami from the reduced view and keeps 200 malformed refusals neutral", async () => {

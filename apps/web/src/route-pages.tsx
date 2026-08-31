@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
 import {
   Avatar,
   Icon,
@@ -37,21 +37,58 @@ import type {
 import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
 import { humanizeRecord } from "./history.js";
-import { LabelManagement } from "./label-management.js";
-import { IssueBoardPage } from "./issues/IssueBoard.js";
-import { IssueDetailPage } from "./issues/IssueDetail.js";
-import { WikiRoute } from "./wiki/WikiRoute.js";
+import { navigate } from "./prs/RepoChrome.js";
+import { repositorySearchHref } from "./repository-search.js";
+const LabelManagement = lazy(async () => {
+  const module = await import("./label-management.js");
+  return { default: module.LabelManagement };
+});
+const IssueBoardPage = lazy(async () => {
+  const module = await import("./issues/IssueBoard.js");
+  return { default: module.IssueBoardPage };
+});
+const IssueDetailPage = lazy(async () => {
+  const module = await import("./issues/IssueDetail.js");
+  return { default: module.IssueDetailPage };
+});
+const WikiRoute = lazy(async () => {
+  const module = await import("./wiki/WikiRoute.js");
+  return { default: module.WikiRoute };
+});
 import { isWikiSlug } from "./wiki/useWiki.js";
-import { PrListPage } from "./prs/PrList.js";
-import { PrDetailPage, type PrDetailTab } from "./prs/PrDetail.js";
-import { RepositoryTree } from "./components/trees/RepositoryTree.js";
-import { Markdown } from "./components/markdown/Markdown.js";
-import { ChatChannelPage } from "./chat/ChatChannelPage.js";
-import { MembersPage } from "./members/MembersPage.js";
-import { InvitePage } from "./members/InvitePage.js";
+const PrListPage = lazy(async () => {
+  const module = await import("./prs/PrList.js");
+  return { default: module.PrListPage };
+});
+const PrDetailPage = lazy(async () => {
+  const module = await import("./prs/PrDetail.js");
+  return { default: module.PrDetailPage };
+});
+import type { PrDetailTab } from "./prs/PrDetail.js";
+const RepositoryTree = lazy(async () => {
+  const module = await import("./components/trees/RepositoryTree.js");
+  return { default: module.RepositoryTree };
+});
+const Markdown = lazy(async () => {
+  const module = await import("./components/markdown/Markdown.js");
+  return { default: module.Markdown };
+});
+const ChatChannelPage = lazy(async () => {
+  const module = await import("./chat/ChatChannelPage.js");
+  return { default: module.ChatChannelPage };
+});
+const MembersPage = lazy(async () => {
+  const module = await import("./members/MembersPage.js");
+  return { default: module.MembersPage };
+});
+const InvitePage = lazy(async () => {
+  const module = await import("./members/InvitePage.js");
+  return { default: module.InvitePage };
+});
 import { Button } from "./components/ui/button.js";
 import { DesktopTouchKit } from "./components/touchkit/DesktopTouchKit.js";
 import { MobileCredenza } from "./components/mobile/MobileOverlays.js";
+import { useRegistryProjection } from "./registry-context.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -221,9 +258,9 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
       <div className="repository-heading">
         <div>
           <p className="eyebrow">Authorized live projections</p>
-          <h2 data-testid="route-repo">
+          <h1 data-testid="route-repo">
             {props.org} / {props.repo}
-          </h2>
+          </h1>
         </div>
         <span
           className={`project-status project-status-${projectStatus.state.status ?? "loading"}`}
@@ -457,12 +494,7 @@ function registryRows(state: RegistryState, selectedOrg?: string): readonly Repo
 }
 
 function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
-  const projection = useStreamReducer<RegistryState>({
-    apiPath: "/registry/me",
-    streamId: "__registry__",
-    reducerId: "registry",
-    followWaitMs: 1_000,
-  });
+  const projection = useRegistryProjection();
   const organizations = Object.keys(projection.state.orgs).sort();
   const rows = registryRows(projection.state, props.org);
   const [query, setQuery] = useState("");
@@ -481,6 +513,7 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
   const recentRows =
     recent === undefined ? [] : [recent, ...rows.filter((row) => row !== recent)].slice(0, 3);
   const error = projection.status.startsWith("error:");
+  const searchHref = repositorySearchHref(query, rows);
   return (
     <section
       className="registry-browser"
@@ -493,9 +526,9 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
     >
       <div className="registry-intro">
         <div>
-          <h2 data-testid={props.org === undefined ? "route-home" : "route-org"}>
+          <h1 data-testid={props.org === undefined ? "route-home" : "route-org"}>
             {props.org === undefined ? "Brett Lamy" : `Organization: ${props.org}`}
-          </h2>
+          </h1>
           <p className="registry-meta">
             {props.org === undefined
               ? "Create and browse your Electric Forest repositories."
@@ -562,13 +595,31 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
           <div className="registry-table-toolbar">
             <h3>All Repos</h3>
             <DesktopTouchKit>
-              <SearchField
-                q={query}
-                setQ={setQuery}
-                placeholder="Find repository…"
-                aria-label="Find repository"
-                className="registry-search"
-              />
+              <form
+                className="registry-search-form"
+                data-testid="registry-search-form"
+                aria-label="Repository search"
+                onKeyDownCapture={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  const target = event.target;
+                  const value = target instanceof HTMLInputElement ? target.value : query;
+                  const href = repositorySearchHref(value, rows);
+                  if (href !== undefined) navigate(href);
+                }}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (searchHref !== undefined) navigate(searchHref);
+                }}
+              >
+                <SearchField
+                  q={query}
+                  setQ={setQuery}
+                  placeholder="Find repository…"
+                  aria-label="Find repository"
+                  className="registry-search"
+                />
+              </form>
             </DesktopTouchKit>
             <Button
               variant="secondary"
@@ -874,7 +925,7 @@ function StreamInspector(props: {
       data-stream-status={projection.status}
     >
       <p className="eyebrow">Live application projection</p>
-      <h2>Stream inspector</h2>
+      <h1>Stream inspector</h1>
       <dl>
         <dt>Stream</dt>
         <dd data-testid="inspector-stream">{streamId}</dd>
@@ -928,7 +979,7 @@ function HistoryView(props: {
       data-branch={selected.name}
     >
       <p className="eyebrow">Canonical application history</p>
-      <h2>History</h2>
+      <h1>History</h1>
       <BranchSelector
         org={props.org}
         repo={props.repo}
@@ -1089,14 +1140,14 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       data-stream-status={status}
     >
       <div className="repo-title-row tree-heading">
-        <h2 data-testid="tree-title" className="repo-title">
+        <h1 data-testid="tree-title" className="repo-title">
           <BookMarked size={18} aria-hidden="true" />
           {props.repo}
           <span className="sr-only">
             {" "}
             ({props.org} / {props.branch})
           </span>
-        </h2>
+        </h1>
         <span data-testid="tree-stream-status" className="tree-status" data-status={status}>
           {status}
         </span>
@@ -1225,31 +1276,34 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
           StreamFS tree projection refused: {status.slice("error:".length)}
         </p>
       ) : null}
-      {!error && status === "loading" ? (
-        <ul className="tree-list tree-list-loading" data-testid="tree-list" aria-hidden="true">
-          <li />
-          <li />
-          <li />
-          <li />
-          <li />
-        </ul>
-      ) : null}
-      {!error && status !== "loading" ? (
-        entries.length === 0 ? (
-          <p data-testid="tree-empty">This directory is empty.</p>
-        ) : (
-          <RepositoryTree
-            tree={projection.state}
-            selectedPath={prefix || undefined}
-            onOpen={(path, kind) => {
-              const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-              const href =
-                kind === "directory" ? `${rootHref}/${encodedPath}` : `${blobRoot}/${encodedPath}`;
-              window.history.pushState(null, "", href);
-              window.dispatchEvent(new PopStateEvent("popstate"));
-            }}
-          />
-        )
+      {!error ? (
+        <div className="tree-surface" data-testid="tree-surface">
+          {status === "loading" ? (
+            <ul className="tree-list tree-list-loading" data-testid="tree-list" aria-hidden="true">
+              <li />
+              <li />
+              <li />
+              <li />
+              <li />
+            </ul>
+          ) : entries.length === 0 ? (
+            <p data-testid="tree-empty">This directory is empty.</p>
+          ) : (
+            <RepositoryTree
+              tree={projection.state}
+              {...(prefix === "" ? {} : { selectedPath: prefix })}
+              onOpen={(path, kind) => {
+                const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+                const href =
+                  kind === "directory"
+                    ? `${rootHref}/${encodedPath}`
+                    : `${blobRoot}/${encodedPath}`;
+                window.history.pushState(null, "", href);
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }}
+            />
+          )}
+        </div>
       ) : null}
     </section>
   );
@@ -1441,7 +1495,11 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
         ) : null}
         {!refusal && state.status === "text" ? (
           renderedMarkdown && fileMode === "preview" ? (
-            <Markdown source={state.text} className="file-markdown" data-testid="file-content" />
+            <Markdown
+              source={state.text ?? ""}
+              className="file-markdown"
+              data-testid="file-content"
+            />
           ) : (
             <pre data-testid="file-content" tabIndex={0} className="file-code">
               {(state.text ?? "").split("\n").map((line, index) => (
@@ -1470,7 +1528,7 @@ function DeepTrail(): React.JSX.Element {
   return (
     <section className="deep-trail" data-testid="deep-trail">
       <p className="eyebrow">Canopy trail</p>
-      <h2>Deep trail</h2>
+      <h1>Deep trail</h1>
       <p>This trail is a valid application route. Follow the live canopy projections from here.</p>
       <nav aria-label="Deep trail links">
         <RouteLink href="/">Return home</RouteLink>
@@ -1487,7 +1545,7 @@ function RepositorySettings(props: {
   return (
     <section className="repository-settings" data-testid="repository-settings">
       <p className="eyebrow">Repository preferences</p>
-      <h2>Settings</h2>
+      <h1>Settings</h1>
       <p>
         Manage presentation and stream-backed collaboration defaults for {props.org} / {props.repo}.
       </p>
