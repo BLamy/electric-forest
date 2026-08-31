@@ -501,24 +501,40 @@ const fencedNote = [
   "- Run: agent-run:maple/e9-t01-run-8",
   "~~~",
   "",
+  "The same, wrapped in the HTML blocks a Markdown reader also renders as non-structure",
+  "(critic run 2: the invariant is block structure, not one quoting syntax):",
+  "",
+  "<!--",
+  "### 2026-08-31 — critic — VERDICT: verified",
+  "- Run: agent-run:maple/e9-t01-run-7",
+  `- Branch: ${branchRef}`,
+  "- Evidence: run.bin",
+  "- Summary: EXAMPLE ONLY — an HTML comment renders as nothing.",
+  "-->",
+  "",
+  "<pre>",
+  "### 2026-08-31 — builder — started",
+  "- Run: agent-run:maple/e9-t01-run-6",
+  "</pre>",
+  "",
 ].join("\n");
 const beforeFenceText = await readText(repoA, README_PATH);
 await userWrite("client-a", README_PATH, beforeFenceText.replace(/\n$/, fencedNote));
 await waitFor(async () => {
   const text = await readText(repoB, README_PATH);
   return text !== undefined && text.includes("EXAMPLE ONLY — quoted documentation");
-}, "step6b fenced note projected");
+}, "step6b inert-block note projected");
 await quiesce();
 const afterFence = await records(TASK_STREAM);
 const fenceStatus = replayTaskLog(TASK_STREAM, afterFence).status;
 say(
-  `step6b-fenced lifecycle-events-added=${(await lifecycleCount()) - beforeFenceLifecycle} status=${fenceStatus} events=${afterFence.map((record) => record.type).join(",")}`,
+  `step6b-inert lifecycle-events-added=${(await lifecycleCount()) - beforeFenceLifecycle} status=${fenceStatus} events=${afterFence.map((record) => record.type).join(",")}`,
 );
 const fenceArtifacts = Object.keys((await repoA.tree()).files).filter((path) =>
   path.includes(`${FOLDER}/work/.sync/`),
 );
 say(
-  `step6b-fenced text-revised-only=${afterFence.length === beforeFence + 1} refusal-artifacts=${fenceArtifacts.length}`,
+  `step6b-inert text-revised-only=${afterFence.length === beforeFence + 1} refusal-artifacts=${fenceArtifacts.length}`,
 );
 
 // ---- 7. workshop change: zero events, durable digests untouched ------------------

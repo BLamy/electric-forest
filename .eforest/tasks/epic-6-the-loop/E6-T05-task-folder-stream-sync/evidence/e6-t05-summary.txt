@@ -6,8 +6,8 @@ step4-detach evidence=evidence.attached,evidence.attached,evidence.detached deta
 step5-claim events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed
 step6-forgery events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised
 step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit
-step6b-fenced lifecycle-events-added=0 status=implemented events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised
-step6b-fenced text-revised-only=true refusal-artifacts=3
+step6b-inert lifecycle-events-added=0 status=implemented events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised
+step6b-inert text-revised-only=true refusal-artifacts=3
 step7-workshop task-events-unchanged=true evidence-events-unchanged=true
 step8-conflict events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised
 step8-loser conflict-artifacts=2 retained-has-loser-bytes=true
@@ -18,7 +18,7 @@ step11-idle heads-frozen=true write-lines-frozen=true
 step11-heads task=0000000000000000_0000000000000010 evidence=0000000000000000_0000000000000002
 final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
 final-status verified
-task-state-digest 7926e4ddd95c8ef7f42355d186c85803c31ee633a914dd7d594e408e9d2dfd5b
+task-state-digest a3de03ff21507fca156df43cf8bf17f8bd698e0ec2fa8555e4d87d9979bf360c
 replay-deterministic true
 projection-parity files=2 byte-equal-on-both-branches=true
 evidence-manifest [{"name":"run.bin","sha256":"9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af"}]

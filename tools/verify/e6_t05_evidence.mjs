@@ -99,15 +99,16 @@ try {
     line(committed, "step6-artifacts "),
     "step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit",
   );
-  // A fenced example entry — the shape this repository's own AGENTS.md ships — is
-  // documentation: zero lifecycle events, one ordinary text revision, no refusal.
+  // Quoted example entries — fenced AND wrapped in the HTML blocks this repository's
+  // own AGENTS.md ships — are documentation: zero lifecycle events, one ordinary text
+  // revision, no refusal, whatever the block kind (critic runs 1 and 2).
   assert.match(
-    line(committed, "step6b-fenced lifecycle"),
+    line(committed, "step6b-inert lifecycle"),
     /lifecycle-events-added=0 status=implemented/,
   );
   assert.equal(
-    line(committed, "step6b-fenced text-revised-only"),
-    "step6b-fenced text-revised-only=true refusal-artifacts=3",
+    line(committed, "step6b-inert text-revised-only"),
+    "step6b-inert text-revised-only=true refusal-artifacts=3",
   );
   assert.equal(
     line(committed, "step7-workshop "),

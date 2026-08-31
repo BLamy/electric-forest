@@ -44,6 +44,20 @@ export const E6_T02_DUPLICATE_KEY_GUARD = true;
 const README = "readme.md";
 const FOLDER_NAME_PATTERN = /^(E(?:0|[1-9][0-9]*)-T[0-9]{2}[a-z]?)-(.+)$/;
 const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+/** HTML block starts that swallow arbitrary content until an explicit end condition. */
+const HTML_RAWTEXT_OPEN = /^ {0,3}<(pre|script|style|textarea)(?:[\s>]|$)/i;
+const HTML_RAWTEXT_CLOSE = /<\/(pre|script|style|textarea)>/i;
+const HTML_COMMENT_OPEN = /^ {0,3}<!--/;
+const HTML_PI_OPEN = /^ {0,3}<\?/;
+const HTML_DECL_OPEN = /^ {0,3}<![A-Za-z]/;
+const HTML_CDATA_OPEN = /^ {0,3}<!\[CDATA\[/;
+/**
+ * CommonMark HTML blocks 6 and 7: a block-level tag, or any complete tag alone on its
+ * line. They end at a blank line rather than a closing marker.
+ */
+const HTML_BLOCK_TAG_OPEN =
+  /^ {0,3}<\/?(address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:[\s/>]|$)/i;
+const HTML_ANY_TAG_ONLY = /^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^>]*)?\/?>\s*$/;
 const H2_PATTERN = /^ {0,3}##(?: |$)/;
 const KEY_PATTERN = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
 const PLAIN_TITLE_INDICATORS = new Set([
@@ -610,54 +624,137 @@ interface HeadingHit {
   readonly index: number;
 }
 
-/** An open fence: its char, its length, and the 1-based line it opened on. */
-export interface OpenFence {
-  readonly char: string;
+/** An open inert block: what kind, and the 1-based line it opened on. */
+export interface OpenInertBlock {
+  readonly kind: "fence" | "html";
+  /** Fence character for `fence`; the HTML end condition's name for `html`. */
+  readonly marker: string;
   readonly length: number;
   readonly line: number;
 }
 
-export interface FenceScan {
+export interface InertBlockScan {
   /**
-   * Per-line, indexed by absolute line number: `true` when the line is a fence marker
-   * or lies inside a fence, i.e. it is NOT ordinary Markdown structure. Lines before
-   * `from` are `false`.
+   * Per-line, indexed by absolute line number: `true` when the line belongs to a block
+   * a CommonMark reader does not read as document structure — a fenced code block or an
+   * HTML block — so no `##` section heading and no `###` log-entry heading may be
+   * recognised on it. Lines before `from` are `false`.
    */
-  readonly fenced: readonly boolean[];
-  /** Set when a fence was opened and never closed; everything after it is `fenced`. */
-  readonly unterminated?: OpenFence;
+  readonly inert: readonly boolean[];
+  /** Set when a block was opened and never closed; everything after it stays inert. */
+  readonly unterminated?: OpenInertBlock;
 }
 
 /**
- * The single fence state machine of the task-folder contract (E6-T02), shared so that
- * every reader of a readme agrees on what is code and what is structure. `##` section
- * headings (`parseSections`) and `###` Verification-log entry headings (E6-T05's
- * ingest) are both recognised only outside a fence: a fenced example of the entry
- * format is documentation, never a lifecycle claim.
+ * The one block scanner of the task-folder contract. Every reader of a readme consumes
+ * it, so a readme keeps agreeing with itself about what is inert: E6-T02's `##` section
+ * headings (`parseSections`) and E6-T05's `###` Verification-log entry headings are both
+ * recognised only in ordinary block position.
+ *
+ * It classifies the constructs that can swallow a line beginning at column 0 — the only
+ * lines either heading rule can match:
+ *
+ * - **fenced code** (``` / ~~~, 3+ chars, longer-or-equal closer, no info string on the
+ *   closer). Per CommonMark a backtick fence's info string may not contain a backtick,
+ *   so an inline code span such as `` ```…`` is not an opener;
+ * - **HTML blocks 1-5**, which swallow arbitrary content up to an explicit end
+ *   condition: `<pre>`/`<script>`/`<style>`/`<textarea>`, `<!-- -->`, `<? ?>`,
+ *   `<!DECLARATION>`, and `<![CDATA[ ]]>`;
+ * - **HTML blocks 6-7** (block-level tags, and any complete tag alone on a line), which
+ *   end at a blank line.
+ *
+ * Constructs that indent or prefix their content — indented code, block quotes, list
+ * items — cannot produce a column-0 `##`/`###` line at all, so they need no state here.
+ * An unterminated block stays inert to end of input: ambiguous text is never structure,
+ * which fails closed (a swallowed section is refused `sections/missing`, and a swallowed
+ * log entry simply does not exist).
  */
-export function scanFences(lines: readonly string[], from = 0): FenceScan {
-  const fenced: boolean[] = new Array<boolean>(lines.length).fill(false);
-  let fence: OpenFence | undefined;
+export function scanInertBlocks(lines: readonly string[], from = 0): InertBlockScan {
+  const inert: boolean[] = new Array<boolean>(lines.length).fill(false);
+  let open: OpenInertBlock | undefined;
   for (let index = from; index < lines.length; index += 1) {
-    const fenceMatch = FENCE_PATTERN.exec(lines[index]!);
-    if (fence !== undefined) {
-      fenced[index] = true;
-      if (
-        fenceMatch !== null &&
-        fenceMatch[1]![0] === fence.char &&
-        fenceMatch[1]!.length >= fence.length &&
-        fenceMatch[2]!.trim() === ""
-      ) {
-        fence = undefined;
+    const line = lines[index]!;
+    if (open !== undefined) {
+      inert[index] = true;
+      if (open.kind === "fence") {
+        const fenceMatch = FENCE_PATTERN.exec(line);
+        if (
+          fenceMatch !== null &&
+          fenceMatch[1]![0] === open.marker &&
+          fenceMatch[1]!.length >= open.length &&
+          fenceMatch[2]!.trim() === ""
+        ) {
+          open = undefined;
+        }
+        continue;
       }
+      if (htmlBlockCloses(open.marker, line)) open = undefined;
       continue;
     }
-    if (fenceMatch !== null) {
-      fenced[index] = true;
-      fence = { char: fenceMatch[1]![0]!, length: fenceMatch[1]!.length, line: index + 1 };
+    const opened = openInertBlock(line, index + 1);
+    if (opened !== undefined) {
+      inert[index] = true;
+      // A block whose end condition is already satisfied on its opening line (a
+      // one-line `<!-- … -->`, `<pre>…</pre>`, or a blank-line-terminated tag) closes
+      // immediately; only the opening line itself is inert.
+      open = htmlBlockClosesOnOpen(opened, line) ? undefined : opened;
     }
   }
-  return fence === undefined ? { fenced } : { fenced, unterminated: fence };
+  return open === undefined ? { inert } : { inert, unterminated: open };
+}
+
+/** The HTML end condition for an open block marker, or a fence-style close. */
+function htmlBlockCloses(marker: string, line: string): boolean {
+  switch (marker) {
+    case "rawtext":
+      return HTML_RAWTEXT_CLOSE.test(line);
+    case "comment":
+      return line.includes("-->");
+    case "pi":
+      return line.includes("?>");
+    case "declaration":
+      return line.includes(">");
+    case "cdata":
+      return line.includes("]]>");
+    default:
+      return line.trim().length === 0;
+  }
+}
+
+function htmlBlockClosesOnOpen(block: OpenInertBlock, line: string): boolean {
+  if (block.kind === "fence") return false;
+  if (block.marker === "tag") return false;
+  const body =
+    block.marker === "comment"
+      ? line.slice(line.indexOf("<!--") + 4)
+      : block.marker === "cdata"
+        ? line.slice(line.indexOf("<![CDATA[") + 9)
+        : line;
+  return htmlBlockCloses(block.marker, body);
+}
+
+function openInertBlock(line: string, lineNumber: number): OpenInertBlock | undefined {
+  const fenceMatch = FENCE_PATTERN.exec(line);
+  if (fenceMatch !== null) {
+    const char = fenceMatch[1]![0]!;
+    // CommonMark: the info string of a backtick fence may not contain a backtick.
+    if (!(char === "`" && fenceMatch[2]!.includes("`"))) {
+      return { kind: "fence", marker: char, length: fenceMatch[1]!.length, line: lineNumber };
+    }
+  }
+  const html = (marker: string): OpenInertBlock => ({
+    kind: "html",
+    marker,
+    length: 0,
+    line: lineNumber,
+  });
+  if (HTML_COMMENT_OPEN.test(line)) return html("comment");
+  if (HTML_CDATA_OPEN.test(line)) return html("cdata");
+  if (HTML_PI_OPEN.test(line)) return html("pi");
+  if (HTML_DECL_OPEN.test(line)) return html("declaration");
+  if (HTML_RAWTEXT_OPEN.test(line)) return html("rawtext");
+  if (HTML_BLOCK_TAG_OPEN.test(line) || HTML_ANY_TAG_ONLY.test(line)) return html("tag");
+  return undefined;
 }
 
 function parseSections(
@@ -666,10 +763,10 @@ function parseSections(
   lineStartBytes: readonly number[],
 ): TaskReadmeV1 {
   const headings: HeadingHit[] = [];
-  const scan = scanFences(lines, bodyStart);
+  const scan = scanInertBlocks(lines, bodyStart);
   for (let index = bodyStart; index < lines.length; index += 1) {
     const line = lines[index]!;
-    if (scan.fenced[index]) continue;
+    if (scan.inert[index]) continue;
     if (H2_PATTERN.test(line)) {
       if (!line.startsWith("## ")) {
         refuseText(
@@ -682,7 +779,7 @@ function parseSections(
       headings.push({ name: line.slice(3), index });
     }
   }
-  if (scan.unterminated !== undefined)
+  if (scan.unterminated !== undefined && scan.unterminated.kind === "fence")
     refuseText(
       "sections/unterminated-fence",
       scan.unterminated.line,

@@ -40,7 +40,7 @@ import {
 import { applyTaskEvent, taskReducer } from "../reducer.js";
 import { taskInitialStateFor, type TaskState } from "../state.js";
 import { TASK_EVENT_VERSION } from "../version.js";
-import { parseTaskFolder, scanFences } from "./parse.js";
+import { parseTaskFolder, scanInertBlocks } from "./parse.js";
 import { renderTaskReadme } from "./render.js";
 import type { TaskSyncIngestKind } from "./journal.js";
 import type {
@@ -159,44 +159,48 @@ const KIND_BY_TOKEN = new Map<string, VerificationLogEntry["kind"]>([
 const FIELD_PATTERN = /^- (Run|Branch|Evidence|Summary|Finding): (.*)$/;
 
 /**
- * Split a Verification-log section body into entries at `### ` headings, **outside code
- * fences only** (E6-T05 critic run 1). The fence state machine is E6-T02's own
- * (`scanFences`), so a readme agrees with itself about what is code: exactly as a fenced
- * `## Goal` is ordinary body text to the section parser, a fenced
- * `### <date> — <role> — <kind>` is documentation, never a lifecycle claim. This
- * repository's own `AGENTS.md` and `.eforest/tasks/README.md` ship such fenced examples.
- * An unterminated fence swallows the rest of the body (nothing after it is a heading),
- * which fails closed: ambiguous text dispatches nothing.
+ * Split a Verification-log section body into entries at `### ` headings, recognised only
+ * in ordinary block position (E6-T05 critic runs 1 and 2). The block scanner is E6-T02's
+ * own (`scanInertBlocks`), so a readme agrees with itself about what is inert: exactly as
+ * an inert `## Goal` is ordinary body text to the section parser, a
+ * `### <date> — <role> — <kind>` inside a code fence **or an HTML block** — an HTML
+ * comment, `<pre>`, CDATA, a processing instruction, a declaration, a block tag — is
+ * documentation, never a lifecycle claim. This is one invariant over block structure,
+ * not a list of quoting syntaxes: this repository's own `AGENTS.md`,
+ * `.eforest/tasks/README.md`, `CLAUDE.md`, and `.eforest/loop.md` ship both fenced
+ * examples and HTML comments. An unterminated block swallows the rest of the body, which
+ * fails closed: ambiguous text dispatches nothing.
  */
 export function parseVerificationLogEntries(body: string): readonly VerificationLogEntry[] {
   const lines = body.split("\n");
-  const { fenced } = scanFences(lines);
+  const { inert } = scanInertBlocks(lines);
   const entries: VerificationLogEntry[] = [];
-  let current: { lines: string[]; fenced: boolean[] } | undefined;
+  let current: { lines: string[]; inert: boolean[] } | undefined;
   for (const [index, line] of lines.entries()) {
-    if (!fenced[index] && line.startsWith("### ")) {
-      if (current !== undefined) entries.push(entryOf(current.lines, current.fenced));
-      current = { lines: [line], fenced: [false] };
+    if (!inert[index] && line.startsWith("### ")) {
+      if (current !== undefined) entries.push(entryOf(current.lines, current.inert));
+      current = { lines: [line], inert: [false] };
     } else if (current !== undefined) {
       current.lines.push(line);
-      current.fenced.push(fenced[index]!);
+      current.inert.push(inert[index]!);
     }
   }
-  if (current !== undefined) entries.push(entryOf(current.lines, current.fenced));
+  if (current !== undefined) entries.push(entryOf(current.lines, current.inert));
   return entries;
 }
 
 /**
- * `fenced[i]` marks lines of this entry that are code. Structured fields are read only
- * from unfenced lines, so a fenced example inside a real entry cannot supply or spoof
- * that entry's `- Run:`/`- Branch:`/`- Evidence:` values.
+ * `inert[i]` marks lines of this entry that are code or HTML. Structured fields are read
+ * only from ordinary lines, so a quoted example inside a real entry — fenced or wrapped
+ * in an HTML block — cannot supply or spoof that entry's `- Run:`/`- Branch:`/
+ * `- Evidence:` values.
  */
-function entryOf(lines: readonly string[], fenced: readonly boolean[]): VerificationLogEntry {
+function entryOf(lines: readonly string[], inert: readonly boolean[]): VerificationLogEntry {
   const text = lines.join("\n");
   const heading = HEADING_PATTERN.exec(lines[0]!);
   const fields = new Map<string, string[]>();
   for (const [index, line] of lines.entries()) {
-    if (index === 0 || fenced[index] === true) continue;
+    if (index === 0 || inert[index] === true) continue;
     const field = FIELD_PATTERN.exec(line);
     if (field === null) continue;
     const values = fields.get(field[1]!) ?? [];
