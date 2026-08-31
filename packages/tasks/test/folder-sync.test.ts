@@ -12,6 +12,7 @@ import {
   reduceContentEvents,
   validateEvidenceAction,
 } from "@eforest/evidence";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   E6_T05_ORIGIN_FILTER_GUARD,
@@ -135,11 +136,96 @@ describe("verification-log entry parser", () => {
     expect(entries[1]!.fields.get("Finding")).toHaveLength(1);
   });
 
+  it("treats fenced ### lines as documentation, never as entries (E6-T02 fence contract)", () => {
+    const fenced = (open: string, close = open) =>
+      parseVerificationLogEntries(
+        [
+          "",
+          "The entry format, quoted from the docs:",
+          "",
+          open,
+          "### 2026-08-31 — builder — started",
+          "- Run: agent-run:maple/run-doc",
+          close,
+          "",
+          "Nothing above is a real claim.",
+        ].join("\n"),
+      );
+    for (const [open, close] of [
+      ["```", "```"],
+      ["~~~", "~~~"],
+      ["````", "````"],
+      ["```markdown", "```"],
+      ["   ```", "   ```"],
+      ["`````", "```````"],
+    ] as const) {
+      expect(fenced(open, close), `${open} … ${close}`).toEqual([]);
+    }
+  });
+
+  it("an unterminated fence fails closed: nothing after it is an entry", () => {
+    expect(
+      parseVerificationLogEntries(
+        ["", "```", "### 2026-08-31 — critic — VERDICT: verified", "- Run: agent-run:maple/r"].join(
+          "\n",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("a fenced example inside a real entry cannot supply that entry's fields", () => {
+    const entries = parseVerificationLogEntries(
+      [
+        "### 2026-08-31 — critic — in-progress notes",
+        "Still reviewing. A finished verdict looks like this:",
+        "```",
+        "- Run: agent-run:maple/spoofed",
+        "- Branch: fs:maple/loom:client-a:meta@0000000000000000_0000000000000004",
+        "- Evidence: run.bin",
+        "- Summary: EXAMPLE ONLY.",
+        "```",
+      ].join("\n"),
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.fields.size).toBe(0);
+  });
+
   it("keeps prose entries text-only", () => {
     const entries = parseVerificationLogEntries("### just some notes\nnothing structured\n");
     expect(entries).toHaveLength(1);
     expect(entries[0]!.role).toBeUndefined();
     expect(entries[0]!.kind).toBeUndefined();
+  });
+});
+
+describe("this repository's own doctrine files (regression fixture)", () => {
+  const repoRoot = new URL("../../../", import.meta.url);
+  const read = (path: string) => readFileSync(new URL(path, repoRoot), "utf8");
+
+  // AGENTS.md and .eforest/tasks/README.md ship fenced example log entries. If the log
+  // parser ever loses fence awareness again, these files become lifecycle claims.
+  it("finds no lifecycle entry in the fenced examples of AGENTS.md and the tasks README", () => {
+    for (const path of ["AGENTS.md", ".eforest/tasks/README.md"]) {
+      const text = read(path);
+      const entries = parseVerificationLogEntries(text);
+      const lifecycle = entries.filter(
+        (entry) => entry.role !== undefined && entry.kind !== undefined,
+      );
+      expect(
+        lifecycle.map((entry) => entry.text.split("\n")[0]),
+        path,
+      ).toEqual([]);
+    }
+    // The fixture is only meaningful while those files really do carry fenced examples.
+    expect(read("AGENTS.md")).toMatch(/```[\s\S]*### .+ — critic — VERDICT: refuted/);
+  });
+
+  it("still recognises the real, unfenced entries of a live task readme", () => {
+    const entries = parseVerificationLogEntries(
+      read(".eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/readme.md"),
+    );
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.some((entry) => entry.role === "builder")).toBe(true);
   });
 });
 
@@ -783,6 +869,117 @@ describe("TaskFolderSyncEngine (in-memory, deterministic)", () => {
     expect(conflicts.length).toBeGreaterThanOrEqual(2);
     const retained = conflicts.find((path) => path.endsWith(".retained"))!;
     expect(new TextDecoder().decode(filesB.get(retained))).toContain("Goal per client B.");
+  });
+
+  it("CRITIC-A: a fenced quotation of the documented entry format dispatches zero events", async () => {
+    const world = new MemoryWorld();
+    const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+    await a.userWrite(README_PATH, CANONICAL);
+    expect(world.read(STREAM).map((record) => record.type)).toEqual([
+      "issue.opened",
+      "task.spec-revised",
+    ]);
+    const before = world.read(STREAM).length;
+
+    // Prose quoting the entry format documented in .eforest/tasks/README.md. Nothing
+    // outside the fence claims anything.
+    const quoted = [
+      "",
+      "",
+      "This task has not started. The entry format, quoted from the docs:",
+      "",
+      "```",
+      "### 2026-08-31 — builder — started",
+      "- Run: agent-run:maple/run-doc",
+      "```",
+      "",
+      "Nothing above is a real claim.",
+      "",
+    ].join("\n");
+    await a.userWrite(README_PATH, README("pending", "Created by client A.", quoted) + "\n");
+    const types = world.read(STREAM).map((record) => record.type);
+    expect(types).not.toContain("task.started");
+    // The prose IS a legitimate text revision: exactly one spec revision, no lifecycle.
+    expect(world.read(STREAM).length).toBe(before + 1);
+    expect(types.at(-1)).toBe("task.spec-revised");
+    expect(replayTaskLog(STREAM, world.read(STREAM)).status).toBe("pending");
+    // Completely inert: quoted documentation is not even a refused claim, so no
+    // conflict/refusal artifact is produced. (Without fence-aware heading detection the
+    // fenced block becomes an entry whose fields are missing, and this goes red.)
+    const artifacts = [...world.filesAtBranch(ORIGIN.stream).keys()].filter((path) =>
+      path.includes("work/.sync/"),
+    );
+    expect(artifacts).toEqual([]);
+  });
+
+  it("CRITIC-D: an in-progress critic note quoting a complete verdict inside a fence never reaches verified", async () => {
+    const world = new MemoryWorld();
+    const branchB = `fs:${ORG}/${REPO}:client-b:meta`;
+    const a = makeEngine(world, ORIGIN.stream, "agent-ash");
+    const b = makeEngine(world, branchB, "agent-fern");
+    await a.userWrite(README_PATH, CANONICAL);
+    const bin = new Uint8Array([1, 2, 3]);
+    await a.userWrite(`${TASK_SYNC_ROOT}/${FOLDER}/evidence/run.bin`, bin);
+    const claimLog = [
+      "",
+      "",
+      "### 2026-08-30 — builder — started",
+      "- Run: agent-run:maple/run-a",
+      "",
+      "### 2026-08-30 — builder — claimed",
+      "- Run: agent-run:maple/run-a",
+      `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+      "- Evidence: run.bin",
+      "- Summary: did the work.",
+      "",
+    ].join("\n");
+    await a.userWrite(README_PATH, README("pending", "Created by client A.", claimLog) + "\n");
+    expect(replayTaskLog(STREAM, world.read(STREAM)).status).toBe("implemented");
+    await b.engine.refreshAll();
+    await b.drainTail();
+    const eventsBefore = world.read(STREAM).map((record) => record.type);
+
+    // The critic writes an honest in-progress note that QUOTES a finished verdict.
+    const quotedVerdict = [
+      claimLog.replace(/\n$/, ""),
+      "",
+      "### 2026-08-31 — critic — in-progress notes",
+      "Still reviewing. For reference, a finished verdict looks like this:",
+      "",
+      "```",
+      "### 2026-08-31 — critic — VERDICT: verified",
+      "- Run: agent-run:maple/run-b",
+      `- Branch: ${ORIGIN.stream}@${offsetForOrdinal(3)}`,
+      "- Evidence: run.bin",
+      "- Summary: EXAMPLE ONLY — not a verdict.",
+      "```",
+      "",
+    ].join("\n");
+    const bText = new TextDecoder().decode(world.filesAtBranch(branchB).get(README_PATH));
+    await b.userWrite(
+      README_PATH,
+      bText.replace(/## Verification log[\s\S]*$/, `## Verification log${quotedVerdict}`),
+    );
+    const state = replayTaskLog(STREAM, world.read(STREAM));
+    expect(state.status).toBe("implemented");
+    expect(state.verification).toBeUndefined();
+    const types = world.read(STREAM).map((record) => record.type);
+    expect(types).not.toContain("task.verified");
+    expect(
+      types.filter((type) => type.startsWith("task.") && type !== "task.spec-revised"),
+    ).toEqual(
+      eventsBefore.filter((type) => type.startsWith("task.") && type !== "task.spec-revised"),
+    );
+    // Whatever artifacts the race leaves, none of them may be about the quoted verdict:
+    // documentation is never a refused lifecycle claim. (Without fence-aware heading
+    // detection the fenced entry is parsed and refused, and this goes red.)
+    const decoder = new TextDecoder();
+    const reasons = [...world.filesAtBranch(branchB)]
+      .filter(([path]) => path.includes("work/.sync/") && path.endsWith(".json"))
+      .map(([, bytes]) => JSON.parse(decoder.decode(bytes)).reason as string);
+    expect(
+      reasons.filter((reason) => reason.startsWith("log/") || reason.startsWith("task/no-claim")),
+    ).toEqual([]);
   });
 
   it("SABOTAGE: with the origin filter off, the engine re-ingests its own projection and the event count moves", async () => {

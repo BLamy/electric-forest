@@ -471,6 +471,56 @@ say(
     .join(",")}`,
 );
 
+// ---- 6b. a FENCED example entry in the Verification log dispatches zero events ----
+// This repository's own AGENTS.md and .eforest/tasks/README.md ship exactly such fenced
+// examples (E6-T05 critic run 1: unfenced parsing made quoted documentation a real
+// lifecycle claim, including a path to `verified`).
+const lifecycleCount = async () =>
+  (await records(TASK_STREAM)).filter(
+    (record) => record.type.startsWith("task.") && record.type !== "task.spec-revised",
+  ).length;
+
+const beforeFence = (await records(TASK_STREAM)).length;
+const beforeFenceLifecycle = await lifecycleCount();
+const fencedNote = [
+  "",
+  "",
+  "### 2026-08-31 — builder — progress note",
+  "Not a claim. For reference, a finished critic verdict looks like this:",
+  "",
+  "```",
+  "### 2026-08-31 — critic — VERDICT: verified",
+  "- Run: agent-run:maple/e9-t01-run-9",
+  `- Branch: ${branchRef}`,
+  "- Evidence: run.bin",
+  "- Summary: EXAMPLE ONLY — quoted documentation, not a verdict.",
+  "```",
+  "",
+  "~~~text",
+  "### 2026-08-31 — builder — started",
+  "- Run: agent-run:maple/e9-t01-run-8",
+  "~~~",
+  "",
+].join("\n");
+const beforeFenceText = await readText(repoA, README_PATH);
+await userWrite("client-a", README_PATH, beforeFenceText.replace(/\n$/, fencedNote));
+await waitFor(async () => {
+  const text = await readText(repoB, README_PATH);
+  return text !== undefined && text.includes("EXAMPLE ONLY — quoted documentation");
+}, "step6b fenced note projected");
+await quiesce();
+const afterFence = await records(TASK_STREAM);
+const fenceStatus = replayTaskLog(TASK_STREAM, afterFence).status;
+say(
+  `step6b-fenced lifecycle-events-added=${(await lifecycleCount()) - beforeFenceLifecycle} status=${fenceStatus} events=${afterFence.map((record) => record.type).join(",")}`,
+);
+const fenceArtifacts = Object.keys((await repoA.tree()).files).filter((path) =>
+  path.includes(`${FOLDER}/work/.sync/`),
+);
+say(
+  `step6b-fenced text-revised-only=${afterFence.length === beforeFence + 1} refusal-artifacts=${fenceArtifacts.length}`,
+);
+
 // ---- 7. workshop change: zero events, durable digests untouched ------------------
 const taskLenBefore = (await records(TASK_STREAM)).length;
 const evidenceLenBefore = (await records(EVIDENCE_STREAM)).length;
@@ -695,14 +745,44 @@ const expectedWarnings = durable.filter(
     message.includes("folder/readme-missing") ||
     message.includes("task/stale-spec"),
 );
-say(
-  `warnings expected=${expectedWarnings.length} unexpected=${durable.length - expectedWarnings.length}`,
-);
+const unexpectedWarnings = durable.filter((message) => !expectedWarnings.includes(message));
+if (unexpectedWarnings.length > 0) {
+  console.error(`unexpected warnings: ${JSON.stringify(unexpectedWarnings)}`);
+}
+say(`warnings expected=${expectedWarnings.length} unexpected=${unexpectedWarnings.length}`);
 
 if (outDir !== undefined) {
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "journal-a.jsonl"), serializeTaskSyncJournal(clientA.journal.state));
   writeFileSync(join(outDir, "journal-b.jsonl"), serializeTaskSyncJournal(clientB.journal.state));
+  // The audit universe, so the verifier can re-audit both journals independently
+  // instead of trusting the summary's own audit lines (critic run 1, note c).
+  const auditInput = {};
+  for (const [name, syncClient, repo] of [
+    ["a", clientA, repoA],
+    ["b", clientB, repoB],
+  ]) {
+    const dump = await repo.rawDump();
+    auditInput[name] = {
+      branch: {
+        stream: syncClient.branchStream,
+        offsets: dump
+          .filter((record) => {
+            const path = record.payload?.path;
+            return typeof path === "string" && path.startsWith(ROOT_DIR);
+          })
+          .map((record) => record.offset),
+      },
+      streams: [
+        { stream: TASK_STREAM, offsets: finalRecords.map((record) => record.offset) },
+        {
+          stream: EVIDENCE_STREAM,
+          offsets: (await records(EVIDENCE_STREAM)).map((record) => record.offset),
+        },
+      ],
+    };
+  }
+  writeFileSync(join(outDir, "audit-input.json"), `${canonicalJson(auditInput)}\n`);
 }
 
 await clientA.stop();

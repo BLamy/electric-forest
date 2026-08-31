@@ -40,7 +40,7 @@ import {
 import { applyTaskEvent, taskReducer } from "../reducer.js";
 import { taskInitialStateFor, type TaskState } from "../state.js";
 import { TASK_EVENT_VERSION } from "../version.js";
-import { parseTaskFolder } from "./parse.js";
+import { parseTaskFolder, scanFences } from "./parse.js";
 import { renderTaskReadme } from "./render.js";
 import type { TaskSyncIngestKind } from "./journal.js";
 import type {
@@ -158,27 +158,45 @@ const KIND_BY_TOKEN = new Map<string, VerificationLogEntry["kind"]>([
 ]);
 const FIELD_PATTERN = /^- (Run|Branch|Evidence|Summary|Finding): (.*)$/;
 
-/** Split a Verification-log section body into entries at `### ` headings. */
+/**
+ * Split a Verification-log section body into entries at `### ` headings, **outside code
+ * fences only** (E6-T05 critic run 1). The fence state machine is E6-T02's own
+ * (`scanFences`), so a readme agrees with itself about what is code: exactly as a fenced
+ * `## Goal` is ordinary body text to the section parser, a fenced
+ * `### <date> — <role> — <kind>` is documentation, never a lifecycle claim. This
+ * repository's own `AGENTS.md` and `.eforest/tasks/README.md` ship such fenced examples.
+ * An unterminated fence swallows the rest of the body (nothing after it is a heading),
+ * which fails closed: ambiguous text dispatches nothing.
+ */
 export function parseVerificationLogEntries(body: string): readonly VerificationLogEntry[] {
+  const lines = body.split("\n");
+  const { fenced } = scanFences(lines);
   const entries: VerificationLogEntry[] = [];
-  let current: string[] | undefined;
-  for (const line of body.split("\n")) {
-    if (line.startsWith("### ")) {
-      if (current !== undefined) entries.push(entryOf(current));
-      current = [line];
+  let current: { lines: string[]; fenced: boolean[] } | undefined;
+  for (const [index, line] of lines.entries()) {
+    if (!fenced[index] && line.startsWith("### ")) {
+      if (current !== undefined) entries.push(entryOf(current.lines, current.fenced));
+      current = { lines: [line], fenced: [false] };
     } else if (current !== undefined) {
-      current.push(line);
+      current.lines.push(line);
+      current.fenced.push(fenced[index]!);
     }
   }
-  if (current !== undefined) entries.push(entryOf(current));
+  if (current !== undefined) entries.push(entryOf(current.lines, current.fenced));
   return entries;
 }
 
-function entryOf(lines: readonly string[]): VerificationLogEntry {
+/**
+ * `fenced[i]` marks lines of this entry that are code. Structured fields are read only
+ * from unfenced lines, so a fenced example inside a real entry cannot supply or spoof
+ * that entry's `- Run:`/`- Branch:`/`- Evidence:` values.
+ */
+function entryOf(lines: readonly string[], fenced: readonly boolean[]): VerificationLogEntry {
   const text = lines.join("\n");
   const heading = HEADING_PATTERN.exec(lines[0]!);
   const fields = new Map<string, string[]>();
-  for (const line of lines.slice(1)) {
+  for (const [index, line] of lines.entries()) {
+    if (index === 0 || fenced[index] === true) continue;
     const field = FIELD_PATTERN.exec(line);
     if (field === null) continue;
     const values = fields.get(field[1]!) ?? [];
@@ -529,13 +547,12 @@ export function planTaskFolderIngest(context: TaskFolderIngestContext): TaskFold
   const entries = section === undefined ? [] : parseVerificationLogEntries(section.body);
   for (const entry of entries) {
     if (previousEntries.has(entryKey(entry.text))) continue;
-    if (
-      entry.role === undefined &&
-      entry.kind === undefined &&
-      !HEADING_PATTERN.test(entry.text.split("\n")[0]!)
-    ) {
-      continue; // plain prose entry: text only, no lifecycle claim
-    }
+    // An entry is a lifecycle claim only when its heading names a recognised kind.
+    // A human note — `### <date> — critic — in-progress notes`, a progress update, a
+    // pointer to a run — is prose: it revises the text and claims nothing. (Refusing it
+    // would make honest notes unwritable.) A heading that DOES name a kind is held to
+    // its role by `buildLifecycleEvent`, so `— builder — verified` is still refused.
+    if (entry.kind === undefined) continue;
     const built = buildLifecycleEvent(entry, context, nameToId, context.ts);
     if (built.refusal !== undefined) {
       kinds.add("refused");

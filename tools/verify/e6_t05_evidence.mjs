@@ -79,7 +79,15 @@ try {
   // Structural re-assertions on the committed summary (belt over the byte equality).
   assert.equal(
     line(committed, "final-events "),
-    "final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.verified",
+    "final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.spec-revised,task.verified",
+  );
+  // Exactly two lifecycle-bearing verdict events in the whole run; the fenced example
+  // and the forged builder verdict contributed none.
+  assert.equal(
+    line(committed, "final-events ")
+      .split(",")
+      .filter((type) => type === "task.verified").length,
+    1,
   );
   assert.equal(line(committed, "final-status "), "final-status verified");
   assert.match(line(committed, "step6-forgery "), /task\.claimed,task\.spec-revised$/);
@@ -90,6 +98,16 @@ try {
   assert.equal(
     line(committed, "step6-artifacts "),
     "step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit",
+  );
+  // A fenced example entry — the shape this repository's own AGENTS.md ships — is
+  // documentation: zero lifecycle events, one ordinary text revision, no refusal.
+  assert.match(
+    line(committed, "step6b-fenced lifecycle"),
+    /lifecycle-events-added=0 status=implemented/,
+  );
+  assert.equal(
+    line(committed, "step6b-fenced text-revised-only"),
+    "step6b-fenced text-revised-only=true refusal-artifacts=3",
   );
   assert.equal(
     line(committed, "step7-workshop "),
@@ -137,8 +155,32 @@ try {
       parsed.every((record) => record.kinds.every((kind) => TASK_SYNC_INGEST_KINDS.includes(kind))),
     );
   }
-  assert.equal(typeof auditTaskSyncJournal, "function");
-  console.log("E6_T05_JOURNALS canonical=true format=v1");
+  // The verifier audits the live journals itself against the run's own stream universe:
+  // every branch offset under the root and every task/evidence record must sit in its
+  // frozen multiplicity (critic run 1, note c — previously this only type-checked).
+  const auditInput = JSON.parse(
+    readFileSync(join(scratch, "journals", "audit-input.json"), "utf8"),
+  );
+  let auditedBranchOffsets = 0;
+  for (const name of ["a", "b"]) {
+    const journal = parseTaskSyncJournal(
+      readFileSync(join(scratch, "journals", `journal-${name}.jsonl`), "utf8"),
+    );
+    const audit = auditTaskSyncJournal(journal, auditInput[name]);
+    assert.deepEqual(
+      audit.violations,
+      [],
+      `journal-${name} violates the frozen multiplicity: ${JSON.stringify(audit.violations)}`,
+    );
+    assert.equal(audit.ok, true, `journal-${name} audit not ok`);
+    assert.ok(audit.own > 0 && audit.foreign > 0, `journal-${name} audited nothing meaningful`);
+    assert.ok(audit.applied > 0, `journal-${name} applied nothing`);
+    auditedBranchOffsets += audit.own + audit.foreign;
+  }
+  assert.ok(auditedBranchOffsets > 0);
+  console.log(
+    `E6_T05_JOURNALS canonical=true format=v1 audited-branch-offsets=${auditedBranchOffsets} violations=0`,
+  );
 
   // 3. Sensitivity: one flipped byte of the staged evidence bytes moves the digests.
   const mutated = run(["--mutate-evidence", "--idle-ms", "1500"], "America/Sao_Paulo");
@@ -173,9 +215,20 @@ try {
       line(sabotaged.stdout, "journal-b ") !== "journal-b ok=true violations=0";
     assert.ok(auditsRed, "origin-filter sabotage must break the journal audit");
   } else {
-    // The echo can also wedge the schedule itself (extra revisions racing the fences);
-    // a red exit is exactly what the sentinel demands.
-    assert.ok(sabotageText.length > 0);
+    // The echo can also wedge the schedule itself (extra revisions racing the fences).
+    // That is a legitimate red, but only in its ONE expected shape: a step that never
+    // converges. Any other nonzero exit (a crash, a missing module, a syntax error)
+    // would satisfy a bare `status !== 0` while proving nothing (critic run 1, note b).
+    assert.match(
+      sabotageText,
+      /TIMEOUT step\d|schedule timed out waiting for/,
+      `origin-filter sabotage must fail by non-convergence, not by an unrelated error:\n${sabotageText.slice(-2000)}`,
+    );
+    assert.doesNotMatch(
+      sabotageText,
+      /ERR_MODULE_NOT_FOUND|SyntaxError|ReferenceError|TypeError: /,
+      "sabotage run died of an unrelated error",
+    );
   }
   console.log(
     `SABOTAGE guard=E6_T05_ORIGIN_FILTER_GUARD origin-filter=off exit=${sabotaged.status} EXPECTED-FAIL OK`,

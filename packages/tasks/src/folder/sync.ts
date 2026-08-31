@@ -127,7 +127,10 @@ export interface TaskSyncEngineOptions {
   readonly streams: TaskSyncStreamsPort;
   readonly journal: TaskSyncJournal;
   readonly now: () => number;
-  /** The origin-filter sentinel; defaults to `E6_T05_ORIGIN_FILTER_GUARD`. */
+  /**
+   * Opt out of provenance suppression for a sabotage run. It can only ever weaken the
+   * engine: the effective filter is `E6_T05_ORIGIN_FILTER_GUARD && (originFilter ?? true)`.
+   */
   readonly originFilter?: boolean;
   readonly onWarning?: (message: string) => void;
 }
@@ -179,7 +182,11 @@ export class TaskFolderSyncEngine {
     this.streams = options.streams;
     this.journal = options.journal;
     this.now = options.now;
-    this.originFilter = options.originFilter ?? E6_T05_ORIGIN_FILTER_GUARD;
+    // The sentinel gates the production path itself: flipping E6_T05_ORIGIN_FILTER_GUARD
+    // to `false` in source disables provenance suppression for every engine, whatever a
+    // caller asks for, so sabotage in the source turns verify-E6-T05 red on exact event
+    // counts and quiescence rather than on a constant assertion (critic run 1, note a).
+    this.originFilter = E6_T05_ORIGIN_FILTER_GUARD && (options.originFilter ?? true);
     this.onWarning = options.onWarning ?? (() => undefined);
   }
 

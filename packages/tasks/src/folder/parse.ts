@@ -610,19 +610,40 @@ interface HeadingHit {
   readonly index: number;
 }
 
-function parseSections(
-  lines: readonly string[],
-  bodyStart: number,
-  lineStartBytes: readonly number[],
-): TaskReadmeV1 {
-  const headings: HeadingHit[] = [];
-  let fence: { char: string; length: number; line: number } | undefined;
-  for (let index = bodyStart; index < lines.length; index += 1) {
-    const line = lines[index]!;
-    const fenceMatch = FENCE_PATTERN.exec(line);
-    if (fence) {
+/** An open fence: its char, its length, and the 1-based line it opened on. */
+export interface OpenFence {
+  readonly char: string;
+  readonly length: number;
+  readonly line: number;
+}
+
+export interface FenceScan {
+  /**
+   * Per-line, indexed by absolute line number: `true` when the line is a fence marker
+   * or lies inside a fence, i.e. it is NOT ordinary Markdown structure. Lines before
+   * `from` are `false`.
+   */
+  readonly fenced: readonly boolean[];
+  /** Set when a fence was opened and never closed; everything after it is `fenced`. */
+  readonly unterminated?: OpenFence;
+}
+
+/**
+ * The single fence state machine of the task-folder contract (E6-T02), shared so that
+ * every reader of a readme agrees on what is code and what is structure. `##` section
+ * headings (`parseSections`) and `###` Verification-log entry headings (E6-T05's
+ * ingest) are both recognised only outside a fence: a fenced example of the entry
+ * format is documentation, never a lifecycle claim.
+ */
+export function scanFences(lines: readonly string[], from = 0): FenceScan {
+  const fenced: boolean[] = new Array<boolean>(lines.length).fill(false);
+  let fence: OpenFence | undefined;
+  for (let index = from; index < lines.length; index += 1) {
+    const fenceMatch = FENCE_PATTERN.exec(lines[index]!);
+    if (fence !== undefined) {
+      fenced[index] = true;
       if (
-        fenceMatch &&
+        fenceMatch !== null &&
         fenceMatch[1]![0] === fence.char &&
         fenceMatch[1]!.length >= fence.length &&
         fenceMatch[2]!.trim() === ""
@@ -631,10 +652,24 @@ function parseSections(
       }
       continue;
     }
-    if (fenceMatch) {
+    if (fenceMatch !== null) {
+      fenced[index] = true;
       fence = { char: fenceMatch[1]![0]!, length: fenceMatch[1]!.length, line: index + 1 };
-      continue;
     }
+  }
+  return fence === undefined ? { fenced } : { fenced, unterminated: fence };
+}
+
+function parseSections(
+  lines: readonly string[],
+  bodyStart: number,
+  lineStartBytes: readonly number[],
+): TaskReadmeV1 {
+  const headings: HeadingHit[] = [];
+  const scan = scanFences(lines, bodyStart);
+  for (let index = bodyStart; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    if (scan.fenced[index]) continue;
     if (H2_PATTERN.test(line)) {
       if (!line.startsWith("## ")) {
         refuseText(
@@ -647,10 +682,10 @@ function parseSections(
       headings.push({ name: line.slice(3), index });
     }
   }
-  if (fence)
+  if (scan.unterminated !== undefined)
     refuseText(
       "sections/unterminated-fence",
-      fence.line,
+      scan.unterminated.line,
       1,
       "code fence never closed; headings after it are ambiguous",
     );
