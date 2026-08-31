@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: refuted
+status: in-progress
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
