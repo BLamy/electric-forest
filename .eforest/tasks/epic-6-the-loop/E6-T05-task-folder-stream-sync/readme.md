@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: implemented
+status: refuted
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -682,3 +682,192 @@ Commands: `make verify-E6-T05`; `make verify-E6-T02`;
   run-2 cases as permanent regression tests and this repository's own doctrine files as
   the fixture. This is a builder claim; independent critic verification remains required
   before `verified`.
+
+### 2026-08-31 — critic run 3 — VERDICT: refuted
+
+- **P1 block-structure invariant, HTML block 7 — FAILED (blocking).** Predicted, before
+  running anything: if the rework's claim is real ("quoted documentation is inert **as a
+  property of block structure**, not of a list of syntaxes", and the scanner's stated
+  contract "HTML blocks 6-7 (block-level tags, and any complete tag alone on a line)"),
+  then for every input a CommonMark parser refuses to render as an ATX heading the engine
+  must dispatch nothing. I built the oracle instead of arguing about it: a differential of
+  `parseVerificationLogEntries` against micromark / `mdast-util-from-markdown`
+  (CommonMark 0.31), over 56 hand-built shapes plus 4,000 seeded combinations
+  (`work/critic3/diff-oracle.mjs`, `work/critic3/fuzz-oracle.mjs`). Observed 12/56 and
+  132/4000 divergences, in one coherent class each way. The dangerous class:
+  `HTML_ANY_TAG_ONLY` (`packages/tasks/src/folder/parse.ts:60`, used at `:756`) models a
+  complete tag's attributes as `(?:\s[^>]*)?`, but a complete tag's **quoted attribute
+  value may contain `>`** — so a type-7 HTML block opened by such a tag is never
+  recognised, and the `### ` line inside it (raw HTML to CommonMark, never a heading) is
+  taken as a lifecycle claim at `packages/tasks/src/folder/ingest.ts:180`.
+  - **CRITIC3-G1/G2/G4** (critic run 2's CRITIC2-E shape otherwise unchanged: `agent-ash`
+    on `fs:maple/loom:client-a:meta`, `agent-fern` on `fs:maple/loom:client-b:meta`, task
+    at `implemented`, real `validateTaskEvent` door). The critic appends an honest
+    `### 2026-08-31 — critic — in-progress notes` entry that quotes a finished verdict
+    marked `- Summary: EXAMPLE ONLY — not a verdict.`, wrapped in `<span title="a>b">`
+    (also `<span title='a>b'>` and `<a href="x?y=1>2">`) instead of an HTML comment.
+    Observed final task log: `issue.opened`, `task.spec-revised`, `task.spec-revised`,
+    `task.started`, `task.claimed`, `task.spec-revised`, `task.verified`; replayed
+    `status: verified`; and a `verification` naming attempt 1, claim offset
+    `…_0000000000000004`, critic actor `agent-fern`, run `agent-run:maple/run-b`, verdict
+    offset `…_0000000000000006`.
+  - **CRITIC3-G3** does it with a line nobody would look at twice:
+    `<img src="proof.png" alt="what a verdict looks like ->">` — same terminal
+    `verified`. The `<span>` and `<!--` controls in the same run stay `implemented` with
+    `verification: undefined`, which is the point: block 7 is a hole in the invariant,
+    not a property of the wrapper.
+  - **CRITIC3-A3** (single engine): the same text with `<span title="a>b">` or
+    `<img … alt="format ->">` moves `pending → in-progress` —
+    `types=["issue.opened","task.spec-revised","task.spec-revised","task.started"]`,
+    `artifacts=0`; the `<span>` control stays `pending`.
+    This refutes adversarial angle 2's refutation condition ("Any path to verified
+    without a valid critic event refutes the sole mutation door") and acceptance
+    criterion 2, on exactly the standard runs 1 and 2 were accepted under. **Demand:**
+    stop approximating the grammar. Either implement CommonMark's open/closing-tag
+    production (an attribute value quoted with a single or double quote may contain `>`;
+    an unquoted one may not), or invert to positive recognition; and commit the
+    differential itself as a permanent step of `make verify-E6-T05` — the parser held
+    against a CommonMark reference over a generated corpus — so the next hole is not
+    found by the next critic.
+- **P2 the same scanner is wrong in the opposite direction — FAILED (blocking, same
+  root).** Predicted: an empty HTML comment cannot make later real entries disappear.
+  Observed: `htmlBlockClosesOnOpen` (`packages/tasks/src/folder/parse.ts:724-734`) tests
+  the comment end condition against `line.slice(indexOf("<!--") + 4)`, so `<!-->` and
+  `<!--->` never close, while CommonMark's HTML block 2 end condition is "line contains
+  `-->`", which both satisfy on their own line. **CRITIC3-POISON:** a readme whose
+  Verification log holds a lone `<!-->` line, then a blank line, then a real unquoted
+  `### 2026-08-31 — builder — started` with `- Run: agent-run:maple/run-real`, dispatches
+  **nothing** — `types=["issue.opened","task.spec-revised","task.spec-revised"]`, replayed
+  `status: pending`. `<!-->` renders as literally nothing, so this is a five-character
+  invisible poison pill that silently switches off every later lifecycle entry in that
+  log, a critic's real verdict included: the folder shows the verdict, the stream never
+  records it. Fail-closed on status, but it is the same folder/stream drift this task's
+  title forbids, and together with P1 it shows the scanner is not a faithful model of
+  block structure in either direction. **Demand:** fix with P1, and add `<!-->` and
+  `<!--->` to the wrapper matrix as must-still-dispatch cases.
+- **COVERAGE HTML block 7 — INSUFFICIENT (unexecuted diff).** Prediction: if the block-7
+  claim were tested at all, some committed input would make `HTML_ANY_TAG_ONLY` the
+  deciding matcher. Observed: it never is. The 20-wrapper matrix
+  (`packages/tasks/test/folder-sync.test.ts:141-182`) reaches block 6 only (`<div>`,
+  `<table>`), and the `||` at `parse.ts:756` short-circuits before `HTML_ANY_TAG_ONLY` on
+  both; a `command grep` for `<span`, `<foo`, `<a href` and `<img` across
+  `packages/tasks/test/folder-sync.test.ts`,
+  `packages/platform/test/task-folder-sync.test.ts` and
+  `tools/verify/e6_t05_schedule.mjs` returns zero lines; and none of the five
+  doctrine-fixture files (nor E6-T04's readme, nor this one) contains a single line
+  matching `HTML_ANY_TAG_ONLY` without also matching `HTML_BLOCK_TAG_OPEN`. The one
+  branch of the new scanner that no run executes is the branch that is wrong. Exercise it
+  with the fix.
+- **COVERAGE `task.spec-revised` refusals — INSUFFICIENT (unexecuted diff).** Five
+  refusal reasons frozen into `TASK_REFUSAL_REASONS` by this diff —
+  `task/spec-foreign-origin`, `task/spec-digest-mismatch`, `task/spec-unparseable`,
+  `task/spec-id-mismatch`, `task/spec-folder-mismatch`
+  (`packages/tasks/src/reducer.ts:83-94`, `packages/tasks/src/version.ts:38-42`) — appear
+  in no test, no fixture, no golden and no schedule step: a repository-wide search for
+  those five strings outside `dist/` returns only their own definition and the frozen
+  list. Only `task/stale-spec` is exercised. Either drive each one through the door, one
+  input per reason, the way E6-T02's 70-scenario refusal transcript does, or delete them
+  from the frozen list.
+- **ORIENT digests — CONFIRMED (no finding).** Recomputed by this session from a full
+  source rebuild before reading the builder's numbers: `make verify-E6-T05` printed
+  `E6_T05_SCHEDULE summary-byte-identical=true`, task digest
+  `a3de03ff21507fca156df43cf8bf17f8bd698e0ec2fa8555e4d87d9979bf360c`, queue digest
+  `aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66`, 37/37
+  focused tests, `E6_T05_JOURNALS … violations=0`, `MUTATION … EXPECTED-FAIL OK`,
+  `SABOTAGE … exit=1 EXPECTED-FAIL OK`. `shasum -a 256` of both committed artifacts
+  before and after that run:
+  `d155f866e751b5cb0e1532f2a53ee62aa1d8b536272c1508935a668ece32ea5b` (summary) and
+  `bc79dddf05a2bc50ff7d11a2ee61a63e0021c6098abf92129640e037290e8622` (sabotage),
+  unchanged — nothing was regenerated at test time. `git diff a16cf4e1..HEAD` contains no
+  `.skip`, no `.todo`, no inline eslint disable, and no `@ts-ignore`/`@ts-expect-error`.
+- **MOCK & ENV — CONFIRMED (no finding).** `bash tools/verify/cold_clone.sh verify-E6-T05`
+  run by this session from pristine committed HEAD `2b524eba`: exit 0,
+  zero `SKIPPED:`, tasks/reducers/platform/server/streamfs all rebuilt from source, 37/37
+  focused tests, the same two digests with `summary-byte-identical=true`,
+  `CANOPY_SENSITIVITY_SPINE_OK`, `DEPENDENCY_INTEGRITY_OK`,
+  `cold_clone: verify-E6-T05 PASSED from a pristine clone`. The committed summary is not
+  blessed stale-`dist` bytes.
+- **No E6-T02 regression — CONFIRMED (no finding).** `make verify-E6-T02` green after my
+  own rebuild: `E6_T02_FIXTURES entries=54 sha256-list-identical=true`, three goldens
+  `byte-identical=true`, `E6_T02_REFUSALS scenarios=70 reasons=37`,
+  `transcript-identical=true`, `fixture-tree-unchanged=true`, `E6_T02_PROPERTY cases=1000`
+  with corpus sha256
+  `3158c855c5ecd7c08f95b41b798b3ae0fb11977c4924950c2139b44def57cf54`
+  `byte-identical=true`, and `E6_T02_ARTIFACTS protected=10 unchanged=true`.
+- **The disclosed near-miss is honestly fixed — CONFIRMED (no finding).** The
+  `CRITIC-D/E/F` family really is parameterised now: a three-case `it.each` over the
+  code-fence, HTML-comment and `<pre>` wrappers, with both `open` and `close`
+  interpolated into the quoted-verdict body
+  (`packages/tasks/test/folder-sync.test.ts:1003-1073`), so the block kind genuinely
+  varies. The doctrine fixture's own guard is real too: `AGENTS.md` carries HTML comments
+  at lines 8-9 and the fixture asserts it (`packages/tasks/test/folder-sync.test.ts:270`),
+  so it cannot quietly stop testing anything.
+- **Apparatus (a)(b)(c) — ALL THREE STILL REAL (no finding).** (a) I set
+  `E6_T05_ORIGIN_FILTER_GUARD = false` in source
+  (`packages/tasks/src/folder/sync.ts:61`), rebuilt `@eforest/tasks`, and ran
+  `node tools/verify/e6_t05_evidence.mjs`: exit 1 with
+  `AssertionError: schedule failed` / `TIMEOUT step5 implemented`, i.e. non-convergence of
+  the exact event schedule, which is what angle 5 demands. (b) I made the sabotaged run
+  fail a different way, a `ReferenceError` thrown from the schedule's
+  `--origin-filter off` parsing: the verifier refused it with
+  `origin-filter sabotage must fail by non-convergence, not by an unrelated error`.
+  (c) I dropped the tail record of the **live** `journal-a.jsonl` after the schedule had
+  written it, so the frozen summary stayed byte-identical and only an independent audit
+  could catch it: the verifier went red —
+  `journal-a violates the frozen multiplicity: ["fs:maple/loop:client-a:meta@0000000000000000_0000000000000034: projected"]`.
+  All three probe patches were applied in the working tree and reverted with `cp` from
+  `work/critic3/*.orig`, each restore confirmed by an empty `git diff --stat` on that
+  path; the tree carries no task-path modification.
+- **The task's own attacks 1-5, with my inputs — CONFIRMED (no finding).**
+  1. Racing watchers: two engines on two branches each writing, from one base, a spec
+     change **plus** a lifecycle log entry **plus** a frontmatter status edit **plus** an
+     evidence file, drained in an interleaved order. One fenced winner, no lost bytes
+     (`loser-bytes-retained=true`, 10 conflict artifacts), both branches byte-converged,
+     `status=in-progress` with no `task.verified`, and both journals audit clean:
+     `{"ok":true,"own":2,"foreign":6,"applied":5,"dispatched":4,"violations":[]}` and
+     `{"ok":true,"own":21,"foreign":4,"applied":5,"dispatched":1,"violations":[]}`.
+  2. Forged verdicts of both kinds: a builder heading claiming a critic verdict is refused
+     `log/role-kind-mismatch`; a raw `status: verified` frontmatter edit alone is refused
+     `status/illegal-edit`; a critic verdict with no claim to answer is refused
+     `log/invalid-branch` plus `status/illegal-edit`. In all three the projected
+     frontmatter reads back `status: pending` and no `task.verified` exists.
+  3. Quiescence with my own window: the whole schedule under scrubbed env
+     (`LANG=C`, `TZ=Asia/Kathmandu`, `NODE_ENV`/`NODE_OPTIONS` unset) with
+     `--idle-ms 61000` — exit 0,
+     `step11-idle window-at-least-ms=61000 measured-ok=true`,
+     `heads-frozen=true write-lines-frozen=true`, and the entire summary byte-identical to
+     the committed one except that single line. No head moved in 61 idle seconds.
+  4. Evidence integrity: a one-byte swap between hash and append is refused
+     (`TaskFolderProjectionError`), and 16 hostile attachment names — `../evil.txt`,
+     `../../evil.txt`, `a/../../b.txt`, `/etc/passwd`, a Windows drive path,
+     `evidence/../../x`, `.`, `..`, `sub/./x`, `a//b`, a percent escape, a non-ASCII name,
+     a trailing dot, an arrow "symlink" name, the stream-derived path
+     `fs:maple/loom:client-a:meta`, and a backslash path — are all re-gated by
+     `projectTaskFolder`. The only two it accepts, `work/x.txt` and `readme.md`, render as
+     `evidence/work/x.txt` and `evidence/readme.md`
+     (`packages/tasks/src/folder/project.ts:71`), inside the evidence subtree and outside
+     the managed-delete set, so neither reaches the real `readme.md` or `work/`.
+  5. Origin-filter sabotage flipped in source: see apparatus (a).
+- **Observations, not findings.** (i) My runs report
+  `E6_T05_JOURNALS audited-branch-offsets=69` where the rework claims 70; that count is
+  not in the frozen summary and is covered by the builder's disclosed poll-interleaving
+  determinism note, so it is not raised. (ii) `task.spec-revised` carries no `by` at all
+  (`packages/tasks/src/events.ts`, exact keys `v, base, folder, origin, readme, sha256`),
+  which is why `packages/tasks/src/validation.ts:108-115` exempts it from the actor bind —
+  coherent, and documented in `packages/tasks/README.md`, but it does mean an accepted
+  spec revision has no author, the same boundary as run 1's `by.actor` note and still
+  E6-T07's job.
+- **SUITE: n/a until the refutation clears.** With the fix, three artifacts deserve to be
+  permanent: the CommonMark differential harness itself, as a step of `make verify-E6-T05`
+  rather than a critic's one-off probe; `CRITIC3-G1`-`G4` and `CRITIC3-A3` beside
+  `CRITIC-A`/`CRITIC-D`/`E`/`F`; and `CRITIC3-POISON` as a must-still-dispatch case. My
+  probes are kept verbatim at `work/critic3/zz-critic3-probe.test.ts.txt` (G1-G6, A3,
+  POISON) and `work/critic3/zz-critic3-attacks.test.ts.txt` (attacks 1, 2 and 4); copy
+  either into `packages/tasks/test/` to reproduce.
+
+Commands: `make verify-E6-T05`; `make verify-E6-T02`;
+`bash tools/verify/cold_clone.sh verify-E6-T05`;
+`node .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic3/diff-oracle.mjs`;
+`node .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic3/fuzz-oracle.mjs`;
+`cp .eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/work/critic3/zz-critic3-probe.test.ts.txt packages/tasks/test/zz-critic3-probe.test.ts && CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept -t "CRITIC3" packages/tasks/test/zz-critic3-probe.test.ts`;
+`env -u NODE_OPTIONS -u NODE_ENV LANG=C TZ=Asia/Kathmandu node tools/verify/e6_t05_schedule.mjs --out <dir> --idle-ms 61000`
