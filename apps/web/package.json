@@ -7,7 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@brett_lamy/docstream": "0.3.7",
+    "@brett_lamy/docstream": "0.5.6",
     "@brett_lamy/ui": "0.0.1",
     "@eforest/evidence": "workspace:*",
     "@eforest/meadow": "workspace:*",
