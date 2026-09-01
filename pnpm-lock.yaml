@@ -50,8 +50,8 @@ importers:
   apps/web:
     dependencies:
       '@brett_lamy/docstream':
-        specifier: 0.5.2
-        version: 0.5.2(@agent-wasm/core@0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/helpers@0.5.23)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0)))(@brett_lamy/viz-engine@0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0))
+        specifier: 0.5.4
+        version: 0.5.4(@agent-wasm/core@0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/helpers@0.5.23)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0)))(@brett_lamy/viz-engine@0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0))
       '@brett_lamy/ui':
         specifier: 0.0.1
         version: 0.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -572,8 +572,8 @@ packages:
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
 
-  '@brett_lamy/docstream@0.5.2':
-    resolution: {integrity: sha512-HWjsNp0c0j568kM+hJNfAc9Cu/V1v8zrDYrxcdpr/7/8Hu2TPhMsnDl18Q4EIWwN9W3lCcRu5ns6Aec0lbla0A==}
+  '@brett_lamy/docstream@0.5.4':
+    resolution: {integrity: sha512-q4Ha21k8OcWPGtCNRyp7gOpypwx+93thTxBqXFDLF2qpzyiRdPwRsSNuv0ymFSg5LlQleCDMkZDviBzXAtE1sg==}
     peerDependencies:
       '@agent-wasm/core': '>=0.4.0'
       '@brett_lamy/viz-engine': '>=0.2.0'
@@ -5700,10 +5700,11 @@ snapshots:
 
   '@braintree/sanitize-url@7.1.2': {}
 
-  '@brett_lamy/docstream@0.5.2(@agent-wasm/core@0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/helpers@0.5.23)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0)))(@brett_lamy/viz-engine@0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@brett_lamy/docstream@0.5.4(@agent-wasm/core@0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/helpers@0.5.23)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0)))(@brett_lamy/viz-engine@0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@agent-wasm/core': 0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/helpers@0.5.23)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.1)(lightningcss@1.32.0)(yaml@2.9.0))
       '@brett_lamy/viz-engine': 0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      framer-motion: 13.1.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       hast-util-to-html: 9.0.5
       lowlight: 3.3.0
       lucide-react: 1.34.0(react@19.2.8)
