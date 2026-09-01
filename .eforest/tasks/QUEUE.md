@@ -8,13 +8,17 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E6-T12** — "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
 1. **E6-T01** — "Task event model: an issue with evidence and builder/critic verdicts"
 1. **E6-T02** — "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 1. **E6-T03** — "Project state machine: server-enforced building, complete, paused, and invalid_loop"
+
+## Unlocks when E6-T12 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -122,7 +126,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [ ] `609` [E6-T09](epic-6-the-loop/E6-T09-critic-agent/readme.md) — "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts" *(deps: E6-T08)*
 - [ ] `610` [E6-T10](epic-6-the-loop/E6-T10-retry-and-thrash-guard/readme.md) — "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop" *(deps: E6-T03, E6-T09)*
 - [ ] `611` [E6-T11](epic-6-the-loop/E6-T11-loop-orchestrator/readme.md) — "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state" *(deps: E6-T08, E6-T09, E6-T10)*
-- [ ] `612` [E6-T12](epic-6-the-loop/E6-T12-live-loop-ui/readme.md) — "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence" *(deps: E6-T06, E6-T11)*
+- [~] `612` [E6-T12](epic-6-the-loop/E6-T12-live-loop-ui/readme.md) — "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence" *(deps: E6-T06, E6-T11)*
 - [ ] `613` [E6-T13](epic-6-the-loop/E6-T13-loop-replay-harness/readme.md) — "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest" *(deps: E6-T11)*
 - [ ] `614` [E6-T14](epic-6-the-loop/E6-T14-the-loop-runs/readme.md) — "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live" **[CAPSTONE]** *(deps: E6-T12, E6-T13)*
 
