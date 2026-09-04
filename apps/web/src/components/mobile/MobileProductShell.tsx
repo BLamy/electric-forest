@@ -26,7 +26,7 @@ export const MOBILE_PRODUCT_TABS: readonly MobileProductTab[] = [
   { id: "settings", title: "Settings", icon: "sliders" },
 ];
 
-const TOUCHKIT_DARK_TOKEN_BRIDGE = {
+export const TOUCHKIT_DARK_TOKEN_BRIDGE = {
   "--tk-bg": "var(--surface-canvas)",
   "--tk-bg2": "var(--surface-subtle)",
   "--tk-card": "var(--surface-raised)",

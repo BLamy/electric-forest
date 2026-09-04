@@ -1,5 +1,5 @@
 import { isDurableConflict, isDurableExistsConflict, isDurableNotFound } from "@eforest/client";
-import type { Event } from "@eforest/protocol";
+import type { Event, Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "../official.js";
 import { NamespaceRuntime } from "../namespace-runtime.js";
@@ -180,7 +180,7 @@ export class NamespaceDispatcher {
     sub: string,
     operationId?: string,
     assertActive?: () => Promise<void>,
-  ): Promise<void> {
+  ): Promise<Offset> {
     if (!(await this.runtime.isDispatchEvent(event))) throw new NamespaceSchemaError();
     const target = event.type === "ns.org.create" ? "ns:root" : streamId;
     if (event.type === "ns.org.create" && streamId !== "ns:root") throw new NamespaceSchemaError();
@@ -279,7 +279,9 @@ export class NamespaceDispatcher {
           });
           if (result === "producer-duplicate-closed") await assertActive?.();
           if (event.type === "ns.org.create") await ensureStream(this.streams, `ns:org:${name}`);
-          return;
+          // The appended application offset is the dispatch receipt every other
+          // door returns; the web hook refuses a confirmation without one.
+          return offset;
         } catch (error) {
           if (!isDurableConflict(error)) throw error;
           const progressed =

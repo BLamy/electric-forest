@@ -1,6 +1,7 @@
 import { extname, relative, resolve, sep } from "node:path";
 import { readFile } from "node:fs/promises";
 import { resolveSessionBackedIdentity, type WhoamiOptions } from "../api/whoami.js";
+import { isPublicSiteRoute } from "../route-topology.js";
 
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".css": "text/css; charset=utf-8",
@@ -40,10 +41,20 @@ function safeAssetPath(root: string, pathname: string): string | null {
   return candidate;
 }
 
-async function fileResponse(path: string): Promise<Response | null> {
+/**
+ * The served shell carries one bit of server truth: whether the request arrived with a
+ * replayed session. The client uses it to choose between the public landing page and
+ * the application at `/` without a whoami round trip (and without a flash of either).
+ */
+export const SESSION_SHELL_MARKER = '<meta name="ef-session" content="replayed">';
+
+async function fileResponse(
+  path: string,
+  transform?: (text: string) => string,
+): Promise<Response | null> {
   try {
     const bytes = await readFile(path);
-    return new Response(bytes, {
+    return new Response(transform === undefined ? bytes : transform(bytes.toString("utf8")), {
       headers: {
         "cache-control": "no-store",
         "content-type": CONTENT_TYPES[extname(path)] ?? "application/octet-stream",
@@ -66,8 +77,14 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
       headers: { "content-type": "application/json" },
     });
   }
-  if ((await resolveSessionBackedIdentity(request, options)) === null) return redirectToLogin();
   const url = new URL(request.url);
+  const identity = await resolveSessionBackedIdentity(request, options);
+  const emittedAsset = url.pathname.startsWith("/assets/") && extname(url.pathname) !== "";
+  // Emitted bundles are public because the public site is built from the same bundle;
+  // they never carry a secret. Application routes remain behind the session gate.
+  if (identity === null && !emittedAsset && !isPublicSiteRoute(url.pathname)) {
+    return redirectToLogin();
+  }
   const assetPath = safeAssetPath(options.webRoot, url.pathname);
   if (assetPath === null) return notFound();
   // Only emitted assets are extension-addressed. Application routes may carry
@@ -84,5 +101,8 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
     const asset = await fileResponse(assetPath);
     return asset ?? notFound();
   }
-  return (await fileResponse(resolve(options.webRoot, "index.html"))) ?? notFound();
+  const shell = await fileResponse(resolve(options.webRoot, "index.html"), (html) =>
+    identity === null ? html : html.replace(/<head>/i, `<head>${SESSION_SHELL_MARKER}`),
+  );
+  return shell ?? notFound();
 }

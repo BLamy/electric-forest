@@ -128,6 +128,8 @@ export interface BrowserWorld {
   readonly platformUrl: string;
   readonly streamUrl: string;
   readonly emulatorUrl: string;
+  /** The Resend emulator the platform mails through; `GET /emails` is the inbox oracle. */
+  readonly resendUrl: string;
   readonly identityStreamUrl: string;
   readonly dataDir: string;
   readonly subject: BrowserSubject;
@@ -172,6 +174,7 @@ interface Auth0EmulatorStartupOptions {
   readonly fixtureLogin: boolean;
   readonly platformUrl: string;
   readonly subject: BrowserSubject;
+  readonly extraSubjects?: readonly BrowserSubject[];
   readonly clientId: string;
   readonly nowSeconds: number;
   /** @internal Overrides only the child module loaded by startup-race tests. */
@@ -276,7 +279,7 @@ function forwardedHeaders(headers: IncomingHttpHeaders): Headers {
   return result;
 }
 
-function fixtureLoginHtml(html: string): string {
+function fixtureLoginHtml(html: string, primaryEmail?: string): string {
   const latestForm = '<form class="user-form" method="post" action="/authorize/callback">';
   if (html.includes(latestForm)) {
     const transformed = html
@@ -291,7 +294,22 @@ function fixtureLoginHtml(html: string): string {
     assert.notEqual(transformed, html, "emulator account picker form was not transformed");
     assert.match(transformed, /data-testid="auth0-fixture-login-form"/);
     assert.match(transformed, /data-testid="auth0-fixture-login-submit"/);
-    return transformed.replace(
+    let withPrimary = transformed;
+    if (primaryEmail !== undefined) {
+      const loginMarker = `<span class="user-login">${primaryEmail}</span>`;
+      const loginIndex = withPrimary.indexOf(loginMarker);
+      if (loginIndex >= 0) {
+        const formStart = withPrimary.lastIndexOf("<form ", loginIndex);
+        const formEnd = withPrimary.indexOf(">", formStart);
+        if (formStart >= 0 && formEnd > formStart) {
+          withPrimary =
+            withPrimary.slice(0, formEnd) +
+            ' data-auth0-fixture-primary="true"' +
+            withPrimary.slice(formEnd);
+        }
+      }
+    }
+    return withPrimary.replace(
       '<main class="card-page">',
       '<main class="card-page"><p data-testid="auth0-fixture-notice">Test fixture identity — choose a preselected account; no password is sent by this browser.</p>',
     );
@@ -319,6 +337,7 @@ async function startFixtureLoginProxy(
   port: number,
   upstreamUrl: string,
   subject: BrowserSubject,
+  extraSubjects: readonly BrowserSubject[] = [],
 ): Promise<FixtureLoginProxy> {
   const url = `http://127.0.0.1:${String(port)}`;
   const server = createHttpServer((request, response) => {
@@ -361,7 +380,7 @@ async function startFixtureLoginProxy(
         requestUrl.pathname === "/authorize" &&
         upstream.status === 200
       ) {
-        output = Buffer.from(fixtureLoginHtml(output.toString("utf8")));
+        output = Buffer.from(fixtureLoginHtml(output.toString("utf8"), subject.email));
       }
       response.statusCode = upstream.status;
       for (const [name, value] of upstream.headers) {
@@ -514,6 +533,15 @@ try {
   let readinessError;
   while (Date.now() < deadline) {
     try {
+      if (options.service !== "auth0") {
+        // Other emulators (Resend) are ready as soon as they answer HTTP at all.
+        const probe = await fetch(new URL("/", options.internalUrl ?? options.baseUrl));
+        if (probe.status > 0) {
+          ready = true;
+          process.stdout.write("READY\n");
+          break;
+        }
+      }
       const discovery = await fetch(
         new URL("/.well-known/openid-configuration", options.internalUrl),
       );
@@ -615,6 +643,7 @@ async function auth0Seed(
     readonly port: number;
     readonly platformUrl: string;
     readonly subject: BrowserSubject;
+    readonly extraSubjects?: readonly BrowserSubject[];
     readonly clientId: string;
     readonly nowSeconds: number;
     readonly baseUrl?: string;
@@ -649,15 +678,13 @@ async function auth0Seed(
         now: options.nowSeconds,
         seed: "e3-t02-browser-world",
         connections: [{ name: "Username-Password-Authentication" }],
-        users: [
-          {
-            email: options.subject.email,
-            password: options.subject.password,
-            user_id: options.subject.id,
-            email_verified: true,
-            name: options.subject.name ?? options.subject.id,
-          },
-        ],
+        users: [options.subject, ...(options.extraSubjects ?? [])].map((user) => ({
+          email: user.email,
+          password: user.password,
+          user_id: user.id,
+          email_verified: true,
+          name: user.name ?? user.id,
+        })),
         oauth_clients: [
           {
             client_id: options.clientId,
@@ -701,6 +728,9 @@ async function startAuth0Emulator(
             port: internalPort,
             platformUrl: options.platformUrl,
             subject: options.subject,
+            ...(options.extraSubjects === undefined
+              ? {}
+              : { extraSubjects: options.extraSubjects }),
             clientId: options.clientId,
             nowSeconds: options.nowSeconds,
             baseUrl: advertisedUrl,
@@ -716,6 +746,7 @@ async function startAuth0Emulator(
             advertisedPort,
             `http://127.0.0.1:${String(internalPort)}`,
             options.subject,
+            options.extraSubjects ?? [],
           )
         : undefined;
       return { emulator, ...(fixtureProxy === undefined ? {} : { fixtureProxy }) };
@@ -789,6 +820,8 @@ function sessionSecret(): string {
 export async function bootWorld(
   options: {
     readonly subject?: BrowserSubject;
+    /** Additional seeded identities the fixture may sign in as (see loginWithFixture). */
+    readonly extraSubjects?: readonly BrowserSubject[];
     readonly root?: string;
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
@@ -839,6 +872,7 @@ export async function bootWorld(
       fixtureLogin: options.fixtureLogin === true,
       platformUrl,
       subject,
+      ...(options.extraSubjects === undefined ? {} : { extraSubjects: options.extraSubjects }),
       clientId,
       nowSeconds,
       ...(options.auth0EmulatorModuleUrl === undefined
@@ -851,6 +885,31 @@ export async function bootWorld(
     throw error;
   }
   const { emulator, fixtureProxy } = auth0;
+  // Outbound email goes to a Resend emulator; its captured inbox is the test oracle for
+  // invitation flows (the invited person really receives the link they sign in with).
+  const resendPort = await freePort();
+  let resend: Emulator;
+  try {
+    resend = await startEmulatorProcess(
+      root,
+      {
+        service: "resend",
+        port: resendPort,
+        baseUrl: `http://127.0.0.1:${String(resendPort)}`,
+        internalUrl: `http://127.0.0.1:${String(resendPort)}`,
+        seed: {
+          resend: { domains: [{ name: "electric-forest.test" }], api_keys: [{ name: "default" }] },
+        },
+      },
+      1,
+    );
+  } catch (error) {
+    await fixtureProxy?.close();
+    await emulator.close();
+    await stopChild(streamChild);
+    await rm(dataDir, { recursive: true, force: true });
+    throw error;
+  }
   // Ports prove isolation, but must not leak nondeterminism into the durable identity log.
   const random = deterministicRandom(3_002);
   const serverNetwork: WireObservation[] = [];
@@ -863,6 +922,9 @@ export async function bootWorld(
       EF_SESSION_TTL: String(sessionTtlSeconds),
       EFOREST_SERVER_URL: streamUrl,
       EF_WEB_ROOT: resolve(root, "apps/web/dist"),
+      EF_RESEND_URL: resend.url,
+      EF_RESEND_API_KEY: "re_test_admin",
+      EF_RESEND_FROM: "Electric Forest <invites@electric-forest.test>",
     },
     {
       now: () => nowSeconds * 1_000,
@@ -949,6 +1011,7 @@ export async function bootWorld(
     platformUrl,
     streamUrl,
     emulatorUrl: fixtureProxy?.url ?? emulator.url,
+    resendUrl: resend.url,
     identityStreamUrl: `${streamUrl}/streams/${encodeURIComponent(identity.streamId)}`,
     dataDir,
     subject,
@@ -1030,6 +1093,7 @@ export async function bootWorld(
       runtime.namespaces.terminate();
       await fixtureProxy?.close();
       await emulator.close();
+      await resend.close();
       await stopChild(streamChild);
       await rm(dataDir, { recursive: true, force: true });
     },
@@ -1145,18 +1209,38 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
 
 export async function loginWithFixture(
   page: Page,
-  subject?: Pick<BrowserSubject, "email">,
+  subjectOrEmail?: Pick<BrowserSubject, "email"> | string,
 ): Promise<void> {
   const forms = page.getByTestId("auth0-fixture-login-form");
   await forms.first().waitFor();
   assert.equal(await page.locator('input[type="password"]').count(), 0);
   assert.equal(await page.locator('input[name="email"], input[name="password"]').count(), 0);
-  const form = subject === undefined ? forms.last() : forms.filter({ hasText: subject.email });
-  assert.equal(
-    await form.count(),
-    1,
-    "fixture account picker did not expose the requested account",
-  );
+  const requestedEmail =
+    typeof subjectOrEmail === "string" ? subjectOrEmail : subjectOrEmail?.email;
+  let form = forms.last();
+  if (requestedEmail === undefined) {
+    const primary = page.locator(
+      'form[data-testid="auth0-fixture-login-form"][data-auth0-fixture-primary="true"]',
+    );
+    if ((await primary.count()) === 1) form = primary;
+  } else {
+    const matching = forms.filter({ hasText: requestedEmail });
+    if ((await matching.count()) === 1) {
+      form = matching;
+    } else {
+      // Older emulate snapshots expose one transformed form instead of an
+      // account picker; retain the explicit subject-selection bridge there.
+      assert.equal(await forms.count(), 1, "fixture account picker did not expose the requested account");
+      form = forms.first();
+      await form.evaluate((element, email) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "as";
+        input.value = email;
+        element.appendChild(input);
+      }, requestedEmail);
+    }
+  }
   await Promise.all([
     page.waitForURL((url) => url.pathname === "/"),
     form.getByTestId("auth0-fixture-login-submit").click(),

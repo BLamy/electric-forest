@@ -32,12 +32,18 @@ import {
   repositoryStatusReducer,
 } from "./repo-home.js";
 import { issueReducerDefinition } from "./issues.js";
+import { chatCatalogReducerDefinition, chatChannelReducerDefinition } from "./chat.js";
+import { membersReducerDefinition } from "./members.js";
+import { agentsReducerDefinition } from "./agents.js";
 
 export * from "./registry.js";
 export * from "./repo-home.js";
 export * from "./file-content.js";
 export * from "./history.js";
 export * from "./issues.js";
+export * from "./chat.js";
+export * from "./members.js";
+export * from "./agents.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -159,6 +165,10 @@ const definitions: readonly ReducerDefinition[] = [
   prIndexReducerDefinition,
   evidenceReducerDefinition,
   evidenceContentReducerDefinition,
+  chatCatalogReducerDefinition,
+  chatChannelReducerDefinition,
+  membersReducerDefinition,
+  agentsReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {

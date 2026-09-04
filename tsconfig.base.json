@@ -31,7 +31,10 @@
       "@eforest/streamfs/worktree-node": ["packages/streamfs/src/worktree-node.ts"],
       "@eforest/workspace": ["packages/workspace/src/index.ts"],
       "@eforest/web-hooks": ["packages/web-hooks/src/index.ts"],
-      "@eforest/sync-harness": ["packages/sync-harness/src/index.ts"]
+      "@eforest/sync-harness": ["packages/sync-harness/src/index.ts"],
+      "@brett_lamy/docstream-editor": ["apps/web/src/types/docstream-editor.d.ts"],
+      "@brett_lamy/docstream-editor/convert": ["apps/web/src/types/docstream-editor.d.ts"],
+      "@brett_lamy/docstream/gitbook": ["apps/web/src/types/docstream-editor.d.ts"]
     }
   }
 }

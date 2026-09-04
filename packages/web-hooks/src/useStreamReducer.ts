@@ -235,6 +235,12 @@ export async function runStreamReducer(options: StreamReducerRunOptions): Promis
     });
     if (!response.ok) {
       const body = await response.text();
+      // A fixed-window rate refusal (or a gateway that is momentarily unavailable)
+      // is transient: honor the server's retry hint and resume from the same
+      // checkpoint instead of freezing the projection in an error state.
+      if (response.status === 429 || response.status === 502 || response.status === 503) {
+        throw new StreamReducerBackoff(response.status, retryAfterMs(body));
+      }
       throw new StreamReducerFailure(
         current.checkpoint,
         `projection request failed ${String(response.status)} ${body}`,
@@ -275,9 +281,37 @@ export async function runStreamReducer(options: StreamReducerRunOptions): Promis
       if (error instanceof StreamReducerFailure) throw error;
       current = { ...current, status: "reconnecting" };
       options.onUpdate(current);
-      await delay(options.reconnectDelayMs ?? 100, options.signal);
+      await delay(
+        error instanceof StreamReducerBackoff
+          ? Math.max(error.retryAfterMs, options.reconnectDelayMs ?? 100)
+          : (options.reconnectDelayMs ?? 100),
+        options.signal,
+      );
     }
   }
+}
+
+class StreamReducerBackoff extends Error {
+  constructor(
+    readonly status: number,
+    readonly retryAfterMs: number,
+  ) {
+    super(`projection request backing off after ${String(status)}`);
+    this.name = "StreamReducerBackoff";
+  }
+}
+
+/** The platform's 429 body carries `retryAfterMs`; fall back to a conservative pause. */
+function retryAfterMs(body: string): number {
+  try {
+    const parsed = JSON.parse(body) as { error?: { retryAfterMs?: unknown } };
+    const hint = parsed.error?.retryAfterMs;
+    if (typeof hint === "number" && Number.isFinite(hint) && hint >= 0)
+      return Math.min(hint, 60_000);
+  } catch {
+    /* not JSON */
+  }
+  return 5_000;
 }
 
 export function useStreamReducer<State = unknown>(
