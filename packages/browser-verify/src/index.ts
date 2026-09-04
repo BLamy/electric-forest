@@ -277,6 +277,28 @@ function forwardedHeaders(headers: IncomingHttpHeaders): Headers {
 }
 
 function fixtureLoginHtml(html: string): string {
+  const latestForm = '<form class="user-form" method="post" action="/authorize/callback">';
+  if (html.includes(latestForm)) {
+    const transformed = html
+      .replaceAll(
+        latestForm,
+        '<form class="user-form" method="post" action="/__fixture/authorize" data-testid="auth0-fixture-login-form">',
+      )
+      .replaceAll(
+        '<button type="submit" class="user-btn">',
+        '<button type="submit" class="user-btn" data-testid="auth0-fixture-login-submit">',
+      );
+    assert.notEqual(transformed, html, "emulator account picker form was not transformed");
+    assert.match(transformed, /data-testid="auth0-fixture-login-form"/);
+    assert.match(transformed, /data-testid="auth0-fixture-login-submit"/);
+    return transformed.replace(
+      '<main class="card-page">',
+      '<main class="card-page"><p data-testid="auth0-fixture-notice">Test fixture identity — choose a preselected account; no password is sent by this browser.</p>',
+    );
+  }
+
+  // Keep compatibility with older emulate snapshots while the fixture proxy is
+  // migrated to the current button-only account picker.
   const fieldsStart = html.indexOf('<label for="auth0-email">');
   const submitStart = html.indexOf('<button class="checkout-pay-btn"', fieldsStart);
   assert.ok(fieldsStart >= 0 && submitStart > fieldsStart, "emulator login form shape changed");
@@ -313,10 +335,18 @@ async function startFixtureLoginProxy(
         const form = new globalThis.URLSearchParams(body.toString("utf8"));
         assert.equal(form.has("email"), false);
         assert.equal(form.has("password"), false);
-        form.set("email", subject.email);
-        form.set("password", subject.password);
+        if (form.has("user_id")) {
+          // Current emulate exposes a preselected account picker. Preserve its
+          // signed OAuth request and let Auth0 resolve the selected user.
+          targetPath = "/authorize/callback";
+        } else {
+          // Older emulate snapshots posted the fixture form to /authorize and
+          // needed the test identity injected by this local-only adapter.
+          form.set("email", subject.email);
+          form.set("password", subject.password);
+          targetPath = "/authorize";
+        }
         body = Buffer.from(form.toString());
-        targetPath = "/authorize";
         headers.set("content-type", "application/x-www-form-urlencoded");
       }
       const upstream = await fetch(new URL(targetPath, upstreamUrl), {
@@ -1113,13 +1143,23 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
   await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
-export async function loginWithFixture(page: Page): Promise<void> {
-  await page.getByTestId("auth0-fixture-login-form").waitFor();
+export async function loginWithFixture(
+  page: Page,
+  subject?: Pick<BrowserSubject, "email">,
+): Promise<void> {
+  const forms = page.getByTestId("auth0-fixture-login-form");
+  await forms.first().waitFor();
   assert.equal(await page.locator('input[type="password"]').count(), 0);
   assert.equal(await page.locator('input[name="email"], input[name="password"]').count(), 0);
+  const form = subject === undefined ? forms.last() : forms.filter({ hasText: subject.email });
+  assert.equal(
+    await form.count(),
+    1,
+    "fixture account picker did not expose the requested account",
+  );
   await Promise.all([
     page.waitForURL((url) => url.pathname === "/"),
-    page.getByTestId("auth0-fixture-login-submit").click(),
+    form.getByTestId("auth0-fixture-login-submit").click(),
   ]);
   await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
