@@ -11,6 +11,9 @@ export function SiteShell(props: {
   const homeHref = props.session ? "/home" : "/";
   return (
     <div className="site" data-testid="public-site" data-site-page={props.page}>
+      <a className="skip-link site-skip-link" href="#main-content">
+        Skip to content
+      </a>
       <header className="site-nav">
         <div className="site-wrap site-nav-in">
           <RouteLink href={homeHref} aria-label="Electric Forest home">
@@ -30,12 +33,18 @@ export function SiteShell(props: {
             {props.session ? (
               <RouteLink href="/">
                 <span className="site-btn">
-                  Open the forest <span className="site-arrow">→</span>
+                  Open the forest{" "}
+                  <span className="site-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </span>
               </RouteLink>
             ) : (
               <a className="site-btn" href="/auth/login" data-testid="site-login">
-                Log in <span className="site-arrow">→</span>
+                Log in{" "}
+                <span className="site-arrow" aria-hidden="true">
+                  →
+                </span>
               </a>
             )}
           </nav>

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { NavigationStack, SplitView, TabBar, TouchKitProvider, type Screen } from "@brett_lamy/ui";
+import { TOUCHKIT_DARK_TOKEN_BRIDGE } from "../touchkit/tokens.js";
 import "../../styles/tokens.css";
 
 export type MobileRepoSection = "code" | "pulls" | "issues" | "wiki" | "settings";
@@ -26,25 +27,7 @@ export const MOBILE_PRODUCT_TABS: readonly MobileProductTab[] = [
   { id: "settings", title: "Settings", icon: "sliders" },
 ];
 
-export const TOUCHKIT_DARK_TOKEN_BRIDGE = {
-  "--tk-bg": "var(--surface-canvas)",
-  "--tk-bg2": "var(--surface-subtle)",
-  "--tk-card": "var(--surface-raised)",
-  "--tk-label": "var(--content-primary)",
-  "--tk-label2": "var(--content-secondary)",
-  "--tk-label3": "var(--content-tertiary)",
-  "--tk-sep": "var(--border-subtle)",
-  "--tk-fill": "var(--control-fill)",
-  "--tk-fill2": "var(--control-fill-strong)",
-  "--tk-bar": "var(--surface-chrome-translucent)",
-  "--tk-press": "var(--control-fill-strong)",
-  "--tk-stick": "var(--surface-sticky-translucent)",
-  "--tk-side": "var(--surface-sidebar)",
-  "--tk-red": "var(--status-danger)",
-  "--tk-green": "var(--status-success)",
-  "--tk-scrim": "var(--overlay-scrim)",
-  "--tk-tint": "var(--accent-primary)",
-} as CSSProperties;
+export { TOUCHKIT_DARK_TOKEN_BRIDGE } from "../touchkit/tokens.js";
 
 function currentWindowClass(): MobileWindowClass {
   if (typeof window === "undefined") return "compact";

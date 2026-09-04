@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { gzipSync } from "node:zlib";
 
 export type PlatformRequestHandler = (request: Request) => Promise<Response>;
 
@@ -47,7 +48,29 @@ async function handleNodeRequest(
     response.end();
     return;
   }
-  response.end(Buffer.from(await result.arrayBuffer()));
+  const bodyBytes = Buffer.from(await result.arrayBuffer());
+  const contentType = result.headers.get("content-type") ?? "";
+  const acceptedEncoding = request.headers["accept-encoding"] ?? "";
+  const acceptsGzip = (
+    Array.isArray(acceptedEncoding) ? acceptedEncoding.join(",") : acceptedEncoding
+  )
+    .split(",")
+    .some((encoding) => encoding.trim().toLowerCase().startsWith("gzip"));
+  const compressible = /^(text\/|application\/(javascript|json|xml|wasm))/.test(contentType);
+  if (
+    bodyBytes.length > 1024 &&
+    acceptsGzip &&
+    compressible &&
+    result.headers.get("content-encoding") === null
+  ) {
+    const compressed = gzipSync(bodyBytes);
+    response.setHeader("content-encoding", "gzip");
+    response.setHeader("vary", "Accept-Encoding");
+    response.setHeader("content-length", compressed.length);
+    response.end(compressed);
+    return;
+  }
+  response.end(bodyBytes);
 }
 
 export function createPlatformServer(handler: PlatformRequestHandler): Server {

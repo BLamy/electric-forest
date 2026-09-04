@@ -80,14 +80,14 @@ export function usePrList(org: string, repo: string): PrListBinding {
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/pulls`,
     streamId,
     reducerId: PR_INDEX_REDUCER,
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
   });
   const branches = useStreamReducer<RepositoryBranchesState>({
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/home/branches`,
     streamId: `repo-home:${org}/${repo}:branches`,
     reducerId: "repo-branches",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 200,
   });
   const actor = useActor();
@@ -148,7 +148,7 @@ export function usePrDetail(org: string, repo: string, prId: string): PrDetailBi
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/main/events?stream=pr&prId=${encoded(prId)}`,
     streamId,
     reducerId: "pr",
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });
@@ -162,7 +162,7 @@ export function usePrDetail(org: string, repo: string, prId: string): PrDetailBi
     apiPath: branchEventsPath(org, repo, targetBranch, state.forkOffset),
     streamId: baseStreamId,
     reducerId: "streamfs",
-    followWaitMs: 750,
+    followWaitMs: 10_000,
     reconnectDelayMs: 150,
     cacheKey: `pr-base:${org}/${repo}:${targetBranch}:${state.forkOffset}`,
   });
@@ -170,7 +170,7 @@ export function usePrDetail(org: string, repo: string, prId: string): PrDetailBi
     apiPath: branchEventsPath(org, repo, sourceBranch),
     streamId: sourceStreamId,
     reducerId: "streamfs",
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
     cacheKey: `pr-source:${org}/${repo}:${sourceBranch}`,
   });

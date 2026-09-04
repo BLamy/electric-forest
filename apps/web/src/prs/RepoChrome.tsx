@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   BookOpen,
   CircleDot,
@@ -40,6 +41,7 @@ export function RepoHeader(props: {
   readonly repo: string;
   readonly active: RepoSection;
 }): React.JSX.Element {
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   return (
     <div className="repo-chrome" data-testid="repo-chrome">
       <div className="repo-identity-line">
@@ -73,9 +75,28 @@ export function RepoHeader(props: {
         className="repo-settings-quick"
         type="button"
         aria-label="Repository display settings"
+        aria-expanded={displaySettingsOpen}
+        aria-controls="repo-display-settings"
+        data-testid="repo-display-settings"
+        onClick={() => setDisplaySettingsOpen((open) => !open)}
       >
-        <SlidersHorizontal size={16} />
+        <SlidersHorizontal size={16} aria-hidden="true" />
       </button>
+      {displaySettingsOpen ? (
+        <div
+          id="repo-display-settings"
+          className="repo-display-settings"
+          role="dialog"
+          aria-label="Repository display settings"
+        >
+          <strong>Display settings</strong>
+          <p>Presentation controls for this repository.</p>
+          <RouteLink href={repoSectionPath(props.org, props.repo, "settings")}>
+            Repository settings
+          </RouteLink>
+          <RouteLink href={`${repoBase(props.org, props.repo)}/labels`}>Manage labels</RouteLink>
+        </div>
+      ) : null}
     </div>
   );
 }

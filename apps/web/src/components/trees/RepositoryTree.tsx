@@ -42,10 +42,10 @@ export function RepositoryTree(props: {
     <PierrePathTree
       paths={paths}
       filePaths={files}
-      title={props.title}
-      selectedPath={props.selectedPath}
       onOpen={props.onOpen}
-      className={props.className}
+      {...(props.title === undefined ? {} : { title: props.title })}
+      {...(props.selectedPath === undefined ? {} : { selectedPath: props.selectedPath })}
+      {...(props.className === undefined ? {} : { className: props.className })}
     />
   );
 }

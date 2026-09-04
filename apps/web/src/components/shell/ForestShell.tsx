@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Settings2 } from "lucide-react";
 import { Icon, List, ListRow, ListSection, PillButton, SearchField } from "@brett_lamy/ui";
 import { useDispatch, useStreamReducer } from "@eforest/web-hooks";
 import type { RegistryState } from "@eforest/reducers";
@@ -16,7 +15,9 @@ import {
   type Workspace,
 } from "../../vendor/chatkit/index.js";
 import { navigate, repoSectionPath } from "../../prs/RepoChrome.js";
+import { RouteLink } from "../../navigation.js";
 import { useChatCatalog } from "../../chat/useChat.js";
+import { useWhoami, type WhoamiUser } from "../../chat/useWhoami.js";
 import { seedDefaultAgents } from "../../members/useRoster.js";
 import { agentsStreamId } from "@eforest/reducers";
 import { MobileCredenza } from "../mobile/MobileOverlays.js";
@@ -44,7 +45,7 @@ function useRegistry() {
     apiPath: "/registry/me",
     streamId: "__registry__",
     reducerId: "registry",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
   });
 }
 
@@ -346,7 +347,56 @@ function RepositorySearch(props: {
 }
 
 type Sheet =
-  "none" | "create-workspace" | "workspace-menu" | "invite" | "search" | "create-channel";
+  | "none"
+  | "create-workspace"
+  | "workspace-menu"
+  | "invite"
+  | "search"
+  | "create-channel"
+  | "account-menu";
+
+function AccountMenu(props: {
+  readonly user: WhoamiUser | null;
+  readonly onClose: () => void;
+}): React.JSX.Element {
+  const email = props.user?.email ?? "Signed-in account";
+  const go = (href: string): void => {
+    props.onClose();
+    if (href === "/settings/cli-tokens") {
+      window.location.assign(href);
+      return;
+    }
+    navigate(href);
+  };
+  return (
+    <div className="forest-account-menu" data-testid="account-menu">
+      <p className="forest-account-identity">
+        Signed in as <strong>{email}</strong>
+      </p>
+      <List inset>
+        <ListSection title="Account">
+          <ListRow
+            title="Docs"
+            leading={<Icon name="layers" />}
+            accessory="chevron"
+            onPress={() => go("/docs")}
+          />
+          <ListRow
+            title="CLI tokens"
+            leading={<Icon name="sliders" />}
+            accessory="chevron"
+            onPress={() => go("/settings/cli-tokens")}
+          />
+        </ListSection>
+      </List>
+      <form action="/auth/logout" method="post" onSubmit={props.onClose}>
+        <button className="forest-account-logout" type="submit">
+          Log out
+        </button>
+      </form>
+    </div>
+  );
+}
 
 /** Channel column for one workspace; hooks here only run once the org is known. */
 function WorkspaceNav(props: {
@@ -355,11 +405,20 @@ function WorkspaceNav(props: {
   readonly codebaseActive: boolean;
   readonly membersActive: boolean;
   readonly codebaseHref: string;
-  readonly repoCount: number;
+  readonly repositories: readonly string[];
+  readonly user: WhoamiUser | null;
   readonly onSheet: (sheet: Sheet) => void;
 }): React.JSX.Element {
   const catalog = useChatCatalog(props.org);
   const channels: ChatChannels = {};
+  for (const repo of props.repositories) {
+    channels[`repo:${repo}`] = {
+      section: "Codebase",
+      label: repo,
+      msgs: [],
+      unread: false,
+    };
+  }
   for (const name of Object.keys(catalog.projection.state.channels).sort()) {
     channels[name] = { section: "Channels", label: name, msgs: [], unread: false };
   }
@@ -370,6 +429,10 @@ function WorkspaceNav(props: {
       cur={current}
       tint="var(--accent-primary)"
       onPick={(id) => {
+        if (id.startsWith("repo:")) {
+          navigate(`/${encodeURIComponent(props.org)}/${encodeURIComponent(id.slice(5))}`);
+          return;
+        }
         navigate(`/chat/${encodeURIComponent(props.org)}/${encodeURIComponent(id)}`);
       }}
       header={
@@ -405,7 +468,7 @@ function WorkspaceNav(props: {
           >
             <Icon name="layers" size={16} />
             <span>Codebase</span>
-            <small>{props.repoCount}</small>
+            <small>{props.repositories.length}</small>
           </a>
           <a
             className={props.membersActive ? "forest-tab forest-tab-active" : "forest-tab"}
@@ -434,14 +497,19 @@ function WorkspaceNav(props: {
       }
       footer={
         <div className="forest-nav-foot">
-          <ChatAvatar user={{ name: props.org, c: "#48b979", role: K.label }} size={26} />
-          <div>
-            <strong style={{ fontFamily: KFONT }}>Electric Forest</strong>
-            <small>● stream native</small>
-          </div>
-          <a href="/settings/cli-tokens" aria-label="CLI tokens" className="forest-icon-button">
-            <Settings2 size={15} />
-          </a>
+          <button
+            type="button"
+            className="forest-account-button"
+            data-testid="account-menu-trigger"
+            aria-label={`Account menu for ${props.user?.email ?? "Electric Forest"}`}
+            onClick={() => props.onSheet("account-menu")}
+          >
+            <ChatAvatar user={{ name: props.org, c: "#48b979", role: K.label }} size={26} />
+            <span>
+              <strong style={{ fontFamily: KFONT }}>Electric Forest</strong>
+              <small>● {props.user?.email ?? "stream native"}</small>
+            </span>
+          </button>
         </div>
       }
     />
@@ -455,6 +523,7 @@ export function ForestShell(props: {
   readonly children: ReactNode;
 }): React.JSX.Element {
   const registry = useRegistry();
+  const user = useWhoami();
   const orgs = Object.keys(registry.state.orgs).sort();
   const org = currentOrg(props.pathname, orgs);
   const repository = repositoryRoute(props.pathname);
@@ -471,6 +540,7 @@ export function ForestShell(props: {
     [registry.state.orgs],
   );
   const repos = rows.filter((row) => row.org === org).map((row) => row.repo);
+  const diagnosticRepo = repository ?? rows[0];
   const workspaces: Workspace[] = orgs.map((name) => ({
     id: name,
     label: name.slice(0, 1).toUpperCase(),
@@ -513,7 +583,8 @@ export function ForestShell(props: {
               codebaseActive={codebaseActive}
               membersActive={props.pathname.startsWith("/members/")}
               codebaseHref={codebaseHref}
-              repoCount={repos.length}
+              repositories={repos}
+              user={user}
               onSheet={setSheet}
             />
           )}
@@ -526,6 +597,13 @@ export function ForestShell(props: {
               <details className="product-diagnostics">
                 <summary>Stream diagnostics</summary>
                 {props.diagnostics}
+                {diagnosticRepo === undefined ? null : (
+                  <RouteLink
+                    href={`/inspect/${encodeURIComponent(diagnosticRepo.org)}/${encodeURIComponent(diagnosticRepo.repo)}/main`}
+                  >
+                    Open Stream Inspector
+                  </RouteLink>
+                )}
               </details>
             )}
           </div>
@@ -588,6 +666,14 @@ export function ForestShell(props: {
           {sheet === "search" ? (
             <RepositorySearch rows={rows} onClose={() => setSheet("none")} />
           ) : null}
+        </MobileCredenza>
+        <MobileCredenza
+          open={sheet === "account-menu"}
+          onClose={() => setSheet("none")}
+          label="Account"
+          compact
+        >
+          <AccountMenu user={user} onClose={() => setSheet("none")} />
         </MobileCredenza>
       </DesktopTouchKit>
     </>

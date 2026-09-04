@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Icon, List, ListRow, ListSection } from "@brett_lamy/ui";
 import { IdentityRegion } from "./identity.js";
-import { MobileProductShell } from "./components/mobile/MobileProductShell.js";
 import { DesktopProductShell, repositoryRoute } from "./components/shell/ProductShell.js";
 import { navigate, repoSectionPath, type RepoSection } from "./prs/RepoChrome.js";
 import { hasReplayedSession, publicSitePage } from "./site/session.js";
@@ -131,6 +130,11 @@ const PageRouter = lazy(async () => {
 const PublicSite = lazy(async () => {
   const module = await import("./site/PublicSite.js");
   return { default: module.PublicSite };
+});
+
+const MobileProductShell = lazy(async () => {
+  const module = await import("./components/mobile/MobileProductShell.js");
+  return { default: module.MobileProductShell };
 });
 
 function RouteFallback(): React.JSX.Element {

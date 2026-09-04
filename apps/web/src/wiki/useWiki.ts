@@ -112,7 +112,7 @@ export function useWiki(org: string, repo: string): WikiBinding {
     apiPath: wikiEventsPath(org, repo),
     streamId,
     reducerId: WIKI_REDUCER,
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_000,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: tree.checkpoint });
@@ -126,7 +126,7 @@ export function useWikiPage(org: string, repo: string, slug: string): WikiPageBi
     apiPath: wikiBlobPath(org, repo, path),
     streamId: fileViewStreamId(org, repo, WIKI_BRANCH, path),
     reducerId: "file-content",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_000,
   });
   return {

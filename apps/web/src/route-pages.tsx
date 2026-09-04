@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import {
   Avatar,
   Icon,
@@ -37,21 +37,56 @@ import type {
 import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
 import { humanizeRecord } from "./history.js";
-import { LabelManagement } from "./label-management.js";
-import { IssueBoardPage } from "./issues/IssueBoard.js";
-import { IssueDetailPage } from "./issues/IssueDetail.js";
-import { WikiRoute } from "./wiki/WikiRoute.js";
-import { isWikiSlug } from "./wiki/useWiki.js";
-import { PrListPage } from "./prs/PrList.js";
-import { PrDetailPage, type PrDetailTab } from "./prs/PrDetail.js";
-import { RepositoryTree } from "./components/trees/RepositoryTree.js";
-import { Markdown } from "./components/markdown/Markdown.js";
-import { ChatChannelPage } from "./chat/ChatChannelPage.js";
-import { MembersPage } from "./members/MembersPage.js";
-import { InvitePage } from "./members/InvitePage.js";
+import { isWikiSlug } from "@eforest/meadow";
+import type { PrDetailTab } from "./prs/PrDetail.js";
 import { Button } from "./components/ui/button.js";
 import { DesktopTouchKit } from "./components/touchkit/DesktopTouchKit.js";
 import { MobileCredenza } from "./components/mobile/MobileOverlays.js";
+
+const LabelManagement = lazy(async () => {
+  const module = await import("./label-management.js");
+  return { default: module.LabelManagement };
+});
+const IssueBoardPage = lazy(async () => {
+  const module = await import("./issues/IssueBoard.js");
+  return { default: module.IssueBoardPage };
+});
+const IssueDetailPage = lazy(async () => {
+  const module = await import("./issues/IssueDetail.js");
+  return { default: module.IssueDetailPage };
+});
+const WikiRoute = lazy(async () => {
+  const module = await import("./wiki/WikiRoute.js");
+  return { default: module.WikiRoute };
+});
+const PrListPage = lazy(async () => {
+  const module = await import("./prs/PrList.js");
+  return { default: module.PrListPage };
+});
+const PrDetailPage = lazy(async () => {
+  const module = await import("./prs/PrDetail.js");
+  return { default: module.PrDetailPage };
+});
+const RepositoryTree = lazy(async () => {
+  const module = await import("./components/trees/RepositoryTree.js");
+  return { default: module.RepositoryTree };
+});
+const Markdown = lazy(async () => {
+  const module = await import("./components/markdown/Markdown.js");
+  return { default: module.Markdown };
+});
+const ChatChannelPage = lazy(async () => {
+  const module = await import("./chat/ChatChannelPage.js");
+  return { default: module.ChatChannelPage };
+});
+const MembersPage = lazy(async () => {
+  const module = await import("./members/MembersPage.js");
+  return { default: module.MembersPage };
+});
+const InvitePage = lazy(async () => {
+  const module = await import("./members/InvitePage.js");
+  return { default: module.InvitePage };
+});
 
 interface TreeRoute {
   readonly org: string;
@@ -192,21 +227,21 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
     apiPath: `${base}/namespace`,
     streamId: `repo-home:${props.org}/${props.repo}:namespace`,
     reducerId: "repo-namespace",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_500,
   });
   const branches = useStreamReducer<RepositoryBranchesState>({
     apiPath: `${base}/branches`,
     streamId: `repo-home:${props.org}/${props.repo}:branches`,
     reducerId: "repo-branches",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_500,
   });
   const projectStatus = useStreamReducer<RepositoryStatusState>({
     apiPath: `${base}/status`,
     streamId: `repo-home:${props.org}/${props.repo}:status`,
     reducerId: "repo-status",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_500,
   });
   const metadata = namespace.state.metadata;
@@ -238,11 +273,6 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
           href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/wiki`}
         >
           Wiki
-        </RouteLink>
-        <RouteLink
-          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/issues`}
-        >
-          Issues
         </RouteLink>
         <RouteLink
           href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/labels`}
@@ -311,7 +341,7 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
                   <strong>
                     <RouteLink
                       href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(branch.name)}`}
-                      aria-label={branch.name === "main" ? "File tree" : undefined}
+                      aria-label={`${branch.name} branch file tree`}
                     >
                       {branch.name}
                     </RouteLink>
@@ -362,7 +392,7 @@ function useBranchCatalog(org: string, repo: string): StreamReducerResult<Reposi
     apiPath,
     streamId: `repo-home:${org}/${repo}:branches`,
     reducerId: "repo-branches",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_500,
     cache: projectionCache,
     cacheKey: `repo-branches:${org}/${repo}`,
@@ -395,6 +425,7 @@ function BranchSelector(props: {
   readonly headCheckpoint: string;
   readonly digest: string;
 }): React.JSX.Element {
+  const [pendingBranch, setPendingBranch] = useState(props.branch);
   const selected = branchFor(props.org, props.repo, props.branch, props.projection);
   const branches = Object.values(props.projection.state.branches).sort((left, right) =>
     left.name.localeCompare(right.name),
@@ -407,6 +438,7 @@ function BranchSelector(props: {
     window.history.pushState(null, "", href);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
+  useEffect(() => setPendingBranch(props.branch), [props.branch]);
   return (
     <div
       className="branch-switcher"
@@ -423,9 +455,9 @@ function BranchSelector(props: {
         id="branch-switcher-select"
         data-testid="branch-selector"
         aria-label="Repository branch"
-        value={props.branch}
+        value={pendingBranch}
         disabled={props.projection.status === "loading" || branches.length === 0}
-        onChange={(event) => navigate(event.currentTarget.value)}
+        onChange={(event) => setPendingBranch(event.currentTarget.value)}
       >
         {branches.length === 0 ? <option value={props.branch}>{props.branch}</option> : null}
         {branches.map((branch) => (
@@ -434,6 +466,16 @@ function BranchSelector(props: {
           </option>
         ))}
       </select>
+      {pendingBranch === props.branch ? null : (
+        <Button
+          type="button"
+          variant="secondary"
+          data-testid="apply-branch"
+          onClick={() => navigate(pendingBranch)}
+        >
+          Apply branch
+        </Button>
+      )}
       <span data-testid="branch-parent-stream">{selected.parentStreamId ?? "root"}</span>
       <code data-testid="branch-fork-checkpoint">{selected.forkOffset}</code>
     </div>
@@ -457,11 +499,14 @@ function registryRows(state: RegistryState, selectedOrg?: string): readonly Repo
 }
 
 function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<string | undefined>(undefined);
   const projection = useStreamReducer<RegistryState>({
     apiPath: "/registry/me",
     streamId: "__registry__",
     reducerId: "registry",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
+    cacheKey: `registry:${props.org ?? "me"}:${String(refreshNonce)}`,
   });
   const organizations = Object.keys(projection.state.orgs).sort();
   const rows = registryRows(projection.state, props.org);
@@ -503,7 +548,12 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
           </p>
         </div>
         {props.org === undefined ? (
-          <Button variant="ghost" type="button">
+          <Button
+            variant="ghost"
+            type="button"
+            data-testid="dashboard-settings"
+            onClick={() => window.location.assign("/settings/cli-tokens")}
+          >
             Settings
           </Button>
         ) : null}
@@ -541,7 +591,9 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
                     href={`/${encodeURIComponent(row.org)}/${encodeURIComponent(row.repo)}`}
                   >
                     <BookMarked size={16} aria-hidden="true" />
-                    <strong>{row.repo}</strong>
+                    <strong>
+                      {row.org}/{row.repo}
+                    </strong>
                     <small>
                       {row.org} · {row.project}
                     </small>
@@ -560,15 +612,39 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
             </nav>
           ) : null}
           <div className="registry-table-toolbar">
-            <h3>All Repos</h3>
+            <h2>All Repos</h2>
             <DesktopTouchKit>
-              <SearchField
-                q={query}
-                setQ={setQuery}
-                placeholder="Find repository…"
-                aria-label="Find repository"
-                className="registry-search"
-              />
+              <form
+                className="registry-search-form"
+                role="search"
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  event.currentTarget.requestSubmit();
+                }}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const first = visibleRows[0];
+                  if (first === undefined) return;
+                  window.history.pushState(
+                    null,
+                    "",
+                    `/${encodeURIComponent(first.org)}/${encodeURIComponent(first.repo)}`,
+                  );
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+              >
+                <SearchField
+                  q={query}
+                  setQ={setQuery}
+                  placeholder="Find repository…"
+                  aria-label="Find repository"
+                  className="registry-search"
+                />
+                <button type="submit" className="registry-search-submit">
+                  Open
+                </button>
+              </form>
             </DesktopTouchKit>
             <Button
               variant="secondary"
@@ -579,8 +655,22 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
               <Plus size={14} aria-hidden="true" />
               New
             </Button>
-            <Button type="button">Sync from GitHub</Button>
+            <Button
+              type="button"
+              data-testid="registry-sync"
+              onClick={() => {
+                setSyncStatus("Registry projection refreshed from the authorized durable stream.");
+                setRefreshNonce((value) => value + 1);
+              }}
+            >
+              Sync from GitHub
+            </Button>
           </div>
+          {syncStatus === undefined ? null : (
+            <p className="registry-sync-status" role="status" data-testid="registry-sync-status">
+              {syncStatus}
+            </p>
+          )}
           {rows.length === 0 ? (
             <p data-testid="registry-empty">
               {props.org === undefined
@@ -719,6 +809,17 @@ function RepositoryActions(props: {
 
 const NEW_PROJECT = "__new__";
 
+function dispatchErrorMessage(cause: unknown, fallback: string): string {
+  const message = cause instanceof Error ? cause.message : fallback;
+  if (message.includes("ns/name-taken")) {
+    return "That repository name is already in use. Choose a different name.";
+  }
+  if (message.includes("ns/project-exists")) {
+    return "That group already exists. Choose it from the Group menu or use another name.";
+  }
+  return message;
+}
+
 function NewRepositoryForm(props: {
   readonly org: string;
   readonly project: string;
@@ -773,7 +874,7 @@ function NewRepositoryForm(props: {
       );
       window.dispatchEvent(new PopStateEvent("popstate"));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The dispatch was refused.");
+      setError(dispatchErrorMessage(cause, "The repository could not be created."));
     } finally {
       setBusy(false);
     }
@@ -827,15 +928,29 @@ function NewRepositoryForm(props: {
           />
         </label>
       ) : null}
-      <Segmented
-        aria-label="Visibility"
-        options={[
-          { id: "public", label: "Public" },
-          { id: "private", label: "Private" },
-        ]}
-        value={visibility}
-        onChange={(id: string) => setVisibility(id === "private" ? "private" : "public")}
-      />
+      <fieldset className="visibility-options" data-testid="visibility-options">
+        <legend>Visibility</legend>
+        <label>
+          <input
+            type="radio"
+            name="visibility"
+            value="public"
+            checked={visibility === "public"}
+            onChange={() => setVisibility("public")}
+          />
+          Public
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="visibility"
+            value="private"
+            checked={visibility === "private"}
+            onChange={() => setVisibility("private")}
+          />
+          Private
+        </label>
+      </fieldset>
       {error === undefined ? null : (
         <p role="alert" className="new-repository-error">
           {error}
@@ -862,7 +977,7 @@ function StreamInspector(props: {
     apiPath,
     streamId,
     reducerId: "streamfs",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
   });
   return (
     <section
@@ -908,7 +1023,7 @@ function HistoryView(props: {
     apiPath,
     streamId,
     reducerId: "history",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_000,
     cache: projectionCache,
     cacheKey: `history:${streamId}`,
@@ -1037,7 +1152,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
     apiPath,
     streamId,
     reducerId: "streamfs",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_000,
     cache: projectionCache,
     cacheKey: `streamfs:${streamId}`,
@@ -1209,7 +1324,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
         <dd data-testid="tree-digest">{projection.digest}</dd>
       </dl>
       <nav className="tree-breadcrumbs" aria-label="Tree path" data-testid="tree-breadcrumbs">
-        <RouteLink href={rootHref} aria-label="File tree">
+        <RouteLink href={rootHref} aria-label={`${props.repo} file tree`}>
           {props.repo}
         </RouteLink>
         {breadcrumbs.map((crumb) => (
@@ -1267,7 +1382,7 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
     apiPath,
     streamId,
     reducerId: "file-content",
-    followWaitMs: 1_000,
+    followWaitMs: 10_000,
     reconnectDelayMs: 1_000,
     cache: projectionCache,
     cacheKey: `file-content:${streamId}`,
@@ -1334,7 +1449,7 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
             digest={projection.digest}
           />
           <nav aria-label="File path" data-testid="file-breadcrumbs" className="file-breadcrumbs">
-            <RouteLink href={treeRoot} aria-label="File tree">
+            <RouteLink href={treeRoot} aria-label={`${props.repo} file tree`}>
               {props.repo}
             </RouteLink>
             {pathSegments.map((segment, index) => (
@@ -1441,7 +1556,11 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
         ) : null}
         {!refusal && state.status === "text" ? (
           renderedMarkdown && fileMode === "preview" ? (
-            <Markdown source={state.text} className="file-markdown" data-testid="file-content" />
+            <Markdown
+              source={state.text ?? ""}
+              className="file-markdown"
+              data-testid="file-content"
+            />
           ) : (
             <pre data-testid="file-content" tabIndex={0} className="file-code">
               {(state.text ?? "").split("\n").map((line, index) => (
@@ -1490,6 +1609,13 @@ function RepositorySettings(props: {
       <h2>Settings</h2>
       <p>
         Manage presentation and stream-backed collaboration defaults for {props.org} / {props.repo}.
+      </p>
+      <p>
+        <RouteLink
+          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/labels`}
+        >
+          Manage labels
+        </RouteLink>
       </p>
       <div className="settings-list">
         <label>

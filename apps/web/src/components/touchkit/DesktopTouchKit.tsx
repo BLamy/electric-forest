@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { TouchKitProvider } from "@brett_lamy/ui";
-import { TOUCHKIT_DARK_TOKEN_BRIDGE } from "../mobile/MobileProductShell.js";
+import { TOUCHKIT_DARK_TOKEN_BRIDGE } from "./tokens.js";
 
 /**
  * Desktop host for `@brett_lamy/ui` overlays and controls. The package's tokens are

@@ -561,7 +561,7 @@ function useDiffContent(
     apiPath: `/api/repos/${encodeURIComponent(org)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/blob/${encodedPath(path)}`,
     streamId,
     reducerId: "file-content",
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
     cacheKey: `pr-diff-content:${streamId}:${expectedDigest ?? "absent"}`,
   });

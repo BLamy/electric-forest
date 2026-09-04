@@ -14,6 +14,20 @@ export interface ChatAvatarProps {
   style?: CSSProperties;
 }
 
+/* ef: keep initials readable when the supplied workspace/user color is light. */
+function avatarForeground(color: string): string {
+  const match = /^#([0-9a-f]{6})/i.exec(color);
+  if (match === null) return "#fff";
+  const channels = [0, 2, 4].map(
+    (index) => Number.parseInt(match[1]!.slice(index, index + 2), 16) / 255,
+  );
+  const linear = channels.map((channel) =>
+    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
+  );
+  const luminance = 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+  return luminance > 0.25 ? "#07140c" : "#fff";
+}
+
 export function ChatAvatar({ user, size = 36, square, className, style }: ChatAvatarProps) {
   return (
     <span
@@ -27,7 +41,7 @@ export function ChatAvatar({ user, size = 36, square, className, style }: ChatAv
         display: "grid",
         placeItems: "center",
         background: "linear-gradient(135deg, " + user.c + ", " + user.c + "88)",
-        color: "#fff",
+        color: avatarForeground(user.c),
         fontWeight: 800,
         fontSize: size * 0.42,
         fontFamily: KFONT,

@@ -29,7 +29,7 @@ export function LabelManagement(props: {
     apiPath,
     streamId,
     reducerId: "repo-labels",
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });

@@ -89,7 +89,7 @@ export function useIssueBoard(org: string, repo: string): IssueBoardBinding {
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/board`,
     streamId,
     reducerId: BOARD_REDUCER,
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
   });
   return { streamId, reducerId: BOARD_REDUCER, projection };
@@ -105,7 +105,7 @@ export function useIssue(org: string, repo: string, issueId: string): IssueBindi
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/main/events?stream=issue&issueId=${encoded(issueId)}`,
     streamId,
     reducerId: "issue",
-    followWaitMs: 500,
+    followWaitMs: 10_000,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });

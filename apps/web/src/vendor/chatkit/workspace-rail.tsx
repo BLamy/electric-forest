@@ -27,6 +27,20 @@ export interface WorkspaceRailProps {
   style?: CSSProperties;
 }
 
+/* ef: active workspace tiles may use light tints; choose a readable initial color. */
+function workspaceForeground(color: string): string {
+  const match = /^#([0-9a-f]{6})/i.exec(color);
+  if (match === null) return "#fff";
+  const channels = [0, 2, 4].map(
+    (index) => Number.parseInt(match[1]!.slice(index, index + 2), 16) / 255,
+  );
+  const linear = channels.map((channel) =>
+    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
+  );
+  const luminance = 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+  return luminance > 0.25 ? "#07140c" : "#fff";
+}
+
 export function WorkspaceRail({
   workspaces,
   onSelect,
@@ -71,7 +85,7 @@ export function WorkspaceRail({
             borderRadius: 11,
             border: w.active ? "2px solid " + w.color : "2px solid transparent",
             background: w.active ? w.color : K.fill2,
-            color: "#fff",
+            color: w.active ? workspaceForeground(w.color) : "#fff",
             fontWeight: 800,
             fontSize: 14,
             cursor: "pointer",

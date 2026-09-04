@@ -449,6 +449,23 @@ body {
   font-size: 13px;
 }
 
+.branch-list li > strong,
+.branch-list li > strong > a {
+  min-width: max-content;
+}
+
+.branch-list li > strong {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+}
+
+.branch-list li > strong > a {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+}
+
 .repository-list li {
   min-height: 44px;
   grid-template-columns: minmax(0, 1fr) 12rem 6rem 2rem;
@@ -1070,6 +1087,42 @@ body {
   }
 }
 
+.registry-table-toolbar h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 520;
+}
+
+.registry-search-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.registry-search-submit {
+  min-height: 32px;
+  border: 1px solid var(--ef-border-strong, #3b3d3c);
+  border-radius: 7px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ef-fg, #e8eae9);
+  background: var(--ef-control, #1e201f);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.registry-search-submit:hover {
+  background: var(--ef-control-hover, #292b2a);
+}
+
+.registry-sync-status {
+  margin: 0.55rem 0 0;
+  color: var(--ef-muted, #a6aaa8);
+  font-size: 12px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1141,6 +1194,35 @@ body {
 
 .new-repository-form small {
   color: var(--ef-subtle, #747977);
+}
+
+.visibility-options {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  border: 1px solid var(--ef-border, #2a2c2b);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.visibility-options legend {
+  padding: 0 0.25rem;
+  color: var(--ef-muted, #a6aaa8);
+  font-size: 12.5px;
+}
+
+.visibility-options label {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ef-fg, #e8eae9);
+  font-size: 13px;
+}
+
+.new-repository-form .visibility-options input {
+  min-height: auto;
+  accent-color: var(--ef-accent, #48b979);
 }
 
 .new-repository-error {
@@ -1308,12 +1390,79 @@ body {
 }
 
 .forest-nav-foot {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.5rem;
+  display: block;
   padding: 9px 12px;
   border-top: 1px solid var(--ef-border, #2a2c2b);
+}
+
+.forest-account-button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.25rem;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.forest-account-button:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.forest-account-button > span:last-child {
+  display: grid;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.forest-account-button strong,
+.forest-account-button small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forest-account-button small {
+  color: var(--ef-success, #48b979);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.forest-account-identity {
+  margin: 0 0 0.75rem;
+  color: var(--ef-muted, #a6aaa8);
+  font-size: 13px;
+}
+
+.forest-account-identity strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--ef-fg, #e8eae9);
+}
+
+.forest-account-menu > form {
+  margin-top: 0.75rem;
+}
+
+.forest-account-logout {
+  width: 100%;
+  border: 1px solid var(--ef-border-strong, #3b3d3c);
+  border-radius: 7px;
+  padding: 0.55rem 0.7rem;
+  color: var(--ef-fg, #e8eae9);
+  background: var(--ef-control, #1e201f);
+  cursor: pointer;
+  font: inherit;
+}
+
+.forest-account-logout:hover {
+  background: var(--ef-control-hover, #292b2a);
 }
 
 .forest-nav-foot div {
