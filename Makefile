@@ -778,7 +778,7 @@ verify-E5-T14: verify-E5-T13 _v-e5-web-build
 	@node tools/verify/e5_t14_browser_evidence.mjs
 	@echo "verify-E5-T14: OK"
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E6-T01 verify-E6-T02 verify-E6-T03 verify-E6-T04 verify-E6-T05
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E6-T01 verify-E6-T02 verify-E6-T03 verify-E6-T04 verify-E6-T05 verify-E6-T07
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
@@ -868,5 +868,16 @@ _v-e6-t05:
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E6-T05"
 
-# --- end verify section ---
+# --- E6-T07: agent-run protocol (leases, capabilities, fresh sessions, replay) ---
+.PHONY: verify-E6-T07 _v-e6-t07
+verify-E6-T07: _v-e6-t07
+	@echo "verify-E6-T07: OK"
 
+_v-e6-t07: _v-build
+	@CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/loop/test/run-protocol.test.ts packages/platform/test/agent-runs.test.ts
+	@node tools/verify/e6_t07_evidence.mjs
+	@node tools/verify/e6_t07_sensitivity.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T07"
+
+# --- end verify section ---

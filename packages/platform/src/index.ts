@@ -129,6 +129,18 @@ export {
   type PlatformProductionRuntime,
 } from "./production.js";
 export {
+  AgentRunCoordinator,
+  AgentRunError,
+  type AgentRunAcquireInput,
+  type AgentRunAcquireResult,
+  type AgentRunEventInput,
+  type AgentRunLeaseInput,
+  type AgentRunLeaseResult,
+  type AgentRunMutationInput,
+  type AgentRunMutationResult,
+  type AgentRunCoordinatorOptions,
+} from "./agent-runs.js";
+export {
   isNamespaceDispatchEvent,
   isNamespaceEvent,
   isNamespaceEventType,

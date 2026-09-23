@@ -12,7 +12,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E6-T07** — "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
+No new task may start until **E6-T05** clears the current gate.
 
 ## Unlocks when E6-T05 verifies
 
@@ -119,7 +119,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `604` [E6-T04](epic-6-the-loop/E6-T04-task-queue-projection/readme.md) — "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs" *(deps: E6-T01)*
 - [?] `605` [E6-T05](epic-6-the-loop/E6-T05-task-folder-stream-sync/readme.md) — "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes" *(deps: E6-T01, E6-T02, E6-T04)*
 - [ ] `606` [E6-T06](epic-6-the-loop/E6-T06-live-task-board/readme.md) — "Live task board: queue, project state, task folders, findings, and evidence in the web app" *(deps: E6-T03, E6-T04, E6-T05)*
-- [ ] `607` [E6-T07](epic-6-the-loop/E6-T07-agent-run-protocol/readme.md) — "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams" *(deps: E6-T03, E6-T04)*
+- [?] `607` [E6-T07](epic-6-the-loop/E6-T07-agent-run-protocol/readme.md) — "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams" *(deps: E6-T03, E6-T04)*
 - [ ] `608` [E6-T08](epic-6-the-loop/E6-T08-builder-agent/readme.md) — "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence" *(deps: E6-T05, E6-T07)*
 - [ ] `609` [E6-T09](epic-6-the-loop/E6-T09-critic-agent/readme.md) — "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts" *(deps: E6-T08)*
 - [ ] `610` [E6-T10](epic-6-the-loop/E6-T10-retry-and-thrash-guard/readme.md) — "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop" *(deps: E6-T03, E6-T09)*
