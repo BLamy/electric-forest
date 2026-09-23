@@ -1,5 +1,8 @@
 import { randomBytes } from "node:crypto";
-import { grantsForSub, userForSub } from "@eforest/identity";
+import { grantsForSub, roleOf, userForSub } from "@eforest/identity";
+import { membersStreamId, normalizeEmail, type MemberRole } from "@eforest/reducers";
+import { inviteEmail, ResendMailer, type ResendConfig } from "../email/resend.js";
+import { reduceMembers } from "../org/validators.js";
 import { UnauthorizedError, type BearerVerifier } from "../auth.js";
 import { bearerToken, tokenHash } from "./grants.js";
 import type { PlatformGateway } from "../gateway.js";
@@ -37,6 +40,12 @@ export interface PlatformWebAppOptions {
   readonly webRoot?: string;
   /** Test-only, authenticated proof receipt. Production composition never supplies this. */
   readonly testProofReceipt?: () => Promise<unknown | undefined>;
+  /** Outbound email (invites). Omitted → invites are recorded but never emailed. */
+  readonly resend?: ResendConfig;
+  /** Optional same-origin bridge for a local OIDC emulator behind a managed tunnel. */
+  readonly oidcProxyTarget?: string;
+  /** Public origin to use when an upstream wrapper terminates or rewrites Host. */
+  readonly publicOrigin?: string;
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}): Response {
@@ -46,8 +55,49 @@ function json(status: number, body: unknown, headers: HeadersInit = {}): Respons
   });
 }
 
-function refusal(reason: AuthRefusalReason): Response {
+const AUTH_REFUSAL_COPY: Readonly<
+  Record<AuthRefusalReason, { readonly title: string; readonly message: string }>
+> = {
+  "bad-state": {
+    title: "That sign-in session is no longer available",
+    message: "Start a new sign-in to continue to Electric Forest.",
+  },
+  "bad-verifier": {
+    title: "We could not verify that sign-in",
+    message: "The sign-in link did not match this browser. Start again to continue.",
+  },
+  "reused-code": {
+    title: "That sign-in link was already used",
+    message: "Start a new sign-in to continue to Electric Forest.",
+  },
+  "bad-token": {
+    title: "We could not complete sign-in",
+    message: "The sign-in link is invalid or expired. Start a new sign-in to continue.",
+  },
+  "expired-token": {
+    title: "Your sign-in expired",
+    message: "Please sign in again to continue to Electric Forest.",
+  },
+  "bad-nonce": {
+    title: "We could not verify that sign-in",
+    message: "The sign-in response was not valid for this browser. Start again to continue.",
+  },
+};
+
+function refusal(reason: AuthRefusalReason, request?: Request): Response {
   const status = reason === "bad-token" || reason === "expired-token" ? 401 : 400;
+  if (request?.headers.get("accept")?.toLowerCase().includes("text/html") === true) {
+    const copy = AUTH_REFUSAL_COPY[reason];
+    const next = nextPathFromCookie(request.headers.get("cookie"));
+    const loginHref =
+      next === undefined ? "/auth/login" : `/auth/login?next=${encodeURIComponent(next)}`;
+    return html(
+      shell(
+        `<main data-testid="auth-error"><h1>${copy.title}</h1><p>${copy.message}</p><p><a data-testid="auth-retry" href="${escape(loginHref)}">Try signing in again</a></p><p><a href="/">Return home</a></p></main>`,
+      ),
+      status,
+    );
+  }
   return json(status, { error: { class: "auth-refused", reason } });
 }
 
@@ -84,10 +134,58 @@ function shell(content: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>electric forest</title><style>body{font-family:ui-monospace,monospace;max-width:58rem;margin:4rem auto;padding:0 1.5rem;background:#08120d;color:#d9ffe8}main{border:1px solid #397a50;padding:2rem;border-radius:12px}a,button{color:#08120d;background:#8dffb0;border:0;border-radius:6px;padding:.65rem 1rem;font:inherit;text-decoration:none}input{font:inherit;padding:.6rem;margin:.25rem}dl{display:grid;grid-template-columns:max-content 1fr;gap:.75rem 1rem}dt{color:#8dffb0}dd{margin:0;overflow-wrap:anywhere}li{margin:1rem 0}.secret{padding:1rem;border:1px solid #8dffb0;overflow-wrap:anywhere}</style></head><body>${content}</body></html>`;
 }
 
+const SAFE_NEXT_PATH = /^\/(?!\/)[A-Za-z0-9/_\-.~%]*$/;
+const OIDC_PROXY_PREFIX = "/__auth0";
+const OIDC_PROXY_ROOT_PATHS = [
+  "/authorize",
+  "/activate",
+  "/userinfo",
+  "/oauth/",
+  "/.well-known/",
+  "/_emulate/",
+  "/api/v2/",
+] as const;
+const HOP_BY_HOP_HEADERS = ["connection", "content-length", "host", "transfer-encoding"] as const;
+
+function nextPathFromCookie(cookie: string | null): string | undefined {
+  if (cookie === null) return undefined;
+  for (const part of cookie.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name !== "ef_next") continue;
+    try {
+      const value = decodeURIComponent(rest.join("="));
+      return SAFE_NEXT_PATH.test(value) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+/** A dispatch-door request built by a platform door on the session's behalf. */
+function dispatchRequest(origin: string, streamId: string, event: unknown): Request {
+  return new Request(`${origin}/api/dispatch`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-eforest-dispatch-receipt": "offset" },
+    body: JSON.stringify({ streamId, event }),
+  });
+}
+
 function validQueryValue(value: string | null): value is string {
   return (
     value !== null && value.length > 0 && value.length <= 1_024 && /^[A-Za-z0-9_-]+$/.test(value)
   );
+}
+
+function oidcProxySuffix(pathname: string): string | undefined {
+  if (pathname === OIDC_PROXY_PREFIX || pathname.startsWith(`${OIDC_PROXY_PREFIX}/`)) {
+    return pathname.slice(OIDC_PROXY_PREFIX.length) || "/";
+  }
+  return OIDC_PROXY_ROOT_PATHS.some((prefix) =>
+    prefix.endsWith("/") ? pathname.startsWith(prefix) : pathname === prefix,
+  )
+    ? pathname
+    : undefined;
 }
 
 export class PlatformWebApp {
@@ -102,6 +200,9 @@ export class PlatformWebApp {
   private readonly random: (size: number) => Uint8Array;
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly webRoot: string | undefined;
+  private readonly mailer: ResendMailer | undefined;
+  private readonly oidcProxyTarget: URL | undefined;
+  private readonly publicOrigin: string | undefined;
   private testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
 
   constructor(options: PlatformWebAppOptions) {
@@ -122,6 +223,38 @@ export class PlatformWebApp {
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.webRoot = options.webRoot;
+    this.mailer = options.resend === undefined ? undefined : new ResendMailer(options.resend);
+    if (options.oidcProxyTarget !== undefined) {
+      const target = new URL(options.oidcProxyTarget);
+      if (target.protocol !== "http:" && target.protocol !== "https:") {
+        throw new TypeError("oidcProxyTarget must use http or https");
+      }
+      if (
+        target.username !== "" ||
+        target.password !== "" ||
+        target.search !== "" ||
+        target.hash !== ""
+      ) {
+        throw new TypeError("oidcProxyTarget must not contain credentials, a query, or a fragment");
+      }
+      this.oidcProxyTarget = target;
+    }
+    if (options.publicOrigin !== undefined) {
+      const origin = new URL(options.publicOrigin);
+      if (origin.protocol !== "http:" && origin.protocol !== "https:") {
+        throw new TypeError("publicOrigin must use http or https");
+      }
+      if (
+        origin.username !== "" ||
+        origin.password !== "" ||
+        origin.pathname !== "/" ||
+        origin.search !== "" ||
+        origin.hash !== ""
+      ) {
+        throw new TypeError("publicOrigin must be an origin without credentials or a path");
+      }
+      this.publicOrigin = origin.origin;
+    }
     this.testProofReceipt = options.testProofReceipt;
   }
 
@@ -135,6 +268,10 @@ export class PlatformWebApp {
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
     try {
+      const proxySuffix = oidcProxySuffix(url.pathname);
+      if (this.oidcProxyTarget !== undefined && proxySuffix !== undefined) {
+        return await this.oidcProxy(request, url, proxySuffix);
+      }
       if (url.pathname === "/__proof/e3-t02") {
         return await this.proofReceipt(request);
       }
@@ -142,12 +279,19 @@ export class PlatformWebApp {
         case "dispatch":
         case "namespaces":
         case "repos":
+        case "chat":
+        case "members":
+        case "agents":
+        case "agent-runs":
         case "registry": {
           if (
             this.gateway !== undefined &&
             (url.pathname === "/api/dispatch" ||
               url.pathname === "/registry/me" ||
-              url.pathname.startsWith("/api/repos/")) &&
+              url.pathname.startsWith("/api/repos/") ||
+              url.pathname.startsWith("/api/chat/") ||
+              url.pathname.startsWith("/api/members/") ||
+              url.pathname.startsWith("/api/agents/")) &&
             !request.headers.has("authorization")
           ) {
             const identity = await resolveSessionBackedIdentity(request, {
@@ -170,6 +314,18 @@ export class PlatformWebApp {
                   request,
                   identity.sub,
                   identity.snapshot.view,
+                );
+              }
+              if (
+                url.pathname.startsWith("/api/chat/") ||
+                url.pathname.startsWith("/api/members/") ||
+                url.pathname.startsWith("/api/agents/")
+              ) {
+                return this.gateway.handleSessionChat(
+                  request,
+                  identity.sub,
+                  identity.snapshot.view,
+                  identity.snapshot.offset,
                 );
               }
               return this.gateway.handleSessionRepository(
@@ -209,6 +365,8 @@ export class PlatformWebApp {
             : await this.spa(request, this.webRoot);
         case "cli-tokens-page":
           return await this.cliTokensPage(request);
+        case "org-api":
+          return await this.orgApi(request, url);
         default:
           if (
             this.webRoot !== undefined &&
@@ -220,16 +378,50 @@ export class PlatformWebApp {
           return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
       }
     } catch (error) {
-      if (error instanceof AuthRefusedError) return refusal(error.reason);
+      if (error instanceof AuthRefusedError) return refusal(error.reason, request);
       throw error;
     }
+  }
+
+  /**
+   * Keep local OIDC emulators reachable to a remote Replay QA browser without
+   * exposing a second public listener. The configured target is explicit and
+   * the route is only mounted under the fixed internal prefix.
+   */
+  private async oidcProxy(request: Request, url: URL, suffix: string): Promise<Response> {
+    const target = new URL(this.oidcProxyTarget!);
+    target.pathname = `${target.pathname.replace(/\/$/, "")}${suffix}`;
+    target.search = url.search;
+    const headers = new Headers(request.headers);
+    for (const header of HOP_BY_HOP_HEADERS) headers.delete(header);
+    const init: RequestInit = {
+      method: request.method,
+      headers,
+      redirect: "manual",
+      ...(request.method === "GET" || request.method === "HEAD"
+        ? {}
+        : { body: new Uint8Array(await request.arrayBuffer()) }),
+    };
+    let upstream: Response;
+    try {
+      upstream = await fetch(target, init);
+    } catch {
+      return json(502, { error: { class: "oidc-proxy", reason: "upstream-unavailable" } });
+    }
+    const responseHeaders = new Headers(upstream.headers);
+    for (const header of HOP_BY_HOP_HEADERS) responseHeaders.delete(header);
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
+    });
   }
 
   private async proofReceipt(request: Request): Promise<Response> {
     if (this.testProofReceipt === undefined) {
       return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
     }
-    if (request.method !== "GET") return refusal("bad-state");
+    if (request.method !== "GET") return refusal("bad-state", request);
     const session = await this.webSession(request);
     if (session instanceof Response) return session;
     const receipt = await this.testProofReceipt();
@@ -242,6 +434,7 @@ export class PlatformWebApp {
   private spa(request: Request, webRoot: string): Promise<Response> {
     return spaResponse(request, {
       webRoot,
+      proofReceiptAvailable: this.testProofReceipt !== undefined,
       identity: this.identity,
       sessionSecret: this.sessionSecret,
       sessionTtlMs: this.sessionTtlMs,
@@ -250,32 +443,188 @@ export class PlatformWebApp {
   }
 
   private async login(request: Request, url: URL): Promise<Response> {
-    if (request.method !== "GET") return refusal("bad-state");
+    if (request.method !== "GET") return refusal("bad-state", request);
     const transaction = this.transactions.create();
-    const callback = `${url.origin}/auth/callback`;
-    return redirect(await this.oidc.authorizationUrl(callback, transaction));
+    const callback = `${this.publicOrigin ?? url.origin}/auth/callback`;
+    const next = url.searchParams.get("next");
+    const location = await this.oidc.authorizationUrl(callback, transaction);
+    // A local return path (an invite landing, a deep link) rides a short-lived cookie
+    // through the OIDC round-trip; anything that is not a same-origin path is dropped.
+    if (next !== null && SAFE_NEXT_PATH.test(next)) {
+      return redirect(
+        location,
+        `ef_next=${encodeURIComponent(next)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
+      );
+    }
+    if (nextPathFromCookie(request.headers.get("cookie")) !== undefined) {
+      return redirect(location, "ef_next=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+    }
+    return redirect(location);
   }
 
   private async callback(request: Request, url: URL): Promise<Response> {
-    if (request.method !== "GET") return refusal("bad-state");
+    if (request.method !== "GET") return refusal("bad-state", request);
     const state = url.searchParams.get("state");
     const code = url.searchParams.get("code");
     if (!validQueryValue(state)) throw new AuthRefusedError("bad-state");
     const transaction = this.transactions.consume(state);
     if (!validQueryValue(code)) throw new AuthRefusedError("bad-token");
-    const claims = await this.oidc.exchangeCode(code, `${url.origin}/auth/callback`, transaction);
+    const claims = await this.oidc.exchangeCode(
+      code,
+      `${this.publicOrigin ?? url.origin}/auth/callback`,
+      transaction,
+    );
     const sessionId = Buffer.from(this.random(24)).toString("base64url");
     await this.identity.login(claims.sub, claims.email, sessionId);
+    // One Set-Cookie per response: the session cookie must never share a header with
+    // another cookie (the HTTP layer joins them). `ef_next` is consumed here and
+    // cleared by the next plain /auth/login; it expires on its own within ten minutes.
+    const next = nextPathFromCookie(request.headers.get("cookie"));
     return redirect(
-      "/",
+      next ?? "/",
       signedSessionCookie(this.sessionSecret, sessionId, this.sessionTtlMs / 1_000),
     );
   }
 
+  /**
+   * Workspace roster doors. Humans are identity memberships (the truth authorization
+   * consults); invitations live on the org's `members:` stream and are accepted here,
+   * where the signed-in email is checked against the invite before identity grants the
+   * membership. Every mutation still goes through the dispatch door.
+   */
+  private async orgApi(request: Request, url: URL): Promise<Response> {
+    const session = await this.webSession(request);
+    if (session instanceof Response) return session;
+    if (this.gateway === undefined) return json(503, { error: { class: "gateway-unavailable" } });
+    const segments = url.pathname.split("/").filter(Boolean).slice(2);
+    let org: string;
+    try {
+      org = decodeURIComponent(segments[0] ?? "");
+    } catch {
+      return json(400, { error: { class: "invalid-path" } });
+    }
+    if (!/^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/.test(org)) {
+      return json(404, { error: { class: "not-found" } });
+    }
+    const owner = await this.gateway.orgOwner(org);
+    if (owner === undefined) return json(404, { error: { class: "not-found" } });
+    const view = session.snapshot.view;
+    const me = session.sub;
+    const myRole = owner === me ? "owner" : roleOf(view, org, me);
+    const tail = segments.slice(1);
+
+    if (request.method === "GET" && tail.length === 1 && tail[0] === "members") {
+      if (myRole === null) return json(404, { error: { class: "not-found" } });
+      const memberships = view.memberships[org] ?? {};
+      const humans = [
+        {
+          sub: owner,
+          email: userForSub(view, owner)?.email ?? null,
+          role: "owner",
+          status: "active",
+        },
+        ...Object.entries(memberships)
+          .filter(([sub]) => sub !== owner)
+          .map(([sub, membership]) => ({
+            sub,
+            email: userForSub(view, sub)?.email ?? null,
+            role: membership.role,
+            status: membership.status,
+          })),
+      ];
+      const members = reduceMembers(await this.gateway.readOrgStream(membersStreamId(org)));
+      return json(200, {
+        org,
+        owner,
+        me: { sub: me, role: myRole },
+        humans,
+        invites: Object.values(members.invites).sort((a, b) => a.invitedAt - b.invitedAt),
+        identityOffset: session.snapshot.offset,
+        emailDelivery: this.mailer === undefined ? "unconfigured" : "resend",
+      });
+    }
+
+    if (request.method === "POST" && tail.length === 1 && tail[0] === "invites") {
+      if (myRole !== "owner" && myRole !== "admin") {
+        return json(403, { error: { class: "authz-refused", reason: "invite-requires-admin" } });
+      }
+      const body = (await request.json().catch(() => null)) as {
+        email?: unknown;
+        role?: unknown;
+      } | null;
+      const email = typeof body?.email === "string" ? normalizeEmail(body.email) : "";
+      const role: MemberRole = body?.role === "admin" ? "admin" : "member";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json(422, { error: { class: "schema-violation", reason: "invalid-email" } });
+      }
+      const token = Buffer.from(this.random(24)).toString("base64url");
+      const dispatched = await this.gateway.handleSessionDispatch(
+        dispatchRequest(url.origin, membersStreamId(org), {
+          type: "member.invite",
+          payload: { v: 1, email, role, token },
+          ts: this.now(),
+        }),
+        me,
+        view,
+        session.snapshot.offset,
+      );
+      if (!dispatched.ok) return dispatched;
+      const link = `${this.publicOrigin ?? url.origin}/auth/login?next=${encodeURIComponent(`/invite/${org}/${token}`)}`;
+      let emailed: { readonly id: string } | null = null;
+      if (this.mailer !== undefined) {
+        const inviter = userForSub(view, me)?.email ?? me;
+        emailed = await this.mailer.send({ to: email, ...inviteEmail({ org, inviter, link }) });
+      }
+      return json(201, { token, email, role, link, emailed });
+    }
+
+    if (
+      request.method === "POST" &&
+      tail.length === 3 &&
+      tail[0] === "invites" &&
+      tail[2] === "accept"
+    ) {
+      const token = tail[1]!;
+      const members = reduceMembers(await this.gateway.readOrgStream(membersStreamId(org)));
+      const invite = members.invites[token];
+      if (invite === undefined || invite.status !== "pending") {
+        return json(404, { error: { class: "not-found", reason: "invite-unavailable" } });
+      }
+      const myEmail = userForSub(view, me)?.email;
+      if (myEmail === undefined || normalizeEmail(myEmail) !== invite.email) {
+        return json(403, { error: { class: "authz-refused", reason: "invite-email-mismatch" } });
+      }
+      // Namespace orgs are created on `ns:root`; identity learns about an org the first
+      // time a membership is granted in it, mirrored with the namespace owner.
+      if (view.orgs[org] === undefined) await this.identity.createOrg(org, org, owner);
+      const granted =
+        myRole === "owner"
+          ? session.snapshot
+          : await this.identity.grantMembership(org, me, invite.role);
+      const accepted = await this.gateway.handleSessionDispatch(
+        dispatchRequest(url.origin, membersStreamId(org), {
+          type: "member.invite.accepted",
+          payload: { v: 1, token, sub: me },
+          ts: this.now(),
+        }),
+        me,
+        granted.view,
+        granted.offset,
+      );
+      if (!accepted.ok) return accepted;
+      return json(200, {
+        org,
+        role: myRole === "owner" ? "owner" : invite.role,
+        identityOffset: granted.offset,
+      });
+    }
+    return json(404, { error: { class: "not-found" } });
+  }
+
   private async logout(request: Request): Promise<Response> {
-    if (request.method !== "POST") return refusal("bad-state");
+    if (request.method !== "POST") return refusal("bad-state", request);
     const parsed = parseSessionCookie(request.headers.get("cookie"), this.sessionSecret);
-    if (parsed.kind === "malformed") return refusal("bad-token");
+    if (parsed.kind === "malformed") return refusal("bad-token", request);
     if (parsed.kind === "valid") {
       const snapshot = await this.identity.snapshot();
       if (sessionIsValid(snapshot, parsed.sessionId, this.now(), this.sessionTtlMs)) {
@@ -286,9 +635,9 @@ export class PlatformWebApp {
   }
 
   private async home(request: Request): Promise<Response> {
-    if (request.method !== "GET") return refusal("bad-state");
+    if (request.method !== "GET") return refusal("bad-state", request);
     const parsed = parseSessionCookie(request.headers.get("cookie"), this.sessionSecret);
-    if (parsed.kind === "malformed") return refusal("bad-token");
+    if (parsed.kind === "malformed") return refusal("bad-token", request);
     if (parsed.kind === "valid") {
       const snapshot = await this.identity.snapshot();
       if (sessionIsValid(snapshot, parsed.sessionId, this.now(), this.sessionTtlMs)) {
@@ -315,10 +664,10 @@ export class PlatformWebApp {
       return json(401, { error: { class: "web-session-required" } });
     }
     const parsed = parseSessionCookie(request.headers.get("cookie"), this.sessionSecret);
-    if (parsed.kind !== "valid") return refusal("bad-token");
+    if (parsed.kind !== "valid") return refusal("bad-token", request);
     const snapshot = await this.identity.snapshot();
     if (!sessionIsValid(snapshot, parsed.sessionId, this.now(), this.sessionTtlMs)) {
-      return refusal("bad-token");
+      return refusal("bad-token", request);
     }
     return { snapshot, sub: snapshot.view.sessions[parsed.sessionId]!.sub };
   }
@@ -504,7 +853,7 @@ export class PlatformWebApp {
   }
 
   private async cliTokensPage(request: Request): Promise<Response> {
-    if (request.method !== "GET") return refusal("bad-state");
+    if (request.method !== "GET") return refusal("bad-state", request);
     const session = await this.webSession(request);
     if (session instanceof Response) return session;
     const initial = this.cliTokenList(session.snapshot, session.sub);

@@ -1642,6 +1642,10 @@ article p {
   opacity: 0.6;
 }
 
+.tree-surface > .tree-list-loading {
+  min-height: inherit;
+}
+
 .tree-list-loading li {
   min-height: 2.75rem;
   border: 1px solid var(--color-border-default);

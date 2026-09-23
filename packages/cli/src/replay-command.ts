@@ -23,13 +23,13 @@ import {
   type MergeDump,
   type FsTree,
 } from "@eforest/streamfs";
-import { streamFsReducerDefinition } from "@eforest/reducers";
 import {
   reducerById,
   reducerForStream,
   streamFsReducerDefinition,
   type ReducerDefinition,
 } from "@eforest/reducers";
+import { projectReducerDefinition } from "@eforest/platform";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -46,13 +46,6 @@ export interface ReducerModule {
   readonly initialState: unknown;
   readonly initialStateForStream?: (streamId: string) => unknown;
 }
-
-export type DigestKind = "tree" | "worktree";
-
-const STREAMFS_REDUCER: ReducerModule = {
-  reducer: streamFsReducerDefinition.reduce,
-  initialState: streamFsReducerDefinition.initialState,
-};
 
 function registeredReducer(definition: ReducerDefinition): ReducerModule {
   return {
@@ -195,7 +188,11 @@ export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
       initialState: fixtureInitialState,
     };
   }
-  const definition = reducerById(modulePath);
+  const definition =
+    reducerById(modulePath) ??
+    // E6-T03: `project/v1` lives in @eforest/platform (the registry package cannot
+    // depend on the platform), so the CLI resolves it here.
+    (modulePath === projectReducerDefinition.id ? projectReducerDefinition : undefined);
   if (definition !== undefined) return registeredReducer(definition);
   try {
     const loaded = (await import(pathToFileURL(modulePath).href)) as {

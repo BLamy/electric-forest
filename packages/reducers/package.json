@@ -18,6 +18,7 @@
     "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
+    "@eforest/streamfs": "workspace:*",
+    "@eforest/tasks": "workspace:*"
   }
 }

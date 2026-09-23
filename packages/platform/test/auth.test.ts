@@ -1,5 +1,6 @@
 import { createHash, createHmac, generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
+import { createServer } from "node:http";
 import { mkdir, mkdtemp, readFile, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -360,6 +361,43 @@ async function triple(identity: IdentityStore): Promise<{
 }
 
 describe("event-backed web login and sessions", () => {
+  it("bridges an explicitly configured local OIDC emulator through a same-origin path", async () => {
+    const upstream = createServer((_request, response) => {
+      response.writeHead(302, {
+        location: "http://platform.test/__auth0/complete",
+        "set-cookie": "auth0=emulated; Path=/",
+      });
+      response.end();
+    });
+    await new Promise<void>((resolve, reject) => {
+      upstream.once("error", reject);
+      upstream.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = upstream.address();
+      if (address === null || typeof address === "string") throw new Error("upstream did not bind");
+      const { identity } = await setup();
+      const app = new PlatformWebApp({
+        oidc: new OidcClient({ issuer: "http://platform.test/__auth0", clientId: CLIENT_ID }),
+        transactions: new OidcTransactions(deterministicRandom()),
+        identity,
+        sessionSecret: SECRET,
+        sessionTtlMs: 60_000,
+        oidcProxyTarget: `http://127.0.0.1:${address.port}`,
+      });
+      const response = await app.handle(
+        new Request("http://platform.test/__auth0/authorize?client_id=local", {
+          headers: { accept: "text/html" },
+        }),
+      );
+      expect(response.status).toBe(302);
+      expect(response.headers.get("location")).toBe("http://platform.test/__auth0/complete");
+      expect(response.headers.get("set-cookie")).toContain("auth0=emulated");
+    } finally {
+      await new Promise<void>((resolve) => upstream.close(() => resolve()));
+    }
+  });
+
   it("runs two PKCE logins, one logout, DOM truth, and restart survival over a real stream", async () => {
     const dispatchPosts: string[] = [];
     const loggingFetch: typeof fetch = async (input, init) => {
@@ -609,6 +647,34 @@ describe("event-backed web login and sessions", () => {
     const final = await identity.snapshot();
     expect(final.events.slice(afterSuccess.events.length)).toHaveLength(0);
     expect(before.events).toHaveLength(0);
+  });
+
+  it("renders browser auth refusals as actionable HTML while keeping API refusals JSON", async () => {
+    const { baseUrl, fixture } = await setup();
+    const login = await begin(baseUrl);
+    fixture.issue("browser-bad-token", login.authorization, { token: "not-a-jwt" });
+
+    const browserResponse = await fetch(
+      `${baseUrl}/auth/callback?code=browser-bad-token&state=${encodeURIComponent(login.state)}`,
+      { headers: { accept: "text/html" }, redirect: "manual" },
+    );
+    expect(browserResponse.status).toBe(401);
+    expect(browserResponse.headers.get("content-type")).toMatch(/^text\/html/);
+    const browserBody = await browserResponse.text();
+    expect(browserBody).toContain('data-testid="auth-error"');
+    expect(browserBody).toContain("We could not complete sign-in");
+    expect(browserBody).toContain('href="/auth/login"');
+    expect(browserBody).not.toContain('"auth-refused"');
+
+    const apiResponse = await fetch(`${baseUrl}/auth/callback?code=x&state=missing`, {
+      headers: { accept: "application/json" },
+      redirect: "manual",
+    });
+    expect(apiResponse.status).toBe(400);
+    expect(apiResponse.headers.get("content-type")).toMatch(/^application\/json/);
+    expect(await apiResponse.json()).toEqual({
+      error: { class: "auth-refused", reason: "bad-state" },
+    });
   });
 
   it("refuses the full cryptographic confusion matrix without touching the identity log", async () => {

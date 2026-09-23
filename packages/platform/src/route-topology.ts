@@ -4,6 +4,11 @@ export type PlatformRouteId =
   | "namespaces"
   | "repos"
   | "registry"
+  | "chat"
+  | "members"
+  | "agents"
+  | "agent-runs"
+  | "org-api"
   | "device-grants"
   | "cli-tokens"
   | "cli-token-item"
@@ -23,6 +28,7 @@ export interface PlatformRouteDefinition {
     | "namespace.lookup"
     | "application.read-follow"
     | "registry.query"
+    | "agent-run"
     | "cli-token.issue";
 }
 
@@ -55,6 +61,12 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   },
   { id: "repos", match: "exact", path: "/api/repos", operation: "application.read-follow" },
   { id: "repos", match: "prefix", path: "/api/repos/", operation: "application.read-follow" },
+  { id: "chat", match: "prefix", path: "/api/chat/", operation: "application.read-follow" },
+  { id: "members", match: "prefix", path: "/api/members/", operation: "application.read-follow" },
+  { id: "agents", match: "prefix", path: "/api/agents/", operation: "application.read-follow" },
+  { id: "agent-runs", match: "exact", path: "/api/agent-runs", operation: "agent-run" },
+  { id: "agent-runs", match: "prefix", path: "/api/agent-runs/", operation: "agent-run" },
+  { id: "org-api", match: "prefix", path: "/api/orgs/", operation: "page" },
   { id: "auth-callback", match: "exact", path: "/auth/callback", operation: "page" },
   { id: "auth-login", match: "exact", path: "/auth/login", operation: "page" },
   { id: "auth-logout", match: "exact", path: "/auth/logout", operation: "page" },
@@ -63,6 +75,28 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   { id: "registry", match: "prefix", path: "/registry/", operation: "registry.query" },
   { id: "cli-tokens-page", match: "exact", path: "/settings/cli-tokens", operation: "page" },
 ] as const;
+
+/**
+ * Public product-site routes the SPA serves without a replayed session: the
+ * marketing home, the roadmap (with per-task pages rendered from `.eforest`), and
+ * the documentation. Every other application route stays behind the session gate.
+ * `/` is dual: a replayed session renders the application, no session renders the
+ * landing page (the server marks the served shell so the client never has to guess).
+ */
+export const PUBLIC_SITE_ROUTES: readonly Pick<PlatformRouteDefinition, "match" | "path">[] = [
+  { match: "exact", path: "/" },
+  { match: "exact", path: "/home" },
+  { match: "exact", path: "/roadmap" },
+  { match: "prefix", path: "/roadmap/" },
+  { match: "exact", path: "/docs" },
+  { match: "prefix", path: "/docs/" },
+] as const;
+
+export function isPublicSiteRoute(pathname: string): boolean {
+  return PUBLIC_SITE_ROUTES.some((route) =>
+    route.match === "exact" ? pathname === route.path : pathname.startsWith(route.path),
+  );
+}
 
 export function classifyPlatformRoute(pathname: string): PlatformRouteId | undefined {
   return PLATFORM_ROUTES.find((route) =>

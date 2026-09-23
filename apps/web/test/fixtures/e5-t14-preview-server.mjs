@@ -65,7 +65,16 @@ function appEvent(type, payload, ts) {
 
 await mkdir(work, { recursive: true });
 await writeFile(proofReceiptPath, "{}\n");
-const world = await bootWorld({ root, subject, fixtureLogin: true, proofReceiptPath });
+const extraSubjects = [
+  { id: "grace-guest", email: "grace@example.test", password: "GraceGuest1234!", name: "Grace" },
+];
+const world = await bootWorld({
+  root,
+  subject,
+  extraSubjects,
+  fixtureLogin: true,
+  proofReceiptPath,
+});
 const streams = new OfficialStreamAdapter({ baseUrl: world.streamUrl });
 const homes = new RepositoryHomeStore(streams, () => 1_780_000_000_000);
 const rawAppendApplication = world.appendApplication.bind(world);
@@ -181,11 +190,10 @@ const wikiArchitectureBytes = encoder.encode(
 );
 await streams.create(wikiStream);
 knownStreams.add(wikiStream);
-await streams.append(
-  wikiStream,
-  appEvent("fs.branch.genesis", { v: 1, branch: "wiki" }, 70),
-  { sequence: offsetForOrdinal(0), applicationOffset: offsetForOrdinal(0) },
-);
+await streams.append(wikiStream, appEvent("fs.branch.genesis", { v: 1, branch: "wiki" }, 70), {
+  sequence: offsetForOrdinal(0),
+  applicationOffset: offsetForOrdinal(0),
+});
 await world.appendApplication(wikiStream, fileCreate("home.md", wikiHomeContent, 71));
 await world.appendApplication(wikiStream, fileWrite("home.md", wikiHomeBytes, 72));
 await world.appendApplication(
@@ -322,6 +330,7 @@ for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => stop());
 process.stdout.write(
   `E5_T14_READY ${JSON.stringify({
     url: world.platformUrl,
+    resendUrl: world.resendUrl,
     repoUrl: `${world.platformUrl}/${org}/${repo}`,
     treeUrl: `${world.platformUrl}/${org}/${repo}/tree/main/`,
     fileUrl: `${world.platformUrl}/${org}/${repo}/blob/main/README.md`,

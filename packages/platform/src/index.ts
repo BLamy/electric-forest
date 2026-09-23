@@ -80,11 +80,18 @@ export {
   type SessionBackedIdentity,
   type WhoamiOptions,
 } from "./api/whoami.js";
-export { spaResponse, type SpaHandlerOptions } from "./web/spa.js";
+export {
+  PROOF_RECEIPT_SHELL_MARKER,
+  SESSION_SHELL_MARKER,
+  spaResponse,
+  type SpaHandlerOptions,
+} from "./web/spa.js";
 export {
   PLATFORM_RATE_LIMIT_KEYS,
   PLATFORM_ROUTES,
+  PUBLIC_SITE_ROUTES,
   classifyPlatformRoute,
+  isPublicSiteRoute,
   type PlatformRouteDefinition,
   type PlatformRouteId,
 } from "./route-topology.js";
@@ -121,6 +128,18 @@ export {
   type PlatformProductionRuntimeOptions,
   type PlatformProductionRuntime,
 } from "./production.js";
+export {
+  AgentRunCoordinator,
+  AgentRunError,
+  type AgentRunAcquireInput,
+  type AgentRunAcquireResult,
+  type AgentRunEventInput,
+  type AgentRunLeaseInput,
+  type AgentRunLeaseResult,
+  type AgentRunMutationInput,
+  type AgentRunMutationResult,
+  type AgentRunCoordinatorOptions,
+} from "./agent-runs.js";
 export {
   isNamespaceDispatchEvent,
   isNamespaceEvent,
@@ -182,12 +201,14 @@ export {
   type BoardProvenance,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
+export * from "./loop/index.js";
 export {
   ActionValidatorRegistry,
   registerApplicationValidators,
   registerIssueValidators,
   registerLabelValidators,
   registerPrValidators,
+  registerProjectValidators,
   type ActionValidationContext,
   type ActionValidator,
 } from "./validation.js";

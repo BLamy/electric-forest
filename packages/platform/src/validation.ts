@@ -15,6 +15,16 @@ import {
 import { isIssueActionType, type IssueActionType, type IssueState } from "@eforest/reducers";
 import type { IssueEnvelopeSource } from "./issues/envelope.js";
 import { IssueUnknownActionError, validateIssueEvent } from "./issues/validators.js";
+import { registerChatValidators } from "./chat/validators.js";
+import { registerOrgRosterValidators } from "./org/validators.js";
+import { taskActionValidators, type TaskState } from "@eforest/tasks";
+import {
+  PROJECT_ACTION_TYPES,
+  validateProjectEvent,
+  type ProjectActorRole,
+  type ProjectRecordResolver,
+  type ProjectState,
+} from "./loop/index.js";
 
 export interface ActionValidationContext {
   readonly streamId: string;
@@ -23,6 +33,12 @@ export interface ActionValidationContext {
   readonly nextOffset: Offset;
   readonly records: readonly Event[];
   readonly issueSource?: IssueEnvelopeSource;
+  /** Identity stamped by the dispatch door; task validators bind `by.actor` to it. */
+  readonly actor?: string;
+  /** Role the dispatch door derived from the credential (E6-T03): session = human, grant = agent. */
+  readonly actorRole?: ProjectActorRole;
+  /** Offset-stamped, metadata-stripped records of another stream (E6-T03 queue proofs). */
+  readonly resolveRecords?: ProjectRecordResolver;
   readonly resolveBranch?: (streamId: string) => Promise<PrBranchSnapshot | undefined>;
   readonly resolveStream?: (streamId: string) => Promise<EvidenceResolvedStream | undefined>;
 }
@@ -121,6 +137,45 @@ export function registerEvidenceValidators(
   return registry;
 }
 
+export function registerTaskValidators(
+  registry = new ActionValidatorRegistry(),
+): ActionValidatorRegistry {
+  for (const validator of taskActionValidators) {
+    registry.registerValidator(validator.actionType, async (action, context) => {
+      await validator.validate(action, {
+        streamId: context.streamId,
+        state: context.state as TaskState,
+        headOffset: context.headOffset,
+        nextOffset: context.nextOffset,
+        records: context.records,
+        ...(context.actor === undefined ? {} : { actor: context.actor }),
+        resolveStream: context.resolveStream ?? (async () => undefined),
+      });
+    });
+  }
+  return registry;
+}
+
+export function registerProjectValidators(
+  registry = new ActionValidatorRegistry(),
+): ActionValidatorRegistry {
+  for (const actionType of PROJECT_ACTION_TYPES) {
+    registry.registerValidator(actionType, async (action, context) => {
+      await validateProjectEvent(action, {
+        streamId: context.streamId,
+        state: context.state as ProjectState,
+        headOffset: context.headOffset,
+        nextOffset: context.nextOffset,
+        records: context.records,
+        ...(context.actor === undefined ? {} : { actor: context.actor }),
+        ...(context.actorRole === undefined ? {} : { actorRole: context.actorRole }),
+        ...(context.resolveRecords === undefined ? {} : { resolveRecords: context.resolveRecords }),
+      });
+    });
+  }
+  return registry;
+}
+
 export function registerApplicationValidators(
   registry = new ActionValidatorRegistry(),
 ): ActionValidatorRegistry {
@@ -128,5 +183,9 @@ export function registerApplicationValidators(
   registerLabelValidators(registry);
   registerPrValidators(registry);
   registerEvidenceValidators(registry);
+  registerTaskValidators(registry);
+  registerProjectValidators(registry);
+  registerChatValidators(registry);
+  registerOrgRosterValidators(registry);
   return registry;
 }

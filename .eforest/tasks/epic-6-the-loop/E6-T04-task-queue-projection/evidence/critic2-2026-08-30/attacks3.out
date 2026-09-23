@@ -1,0 +1,13 @@
+proof decision {"kind":"eligible","nextEligible":"E2-T01","inFlight":null} heads 7
+catalog-moved false queue/stale-proof {"stream":"repo-issues:maple/loom","cited":"0000000000000000_0000000000000006","current":"0000000000000000_0000000000000007"}
+verified-task-moved false queue/stale-proof {"stream":"issue:maple/loom/E1-T01","cited":"0000000000000000_0000000000000004","current":"0000000000000000_0000000000000005"}
+admit-after-move false queue/stale-proof
+double-start false queue/stale-proof {"stream":"issue:maple/loom/E2-T01","cited":"0000000000000000_0000000000000001","current":"0000000000000000_0000000000000002"} current decision {"kind":"in-flight","nextEligible":null,"inFlight":"E2-T01"}
+truncated false queue/stale-proof {"stream":"issue:maple/loom/E1-T01","cited":"0000000000000000_0000000000000004","current":"0000000000000000_0000000000000003"}
+forged-extra-head false queue/stale-proof {"stream":"issue:maple/loom/E8-T01","cited":"0000000000000000_0000000000000003","current":"-1"}
+tampered-tasks false queue/false-proof
+tampered-finalCapstone false queue/false-proof
+wrong-version false queue/false-proof
+refuted+implemented, caps in E1 and E2 {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E1-T01","E1-T02"]},{"reason":"capstone/not-final","refs":["E1-T01"]}]} admit: queue/invalid md has gate: false
+in-progress+in-progress, two caps E2 {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E2-T01","E2-T02"]},{"reason":"capstone/multiple","refs":["E2"]}]} admit: queue/invalid md has gate: false
+three active {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E1-T01","E1-T02","E1-T03"]}]} admit: queue/invalid md has gate: false

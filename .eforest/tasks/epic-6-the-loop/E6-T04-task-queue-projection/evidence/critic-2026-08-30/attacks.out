@@ -1,0 +1,63 @@
+== A1 crafted edge graphs (Python vs TS) ==
+[float-tie] decision=eligible:E1-T02 pySelected=E1-T01 tsSelected=E1-T02 match=false warnings=[]
+   nextUp: TS=["E1-T02","E1-T01","E1-T03"] PY=["E1-T01","E1-T02","E1-T03"]
+   selected: TS="E1-T02" PY="E1-T01"
+   tuples: TS=[["E1-T02","pending","101.1",[],false],["E1-T01","pending","101.10000000000000001",[],false],["E1-T03","pending","103",[],true]] PY=[["E1-T01","pending","101.1",[],false],["E1-T02","pending","101.1",[],false],["E1-T03","pending","103",[],true]]
+   markdown: line 14: TS="1. **E1-T02** — Task E1-T02" PY="1. **E1-T01** — Task E1-T01"
+[equal-prio] decision=invalid pySelected=E1-T11 tsSelected=E1-T11 match=false warnings=[]
+   markdown: line 8: TS="## Invalid queue" PY="## Current gate"
+   violations=[{"reason":"capstone/not-final","refs":["E1-T11"]}]
+[cross-epic-tie] decision=eligible:E10-T01 pySelected=E10-T01 tsSelected=E10-T01 match=true warnings=[]
+[frac-no-reason] decision=invalid pySelected=E1-T01 tsSelected=E1-T01 match=false warnings=[]
+   markdown: line 8: TS="## Invalid queue" PY="## Current gate"
+   violations=[{"reason":"priority/fractional-without-reason","refs":["E1-T01"]}]
+[bare-zero-cap] decision=eligible:E1-T02 pySelected=E1-T02 tsSelected=E1-T02 match=true warnings=[]
+[bare-one-cap-verified] decision=eligible:E2-T01 pySelected=E2-T01 tsSelected=E2-T01 match=true warnings=[]
+[bare-two-caps] decision=invalid pySelected=E2-T01 tsSelected=E2-T02 match=false warnings=[]
+   nextUp: TS=["E2-T02"] PY=["E2-T01","E2-T02"]
+   selected: TS="E2-T02" PY="E2-T01"
+   markdown: line 8: TS="## Invalid queue" PY="## Current gate"
+   violations=[{"reason":"capstone/multiple","refs":["E1"]}]
+[bare-epic-cycle] decision=exhausted:null pySelected=null tsSelected=null match=true warnings=[]
+[self-epic-cycle] decision=exhausted:null pySelected=null tsSelected=null match=true warnings=[]
+[unicode-title] decision=invalid pySelected=E1-T01 tsSelected=E1-T02 match=false warnings=[]
+   nextUp: TS=["E1-T02"] PY=["E1-T01","E1-T02"]
+   selected: TS="E1-T02" PY="E1-T01"
+   tuples: TS=[["E1-T02","pending","102",[],true]] PY=[["E1-T01","pending","101",[],false],["E1-T02","pending","102",[],true]]
+   markdown: line 4: TS="**0 / 1 tasks verified.**" PY="**0 / 2 tasks verified.**"
+   violations=[{"reason":"spec/unparseable","refs":["E1-T01"]}]
+[hash-title] decision=eligible:E1-T01 pySelected=E1-T01 tsSelected=E1-T01 match=false warnings=[]
+   markdown: line 14: TS="1. **E1-T01** — \"Fix regression #12 in queue\"" PY="1. **E1-T01** — \"Fix regression"
+[refuted-rework] decision=rework:E1-T02 pySelected=E1-T02 tsSelected=E1-T02 match=true warnings=[]
+[refuted-blocked] decision=in-flight:null pySelected=E1-T02 tsSelected=E1-T02 match=true warnings=[]
+[capstone-gate-unlocks] decision=in-flight:null pySelected=E1-T02 tsSelected=E1-T02 match=true warnings=[]
+[inprogress-unmet-deps] decision=in-flight:null pySelected=E1-T02 tsSelected=E1-T02 match=true warnings=[]
+[verified-on-pending] decision=eligible:E1-T01 pySelected=E1-T01 tsSelected=E1-T01 match=true warnings=[]
+[twelve-eligible] decision=eligible:E1-T01 pySelected=E1-T01 tsSelected=E1-T01 match=true warnings=[]
+[large-1000] decision=eligible:E11-T01 pySelected=E11-T01 tsSelected=E11-T01 match=true warnings=[]
+   large graph ms=742 tasks=1000
+== A1 random graphs, my seeds ==
+compared=124 (cyclic-but-valid=4) mismatches=0
+== A2 stale proof after dependency status moves ==
+  before: {"kind":"in-flight","nextEligible":null,"inFlight":"E1-T01"}
+  old proof vs moved: {"ok":false,"reason":"queue/stale-proof","stale":{"stream":"issue:maple/loom/E1-T01","cited":"0000000000000000_0000000000000003","current":"0000000000000000_0000000000000004"}}
+  admit E1-T02 with old proof: {"ok":false,"reason":"queue/stale-proof"}
+  fresh: {"kind":"eligible","nextEligible":"E1-T02","inFlight":null} admit E1-T02: true
+  catalog offset ahead: {"ok":false,"reason":"queue/stale-proof","stale":{"stream":"repo-issues:maple/loom","cited":"0000000000000000_0000000000000099","current":"0000000000000000_0000000000000002"}}
+  forged decision: {"ok":false,"reason":"queue/false-proof"}
+  forged digest: queue/false-proof
+  cited head absent now: {"stream":"issue:maple/loom/E9-T99","cited":"0000000000000000_0000000000000001","current":"-1"}
+== A3 two active + two capstones ==
+  same-epic: {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E1-T01","E1-T02"]},{"reason":"capstone/multiple","refs":["E1"]}]} finalCapstone=E1-T02 admit="queue/invalid"
+  diff-epic: {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E1-T01","E2-T01"]}]} finalCapstone=E2-T01 admit="queue/invalid"
+  two-caps-diff-epic-no-active: {"kind":"eligible","nextEligible":"E1-T01","inFlight":null} finalCapstone=E2-T01 admit=undefined
+  implemented+refuted: {"kind":"invalid","violations":[{"reason":"queue/multiple-active","refs":["E1-T01","E1-T02"]}]} finalCapstone=E1-T03 admit="queue/invalid"
+== Unlisted ==
+  body says verified, stream pending → status=pending decision={"kind":"eligible","nextEligible":"E1-T01","inFlight":null}
+  body says cancelled → status=pending decision={"kind":"eligible","nextEligible":"E1-T01","inFlight":null}
+  lowercase id in body → {"kind":"invalid","violations":[{"reason":"spec/unparseable","refs":["E1-T01"]},{"reason":"dep/missing","refs":["E1-T01"]}]}
+  catalog lists E1-T01 but no records fetched → members=E1-T02 heads=[{"stream":"issue:maple/loom/E1-T02","offset":"0000000000000000_0000000000000002"}] decision={"kind":"invalid","violations":[{"reason":"dep/missing","refs":["E1-T01"]}]}
+  duplicate dep ref → {"kind":"invalid","violations":[{"reason":"spec/unparseable","refs":["E1-T02"]},{"reason":"capstone/none-in-completed-epic","refs":["E1"]}]}
+  evaluateQueue duplicate id → {"kind":"invalid","violations":[{"reason":"queue/duplicate-id","refs":["E1-T01"]}]}
+  capstone depends on its own epic → {"kind":"exhausted","nextEligible":null,"inFlight":null} blocked=[{"reason":"dep/epic-capstone-unverified","ref":"E1","detail":"pending"}]
+  queue-jump after verified capstone → {"kind":"invalid","violations":[{"reason":"capstone/not-final","refs":["E1-T02"]}]}

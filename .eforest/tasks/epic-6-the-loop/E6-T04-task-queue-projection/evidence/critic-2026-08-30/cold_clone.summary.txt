@@ -1,0 +1,19 @@
+cold_clone: cloning HEAD 85ca9bf7154edd547ae606c0991f9dd2cfe52d9d → /var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.f1IJ11e0zY
+cold_clone: make verify-E6-T04 (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)
+cold_clone: hydrating dependencies from lockfile-verified pnpm store /Users/blamy/Library/pnpm/store/v10
+E6_T04_FIXTURE catalog=repo-issues:maple/loom@0000000000000000_0000000000000006 tasks=7 next=E2-T01
+E6_T04_DIGEST 1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec
+E6_T04_QUEUE_MD sha256=dae6f93c83215b4a195c56558968c5e034eaf1d19ac01ac5cfc906516c66cce3 bytes=1252
+E6_T04_REBUILD processes=3 shuffled=2 byte-identical=true digest=1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec
+E6_T04_GRAPHS valid=13 invalid=14 reasons=11/13
+E6_T04_DIFFERENTIAL graphs=53 python=tools/build_queue.py mismatches=0
+E6_T04_PERMUTATIONS graphs=120 orders=360 digest-identical=true
+E6_T04_FENCE stale-refused=queue/stale-proof moved=issue:maple/loom/E1-T02 cited=0000000000000000_0000000000000005 current=0000000000000000_0000000000000006
+E6_T04_ENDPOINT steps=4 in-flight->eligible head=0000000000000000_0000000000000003->0000000000000000_0000000000000004
+E6_T04_SENTINEL fixture=bare-epic-noncapstone-first next=E1-T02 blocked=E2-T01:dep/epic-capstone-unverified python=E1-T02
+MUTATION e6-t04-sources.jsonl(E2-T01 label task->tasq) digest=536219c421d9017afea8a5f7e2882ccfb8ce36f0ffa7260ff167c24a3f5373f4 EXPECTED-FAIL OK
+E6_T04_EVIDENCE OK
+verify-E6-T04: OK
+DEPENDENCY_INTEGRITY_OK
+cold_clone: kept /var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.f1IJ11e0zY
+cold_clone: verify-E6-T04 PASSED from a pristine clone

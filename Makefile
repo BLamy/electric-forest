@@ -778,7 +778,7 @@ verify-E5-T14: verify-E5-T13 _v-e5-web-build
 	@node tools/verify/e5_t14_browser_evidence.mjs
 	@echo "verify-E5-T14: OK"
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E6-T01 verify-E6-T02 verify-E6-T03 verify-E6-T04 verify-E6-T05 verify-E6-T07
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
@@ -786,5 +786,98 @@ verify-list:
 
 verify-task-board:
 	@pnpm task-board:check
+
+# --- E6-T01: task event model (a task is an issue with evidence) ---
+.PHONY: verify-E6-T01 _v-e6-t01
+verify-E6-T01: _v-e6-t01
+	@echo "verify-E6-T01: OK"
+
+_v-e6-t01:
+	@CI=true pnpm --filter @eforest/tasks build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/cli build
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process" packages/tasks/src; test $$? -eq 1
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test packages/reducers/src/index.test.ts packages/platform/test/tasks.test.ts
+	@node tools/verify/e6_t01_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T01"
+
+# --- E6-T02: task-folder contract (parse and render readme, work, evidence) ---
+.PHONY: verify-E6-T02 _v-e6-t02
+verify-E6-T02: _v-e6-t02
+	@echo "verify-E6-T02: OK"
+
+_v-e6-t02:
+	@CI=true pnpm --filter @eforest/tasks build
+	@grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|js-yaml|from \"yaml\"" packages/tasks/src/folder; test $$? -eq 1
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test/folder-contract.test.ts packages/tasks/test/folder-property.test.ts
+	@node tools/verify/e6_t02_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T02"
+
+# --- E6-T03: project state machine (building / complete / paused / invalid_loop) ---
+.PHONY: verify-E6-T03 _v-e6-t03
+verify-E6-T03: _v-e6-t03
+	@echo "verify-E6-T03: OK"
+
+_v-e6-t03:
+	@CI=true pnpm --filter @eforest/tasks build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/cli build
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|readFile|writeFile" packages/platform/src/loop; test $$? -eq 1
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/project-state.test.ts
+	@node tools/verify/e6_t03_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T03"
+
+# --- E6-T04: task queue projection (deterministic eligibility and dependency proofs) ---
+.PHONY: verify-E6-T04 _v-e6-t04
+verify-E6-T04: _v-e6-t04
+	@echo "verify-E6-T04: OK"
+
+_v-e6-t04:
+	@CI=true pnpm --filter @eforest/tasks build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|readFile|writeFile" packages/tasks/src/queue; test $$? -eq 1
+	@command grep -nE "def eligible|capstone_verified|done_refs" tools/build_queue.py >/dev/null
+	@command grep -nE "def eligible|capstone_verified|done_refs|STATUS_ICON" tools/verify/queue_differential.py; test $$? -eq 1
+	@python3 -c "import ast,sys; ast.parse(open('tools/build_queue.py').read())"
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test/queue-eligibility.test.ts packages/tasks/test/queue-fuzz.test.ts packages/tasks/test/queue-differential.test.ts packages/platform/test/task-queue.test.ts
+	@node tools/verify/e6_t04_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T04"
+
+# --- E6-T05: task folders on streams (bidirectional projection without echo) ---
+.PHONY: verify-E6-T05 _v-e6-t05
+verify-E6-T05: _v-e6-t05
+	@echo "verify-E6-T05: OK"
+
+_v-e6-t05:
+	@CI=true pnpm --filter @eforest/tasks build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/server build
+	@CI=true pnpm --filter @eforest/streamfs build
+	@command grep -rnE "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http|node:child_process|setTimeout|setInterval" packages/tasks/src/folder; test $$? -eq 1
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/tasks/test/folder-sync.test.ts packages/platform/test/task-folder-sync.test.ts
+	@node tools/verify/e6_t05_differential.mjs
+	@node tools/verify/e6_t05_evidence.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T05"
+
+# --- E6-T07: agent-run protocol (leases, capabilities, fresh sessions, replay) ---
+.PHONY: verify-E6-T07 _v-e6-t07
+verify-E6-T07: _v-e6-t07
+	@echo "verify-E6-T07: OK"
+
+_v-e6-t07: _v-build
+	@CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/loop/test/run-protocol.test.ts packages/platform/test/agent-runs.test.ts
+	@node tools/verify/e6_t07_evidence.mjs
+	@node tools/verify/e6_t07_sensitivity.mjs
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E6-T07"
 
 # --- end verify section ---

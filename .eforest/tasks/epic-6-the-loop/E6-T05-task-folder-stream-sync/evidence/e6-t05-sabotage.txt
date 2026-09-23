@@ -1,0 +1,47 @@
+E6-T05 sabotage sentinel transcript (2026-08-31, after critic run 1)
+guard: E6_T05_ORIGIN_FILTER_GUARD (packages/tasks/src/folder/sync.ts)
+
+A. SOURCE-LEVEL SABOTAGE (attack 5: the guard gates the production path)
+   mutation: E6_T05_ORIGIN_FILTER_GUARD = true -> false in source, then rebuilt.
+   The effective filter is GUARD && (originFilter ?? true), so no caller can restore
+   suppression: every engine re-ingests its own projections.
+   node tools/verify/e6_t05_schedule.mjs --idle-ms 1500  -> exit 1
+TIMEOUT step5 implemented
+warnings: ["client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000010: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000024: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000029: task/stale-spec"]
+readmeA: "---\nid: E9-T01\nepic: 9\ntitle: Folder sync schedule task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nThe folder is the stream.\n\n## Context\nCreated by A; revised by B.\n\n## Deliverables\n- Bidirectional projection without echo.\n\n## Acceptanc
+   node tools/verify/e6_t05_evidence.mjs                 -> exit 1 (schedule failed)
+   The target fails on non-convergence of the exact event schedule, NOT merely on
+   assert.equal(E6_T05_ORIGIN_FILTER_GUARD, true). EXPECTED-FAIL OK
+
+B. FLAG-LEVEL SABOTAGE (the verifier's own in-run sentinel)
+   command: node tools/verify/e6_t05_schedule.mjs --origin-filter off --idle-ms 1500
+   exit=1, failing by non-convergence; the verifier asserts that specific shape and
+   refuses an unrelated crash (no ERR_MODULE_NOT_FOUND/SyntaxError/ReferenceError).
+   EXPECTED-FAIL OK
+
+--- stderr of the source-level run (first 25 lines) ---
+TIMEOUT step5 implemented
+warnings: ["client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000010: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000024: task/stale-spec","client-a: task/stale-spec: spec-revised refused at 0000000000000000_0000000000000029: task/stale-spec"]
+readmeA: "---\nid: E9-T01\nepic: 9\ntitle: Folder sync schedule task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nThe folder is the stream.\n\n## Context\nCreated by A; revised by B.\n\n## Deliverables\n- Bidirectional projection without echo.\n\n## Acceptanc
+readmeB: "---\nid: E9-T01\nepic: 9\ntitle: Folder sync schedule task\npriority: 901\nstatus: pending\ndepends_on: []\nestimate: S\ncapstone: false\n---\n\n## Goal\nThe folder is the stream.\n\n## Context\nCreated by A; revised by B.\n\n## Deliverables\n- Bidirectional projection without echo.\n\n## Acceptanc
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000024-1.retained","o":"0000000000000000_0000000000000028","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/readme.md","o":"0000000000000000_0000000000000029","k":["refused","revised"],"r":"task/stale-spec"}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.json","o":"0000000000000000_0000000000000030","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.json","o":"0000000000000000_0000000000000031","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.retained","o":"0000000000000000_0000000000000032","k":[],"r":""}
+Ja {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.retained","o":"0000000000000000_0000000000000033","k":[],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.json","o":"0000000000000000_0000000000000030","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.json","o":"0000000000000000_0000000000000031","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.retained","o":"0000000000000000_0000000000000032","k":["workshop"],"r":""}
+Ja {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/work/.sync/conflicts/0000000000000000_0000000000000029-1.retained","o":"0000000000000000_0000000000000033","k":["workshop"],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/readme.md","o":"0000000000000000_0000000000000009","k":["revised"],"r":""}
+Jb {"d":"applied","s":"evidence.attached","o":"0000000000000000_0000000000000000","k":[],"r":""}
+Jb {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence","o":"0000000000000000_0000000000000010","k":[],"r":""}
+Jb {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000011","k":[],"r":""}
+Jb {"d":"projected","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000012","k":[],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence","o":"0000000000000000_0000000000000010","k":["directory"],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000011","k":["awaiting-content"],"r":""}
+Jb {"d":"ingested","s":".eforest/tasks/epic-9/E9-T01-folder-sync/evidence/run.bin","o":"0000000000000000_0000000000000012","k":["unchanged"],"r":""}
+Jb {"d":"applied","s":"evidence.attached","o":"0000000000000000_0000000000000001","k":[],"r":""}
+Jb {"d":"applied","s":"evidence.detached","o":"0000000000000000_0000000000000002","k":[],"r":""}
+file:///Users/blamy/Documents/Codex/electric-forest/tools/verify/e6_t05_schedule.mjs:304
