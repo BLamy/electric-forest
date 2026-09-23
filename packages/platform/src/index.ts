@@ -80,7 +80,12 @@ export {
   type SessionBackedIdentity,
   type WhoamiOptions,
 } from "./api/whoami.js";
-export { SESSION_SHELL_MARKER, spaResponse, type SpaHandlerOptions } from "./web/spa.js";
+export {
+  PROOF_RECEIPT_SHELL_MARKER,
+  SESSION_SHELL_MARKER,
+  spaResponse,
+  type SpaHandlerOptions,
+} from "./web/spa.js";
 export {
   PLATFORM_RATE_LIMIT_KEYS,
   PLATFORM_ROUTES,

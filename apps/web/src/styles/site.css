@@ -201,6 +201,12 @@
     filter 0.2s;
 }
 
+/* The nav-link rule is more specific than .site-btn for the unauthenticated header CTA. */
+.site-nav-links > a.site-btn,
+.site-nav-links > a.site-btn:hover {
+  color: #04140b;
+}
+
 .site-btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.06);

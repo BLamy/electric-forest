@@ -1,10 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Icon, List, ListRow, ListSection } from "@brett_lamy/ui";
 import { IdentityRegion } from "./identity.js";
-import { MobileProductShell } from "./components/mobile/MobileProductShell.js";
-import { DesktopProductShell, repositoryRoute } from "./components/shell/ProductShell.js";
-import { navigate, repoSectionPath, type RepoSection } from "./prs/RepoChrome.js";
-import { hasReplayedSession, publicSitePage } from "./site/session.js";
+import { repositoryRoute } from "./components/shell/repository-route.js";
+import { hasProofReceipt, hasReplayedSession, publicSitePage } from "./site/session.js";
 
 interface ProofReceiptValue {
   readonly identityStream: string;
@@ -133,6 +130,16 @@ const PublicSite = lazy(async () => {
   return { default: module.PublicSite };
 });
 
+const DesktopProductShell = lazy(async () => {
+  const module = await import("./components/shell/ProductShell.js");
+  return { default: module.DesktopProductShell };
+});
+
+const MobileRepositoryRoute = lazy(async () => {
+  const module = await import("./MobileRepositoryRoute.js");
+  return { default: module.MobileRepositoryRoute };
+});
+
 function RouteFallback(): React.JSX.Element {
   return <p data-testid="route-loading">Loading route…</p>;
 }
@@ -145,82 +152,11 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
   );
 }
 
-const repositorySections: readonly {
-  id: RepoSection;
-  title: string;
-  subtitle: string;
-  icon: string;
-}[] = [
-  { id: "code", title: "Code", subtitle: "Browse branches and files", icon: "layers" },
-  { id: "pulls", title: "Pull Requests", subtitle: "Review activity and changes", icon: "message" },
-  { id: "issues", title: "Issues", subtitle: "Plan and track work", icon: "info" },
-  { id: "wiki", title: "Wiki", subtitle: "Read repository documentation", icon: "star" },
-  { id: "settings", title: "Settings", subtitle: "Configure this repository", icon: "sliders" },
-];
-
-function MobileRepositoryRoute(props: {
-  readonly pathname: string;
-  readonly org: string;
-  readonly repo: string;
-  readonly active: RepoSection;
-}): React.JSX.Element {
-  const section = repositorySections.find((item) => item.id === props.active);
-  const rootContent = (
-    <List inset>
-      <ListSection
-        title={`${props.org} / ${props.repo}`}
-        footer="Every mutation is backed by a durable stream."
-      >
-        {repositorySections.map((item) => (
-          <ListRow
-            key={item.id}
-            title={item.title}
-            subtitle={item.subtitle}
-            leading={<Icon name={item.icon} />}
-            accessory="chevron"
-            selected={item.id === props.active}
-            onPress={() => navigate(repoSectionPath(props.org, props.repo, item.id))}
-          />
-        ))}
-      </ListSection>
-    </List>
-  );
-  const rootScreen = {
-    key: "repository",
-    title: props.repo,
-    largeTitle: true,
-    content: rootContent,
-    bottomInset: 78,
-  };
-  const detailScreen = {
-    key: props.pathname,
-    title: section?.title ?? "Repository",
-    content: (
-      <article id="main-content" className="mobile-repository-content" tabIndex={-1}>
-        <Route pathname={props.pathname} />
-      </article>
-    ),
-    bottomInset: 78,
-  };
-  return (
-    <MobileProductShell
-      org={props.org}
-      repo={props.repo}
-      activeTab={props.active}
-      screens={[rootScreen, detailScreen]}
-      onPop={() => navigate(`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}`)}
-      routeForTab={(tab) => repoSectionPath(props.org, props.repo, tab)}
-      sidebar={rootContent}
-      regularMaster={rootContent}
-      className="mobile-repository-shell"
-    />
-  );
-}
-
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
   const compact = useCompactProductShell();
   const session = hasReplayedSession();
+  const proofReceipt = hasProofReceipt();
   const site = publicSitePage(pathname, session);
   if (site !== undefined) {
     return (
@@ -237,19 +173,22 @@ export function AppRoutes(): React.JSX.Element {
         Skip to content
       </a>
       {mobileRepository ? (
-        <MobileRepositoryRoute
-          pathname={pathname}
-          org={repository.org}
-          repo={repository.repo}
-          active={repository.active}
-        />
+        <Suspense fallback={<RouteFallback />}>
+          <MobileRepositoryRoute
+            pathname={pathname}
+            org={repository.org}
+            repo={repository.repo}
+            active={repository.active}
+            detail={<Route pathname={pathname} />}
+          />
+        </Suspense>
       ) : (
         <DesktopProductShell
           pathname={pathname}
           diagnostics={
             <>
               <IdentityRegion />
-              <ProofReceipt />
+              {proofReceipt ? <ProofReceipt /> : null}
             </>
           }
         >

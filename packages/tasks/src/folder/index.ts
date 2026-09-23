@@ -3,3 +3,7 @@ export * from "./parse.js";
 export * from "./paths.js";
 export * from "./render.js";
 export * from "./schema.js";
+export * from "./ingest.js";
+export * from "./journal.js";
+export * from "./project.js";
+export * from "./sync.js";

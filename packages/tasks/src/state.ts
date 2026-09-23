@@ -60,6 +60,14 @@ export interface TaskCurrentClaim {
   readonly offset: Offset;
 }
 
+/** The accepted readme text of the task (E6-T05); absent until the first revision. */
+export interface TaskSpec {
+  readonly offset: Offset;
+  readonly folder: string;
+  readonly sha256: string;
+  readonly readme: string;
+}
+
 export interface TaskVerification {
   readonly attempt: number;
   readonly claim: Offset;
@@ -80,6 +88,7 @@ export interface TaskState {
   readonly attempts: readonly TaskAttempt[];
   readonly currentClaim?: TaskCurrentClaim;
   readonly verification?: TaskVerification;
+  readonly spec?: TaskSpec;
 }
 
 export function taskInitialStateFor(stream: string, taskId: string): TaskState {

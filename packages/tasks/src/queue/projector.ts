@@ -114,7 +114,9 @@ function specOf(
   stream: string,
   head: Offset | typeof OFFSET_BEFORE_FIRST,
 ): MemberSpec | QueueViolation {
-  const parsed = parseTaskReadme(new TextEncoder().encode(task.issue.body));
+  // E6-T05: the accepted readme text is the latest `task.spec-revised`; the issue body is
+  // the text the task was opened with and stays the spec until the first revision.
+  const parsed = parseTaskReadme(new TextEncoder().encode(task.spec?.readme ?? task.issue.body));
   if (!parsed.ok) return { reason: "spec/unparseable", refs: [task.taskId] };
   const { frontmatter, readme } = parsed;
   if (frontmatter.id !== task.taskId) return { reason: "spec/id-mismatch", refs: [task.taskId] };

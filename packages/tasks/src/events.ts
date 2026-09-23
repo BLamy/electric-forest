@@ -11,6 +11,7 @@ export const TASK_ACTION_TYPES = [
   "task.refuted",
   "task.rework-started",
   "task.verified",
+  "task.spec-revised",
 ] as const;
 export type TaskActionType = (typeof TASK_ACTION_TYPES)[number];
 
@@ -21,6 +22,19 @@ export const TASK_MAX_ATTACHMENT_REFS = 64;
 export const TASK_MAX_FINDINGS = 64;
 export const TASK_ACTOR_MAX_CODE_UNITS = 256;
 export const TASK_STREAM_REF_MAX_CODE_UNITS = 512;
+/** A spec revision carries the whole canonical readme; anything larger is refused. */
+export const TASK_SPEC_MAX_CODE_UNITS = 1024 * 1024;
+/** The base of the first spec revision: no prior `task.spec-revised` record exists. */
+export const TASK_SPEC_NO_BASE = OFFSET_BEFORE_FIRST;
+/** `epic-<n>[-slug]/E<n>-T<nn>[a-z]?-<slug>`: a task folder path relative to `.eforest/tasks/`. */
+export const TASK_FOLDER_PATH_PATTERN =
+  /^epic-(0|[1-9][0-9]*)(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?\/E(0|[1-9][0-9]*)-T[0-9]{2}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isTaskFolderPath(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > 512) return false;
+  const match = TASK_FOLDER_PATH_PATTERN.exec(value);
+  return match !== null && match[1] === match[2];
+}
 
 /** `agent-run:<org>/<run-id>` — the stream an agent run writes its trace to (E6-T07). */
 export const AGENT_RUN_STREAM_PATTERN = /^agent-run:[a-z0-9](?:-?[a-z0-9])*\/[A-Za-z0-9._~-]+$/;
@@ -100,7 +114,28 @@ export interface TaskVerifiedEvent extends Event {
     readonly summary: string;
   };
 }
+/**
+ * E6-T05: one accepted text revision of the task readme. `readme` is the E6-T02 canonical
+ * render (frontmatter in canonical order, sections verbatim) with the frontmatter `status`
+ * set to the status the revision was made under — text, never authority. `base` fences
+ * the revision: the offset of the `task.spec-revised` it was made from, or `-1` when none
+ * exists yet. `sha256` is over the UTF-8 bytes of `readme`.
+ */
+export interface TaskSpecRevisedEvent extends Event {
+  readonly type: "task.spec-revised";
+  readonly payload: {
+    readonly v: typeof TASK_EVENT_VERSION;
+    readonly base: Offset | typeof TASK_SPEC_NO_BASE;
+    /** `<epic dir>/<id>-<slug>` under `.eforest/tasks/`: the folder this readme lives in. */
+    readonly folder: string;
+    /** Provenance: the branch write this revision ingested (stream + fs offset). */
+    readonly origin: TaskBranchRef;
+    readonly readme: string;
+    readonly sha256: string;
+  };
+}
 export type TaskEvent =
+  | TaskSpecRevisedEvent
   | TaskStartedEvent
   | TaskClaimedEvent
   | TaskRefutedEvent
@@ -267,7 +302,19 @@ export function isTaskEventShape(event: Event): event is TaskEvent {
   const p = event.payload;
   if (p === null || typeof p !== "object" || Array.isArray(p)) return false;
   const payload = p as Record<string, unknown>;
-  if (payload.v !== TASK_EVENT_VERSION || !isTaskActorRef(payload.by)) return false;
+  if (payload.v !== TASK_EVENT_VERSION) return false;
+  if (event.type === "task.spec-revised") {
+    return (
+      exactObject(payload, ["v", "base", "folder", "origin", "readme", "sha256"]) &&
+      (payload.base === TASK_SPEC_NO_BASE || eventOffsetValue(payload.base)) &&
+      isTaskFolderPath(payload.folder) &&
+      isTaskBranchRef(payload.origin) &&
+      boundedText(payload.readme, TASK_SPEC_MAX_CODE_UNITS) &&
+      typeof payload.sha256 === "string" &&
+      /^[0-9a-f]{64}$/.test(payload.sha256)
+    );
+  }
+  if (!isTaskActorRef(payload.by)) return false;
   switch (event.type) {
     case "task.started":
       return exactObject(payload, ["v", "by"]);

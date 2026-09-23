@@ -13,6 +13,7 @@ const identityRoot = fileURLToPath(new URL("./packages/identity/src/index.ts", i
 const issuesRoot = fileURLToPath(new URL("./packages/issues/src/index.ts", import.meta.url));
 const evidenceRoot = fileURLToPath(new URL("./packages/evidence/src/index.ts", import.meta.url));
 const tasksRoot = fileURLToPath(new URL("./packages/tasks/src/index.ts", import.meta.url));
+const tasksSyncNode = fileURLToPath(new URL("./packages/tasks/io/sync-node.ts", import.meta.url));
 const prRoot = fileURLToPath(new URL("./packages/pr/src/index.ts", import.meta.url));
 const serverRoot = fileURLToPath(new URL("./packages/server/src/index.ts", import.meta.url));
 const platformRoot = fileURLToPath(new URL("./packages/platform/src/index.ts", import.meta.url));
@@ -33,6 +34,7 @@ export default defineConfig({
       { find: "@eforest/identity", replacement: identityRoot },
       { find: "@eforest/issues", replacement: issuesRoot },
       { find: "@eforest/evidence", replacement: evidenceRoot },
+      { find: "@eforest/tasks/sync-node", replacement: tasksSyncNode },
       { find: "@eforest/tasks", replacement: tasksRoot },
       { find: "@eforest/pr", replacement: prRoot },
       { find: "@eforest/server", replacement: serverRoot },

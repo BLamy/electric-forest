@@ -1,0 +1,30 @@
+step1-create events=issue.opened,task.spec-revised
+step1-readme-sha256=1f43019dd2fa9116b06da4e781309d10ee3df313eafef767e06be4deaa7b9bf2
+step2-revise events=issue.opened,task.spec-revised,task.spec-revised
+step3-evidence sha256=9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af sealed=true content-digest-match=true
+step4-detach evidence=evidence.attached,evidence.attached,evidence.detached detached-content-sealed=true bytes-reconstructable=true
+step5-claim events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed
+step6-forgery events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised
+step6-artifacts count=3 reasons=log/role-kind-mismatch,status/illegal-edit
+step6b-inert lifecycle-events-added=0 status=implemented events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised
+step6b-inert text-revised-only=true refusal-artifacts=3
+step7-workshop task-events-unchanged=true evidence-events-unchanged=true
+step8-conflict events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised
+step8-loser conflict-artifacts=2 retained-has-loser-bytes=true
+step9-verified events=issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
+step10-restore readme-byte-equal=true evidence-byte-equal=true detach-events=1
+step11-idle window-at-least-ms=12000 measured-ok=true
+step11-idle heads-frozen=true write-lines-frozen=true
+step11-heads task=0000000000000000_0000000000000010 evidence=0000000000000000_0000000000000002
+final-events issue.opened,task.spec-revised,task.spec-revised,task.spec-revised,task.started,task.claimed,task.spec-revised,task.spec-revised,task.spec-revised,task.spec-revised,task.verified
+final-status verified
+task-state-digest 10721ceb758f52940cec2b121a21cc2e2816032f30cb6e3b41822233ad0480bf
+replay-deterministic true
+projection-parity files=2 byte-equal-on-both-branches=true
+evidence-manifest [{"name":"run.bin","sha256":"9a76b8af8f16f19d60de2b3999c22f9d10be4395c90ea3bfc5eb6cd6254243af"}]
+queue-digest aedebe8487ca9aee6a2b3d4c996379fa36bf7507476b1897da284b9fa4422a66
+queue-decision {"kind":"invalid","violations":[{"reason":"capstone/none-in-completed-epic","refs":["E9"]}]}
+queue-independent-replay-equal true
+journal-a ok=true violations=0
+journal-b ok=true violations=0
+warnings expected=5 unexpected=0

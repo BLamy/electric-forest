@@ -8,6 +8,11 @@ export function hasReplayedSession(doc: Document = document): boolean {
   return doc.querySelector('meta[name="ef-session"][content="replayed"]') !== null;
 }
 
+/** The proof receipt is a browser-verify-only diagnostic, never a production request. */
+export function hasProofReceipt(doc: Document = document): boolean {
+  return doc.querySelector('meta[name="ef-proof-receipt"][content="available"]') !== null;
+}
+
 export type PublicSitePage =
   | { readonly kind: "landing" }
   | { readonly kind: "roadmap" }

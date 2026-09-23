@@ -29,4 +29,18 @@ export const TASK_REFUSAL_REASONS = [
   "task/unknown-attachment",
 ] as const;
 
-export type TaskRefusalReason = (typeof TASK_REFUSAL_REASONS)[number];
+/**
+ * E6-T05 refusals of a `task.spec-revised` record. Kept apart from the E6-T01 list, whose
+ * frozen refusal transcript enumerates every lifecycle reason exactly.
+ */
+export const TASK_SPEC_REFUSAL_REASONS = [
+  "task/stale-spec",
+  "task/spec-digest-mismatch",
+  "task/spec-unparseable",
+  "task/spec-id-mismatch",
+  "task/spec-folder-mismatch",
+  "task/spec-foreign-origin",
+] as const;
+
+export type TaskRefusalReason =
+  (typeof TASK_REFUSAL_REASONS)[number] | (typeof TASK_SPEC_REFUSAL_REASONS)[number];

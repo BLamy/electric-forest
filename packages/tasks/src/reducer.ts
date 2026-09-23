@@ -1,12 +1,14 @@
-import { stateDigest, type Event, type Offset } from "@eforest/protocol";
+import { sha256Hex, stateDigest, type Event, type Offset } from "@eforest/protocol";
 import {
   isIssueActionType,
   isIssueStreamId,
   issueHasBeenOpened,
   issueReducer,
 } from "@eforest/issues";
+import { parseTaskReadme } from "./folder/parse.js";
 import {
   TASK_BRANCH_STREAM_PATTERN,
+  TASK_SPEC_NO_BASE,
   isTaskActionType,
   isTaskEventShape,
   parseTaskStreamId,
@@ -61,7 +63,47 @@ function withoutCurrentClaim(state: TaskState): TaskState {
     status: state.status,
     attempts: state.attempts,
   };
-  return state.verification === undefined ? next : { ...next, verification: state.verification };
+  const withVerification =
+    state.verification === undefined ? next : { ...next, verification: state.verification };
+  return state.spec === undefined ? withVerification : { ...withVerification, spec: state.spec };
+}
+
+/**
+ * E6-T05: a spec revision is fenced on the previous revision (`base`), must hash to its
+ * own bytes, and must be a parseable E6-T02 readme for this task id. It never touches
+ * status: the frontmatter `status` inside `readme` is text.
+ */
+function applySpecRevised(
+  state: TaskState,
+  event: TaskEvent & { readonly type: "task.spec-revised" },
+  offset: Offset,
+): TaskTransition {
+  const currentBase = state.spec?.offset ?? TASK_SPEC_NO_BASE;
+  if (event.payload.base !== currentBase) return refuse("task/stale-spec");
+  if (!branchBelongsToTask(state, event.payload.origin)) return refuse("task/spec-foreign-origin");
+  const bytes = new TextEncoder().encode(event.payload.readme);
+  if (sha256Hex(bytes) !== event.payload.sha256) return refuse("task/spec-digest-mismatch");
+  const parsed = parseTaskReadme(bytes);
+  if (!parsed.ok) return refuse("task/spec-unparseable");
+  if (parsed.frontmatter.id !== state.taskId) return refuse("task/spec-id-mismatch");
+  const folderId = event.payload.folder.split("/")[1]!.split("-").slice(0, 2).join("-");
+  if (
+    folderId !== state.taskId ||
+    !event.payload.folder.startsWith(`epic-${parsed.frontmatter.epic}`)
+  )
+    return refuse("task/spec-folder-mismatch");
+  return {
+    ok: true,
+    next: {
+      ...state,
+      spec: {
+        offset,
+        folder: event.payload.folder,
+        sha256: event.payload.sha256,
+        readme: event.payload.readme,
+      },
+    },
+  };
 }
 
 function sameBranch(a: TaskBranchRef, b: TaskBranchRef): boolean {
@@ -75,6 +117,7 @@ function sameBranch(a: TaskBranchRef, b: TaskBranchRef): boolean {
  */
 export function applyTaskEvent(state: TaskState, event: TaskEvent, offset: Offset): TaskTransition {
   if (!issueHasBeenOpened(state.issue)) return refuse("task/not-opened");
+  if (event.type === "task.spec-revised") return applySpecRevised(state, event, offset);
   const by = event.payload.by;
   const attempt = currentAttempt(state);
   switch (event.type) {

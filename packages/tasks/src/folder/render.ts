@@ -79,7 +79,7 @@ export function renderFrontmatter(frontmatter: TaskFrontmatterV1): string {
   return `---\n${lines.join("\n")}\n---\n`;
 }
 
-export function renderTaskReadme(folder: TaskFolderV1): string {
+export function renderTaskReadme(folder: Pick<TaskFolderV1, "frontmatter" | "readme">): string {
   const body = folder.readme.sections.map((section) => `## ${section.name}\n${section.body}`);
   return `${renderFrontmatter(folder.frontmatter)}${folder.readme.preamble}${body.join("")}`;
 }

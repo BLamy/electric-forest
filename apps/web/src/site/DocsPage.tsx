@@ -46,12 +46,16 @@ export function DocsPage(props: {
                 {previous === undefined ? (
                   <span />
                 ) : (
-                  <RouteLink href={`/docs/${previous.slug}`}>← {previous.title}</RouteLink>
+                  <RouteLink href={`/docs/${previous.slug}`} aria-label={previous.title}>
+                    ← {previous.title}
+                  </RouteLink>
                 )}
                 {next === undefined ? (
                   <span />
                 ) : (
-                  <RouteLink href={`/docs/${next.slug}`}>{next.title} →</RouteLink>
+                  <RouteLink href={`/docs/${next.slug}`} aria-label={next.title}>
+                    {next.title} →
+                  </RouteLink>
                 )}
               </footer>
             </>

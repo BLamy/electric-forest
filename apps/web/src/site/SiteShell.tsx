@@ -24,7 +24,7 @@ export function SiteShell(props: {
             <a href={`${homeHref}#model`}>How it works</a>
             <RouteLink href="/roadmap">Roadmap</RouteLink>
             <RouteLink href="/docs">Docs</RouteLink>
-            <a href={GITHUB_URL} target="_blank" rel="noopener">
+            <a href={GITHUB_URL} target="_blank" rel="noopener" aria-label="Star on GitHub">
               GitHub
             </a>
             {props.session ? (
@@ -34,7 +34,12 @@ export function SiteShell(props: {
                 </span>
               </RouteLink>
             ) : (
-              <a className="site-btn" href="/auth/login" data-testid="site-login">
+              <a
+                className="site-btn"
+                href="/auth/login"
+                data-testid="site-login"
+                aria-label="Log in"
+              >
                 Log in <span className="site-arrow">→</span>
               </a>
             )}
@@ -56,10 +61,12 @@ export function SiteShell(props: {
           <div className="site-footer-links">
             <RouteLink href="/roadmap">Roadmap</RouteLink>
             <RouteLink href="/docs">Docs</RouteLink>
-            <a href={GITHUB_URL} target="_blank" rel="noopener">
+            <a href={GITHUB_URL} target="_blank" rel="noopener" aria-label="Star on GitHub">
               GitHub
             </a>
-            <a href="/auth/login">Log in</a>
+            <a href="/auth/login" aria-label="Log in">
+              Log in
+            </a>
           </div>
         </div>
       </footer>
