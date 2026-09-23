@@ -4,6 +4,7 @@ import { IdentityRegion } from "./identity.js";
 import { MobileProductShell } from "./components/mobile/MobileProductShell.js";
 import { DesktopProductShell, repositoryRoute } from "./components/shell/ProductShell.js";
 import { navigate, repoSectionPath, type RepoSection } from "./prs/RepoChrome.js";
+import { hasReplayedSession, publicSitePage } from "./site/session.js";
 
 interface ProofReceiptValue {
   readonly identityStream: string;
@@ -127,6 +128,11 @@ const PageRouter = lazy(async () => {
   return { default: module.PageRouter };
 });
 
+const PublicSite = lazy(async () => {
+  const module = await import("./site/PublicSite.js");
+  return { default: module.PublicSite };
+});
+
 function RouteFallback(): React.JSX.Element {
   return <p data-testid="route-loading">Loading route…</p>;
 }
@@ -214,6 +220,15 @@ function MobileRepositoryRoute(props: {
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
   const compact = useCompactProductShell();
+  const session = hasReplayedSession();
+  const site = publicSitePage(pathname, session);
+  if (site !== undefined) {
+    return (
+      <Suspense fallback={<RouteFallback />}>
+        <PublicSite page={site} session={session} />
+      </Suspense>
+    );
+  }
   const repository = repositoryRoute(pathname);
   const mobileRepository = compact && repository !== undefined && repository.active !== "pulls";
   return (

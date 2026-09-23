@@ -58,6 +58,12 @@ export type AuthzTarget =
   | { readonly kind: "control"; readonly streamId: string }
   | { readonly kind: "sandbox"; readonly streamId: string }
   | {
+      /** An org-scoped application stream (workspace chat); membership decides access. */
+      readonly kind: "org";
+      readonly org: string;
+      readonly streamId: string;
+    }
+  | {
       readonly kind: "repo";
       readonly org: string;
       readonly repo: string;
@@ -120,6 +126,8 @@ const NAME_PATTERN = /^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/;
 /** Mirrors packages/streamfs/src/branch.ts BRANCH_NAME_PATTERN; "meta"/"file" reserved. */
 const BRANCH_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const INTERNAL_PATTERN = /^__[\s\S]*__$/;
+/** Mirrors packages/reducers/src/chat.ts channel grammar. */
+const CHAT_CHANNEL_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 const FS_STREAM_PATTERN = /^fs:([^:]*):([^:]*):([\s\S]+)$/;
 
 function ownEntry<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
@@ -226,6 +234,20 @@ export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKi
       ? { kind: "malformed", input: streamId }
       : { kind: "repo", org: identity.org, repo: identity.repo, branch: "main", streamId };
   }
+  if (streamId.startsWith("members:") || streamId.startsWith("agents:")) {
+    const match = /^(?:members|agents):([^/]+)$/.exec(streamId);
+    if (match === null || !isAuthzName(match[1]!)) return { kind: "malformed", input: streamId };
+    return { kind: "org", org: match[1]!, streamId };
+  }
+  if (streamId.startsWith("chat:")) {
+    const match = /^chat:([^/]+)(?:\/([^/]+))?$/.exec(streamId);
+    if (match === null) return { kind: "malformed", input: streamId };
+    const [, org, channel] = match as unknown as [string, string, string | undefined];
+    if (!isAuthzName(org) || (channel !== undefined && !CHAT_CHANNEL_PATTERN.test(channel))) {
+      return { kind: "malformed", input: streamId };
+    }
+    return { kind: "org", org, streamId };
+  }
   if (streamId.startsWith("ns:") || INTERNAL_PATTERN.test(streamId)) {
     return { kind: "internal", streamId };
   }
@@ -296,6 +318,32 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
       return allow("sandbox", target.streamId);
     }
     return refuse("authz/not-found");
+  }
+
+  // 4b. Org-scoped application streams (workspace chat): the org must exist and
+  //     the principal must belong to it. Reads and writes share one membership
+  //     basis; writes additionally require a validated web session, exactly as
+  //     repo writes do for owners/admins. Outsiders get the uniform not-found.
+  if (target.kind === "org") {
+    const orgView = ownEntry(namespace.orgs, target.org);
+    if (orgView === undefined) return refuse("authz/not-found");
+    const orgSub = principal.kind === "identified" ? principal.sub : undefined;
+    const orgRole = orgSub === undefined ? null : roleOf(identity, target.org, orgSub);
+    const orgBasis: AuthzBasis | undefined =
+      orgSub === undefined
+        ? undefined
+        : orgView.owner === orgSub || orgRole === "owner"
+          ? "org-owner"
+          : orgRole === "admin"
+            ? "membership:admin"
+            : orgRole === "member"
+              ? "membership:member"
+              : undefined;
+    if (orgBasis === undefined) return refuse("authz/not-found");
+    if (operation === "dispatch" && !(principal.kind === "identified" && principal.session)) {
+      return refuse("authz/write-grant-required");
+    }
+    return allow(orgBasis, target.streamId);
   }
 
   // 5. Repo resolution against the replayed namespace view.

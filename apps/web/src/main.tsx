@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { AppRoutes } from "./routes.js";
 import "@brett_lamy/docstream/styles.css";
+import "@brett_lamy/docstream-editor/styles.css";
 import "@brett_lamy/ui/styles.css";
 import "./styles.css";
 import "./styles/tokens.css";

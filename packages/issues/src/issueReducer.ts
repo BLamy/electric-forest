@@ -355,3 +355,14 @@ export const issueReducerDefinition = Object.freeze({
   digest: stateDigest,
   matchesStream: isIssueStreamId,
 });
+
+/**
+ * Event families that legally share an issue stream without belonging to the issue
+ * envelope. E6-T01's loop events (`task.*`) ride the task's issue stream: the issue
+ * reducer and board keep them as deterministic no-ops; the `tasks/v1` reducer reads them.
+ */
+export const ISSUE_SIBLING_EVENT_FAMILIES = ["task."] as const;
+
+export function isIssueSiblingEvent(type: string): boolean {
+  return ISSUE_SIBLING_EVENT_FAMILIES.some((family) => type.startsWith(family));
+}

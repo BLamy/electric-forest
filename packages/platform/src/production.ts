@@ -26,6 +26,9 @@ export interface PlatformEnvironment {
   readonly EF_SESSION_TTL: string;
   readonly EFOREST_SERVER_URL: string;
   readonly EF_WEB_ROOT?: string;
+  readonly EF_RESEND_URL?: string;
+  readonly EF_RESEND_API_KEY?: string;
+  readonly EF_RESEND_FROM?: string;
   readonly EF_BOARD_CACHE_DIR?: string;
 }
 
@@ -113,6 +116,15 @@ export function readPlatformEnvironment(
     ),
     ...(webRoot === undefined ? {} : { EF_WEB_ROOT: webRoot }),
     ...(boardCacheDir === undefined ? {} : { EF_BOARD_CACHE_DIR: boardCacheDir }),
+    ...(environment.EF_RESEND_URL === undefined
+      ? {}
+      : { EF_RESEND_URL: absoluteHttpUrl(environment.EF_RESEND_URL, "EF_RESEND_URL") }),
+    ...(environment.EF_RESEND_API_KEY === undefined
+      ? {}
+      : { EF_RESEND_API_KEY: environment.EF_RESEND_API_KEY }),
+    ...(environment.EF_RESEND_FROM === undefined
+      ? {}
+      : { EF_RESEND_FROM: environment.EF_RESEND_FROM }),
   };
 }
 
@@ -218,6 +230,15 @@ export async function createPlatformProductionRuntime(
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
     ...(webRoot === undefined ? {} : { webRoot }),
+    ...(config.EF_RESEND_URL === undefined || config.EF_RESEND_API_KEY === undefined
+      ? {}
+      : {
+          resend: {
+            baseUrl: config.EF_RESEND_URL,
+            apiKey: config.EF_RESEND_API_KEY,
+            from: config.EF_RESEND_FROM ?? "Electric Forest <invites@electric-forest.test>",
+          },
+        }),
   });
   const server = createPlatformServer((request) => app.handle(request));
   return {

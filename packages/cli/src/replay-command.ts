@@ -23,7 +23,6 @@ import {
   type MergeDump,
   type FsTree,
 } from "@eforest/streamfs";
-import { streamFsReducerDefinition } from "@eforest/reducers";
 import {
   reducerById,
   reducerForStream,
@@ -46,13 +45,6 @@ export interface ReducerModule {
   readonly initialState: unknown;
   readonly initialStateForStream?: (streamId: string) => unknown;
 }
-
-export type DigestKind = "tree" | "worktree";
-
-const STREAMFS_REDUCER: ReducerModule = {
-  reducer: streamFsReducerDefinition.reduce,
-  initialState: streamFsReducerDefinition.initialState,
-};
 
 function registeredReducer(definition: ReducerDefinition): ReducerModule {
   return {
