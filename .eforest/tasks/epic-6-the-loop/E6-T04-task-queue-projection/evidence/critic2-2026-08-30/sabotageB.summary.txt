@@ -1,0 +1,5 @@
+     × holds every frozen graph to its committed projection, markdown, and digest 12ms
+     × names every violation reason from at least one frozen graph 6ms
+     × finds cycles that run through bare-epic edges and refuses to call a deadlock exhausted 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 17 passed (20)

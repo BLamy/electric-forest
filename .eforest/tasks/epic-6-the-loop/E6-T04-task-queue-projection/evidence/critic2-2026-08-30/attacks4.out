@@ -1,0 +1,9 @@
+reverse-dag-1000 {"kind":"eligible","nextEligible":"E1000-T01","inFlight":null}
+reverse-dag-2000 {"kind":"eligible","nextEligible":"E2000-T01","inFlight":null}
+reverse-dag-3000 {"kind":"eligible","nextEligible":"E3000-T01","inFlight":null}
+reverse-dag-5000 {"kind":"eligible","nextEligible":"E5000-T01","inFlight":null}
+bigE-8001 ok {"kind":"eligible","nextEligible":"E24-T06","inFlight":null} nextUp 10 py 10
+bigE-8002 ok {"kind":"eligible","nextEligible":"E34-T02","inFlight":null} nextUp 10 py 10
+bigE-8003 ok {"kind":"eligible","nextEligible":"E1-T06","inFlight":null} nextUp 10 py 10
+bigE-8004 ok {"kind":"eligible","nextEligible":"E22-T01","inFlight":null} nextUp 10 py 10
+BIG-eligible mismatches 0

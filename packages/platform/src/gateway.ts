@@ -23,7 +23,9 @@ import {
   isRepoLabelsStreamId,
   labelInitialState,
   labelReducer,
+  repoIssuesStreamId,
   repoLabelsStreamId,
+  replayIssueCatalog,
   LabelRefusalError,
   LabelSchemaError,
   LabelUnknownActionError,
@@ -237,8 +239,13 @@ import {
   TaskSchemaError,
   TaskUnknownActionError,
   isTaskActionType,
+  projectQueue,
+  queueDigest,
+  queueProof,
+  renderQueueMarkdown,
   taskInitialStateForStream,
   taskReducer,
+  type QueueSourceStream,
 } from "@eforest/tasks";
 import {
   IssueBoardMaterializer,
@@ -3413,6 +3420,7 @@ export class PlatformGateway {
     const boardRoute = segments.length === 4 && segments[3] === "board";
     const pullsRoute = segments.length === 4 && segments[3] === "pulls";
     const projectRoute = segments.length === 4 && segments[3] === "project";
+    const queueRoute = segments.length === 4 && segments[3] === "queue";
     const blobRoute = segments.length >= 6 && segments[4] === "blob";
     if (
       (!applicationEvents &&
@@ -3420,7 +3428,8 @@ export class PlatformGateway {
         !blobRoute &&
         !boardRoute &&
         !pullsRoute &&
-        !projectRoute) ||
+        !projectRoute &&
+        !queueRoute) ||
       segments.some((s) => s === "")
     ) {
       return failure(404, "invalid_request", "not_found");
@@ -3435,6 +3444,17 @@ export class PlatformGateway {
         return failure(404, "invalid_request", "not_found");
       }
       return this.repositoryProjectRoute(request, org, repo, trustedContext);
+    }
+    if (queueRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryQueueRoute(request, org, repo, trustedContext);
     }
     if (boardRoute) {
       let org: string;
@@ -3988,6 +4008,67 @@ export class PlatformGateway {
       digest: stateDigest(state),
       state,
       projection: projectProjectionBytes(state),
+    });
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/queue` (E6-T04): the task queue derived by replaying the
+   * repository issue catalog and every task stream it lists — queue digest, every source
+   * head consumed, per-task blocked reasons, the in-flight task, `nextEligible` with its
+   * proof, and the `QUEUE.md` rendering. Read-only and rebuilt on every call: there is no
+   * queue table to drift from task truth.
+   */
+  private async repositoryQueueRoute(
+    request: Request,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    if (!isAuthzName(org) || !isAuthzName(repo))
+      return failure(404, "invalid_request", "not_found");
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    const resolve = projectRecordResolver(this.streams);
+    const catalogStream = repoIssuesStreamId(org, repo);
+    const catalogRecords = (await resolve(catalogStream)) ?? [];
+    const tasks: QueueSourceStream[] = [];
+    let catalog: ReturnType<typeof replayIssueCatalog> | undefined;
+    try {
+      catalog = replayIssueCatalog(catalogStream, catalogRecords);
+    } catch {
+      catalog = undefined;
+    }
+    for (const stream of Object.keys(catalog?.issues ?? {}).sort()) {
+      tasks.push({ stream, records: (await resolve(stream)) ?? [] });
+    }
+    const projection = projectQueue({
+      catalog: { stream: catalogStream, records: catalogRecords },
+      tasks,
+    });
+    return json(200, {
+      streamId: catalogStream,
+      offset: projection.sources.catalog.offset,
+      digest: queueDigest(projection),
+      projection,
+      proof: queueProof(projection),
+      markdown: renderQueueMarkdown(projection),
     });
   }
 
