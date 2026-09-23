@@ -3,7 +3,7 @@ id: E6-T02
 epic: 6
 title: "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 priority: 602
-status: pending
+status: verified
 depends_on: [E5]
 estimate: M
 capstone: false
@@ -77,3 +77,338 @@ anchors, and non-flat values other than inline `depends_on` are refused.
    on a committed ambiguous fixture; green refutes sensitivity.
 
 ## Verification log
+
+### 2026-08-30 — builder — implemented, not yet verified
+
+- Implementation commit `aa36af19` (branch `e6-t02-task-folder-contract`, stacked on
+  verified E6-T01). `packages/tasks/src/folder/{schema,paths,parse,render,generate}.ts`
+  define `TaskFolderV1` and a **pure** snapshot parser/renderer: the parser takes an inert
+  `TaskFolderSnapshot` (`{ folderName, entries[{ path, kind, bytes }] }`), so it never
+  resolves a path against any filesystem and the same contract will apply to a stream-fs
+  tree in E6-T05. `packages/tasks/io/disk.ts` (`@eforest/tasks/disk`) is the one
+  `node:fs` boundary — a `readdir`-only walker that reports symlinks without following
+  them and a writer that refuses non-empty targets — kept outside `src/` so
+  verify-E6-T01's "no `node:fs` in `packages/tasks/src`" check still holds unchanged.
+- Contract as frozen (`packages/tasks/README.md`, "Task-folder contract"): flat YAML
+  **subset** read by a ~150-line hand-written reader (no YAML library — anchors, aliases,
+  merge keys, tags, duplicate keys, block values, flow maps, nested lists, unknown keys,
+  tabs, single quotes are all refusals with a reason from the frozen
+  `TASK_FOLDER_REFUSAL_REASONS` (37) plus `readme.md:line:column`); exactly the eight keys
+  `id/epic/title/priority/status/depends_on/estimate/capstone`, all required; the six
+  sections in fixed order, recognised only as an exact `## <Name>` line outside a code
+  fence (`---` rules, `#`/`###` headings, fenced `## Goal`, prose `## Goal` are body
+  text; `## Goal ` with trailing space, indented `   ## Goal`, and an unterminated fence
+  are refused); bodies, the preamble and an empty Verification log are kept verbatim with
+  inclusive 1-based line spans and half-open UTF-8 byte spans; `evidence/**` is a sorted
+  `{ path, size, sha256 }` manifest with bytes carried for render; `work/**` is a
+  workshop inventory, never rendered, never in `taskFolderDigest` (SHA-256 of the canonical
+  JSON of `{ v, folderName, frontmatter, readmeSha256, evidence }`). Paths: ASCII
+  `[A-Za-z0-9._-]` segments only; absolute (`/`, `C:`, `\`), `.`/`..`, empty segments,
+  any `%`, non-ASCII, trailing `.`, >255-byte segments, symlinks, special files, exact
+  duplicates, file/dir clashes, and case-folded collisions are refused; only `readme.md`,
+  `work/`, `evidence/` may exist at the root; frontmatter `id` must equal the folder
+  prefix and `epic` the id's epic. Canonical render: keys in fixed order, `title` plain
+  unless it needs quoting, `depends_on` as `[A, B]`, comments/blank frontmatter lines
+  dropped — `render ∘ parse` is a fixed point of `parse ∘ render`. Smoke-parsing this
+  repo's 104 task folders: 76 parse and re-render byte-identically or to the canonical
+  rewrite (unneeded title quotes, trailing `# comments`); the 28 refusals are exactly the
+  loop-ledger keys `work-queue` appends (`verification_run_ceiling` …), 20 readmes with no
+  `## Context`, one `## 2026-07-13 runtime-boundary note`, and three evidence trees with
+  root `references/`, a `%3A`-encoded name, and a `café/` directory — the README contract
+  says none of those are in-format, so they are refused rather than tolerated.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint`
+  (18 errors, the pre-existing baseline), `pnpm typecheck` (41, baseline), `pnpm test`
+  (119 files: 116 passed, the same 3 pre-existing failures — meadow README drift,
+  issues.test workflow-key count, pr fuzz timeout), `pnpm build` (green),
+  `pnpm task-board:check` (green), `make verify-E6-T02` (green),
+  `bash tools/verify/cold_clone.sh verify-E6-T02` → `PASSED from a pristine clone` of
+  `aa36af19`, zero `SKIPPED:` lines.
+- Evidence (all in `evidence/`, hashed before/after by the verifier so nothing regenerates
+  at test time): `fixtures/valid/E9-T01-minimal` (readme only, empty Verification log),
+  `fixtures/valid/E9-T02-complete` (quoted title with `: ` and `---`, `---` rule and
+  fenced `## Goal`/`## Context`/`## Deliverables` in the body, seven evidence files
+  including `nested/deep/blob.bin` — 4,096 bytes with NUL every fifth byte and a NUL
+  last byte —, `nested/zeros.bin`, `empty.bin`, `.ef/state.json`, CRLF+NUL `notes.txt`,
+  `ABC.txt`/`abd.txt`), `fixtures/valid/E9-T03-noncanonical` (comments, blank lines,
+  shuffled keys, `903.5`, `[ E9-T01 ,E9-T02,E8 ]`, needlessly quoted title);
+  `goldens/<id>.json` (canonical value + digest + rendered file hashes) and
+  `goldens/<id>.readme.md`: E9-T01 `e72bbecc02d37cc29a18042157f63b52d9c1fff9cf62cc8caa8d8632a707b5bb`,
+  E9-T02 `0b5465ef21a3762edcd2628c9537dc65ecc1097be5e3e3f040a48a940e2a74e3`,
+  E9-T03 `a2c0c31aa8e7546404c476b638ef7a8ebaeaae7ba8bf27ed8082ac5a33406833` (E9-T01/E9-T02
+  render byte-identical to their source; E9-T03 renders to the canonical rewrite);
+  `fixtures/invalid/` — 40 on-disk malformed folders (duplicate key, anchor, alias, merge
+  key, unknown/missing key, block list/scalar, flow map, single quotes, bad escape,
+  id/epic mismatch, missing/out-of-order/duplicate/unknown section, trailing-space and
+  indented headings, unterminated fence, CRLF, no trailing newline, no/unclosed
+  frontmatter, `...`, tab, bad priority/status/dependency, nested list, stray root file,
+  `%2e%2e` path, bad folder name, missing readme, and a committed mode-120000 symlink
+  `evidence/escape -> ../../../../../../../readme.md`) plus `fixtures/invalid-snapshots.json`
+  — 24 inline cases a checkout cannot hold (absolute and `C:` paths, `../` in `evidence/`
+  and `work/`, `./`, backslash, case collisions in `evidence/`, `work/` and against
+  `readme.md`, `work/` symlink and `%2e%2e`, Unicode slug and path, empty evidence dir,
+  readme-as-directory, FIFO, control char, BOM, invalid UTF-8, duplicate path, file/dir
+  clash, empty segment, trailing dot, 256-byte segment); `e6-t02-refusals.txt` — the 64
+  frozen transcript lines (`ok:false` for every one, all 37 reasons covered);
+  `e6-t02-fixtures.sha256` — the 54-entry fixture tree hash list; `e6-t02-property.txt` —
+  seed `e6020000`, 1,000 generated folders, corpus SHA-256
+  `3158c855c5ecd7c08f95b41b798b3ae0fb11977c4924950c2139b44def57cf54`;
+  `e6-t02-sabotage.txt` — with `E6_T02_DUPLICATE_KEY_GUARD` set to false, the
+  duplicate-key fixture parses `ok:true`, 4 contract tests and the verifier's transcript
+  step go red (`refusal transcript drifted`), both exit 1.
+- `make verify-E6-T02` = build, a `grep` gate that `src/folder` imports no `node:fs`/
+  clock/randomness/YAML library (exit status held to exactly 1, so a missing tool cannot
+  green-wash), the two suites `folder-contract.test.ts` + `folder-property.test.ts`
+  (18 tests: goldens, fixed points, spans, NUL evidence, refusal pins, work/evidence
+  boundary, 200 random binary payloads at nested paths), then
+  `tools/verify/e6_t02_evidence.mjs`: holds the fixture tree to `e6-t02-fixtures.sha256`,
+  byte-compares parse→render of every valid fixture to its golden and re-renders to a
+  fixed point, re-executes all 64 refusals to a byte-identical transcript with the fixture
+  tree unchanged afterwards, runs `e6_t02_property.mjs` in two fresh processes (foreign
+  cwd + `Pacific/Kiritimati` vs repo cwd + UTC) to byte-identical 1,000-line output
+  matching the frozen corpus digest, renders E9-T02 to a scratch directory and proves the
+  boundary on disk (adding `work/probe.log` + `work/nested/blob.bin` leaves digest and
+  manifest identical; one flipped byte in `evidence/notes.txt` moves both), prints the
+  `SABOTAGE … EXPECTED-FAIL-WHEN-GUARD-REMOVED OK` sentinel, and checks every committed
+  artifact's hash is unchanged. Registered in `tools/verify/cold_clone_targets.txt` and
+  `verify-all`.
+- `Replay: N/A (filesystem parser/renderer only)` + mitigation: byte-for-byte fixture
+  round trips against committed goldens, independent-process manifests (two fresh
+  processes, corpus digest frozen), 1,000 generated folders with `---`/fence/heading
+  look-alike fuzz and NUL-bearing evidence, 200 random binary payloads, 64 frozen
+  refusals, the on-disk work/evidence boundary, and the sabotage transcript.
+- What the run demonstrates: a `.eforest/tasks` folder is now a versioned value with one
+  strict reading — the README contract and nothing quieter. Every ambiguity a general
+  YAML reader would resolve silently (last-key-wins, anchors, block forms) is a refusal
+  with a stable address; every byte a builder or critic authored (Markdown bodies,
+  including `---` and fenced headings, and arbitrary evidence bytes at nested paths)
+  comes back identical after parse→render; the durable digest is blind to `work/` and
+  sensitive to one evidence byte; two fresh processes agree on every rendered byte and
+  manifest; and removing the duplicate-key guard turns the committed ambiguous fixture
+  red, so the apparatus measures what it claims. One honest scope note: canonical render
+  drops frontmatter comments (including a queue-jump reason on a fractional priority),
+  and the loop-ledger keys some readmes carry are refused as unknown — where that ledger
+  lives as events is E6-T03/E6-T04's decision, not a second format here.
+- Known consequence, stated rather than hidden: this task's own folder is refused by its
+  own parser (`paths/percent-escape` at
+  `evidence/fixtures/invalid/percent-escape/E9-T41-percent-escape/evidence/%2e%2e/escape.txt`,
+  and the mode-120000 symlink fixture behind it), because the hostile on-disk fixtures
+  live inside `evidence/` where the spec asked for them. The contract is doing its job on
+  the fixtures; if E6-T05 needs this folder itself to sync, those two cases must move to
+  an inline/archived form. The critic should treat that as a documented boundary, not a
+  surprise.
+
+### 2026-08-30 — critic — VERDICT: refuted
+
+- ORIENT — OK. Recomputed independently from a fresh `pnpm --filter @eforest/tasks build`:
+  E9-T01 `e72bbecc…b5bb`, E9-T02 `0b5465ef…74e3`, E9-T03 `a2c0c31a…6833`; property corpus
+  `node tools/verify/e6_t02_property.mjs | shasum -a 256` =
+  `3158c855c5ecd7c08f95b41b798b3ae0fb11977c4924950c2139b44def57cf54`. No `.skip`/`.todo`/
+  `.only`/inline lint disables/`@ts-ignore` in `git diff a0e09c83..HEAD`. Goldens are read
+  from disk and hashed before/after by the verifier (`e6_t02_evidence.mjs` steps 1 and 7);
+  nothing regenerates at test time. `bash tools/verify/cold_clone.sh verify-E6-T02` →
+  `PASSED from a pristine clone` of fe8cf4b0, 18/18 tests, zero `SKIPPED:`.
+- P-case-collision (contract: `packages/tasks/README.md:120` "case-folded collisions … are
+  refused"; attack 1 "any accepted ambiguous parse … is a refutation"; attack 2 plants
+  case-collision in `work/` and `evidence/`) — FAILED. Predicted refusal
+  `paths/case-collision` for a snapshot holding `evidence/A/x.txt` + `evidence/a/y.txt`;
+  observed `ok: true`. `parse.ts:113-137` folds only the full entry path, never the
+  directory prefixes. Consequence on this machine (APFS, case-insensitive):
+  `writeRenderedTaskFolder` then `readTaskFolderSnapshot` yields manifest
+  `["A/x.txt","A/y.txt"]` and the durable `taskFolderDigest` differs from the pre-render
+  value — the disk round trip the verifier itself relies on (step 5) is not a fixed point
+  for an accepted folder. Variant `evidence/A` (file) + `evidence/a/y.txt`: accepted, then
+  the writer throws `EEXIST … mkdir …/evidence/a` after writing 1 file — an accepted input
+  leaves a half-rendered folder. `work/A/x` + `work/a/y` likewise accepted. Demand: extend
+  the case-fold check to every directory prefix (and file-vs-directory prefix), add these
+  four as inline `invalid-snapshots.json` cases, regenerate `e6-t02-refusals.txt` and the
+  pinned-reason test, re-run cold clone.
+- P-root-file (contract `packages/tasks/README.md:125` "`render(parse(x))` is a fixed point
+  of `parse ∘ render`"; README contract "Only `readme.md`, `work/`, and `evidence/` may
+  exist at the folder root") — FAILED. Predicted `folder/unexpected-entry` for a regular
+  *file* named `evidence` at the root; observed `ok: true` with evidence manifest
+  `[{"path":"","size":9,…}]` (`parse.ts:148-154` accepts any non-directory whose root
+  segment is `evidence`; `parse.ts:202` slices `"evidence"` to `""`). `renderTaskFolder`
+  then emits path `evidence/`, and `parseTaskFolder(snapshotOfRendered(...))` refuses
+  `paths/empty-segment@evidence/`. A file named `work` at the root likewise produces a
+  workshop entry with path `""`. Repro on disk: `touch <folder>/evidence` next to a valid
+  readme. Demand: refuse a root `evidence`/`work` entry that is not a directory (new or
+  existing reason, e.g. `folder/unexpected-entry`), add both as inline fixtures, regenerate
+  the transcript.
+- P1 cold clone / goldens — PASSED (above). P2 exact keys + ordered sections + stable
+  path:line:column — PASSED on my own inputs: duplicate key (`4:1`, and via a `#id:` comment
+  decoy `5:1`), anchor/alias/merge key/tag, block `|`, flow map, nested list, `[E1` and
+  `[E1,]`, `key :`, `--- ` close, `...` end, `ID:` casing, `id: E9-T50#c`, `epic: 09`,
+  `950.50`, `.5`, `True`/`yes`, lowercase id, slug with uppercase or `--`, empty file,
+  `---`-only, all refused with the frozen reasons; shuffled keys + comments accepted and
+  canonicalised. P3 two fresh processes — PASSED (verifier; plus my own 9,000-byte NUL-bearing
+  blob rendered from cwd `/` + `TZ=Asia/Tokyo` and from scratch + `TZ=UTC LANG=C`:
+  manifests and bytes `cmp`-identical). P4 bytes/`---`/empty log — PASSED: 20,000 random
+  bodies over `---`/```/~~~/````/`## Goal`/` ## Goal`/`    ## Goal`/`##Goal`/`## `/`##`/
+  `> ## Goal`/`- ## Goal`/tab-heading lines: 4,004 accepted, 0 render drift, 0 throws;
+  20,000 random titles over `" # \ : - [ ] { & * ! | > % @ , ? '`: 10,968 accepted, 0
+  drift, 0 throws; 1 MiB line, setext `Goal\n---`, `---\nid: x\n---` in body, `## Verification
+  log` inside a fence all accepted verbatim. P5 work/ boundary — PASSED (add, remove work
+  files: digest and manifest unchanged; one evidence byte: both move). P6 refusals write
+  nothing — PASSED for refused inputs (fixture tree hash unchanged after 64 refusals; my
+  symlink canary below); the accepted-then-EEXIST case above is a P-root/P-case failure,
+  not a P6 one. P7 Replay N/A — accepted, filesystem-only.
+- ENV/MOCK HUNT — OK. `io/disk.ts` walks with `readdirSync(withFileTypes)` and reports
+  `isSymbolicLink()` before `isDirectory()`; canary: `evidence/fifo-link -> <outside>/fifo`
+  (a FIFO — following would block), `work/dir-link -> <outside dir>`, `evidence/rel-link ->
+  ../../outside/canary.txt`: walk returned in 0 ms with three `symlink` entries and no
+  bytes; parser refused `paths/symlink@evidence/fifo-link`. The walker only ever joins
+  `readdir` names, so no path outside the root is constructed. `fe8cf4b0` Makefile hardening
+  verified: `sh -c 'command grepzz …; test $? -eq 1'` exits 1 (missing tool → red), a clean
+  scan exits 0, a match exits 1.
+- SABOTAGE (scratch worktree, my own mutations, not the builder's flag) — all red:
+  (A) delete the duplicate-key block → `refusal transcript drifted`, exit 1; (B) delete the
+  symlink refusal → drifted, exit 1; (C) append one byte to `goldens/E9-T01.readme.md` →
+  `E9-T01-minimal: readme golden`, exit 1; (D) flip one byte in
+  `fixtures/valid/E9-T02-complete/evidence/nested/zeros.bin` → `fixture tree drifted`,
+  exit 1; (E) delete the `..` traversal refusal → drifted, exit 1.
+- Unlisted attacks: CRLF (`readme/crlf@11:8`), lone CR, BOM (`1:1`), no trailing newline,
+  NUL/FF/DEL in body (`readme/control-character`), invalid and overlong UTF-8
+  (`readme/not-utf8`), `## Goal ##` closing hashes and `##\tGoal` (refused), HTML-comment
+  block containing `## Goal` (refused as duplicate — strict, acceptable), Unicode/emoji/
+  ZWSP/NBSP/fullwidth-colon titles (accepted, round-trip stable), `..x` segment (accepted,
+  correctly), Windows reserved name `CON` (accepted — noted, not in scope). One
+  observation, not a finding: `stripComment` uses `String.prototype.trim`, so a title with
+  trailing NBSP or U+0085 is canonicalised to the trimmed value (render remains a fixed
+  point).
+- Boundaries judged: (a) refusing 28/104 repo folders (loop-ledger keys, missing
+  `## Context`, ad-hoc H2, `references/`, `%3A`, `café/`) is consistent with the criterion
+  "accepts exactly the flat keys … requires … in order" — the criterion freezes the README
+  contract, not the repo's current drift — but E6-T05 cannot sync this repo until the
+  ledger keys move to events and those readmes are brought into format; (b) the task's own
+  folder being refused because hostile fixtures live under `evidence/` is a documented
+  consequence of "malformed path … cases" being deliverables, not a criterion miss.
+- COVERAGE: `src/folder/{schema,paths,parse,render,generate}.ts`, `io/disk.ts`,
+  `test/folder-*.ts`, `tools/verify/e6_t02_*.mjs`, Makefile `_v-e6-t02` and the `_v-e6-t01`
+  grep line — executed (cold clone + attacks above). `src/index.ts`, `src/folder/index.ts`,
+  `package.json` exports, `tsconfig*.json`, `cold_clone_targets.txt`, docs, QUEUE.md —
+  waived (config/re-exports/docs). Dead: none. The gates are at baseline (18 lint, 41 TS,
+  7 prettier; none in E6-T02 files).
+- SUITE: n/a until the two refutations clear; on rework promote the four case-collision
+  and two root-file snapshots into `invalid-snapshots.json` so the transcript pins them.
+Commands: `bash tools/verify/cold_clone.sh verify-E6-T02`; `node tools/verify/e6_t02_property.mjs | shasum -a 256`; `node work/critic-attacks.mjs`; `node work/critic-disk.mjs`; `node work/critic-fm2.mjs`; worktree sabotages A–E via `node tools/verify/e6_t02_evidence.mjs`; `pnpm lint`/`typecheck`/`format:check`.
+
+### 2026-08-30 — builder — rework after critic run 1, implemented, not yet verified
+
+- Rework commit `59785260` (branch `e6-t02-task-folder-contract`). Both refutations
+  addressed in `packages/tasks/src/folder/parse.ts`:
+  - **P-case-collision**: the case-fold check now runs over every node of every entry
+    path — each directory prefix and the leaf — in `work/` and `evidence/` alike, so
+    `evidence/A/x.txt` + `evidence/a/y.txt`, the file-vs-directory variant `evidence/A` +
+    `evidence/a/y.txt`, and the `work/` twins are all refused `paths/case-collision` with
+    the message naming both colliding nodes (`"evidence/a" collides with "evidence/A"`).
+  - **P-root-file**: a regular file (or anything not a directory) named `evidence` or
+    `work` at the folder root is refused `folder/unexpected-entry` ("evidence must be a
+    directory"); no entry can carry an empty path any more.
+  - `packages/tasks/io/disk.ts` `writeRenderedTaskFolder` now stages every file
+    (`flag: "wx"`) into a sibling temporary directory and moves it into place with one
+    `rename`, removing the staging directory on any failure — an accepted-then-EEXIST
+    path can no longer leave a half-rendered folder. New test in
+    `folder-contract.test.ts` writes E9-T02 to scratch (digest equal) and proves a
+    clashing file set throws and leaves no target directory behind.
+- Fixtures: the six cases the critic demanded (`case-collision-evidence-dir`,
+  `case-collision-evidence-file-dir`, `case-collision-work-dir`,
+  `case-collision-work-file-dir`, `root-evidence-file`, `root-work-file`) added to
+  `evidence/fixtures/invalid-snapshots.json` and pinned by reason and position in the
+  test; `e6-t02-refusals.txt` regenerated (70 lines, all `ok:false`, all 37 reasons still
+  covered); `e6-t02-fixtures.sha256` updated for the JSON change; `e6-t02-sabotage.txt`
+  recaptured (4 tests red, `refusal transcript drifted`, both exit 1). Valid goldens and
+  the property corpus are unchanged: E9-T01 `e72bbecc…b5bb`, E9-T02 `0b5465ef…74e3`,
+  E9-T03 `a2c0c31a…6833`, corpus `3158c855…cf54`.
+- Exact commands: `pnpm format:check` (7 pre-existing files, none mine), `pnpm lint` (18,
+  baseline), `pnpm typecheck` (41, baseline), `pnpm test` (119 files: 116 passed, same 3
+  pre-existing failures; 912 tests, 909 passed), `pnpm build` (green),
+  `make verify-E6-T02` (19 tests, green), `bash tools/verify/cold_clone.sh verify-E6-T02`
+  → `PASSED from a pristine clone` of `59785260`, zero `SKIPPED:` lines.
+- `Replay: N/A (filesystem parser/renderer only)` + mitigation unchanged from the first
+  entry, plus the new transcript-pinned collision and root-file refusals and the writer
+  atomicity test.
+
+### 2026-08-30 — critic run 2 — VERDICT: verified
+
+- ORIENT — OK. Fresh session, no part in the implementation or run 1. Recomputed from a
+  fresh `pnpm --filter @eforest/tasks build` with my own script (`work/critic2-digests.mjs`):
+  E9-T01 `e72bbecc…b5bb`, E9-T02 `0b5465ef…74e3`, E9-T03 `a2c0c31a…6833`, each rendered readme
+  `cmp`-identical to `goldens/<id>.readme.md`; `node tools/verify/e6_t02_property.mjs |
+  shasum -a 256` = `3158c855c5ecd7c08f95b41b798b3ae0fb11977c4924950c2139b44def57cf54`, 1,000
+  lines. No `.skip`/`.todo`/`.only`/`eslint-disable`/`@ts-ignore` in `src/folder`, `io/`,
+  `test/folder-*`, `tools/verify/e6_t02_*`. Goldens and fixtures are hashed before and after
+  by the verifier; nothing regenerates. `bash tools/verify/cold_clone.sh verify-E6-T02` →
+  `PASSED from a pristine clone` of 1d769983 (19/19 tests, transcript 70/70, 37 reasons,
+  two-process corpus identical, zero `SKIPPED:`).
+- P-case-collision (run 1 refutation, rework `parse.ts:128-143`) — CLOSED as a general
+  invariant. Predicted `paths/case-collision` for every prefix-level fold; observed refusals
+  for dir-vs-dir at depth 2 and 3, a fold only at the third segment (`x/y/Z` vs `x/y/z`),
+  file-vs-dir in both sort orders (`evidence/A/B`+`evidence/a/b/c`; `evidence/a/B`+
+  `evidence/A/b/c`), `work/` twins at depth 3 and file-vs-dir both ways, leaf-only
+  (`a.TXT`/`a.txt`), and a *listed empty directory* `evidence/a` vs file `evidence/A` — each
+  with the message naming both nodes. Same-case siblings (`A/x`,`A/y`,`A/b/c`) and prefix-
+  but-not-equal names (`A` file + `AB/` dir) stay accepted. Root-level folds (`Evidence/`,
+  `WORK/`, `README.md`) are refused as `folder/unexpected-entry` before the fold runs — a
+  different reason, same outcome. Decision on Unicode: `ß`/`ẞ`, `İ`/`i`, dotless `ı`, NFC vs
+  NFD `café`, Kelvin `K` are all refused `paths/forbidden-character` by the ASCII segment
+  charset (`paths.ts:14`), so normalization/Unicode case-fold collisions are **out of the
+  spec's scope by construction** (README: "ASCII `[A-Za-z0-9._-]` segments"); `toLowerCase`
+  over ASCII is a complete fold there. `work/critic2-paths.mjs`.
+- P-root-file (run 1 refutation, rework `parse.ts:152-156`) — CLOSED. Root `evidence`/`work`
+  as a file → `folder/unexpected-entry` ("must be a directory"); as `other` →
+  `paths/unsupported-kind`; as `symlink` → `paths/symlink`; as an empty directory → accepted
+  with `[]`, and `parse(render(...))` of that folder is value- and digest-equal (fixed point
+  holds without the directory). No entry can reach the manifest with path `""`.
+- P-writer (rework `io/disk.ts:53-83`) — PASSED. Staging is `mkdtempSync(<parent>/.<name>.
+  staging-XXXXXX)`: a leading dot can never match a task-folder name, `basename(dir)` cannot
+  carry a separator, and the rename is sibling-to-sibling. Forced mid-write failure (file
+  then a child under it) → `EEXIST`, no target directory, parent listing unchanged; writing
+  into a pre-existing empty target directory re-reads to an equal digest with no staging
+  leftover; non-empty target refused before staging. SIGKILL of a child process 8 ms into a
+  4,000-file write: nothing at the target; one orphan `.killed.staging-XXXXXX` remains — the
+  "nothing left at `dir`" claim holds; the orphan is a stated limit of `rename`-atomicity,
+  not a partial folder. Observation, not a finding: `writeRenderedTaskFolder` trusts its
+  `RenderedTaskFolder` — a hand-forged `{ path: "../OUTSIDE.txt" }` writes outside the
+  parent. No parsed folder can produce that path (`checkRelativePath` gates every entry),
+  and the criterion is about parse-time refusals; E6-T05 should run `checkRelativePath` on
+  rendered paths before writing stream-fs output to disk. `work/critic2-disk.mjs`.
+- P1 cold clone + goldens — PASSED (above). P2 keys/sections/position — PASSED: 20,000
+  frontmatter permutations (seed `c2c2a1`: shuffled keys, duplicates, `ID`/`<<`/ledger keys,
+  `:`-spacing variants, comments, `---`/`...`/tab lines, anchors/aliases/tags/flow/block
+  values): 690 accepted, 19,310 refused across 10 reasons, 0 throws, 0 render drift; 20,000
+  section layouts (seed `c2c2b7`: fences ```/~~~/````, indented fences, `# `/`### `, trailing
+  space, tab, blockquote/list-prefixed headings, HTML comments, setext `Goal\n----`, `---`
+  frontmatter look-alikes in bodies, missing trailing newline): 170 accepted, 0 throws, 0
+  drift, and every section's `span`/`heading` byte range reconstructs `"## <name>\n" + body`
+  exactly. P3 two fresh processes — PASSED: 300 random NUL-heavy payloads (seed `7a7a01`) at
+  nested paths rendered from cwd `/` + `TZ=Asia/Kolkata LANG=C` and from the task folder +
+  `TZ=UTC`: digest `c87313b0…`, manifest and byte hashes `cmp`-identical. P4 — PASSED (E9-T02
+  golden byte-identical: `---` rule, fenced headings, NUL blob, empty log). P5 — PASSED:
+  changing/adding/removing `work/` leaves digest and manifest identical while the workshop
+  inventory changes; one evidence byte moves both. P6 refusals write nothing — PASSED
+  (fixture tree unchanged after 70 refusals; writer never touches `dir` on refusal). P7
+  Replay N/A — accepted.
+- Unlisted attacks: `work/into-evidence -> ../evidence` symlink on disk → walker reports
+  `symlink`, never descends; a FIFO in `evidence/` → `other`, refused `paths/unsupported-kind`
+  without blocking; a hard link into `evidence/` is a regular file and is (correctly) read
+  as bytes; `evidence/readme.md`, `evidence/Goal`, dotfiles, zero-byte and `bytes`-less
+  file entries accepted; `evidence/` and `evidence//a` → `paths/empty-segment`; `..a`
+  accepted; 10,000-entry evidence tree parsed from three shuffles → one digest, manifest
+  strictly sorted.
+- SABOTAGE (scratch worktree, my mutations, not the builder's flag) — all red: (A)
+  duplicate key silently last-wins → `refusal transcript drifted`, exit 1; (B) case fold
+  restricted to the leaf (run 1's hole) → drifted, exit 1; (C) root `evidence`/`work` file
+  accepted → drifted, exit 1; (D) writer's failure cleanup removed → the new atomicity test
+  fails on the orphan `.clash.staging-…`.
+- COVERAGE: rework hunks `parse.ts:128-143,152-156` (attacks + sabotage B/C), `io/disk.ts`
+  writer (disk attacks + sabotage D), `folder-contract.test.ts` and `invalid-snapshots.json`
+  (transcript 70/70, cold clone) — executed. `e6-t02-refusals.txt`, `e6-t02-fixtures.sha256`,
+  `e6-t02-sabotage.txt`, README/readme prose — waived (frozen evidence/docs, held by hash).
+  Dead: none. Gates: 18 lint, 41 TS, 7 prettier files — baseline, none in E6-T02 files.
+- SUITE: promoted `packages/tasks/test/folder-contract.test.ts` "critic run 2" block (3
+  tests, 22 total): prefix collisions at depth 3, both sort orders, listed-empty-dir vs
+  file, non-directory root entries, Unicode folds refused by charset, and 3,000-entry
+  three-shuffle determinism. Frozen transcripts left untouched (no artifact regeneration).
+  Discarded: the fuzz harnesses (`work/critic2-*.mjs`) — the property corpus already pins
+  the same invariants deterministically.
+Commands: `bash tools/verify/cold_clone.sh verify-E6-T02`; `make verify-E6-T02`; `node tools/verify/e6_t02_property.mjs | shasum -a 256`; `node work/critic2-digests.mjs`; `node work/critic2-paths.mjs`; `node work/critic2-disk.mjs`; `node work/critic2-fuzz.mjs {fm c2c2a1|sections c2c2b7|binary 7a7a01|boundary}`; worktree sabotages A–D via `node tools/verify/e6_t02_evidence.mjs` / vitest; `pnpm lint`/`typecheck`/`format:check`.

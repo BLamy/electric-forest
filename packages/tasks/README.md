@@ -79,3 +79,54 @@ ef replay <dump.jsonl> --digest --reducer tasks/v1 --stream-id issue:<org>/<repo
 
 Frozen artifacts and the verifier live in `.eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/`
 (`make verify-E6-T01`).
+
+## Task-folder contract (`TaskFolderV1`, E6-T02)
+
+`packages/tasks/src/folder/` parses a `.eforest/tasks/<epic>/<id>-<slug>/` tree into a
+versioned `TaskFolderV1` and renders it back deterministically. It is syntax-level only
+(no lifecycle state; that is the `tasks/v1` reducer above) and pure: a folder is parsed
+from an inert `TaskFolderSnapshot` (`{ folderName, entries[] }`, each entry a path, a
+kind, and bytes), so the same contract applies to a disk directory today
+(`@eforest/tasks/disk` → `readTaskFolderSnapshot` / `writeRenderedTaskFolder`, the one
+`node:fs` boundary, kept outside `src/`) and to a stream-fs tree in E6-T05.
+
+- **Frontmatter** is a flat YAML _subset_ read by a hand-written parser, not a YAML
+  library: exactly the keys `id`, `epic`, `title`, `priority`, `status`, `depends_on`,
+  `estimate`, `capstone`, all required, any order on input, canonical order on output.
+  Values are bare scalars or a double-quoted `title` (escapes `\"` and `\\` only);
+  `depends_on` is the only list and must be inline (`[E1-T01, E2]`, no duplicates).
+  Blank lines and `#` comments are accepted and dropped on render. Refused: duplicate
+  keys, `&anchors`, `*aliases`, `<<:` merge keys, `!tags`, block lists/scalars, flow
+  maps, nested lists, unknown keys, tabs, single quotes, `priority` with leading or
+  trailing zeros, an `id` that does not match the folder name, an `epic` that does not
+  match the id.
+- **Sections**: exactly `## Goal`, `## Context`, `## Deliverables`,
+  `## Acceptance criteria`, `## Adversarial verification`, `## Verification log`, in that
+  order, each recognised only as an exact `## <Name>` line outside a code fence. Any
+  other H2 (including `## Goal ` with a trailing space or an indented `   ## Goal`) is
+  refused; `#`/`###` headings, `---` rules, and fenced `## Goal` lines are ordinary body
+  text. An unterminated fence is refused (it would swallow every later heading). Bodies,
+  the preamble before `## Goal`, and an empty Verification log are preserved verbatim
+  with 1-based inclusive line spans and 0-based half-open UTF-8 byte spans.
+- **Evidence** (`evidence/**`) is byte-addressed: `{ path, size, sha256 }` sorted by path,
+  nested paths allowed, bytes carried on the value so render reproduces them exactly.
+- **Work** (`work/**`) is a workshop inventory only: listed with sizes and hashes, never
+  rendered, never in the durable digest. `taskFolderDigest` = SHA-256 of the canonical
+  JSON of `{ v, folderName, frontmatter, readmeSha256, evidence manifest }`.
+- **Paths**: every entry path is `seg(/seg)*` with ASCII `[A-Za-z0-9._-]` segments; refused
+  are absolute paths (`/…`, `C:…`, `\…`), `.`/`..`, empty segments, backslashes, any `%`
+  (percent escapes), non-ASCII, trailing `.`, segments over 255 bytes, symlinks (never
+  followed by the reader; refused by the parser), special files, exact duplicates,
+  file/directory clashes, and case-folded collisions (`Log.txt` vs `log.txt`). Only
+  `readme.md`, `work/`, and `evidence/` may exist at the folder root.
+- **Refusals** return `{ ok: false, refusal: { reason, path, line, column, message } }`
+  with `reason` from the frozen `TASK_FOLDER_REFUSAL_REASONS`; nothing is rendered and
+  nothing is written. `parseTaskFolder` never throws for malformed input.
+- **Canonical round trip**: `render(parse(x))` is a fixed point of `parse ∘ render`, and
+  `parse(render(parse(x)))` equals `parse(render(parse(render(parse(x)))))`; frozen
+  fixtures and 1,000 generated folders (`generateTaskFolder(seed)`) are held to this in
+  `make verify-E6-T02`.
+
+The loop ledger keys that `work-queue` appends to some readmes in this repository
+(`verification_run_ceiling`, …) are outside the README contract and are refused as
+unknown keys; E6-T03/E6-T04 decide where that ledger lives as events.

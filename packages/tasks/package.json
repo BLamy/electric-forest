@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
+    },
+    "./disk": {
+      "types": "./dist/io/disk.d.ts",
+      "default": "./dist/io/disk.js"
     }
   },
   "scripts": {
