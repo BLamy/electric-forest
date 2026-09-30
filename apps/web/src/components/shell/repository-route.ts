@@ -1,4 +1,4 @@
-import type { RepoSection } from "../../prs/RepoChrome.js";
+import type { RepoSection } from "../../navigation.js";
 
 interface RepositoryRoute {
   readonly org: string;
@@ -34,7 +34,7 @@ export function repositoryRoute(pathname: string): RepositoryRoute | undefined {
               : "code";
     return { org, repo, active };
   }
-  if (segments.length >= 2 && ["tree", "blob", "history"].includes(segments[2] ?? "")) {
+  if (segments.length >= 2 && ["tree", "blob", "history", "branches"].includes(segments[2] ?? "")) {
     const org = decoded(segments[0]);
     const repo = decoded(segments[1]);
     if (org !== undefined && repo !== undefined) return { org, repo, active: "code" };

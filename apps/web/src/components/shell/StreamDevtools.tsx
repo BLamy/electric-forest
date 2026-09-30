@@ -1,5 +1,22 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
+
+/** The frame's compact breakpoint (ChatShell `breakpoint={880}`). */
+const COMPACT = "(max-width: 879px)";
+
+function subscribeCompact(onChange: () => void): () => void {
+  const query = window.matchMedia(COMPACT);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function useCompact(): boolean {
+  return useSyncExternalStore(
+    subscribeCompact,
+    () => window.matchMedia(COMPACT).matches,
+    () => false,
+  );
+}
 
 /**
  * Stream diagnostics live in the TanStack Devtools panel, not the page layout.
@@ -13,20 +30,29 @@ export function StreamDevtools(props: {
   readonly diagnostics: ReactNode;
   readonly inspector?: ReactNode;
 }): React.JSX.Element {
+  // The trigger sits on the workspace rail's empty mid-left edge, clear of the composer and
+  // the page chrome. On compact widths every edge covers content, so the trigger is hidden
+  // there (the panel still opens with the devtools hotkey; the anchor below stays mounted).
+  const compact = useCompact();
   return (
     <>
-      <div className="stream-diagnostics-anchor" data-testid="stream-diagnostics-anchor">
+      <div className="sr-only" data-testid="stream-diagnostics-anchor">
         {props.diagnostics}
       </div>
       <TanStackDevtools
-        config={{ position: "bottom-right", theme: "dark" }}
+        config={{
+          position: "middle-left",
+          triggerMode: "fixed",
+          triggerHidden: compact,
+          theme: "dark",
+        }}
         plugins={[
           {
             id: "eforest-stream-diagnostics",
             name: "Stream diagnostics",
             defaultOpen: true,
             render: (
-              <div className="stream-devtools-panel">
+              <div className="grid gap-3 p-3 text-[12px]">
                 {props.diagnostics}
                 {props.inspector}
               </div>

@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Icon, List, ListRow, ListSection } from "@brett_lamy/ui";
 import { IdentityRegion } from "./identity.js";
-import { DesktopProductShell, repositoryRoute } from "./components/shell/ProductShell.js";
-import { navigate, repoSectionPath, type RepoSection } from "./prs/RepoChrome.js";
+import { ForestShell } from "./components/shell/ForestShell.js";
+import { repositoryRoute } from "./components/shell/repository-route.js";
+import { preloadPrDetail, preloadPrDetailWhenIdle } from "./prs/preload.js";
 import { hasReplayedSession, publicSitePage } from "./site/session.js";
 
 interface ProofReceiptValue {
@@ -68,9 +68,9 @@ function ProofReceipt(): React.JSX.Element | null {
   }, []);
   if (receipt === undefined) return null;
   return (
-    <section className="proof-receipt" data-testid="proof-receipt">
+    <section className="grid gap-2 text-[12px]" data-testid="proof-receipt">
       <div>
-        <p className="eyebrow">Recorded proof receipt</p>
+        <p className="m-0 text-muted-foreground">Recorded proof receipt</p>
         <h2>PKCE and stream replay agree</h2>
       </div>
       <dl>
@@ -79,7 +79,7 @@ function ProofReceipt(): React.JSX.Element | null {
         <dt>Challenge</dt>
         <dd data-testid="proof-pkce-challenge">{receipt.pkce.challenge}</dd>
         <dt>Authorization code</dt>
-        <dd data-testid="proof-code-redeemed" className="proof-success">
+        <dd data-testid="proof-code-redeemed" className="text-success">
           redeemed
         </dd>
         <dt>Verifier in browser</dt>
@@ -93,7 +93,7 @@ function ProofReceipt(): React.JSX.Element | null {
         <dt>DOM state digest</dt>
         <dd data-testid="proof-dom-digest">{receipt.digest}</dd>
         <dt>Literal equality</dt>
-        <dd data-testid="proof-digest-match" className="proof-success">
+        <dd data-testid="proof-digest-match" className="text-success">
           {receipt.cliDigestMatches ? "equal" : "different"}
         </dd>
       </dl>
@@ -111,17 +111,6 @@ function usePathname(): string {
   return pathname;
 }
 
-function useCompactProductShell(): boolean {
-  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 899px)").matches);
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 899px)");
-    const update = (): void => setCompact(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  return compact;
-}
-
 const PageRouter = lazy(async () => {
   const module = await import("./route-pages.js");
   return { default: module.PageRouter };
@@ -132,13 +121,12 @@ const PublicSite = lazy(async () => {
   return { default: module.PublicSite };
 });
 
-const MobileProductShell = lazy(async () => {
-  const module = await import("./components/mobile/MobileProductShell.js");
-  return { default: module.MobileProductShell };
-});
-
 function RouteFallback(): React.JSX.Element {
-  return <p data-testid="route-loading">Loading route…</p>;
+  return (
+    <p data-testid="route-loading" role="status" className="m-0 p-4 text-muted-foreground">
+      Loading route…
+    </p>
+  );
 }
 
 function Route(props: { readonly pathname: string }): React.JSX.Element {
@@ -149,83 +137,21 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
   );
 }
 
-const repositorySections: readonly {
-  id: RepoSection;
-  title: string;
-  subtitle: string;
-  icon: string;
-}[] = [
-  { id: "code", title: "Code", subtitle: "Browse branches and files", icon: "layers" },
-  { id: "pulls", title: "Pull Requests", subtitle: "Review activity and changes", icon: "message" },
-  { id: "issues", title: "Issues", subtitle: "Plan and track work", icon: "info" },
-  { id: "wiki", title: "Wiki", subtitle: "Read repository documentation", icon: "star" },
-  { id: "settings", title: "Settings", subtitle: "Configure this repository", icon: "sliders" },
-];
-
-function MobileRepositoryRoute(props: {
-  readonly pathname: string;
-  readonly org: string;
-  readonly repo: string;
-  readonly active: RepoSection;
-}): React.JSX.Element {
-  const section = repositorySections.find((item) => item.id === props.active);
-  const rootContent = (
-    <List inset>
-      <ListSection
-        title={`${props.org} / ${props.repo}`}
-        footer="Every mutation is backed by a durable stream."
-      >
-        {repositorySections.map((item) => (
-          <ListRow
-            key={item.id}
-            title={item.title}
-            subtitle={item.subtitle}
-            leading={<Icon name={item.icon} />}
-            accessory="chevron"
-            selected={item.id === props.active}
-            onPress={() => navigate(repoSectionPath(props.org, props.repo, item.id))}
-          />
-        ))}
-      </ListSection>
-    </List>
-  );
-  const rootScreen = {
-    key: "repository",
-    title: props.repo,
-    largeTitle: true,
-    content: rootContent,
-    bottomInset: 78,
-  };
-  const detailScreen = {
-    key: props.pathname,
-    title: section?.title ?? "Repository",
-    content: (
-      <article id="main-content" className="mobile-repository-content" tabIndex={-1}>
-        <Route pathname={props.pathname} />
-      </article>
-    ),
-    bottomInset: 78,
-  };
-  return (
-    <MobileProductShell
-      org={props.org}
-      repo={props.repo}
-      activeTab={props.active}
-      screens={[rootScreen, detailScreen]}
-      onPop={() => navigate(`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}`)}
-      routeForTab={(tab) => repoSectionPath(props.org, props.repo, tab)}
-      sidebar={rootContent}
-      regularMaster={rootContent}
-      className="mobile-repository-shell"
-    />
-  );
-}
-
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
-  const compact = useCompactProductShell();
   const session = hasReplayedSession();
   const site = publicSitePage(pathname, session);
+  const inRepository = site === undefined && repositoryRoute(pathname) !== undefined;
+  // Optimistically load the PR detail chunk (@pierre/diffs + Shiki): right away inside a
+  // repository, where a PR is one click off, otherwise once the app goes idle.
+  useEffect(() => {
+    if (site !== undefined) return undefined;
+    if (inRepository) {
+      preloadPrDetail();
+      return undefined;
+    }
+    return preloadPrDetailWhenIdle();
+  }, [inRepository, site]);
   if (site !== undefined) {
     return (
       <Suspense fallback={<RouteFallback />}>
@@ -233,43 +159,18 @@ export function AppRoutes(): React.JSX.Element {
       </Suspense>
     );
   }
-  const repository = repositoryRoute(pathname);
-  const mobileRepository = compact && repository !== undefined && repository.active !== "pulls";
-  // Compact pull-request routes render their own complete MobileProductShell (tab bar,
-  // navigation stack, drawer). Nesting that inside the desktop chat frame put the
-  // workspace rail beside it and squeezed the list, so they get the screen to themselves.
-  const mobilePulls = compact && repository?.active === "pulls";
   return (
-    <main className="app-shell-repository" data-testid="app-shell">
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
-      {mobilePulls ? (
-        <article id="main-content" className="mobile-pulls-route" tabIndex={-1}>
-          <Route pathname={pathname} />
-        </article>
-      ) : mobileRepository ? (
-        <MobileRepositoryRoute
-          pathname={pathname}
-          org={repository.org}
-          repo={repository.repo}
-          active={repository.active}
-        />
-      ) : (
-        <DesktopProductShell
-          pathname={pathname}
-          diagnostics={
-            <>
-              <IdentityRegion />
-              <ProofReceipt />
-            </>
-          }
-        >
-          <article id="main-content" tabIndex={-1}>
-            <Route pathname={pathname} />
-          </article>
-        </DesktopProductShell>
-      )}
-    </main>
+    <div className="h-full" data-testid="app-shell">
+      <ForestShell
+        pathname={pathname}
+        render={(path) => <Route pathname={path} />}
+        diagnostics={
+          <>
+            <IdentityRegion />
+            <ProofReceipt />
+          </>
+        }
+      />
+    </div>
   );
 }

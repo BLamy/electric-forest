@@ -254,6 +254,43 @@ async function stopChild(child: ChildProcess): Promise<void> {
   });
 }
 
+/** Longest a platform follow handler may hold (the gateway's MAX_FOLLOW_WAIT_MS) plus margin. */
+const PLATFORM_HANDLER_DRAIN_MS = 25_000;
+
+/**
+ * Counts platform request handlers that have not yet ended their response. The returned
+ * drain resolves once every handler started so far has ended (or after
+ * PLATFORM_HANDLER_DRAIN_MS), so teardown can stop the stream server only after nothing
+ * inside the platform still reads it.
+ */
+function trackPlatformHandlers(server: import("node:http").Server): () => Promise<void> {
+  let inFlight = 0;
+  let idle: (() => void) | undefined;
+  server.on("request", (_request, response: import("node:http").ServerResponse) => {
+    inFlight += 1;
+    const end = response.end.bind(response) as (...args: unknown[]) => unknown;
+    let ended = false;
+    (response as unknown as { end: (...args: unknown[]) => unknown }).end = (...args) => {
+      if (!ended) {
+        ended = true;
+        inFlight -= 1;
+        if (inFlight === 0) idle?.();
+      }
+      return end(...args);
+    };
+  });
+  return async () => {
+    if (inFlight === 0) return;
+    await new Promise<void>((resolveDrain) => {
+      const timer = setTimeout(resolveDrain, PLATFORM_HANDLER_DRAIN_MS);
+      idle = () => {
+        clearTimeout(timer);
+        resolveDrain();
+      };
+    });
+  };
+}
+
 async function closeServer(server: import("node:http").Server): Promise<void> {
   server.closeIdleConnections();
   server.closeAllConnections();
@@ -1008,6 +1045,7 @@ export async function bootWorld(
   const identity = runtime.identity;
   const platformServer = runtime.server;
   capturePlatformWire(platformServer, serverNetwork);
+  const drainHandlers = trackPlatformHandlers(platformServer);
   await listenPlatformServer(platformServer, platformPort);
   let closed = false;
   let authenticatedSessionOrdinal = 0;
@@ -1093,6 +1131,10 @@ export async function bootWorld(
       if (closed) return;
       closed = true;
       await closeServer(platformServer);
+      // Closing the server drops its sockets, not its handlers: a follow still inside the
+      // platform reads Durable Streams until its hold ends. Stopping the stream server under
+      // it would leave the Durable Streams client retrying forever and the process alive.
+      await drainHandlers();
       runtime.agentResponder?.stop();
       await runtime.registry.stop();
       runtime.gateway.terminate();

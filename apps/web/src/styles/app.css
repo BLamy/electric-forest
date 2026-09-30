@@ -1,0 +1,358 @@
+/*
+ * Electric Forest — the single Tailwind v4 entry for apps/web.
+ *
+ * Layers, in order: Tailwind (theme + preflight + utilities), the `bl-ui` registry style's
+ * @theme tokens (shadcn colors + BL UI extras + spring easings), the Electric Forest dark
+ * palette as shadcn CSS variables, and the handful of rules a block cannot express as a
+ * utility (third-party shadow-DOM hosts, the skip link, visually hidden evidence rows).
+ *
+ * Sources are explicit (`source(none)`): the owned registry blocks and each app area get
+ * their own `@source` root, so a class used only inside `src/blocks` is generated only
+ * because of the blocks line. `tailwind-sources.test.ts` compiles this file and fails if a
+ * block-only utility disappears; `tools/verify/e5_t15_ui_contract.mjs` fails if an app
+ * area with .ts/.tsx files is not covered.
+ */
+@import "tailwindcss" source(none);
+
+/* Owned registry blocks: github-clone (blocks/github) and discord-clone (blocks/chat). */
+@source "../blocks";
+/* App areas composed from the blocks and the package. */
+@source "../chat";
+@source "../components";
+@source "../evidence";
+@source "../issues";
+@source "../members";
+@source "../prs";
+@source "../site";
+@source "../wiki";
+@source "../*.tsx";
+/* Class strings @brett_lamy/ui@2.0.0 leaves to the host (its own sheet covers the rest). */
+@source "../../node_modules/@brett_lamy/ui/dist/index.js";
+
+@custom-variant dark (&:is(.dark *));
+
+/* bl-ui registry style (registry.json item "bl-ui", cssVars.theme) + shadcn's color map. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-success: var(--success, oklch(0.723 0.191 149.6));
+  --color-warning: var(--warning, oklch(0.769 0.165 70.1));
+  --color-tertiary-foreground: var(
+    --tertiary-foreground,
+    color-mix(in oklab, var(--muted-foreground) 60%, transparent)
+  );
+  --color-secondary-strong: var(--secondary-strong, var(--accent));
+  --color-overlay: var(--overlay, color-mix(in oklab, black 40%, transparent));
+  --color-bar: var(--bar, color-mix(in oklab, var(--background) 85%, transparent));
+  --color-sticky: var(--sticky, color-mix(in oklab, var(--muted) 92%, transparent));
+  --color-handle: var(--handle, var(--secondary-strong, var(--accent)));
+  --color-link: var(--link, var(--primary));
+  --color-code: var(--code, var(--muted));
+  --color-code-foreground: var(--code-foreground, var(--foreground));
+  --spacing-toolbar: 52px;
+  --font-ios:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue",
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring-snappy: linear(
+    0.0017,
+    0.0315,
+    0.0996,
+    0.1865,
+    0.2645,
+    0.3583,
+    0.4476,
+    0.5297,
+    0.5916,
+    0.6577,
+    0.7152,
+    0.7644,
+    0.7997,
+    0.8359,
+    0.8661,
+    0.8912,
+    0.9088,
+    0.9264,
+    0.9407,
+    0.9525,
+    0.9605,
+    0.9685,
+    0.9749,
+    0.9801,
+    0.9836,
+    0.987,
+    0.9898,
+    0.992,
+    0.9934,
+    0.9948,
+    0.996,
+    0.9969,
+    0.9974,
+    0.998,
+    0.9985,
+    0.9988,
+    0.999,
+    0.9993,
+    0.9994,
+    0.9996,
+    1
+  );
+  --duration-spring-snappy: 383ms;
+  --ease-spring-smooth: linear(
+    0.0011,
+    0.0397,
+    0.1132,
+    0.2029,
+    0.2972,
+    0.4001,
+    0.4846,
+    0.5608,
+    0.6282,
+    0.6936,
+    0.7431,
+    0.7854,
+    0.8212,
+    0.8547,
+    0.8795,
+    0.9002,
+    0.9174,
+    0.9334,
+    0.945,
+    0.9547,
+    0.9626,
+    0.9699,
+    0.9753,
+    0.9796,
+    0.9832,
+    0.9865,
+    0.9889,
+    0.9909,
+    0.9927,
+    0.994,
+    0.9951,
+    0.996,
+    0.9968,
+    0.9973,
+    0.9978,
+    0.9982,
+    0.9986,
+    0.9988,
+    0.999,
+    0.9992,
+    1
+  );
+  --duration-spring-smooth: 550ms;
+  --ease-spring-bouncy: linear(
+    0.0014,
+    0.0574,
+    0.188,
+    0.355,
+    0.5301,
+    0.6935,
+    0.8331,
+    0.9431,
+    1.0225,
+    1.0736,
+    1.1007,
+    1.1091,
+    1.104,
+    1.0905,
+    1.0725,
+    1.0534,
+    1.0354,
+    1.0198,
+    1.0074,
+    0.9984,
+    0.993,
+    0.9895,
+    0.9882,
+    0.9884,
+    0.9897,
+    0.9916,
+    0.9937,
+    0.9957,
+    0.9975,
+    0.9989,
+    1,
+    1.0007,
+    1.0011,
+    1.0013,
+    1.0013,
+    1.0011,
+    1.0009,
+    1.0007,
+    1.0005,
+    1.0003,
+    1
+  );
+  --duration-spring-bouncy: 597ms;
+  --duration-exit: 140ms;
+}
+
+/* Neutral charcoal surfaces with a cool blue interaction accent. Forest green remains in
+   the logo and semantic success/merge states; it no longer tints the app chrome. */
+:root {
+  color-scheme: dark;
+  --background: #101114;
+  --foreground: #eef0f5;
+  --card: #17191e;
+  --card-foreground: #eef0f5;
+  --popover: #1e2026;
+  --popover-foreground: #eef0f5;
+  --primary: #8faeff;
+  --primary-foreground: #10131a;
+  --secondary: rgb(151 158 174 / 14%);
+  --secondary-foreground: #eef0f5;
+  --muted: #15171c;
+  --muted-foreground: #a5aab5;
+  --accent: rgb(151 158 174 / 10%);
+  --accent-foreground: #eef0f5;
+  --destructive: #ef6374;
+  --border: #15171c;
+  --input: rgb(151 158 174 / 8%);
+  --ring: #a1bbff;
+  --radius: 0.625rem;
+  --sidebar: #121318;
+  --sidebar-foreground: #eef0f5;
+  --sidebar-accent: rgb(151 158 174 / 10%);
+  --sidebar-accent-foreground: #eef0f5;
+  --sidebar-border: #14161b;
+  --success: #48b979;
+  --warning: #d6a84b;
+  --tertiary-foreground: #969ca8;
+  --secondary-strong: rgb(151 158 174 / 24%);
+  --overlay: rgb(0 0 0 / 62%);
+  --bar: rgb(18 19 24 / 88%);
+  --sticky: rgb(23 25 30 / 94%);
+  --handle: rgb(151 158 174 / 24%);
+  --link: #9cc3ff;
+  --code: #15171c;
+  --code-foreground: #eef0f5;
+
+  /* Alpha tints as plain rgba tokens. A Tailwind `bg-primary/8` compiles to color-mix() with
+     an opaque fallback, which older engines (Replay Chromium 108 records the browser evidence)
+     paint solid; these keep the wash in every engine. */
+  --ef-primary-wash-8: rgb(143 174 255 / 8%);
+  --ef-primary-wash-10: rgb(143 174 255 / 10%);
+  --ef-primary-edge-12: rgb(143 174 255 / 12%);
+  --ef-destructive-wash-12: rgb(239 99 116 / 12%);
+
+  /* github-clone extras (parts.tsx `--gh-*`) use neutral chrome and semantic states. */
+  --gh-inset: #0c0d11;
+  --gh-open: #48b979;
+  --gh-done: #b38cff;
+  --gh-closed: #ef6374;
+  --gh-attention: #d6a84b;
+  --gh-btn: #1b1d23;
+  --gh-btn-hover: #242731;
+  --gh-primary-hover: #a2bbff;
+  --gh-merge: #48b979;
+  --gh-merge-hover: #5cc98b;
+  --gh-merge-border: rgb(0 0 0 / 30%);
+  --gh-draft: #a5aab5;
+  --gh-ink: #07140c;
+  --gh-tab: var(--primary);
+  --gh-folder: #9cc3ff;
+  --gh-hunk: rgb(143 174 255 / 10%);
+  --gh-hunk-fg: #a5aab5;
+
+  /* Syntax colors for the app's gpu-lexer code view (components/code/syntax.ts). */
+  --bl-syntax-keyword: #ff8b8b;
+  --bl-syntax-string: #a5d6ff;
+  --bl-syntax-number: #79c0ff;
+  --bl-syntax-constant: #79c0ff;
+  --bl-syntax-comment: #969ca8;
+  --bl-syntax-function: #d2a8ff;
+  --bl-syntax-type: #ffb86b;
+  --bl-syntax-operator: #eef0f5;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-ios);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus is always visible: react-aria marks it with data-focus-visible, native
+   controls with :focus-visible. Utilities may restyle it; nothing removes it. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 0.75rem;
+  z-index: 1000;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* Docstream renders into an unlayered sheet; keep rendered Markdown on the forest palette. */
+[data-markdown-renderer="docstream"] {
+  --color-canvas-default: var(--background);
+  --color-canvas-subtle: var(--muted);
+  --color-fg-default: var(--foreground);
+  --color-fg-muted: var(--muted-foreground);
+  --color-border-default: var(--border);
+  --color-accent-fg: var(--link);
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+/* Pierre's trees/diffs render inside shadow roots; size their hosts only. */
+.pierre-tree file-tree-container {
+  display: block;
+}
+
+/* The running agent-run label shimmer (chat/RunAccordion.tsx); disabled under reduced motion. */
+@keyframes run-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}

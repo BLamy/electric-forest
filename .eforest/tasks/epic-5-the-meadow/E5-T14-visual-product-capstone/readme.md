@@ -385,3 +385,15 @@ apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
   and the focused verifier exact-matches all three desktop interaction ledger entries.
   No unexecuted changed hunk or remaining P0/P1/P2 visual blocker remains.
 - No Replay, MP4, E5-T13/dependency, cold-clone, root-suite, or broad gate was rerun.
+
+### 2026-09-30 — builder (E5-T15) — supersession note (append-only)
+
+- E5-T15 (`E5-T15-bl-ui-2-rebuild`) replaces this task's mandate 4 (desktop on source-owned
+  shadcn `components/ui/*`) and mandate 5 (mobile on `@brett_lamy/ui@0.0.1` via
+  `DesktopTouchKit` / `MobileProductShell`) with one foundation: `@brett_lamy/ui@2.0.0` plus
+  the owned `github-clone` / `discord-clone` registry blocks under `apps/web/src/blocks/`.
+  Docstream Markdown, `@pierre/diffs` and `@pierre/trees` remain the kept foundations.
+- `node tools/verify/e5_t14_visual_contract.mjs` is therefore expected to fail from the
+  E5-T15 candidate on (first stale assertion: `@brett_lamy/docstream` `1.5.0 !== 0.3.7`); the
+  successor contract is `node tools/verify/e5_t15_ui_contract.mjs`. This task's verified
+  claim, status and evidence are unchanged; this entry only records the supersession.

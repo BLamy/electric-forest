@@ -2,7 +2,18 @@ import { useState } from "react";
 import { DispatchRefusalError, useDispatch, useStreamReducer } from "@eforest/web-hooks";
 import { repoLabelsStreamId, type LabelState, type RepoLabel } from "@eforest/reducers";
 import type { Event } from "@eforest/protocol";
-import { RouteLink } from "./navigation.js";
+import { cn } from "@brett_lamy/ui";
+import { RouteLink, repoSectionPath } from "./navigation.js";
+import {
+  Box,
+  Counter,
+  LabelChip,
+  Oct,
+  ghButton,
+  ghField,
+  type Layout,
+} from "./blocks/github/parts.js";
+import { LIVE_FOLLOW } from "./live.js";
 
 interface RenderedDispatchError {
   readonly code: string;
@@ -19,7 +30,9 @@ function formValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "");
 }
 
+/** The repository label catalog (`repo-labels:<org>/<repo>`); every edit is a dispatch. */
 export function LabelManagement(props: {
+  readonly ui: Layout;
   readonly org: string;
   readonly repo: string;
 }): React.JSX.Element {
@@ -29,7 +42,7 @@ export function LabelManagement(props: {
     apiPath,
     streamId,
     reducerId: "repo-labels",
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });
@@ -54,9 +67,10 @@ export function LabelManagement(props: {
 
   const inFlight = dispatch.counters.sent > dispatch.counters.confirmed + dispatch.counters.refused;
 
+  const label = "grid gap-1 text-[13px] font-semibold";
   return (
     <section
-      className="label-management"
+      className={cn("grid gap-4", props.ui.phone && "px-4 py-4")}
       data-testid="label-management"
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
@@ -72,19 +86,23 @@ export function LabelManagement(props: {
       data-dispatches-refused={dispatch.counters.refused}
       aria-busy={inFlight}
     >
-      <div className="label-heading">
-        <div>
-          <p className="eyebrow">Replay-backed catalog</p>
-          <h2 data-testid="route-labels">
-            {props.org} / {props.repo} / labels
-          </h2>
-        </div>
-        <RouteLink href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}`}>
-          Repository
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="m-0 mr-auto text-[20px] font-semibold" data-testid="route-labels">
+          <span className="sr-only">
+            {props.org} / {props.repo} /{" "}
+          </span>
+          Labels
+        </h1>
+        <RouteLink
+          href={repoSectionPath(props.org, props.repo, "issues")}
+          className={cn(ghButton(), "text-foreground hover:no-underline")}
+        >
+          <Oct name="issue" className="text-muted-foreground" />
+          Issues
         </RouteLink>
       </div>
 
-      <dl className="label-facts">
+      <dl className="sr-only">
         <dt>Reducer</dt>
         <dd data-testid="labels-reducer">repo-labels</dd>
         <dt>Replayed offset</dt>
@@ -97,20 +115,39 @@ export function LabelManagement(props: {
         <dd data-testid="labels-status">{projection.status}</dd>
       </dl>
 
-      <dl className="dispatch-counters" aria-label="Dispatch lifecycle">
-        <dt>Sent</dt>
-        <dd data-testid="dispatches-sent">{dispatch.counters.sent}</dd>
-        <dt>Confirmed</dt>
-        <dd data-testid="dispatches-confirmed">{dispatch.counters.confirmed}</dd>
-        <dt>Reconciled</dt>
-        <dd data-testid="dispatches-reconciled">{dispatch.counters.reconciled}</dd>
-        <dt>Refused</dt>
-        <dd data-testid="dispatches-refused">{dispatch.counters.refused}</dd>
+      <dl
+        className="m-0 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground"
+        aria-label="Dispatch lifecycle"
+      >
+        <div className="flex gap-1">
+          <dt>Sent</dt>
+          <dd data-testid="dispatches-sent" className="m-0 text-foreground">
+            {dispatch.counters.sent}
+          </dd>
+        </div>
+        <div className="flex gap-1">
+          <dt>Confirmed</dt>
+          <dd data-testid="dispatches-confirmed" className="m-0 text-foreground">
+            {dispatch.counters.confirmed}
+          </dd>
+        </div>
+        <div className="flex gap-1">
+          <dt>Reconciled</dt>
+          <dd data-testid="dispatches-reconciled" className="m-0 text-foreground">
+            {dispatch.counters.reconciled}
+          </dd>
+        </div>
+        <div className="flex gap-1">
+          <dt>Refused</dt>
+          <dd data-testid="dispatches-refused" className="m-0 text-foreground">
+            {dispatch.counters.refused}
+          </dd>
+        </div>
       </dl>
 
       {dispatchError === undefined ? null : (
         <p
-          className="dispatch-error"
+          className="m-0 text-destructive"
           role="alert"
           data-testid="dispatch-error"
           data-code={dispatchError.code}
@@ -120,7 +157,7 @@ export function LabelManagement(props: {
       )}
 
       <form
-        className="label-create-form"
+        className="grid gap-3 rounded-md border border-border p-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
         data-testid="label-create-form"
         onSubmit={(event) => {
           event.preventDefault();
@@ -137,104 +174,136 @@ export function LabelManagement(props: {
           });
         }}
       >
-        <h3>Create label</h3>
-        <label>
+        <h2 className="m-0 text-[14px] font-semibold sm:col-span-4">Create label</h2>
+        <label className={label}>
           ID
-          <input name="labelId" required data-testid="label-create-id" />
+          <input name="labelId" required data-testid="label-create-id" className={ghField} />
         </label>
-        <label>
+        <label className={label}>
           Name
-          <input name="name" required data-testid="label-create-name" />
+          <input name="name" required data-testid="label-create-name" className={ghField} />
         </label>
-        <label>
+        <label className={label}>
           Color
-          <input name="color" required defaultValue="#0969da" data-testid="label-create-color" />
+          <input
+            name="color"
+            required
+            defaultValue="#0969da"
+            data-testid="label-create-color"
+            className={ghField}
+          />
         </label>
-        <button type="submit" disabled={inFlight} data-testid="label-create-submit">
+        <button
+          type="submit"
+          disabled={inFlight}
+          data-testid="label-create-submit"
+          className={ghButton(true)}
+        >
           Create label
         </button>
       </form>
 
       {projection.status === "loading" ? (
-        <p data-testid="labels-loading">Loading labels…</p>
+        <p data-testid="labels-loading" role="status" className="m-0 text-muted-foreground">
+          Loading labels…
+        </p>
       ) : rows.length === 0 ? (
-        <p data-testid="labels-empty">No labels yet.</p>
+        <Box className="px-4 py-8 text-center">
+          <p data-testid="labels-empty" className="m-0 text-muted-foreground">
+            No labels yet.
+          </p>
+        </Box>
       ) : (
-        <ul className="label-list" data-testid="label-list">
-          {rows.map((label) => (
-            <li key={label.labelId} data-testid="label-row" data-label-id={label.labelId}>
-              <div className="label-identity">
-                <span
-                  className="label-swatch"
-                  aria-label={`Color ${label.color}`}
-                  style={{ backgroundColor: label.color }}
-                />
-                <strong data-testid="label-name">{label.name}</strong>
-                <code data-testid="label-id">{label.labelId}</code>
-              </div>
-              <form
-                data-testid="label-rename-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const form = new FormData(event.currentTarget);
-                  void submit({
-                    type: "label.renamed",
-                    payload: {
-                      v: 1,
-                      labelId: label.labelId,
-                      name: formValue(form, "name"),
-                    },
-                    ts: Date.now(),
-                  });
-                }}
+        <Box
+          header={
+            <>
+              <b className="font-semibold">Labels</b>
+              <Counter>{rows.length}</Counter>
+            </>
+          }
+        >
+          <ul className="m-0 list-none p-0" data-testid="label-list">
+            {rows.map((row) => (
+              <li
+                key={row.labelId}
+                data-testid="label-row"
+                data-label-id={row.labelId}
+                className="grid gap-2 border-t border-border px-4 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center"
               >
-                <label>
-                  Rename
-                  <input
-                    key={`${label.labelId}:${label.name}`}
-                    name="name"
-                    required
-                    defaultValue={label.name}
-                    data-testid="label-rename-name"
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span
+                    className="size-3.5 shrink-0 rounded-full"
+                    role="img"
+                    aria-label={`Color ${row.color}`}
+                    style={{ backgroundColor: row.color }}
                   />
-                </label>
-                <button type="submit" disabled={inFlight}>
-                  Rename
-                </button>
-              </form>
-              <form
-                data-testid="label-recolor-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const form = new FormData(event.currentTarget);
-                  void submit({
-                    type: "label.recolored",
-                    payload: {
-                      v: 1,
-                      labelId: label.labelId,
-                      color: formValue(form, "color"),
-                    },
-                    ts: Date.now(),
-                  });
-                }}
-              >
-                <label>
-                  Recolor
-                  <input
-                    key={`${label.labelId}:${label.color}`}
-                    name="color"
-                    required
-                    defaultValue={label.color}
-                    data-testid="label-recolor-color"
-                  />
-                </label>
-                <button type="submit" disabled={inFlight}>
-                  Recolor
-                </button>
-              </form>
-            </li>
-          ))}
-        </ul>
+                  <strong data-testid="label-name" className="font-normal">
+                    <LabelChip label={row} />
+                  </strong>
+                  <code data-testid="label-id" className="text-[12px] text-muted-foreground">
+                    {row.labelId}
+                  </code>
+                </div>
+                <form
+                  data-testid="label-rename-form"
+                  className="flex items-end gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const form = new FormData(event.currentTarget);
+                    void submit({
+                      type: "label.renamed",
+                      payload: { v: 1, labelId: row.labelId, name: formValue(form, "name") },
+                      ts: Date.now(),
+                    });
+                  }}
+                >
+                  <label className={label}>
+                    Rename
+                    <input
+                      key={`${row.labelId}:${row.name}`}
+                      name="name"
+                      required
+                      defaultValue={row.name}
+                      data-testid="label-rename-name"
+                      className={ghField}
+                    />
+                  </label>
+                  <button type="submit" disabled={inFlight} className={ghButton()}>
+                    Rename
+                  </button>
+                </form>
+                <form
+                  data-testid="label-recolor-form"
+                  className="flex items-end gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const form = new FormData(event.currentTarget);
+                    void submit({
+                      type: "label.recolored",
+                      payload: { v: 1, labelId: row.labelId, color: formValue(form, "color") },
+                      ts: Date.now(),
+                    });
+                  }}
+                >
+                  <label className={label}>
+                    Recolor
+                    <input
+                      key={`${row.labelId}:${row.color}`}
+                      name="color"
+                      required
+                      defaultValue={row.color}
+                      data-testid="label-recolor-color"
+                      className={ghField}
+                    />
+                  </label>
+                  <button type="submit" disabled={inFlight} className={ghButton()}>
+                    Recolor
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </Box>
       )}
     </section>
   );

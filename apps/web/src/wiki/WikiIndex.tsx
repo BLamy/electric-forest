@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { DispatchRefusalError } from "@eforest/web-hooks";
-import { RouteLink } from "../navigation.js";
+import { cn } from "@brett_lamy/ui";
+import { RouteLink, navigate } from "../navigation.js";
+import { Box, Counter, Oct, ghButton, ghField } from "../blocks/github/parts.js";
 import {
   createWikiPageEvent,
   isWikiSlug,
@@ -8,11 +10,6 @@ import {
   wikiEditorRoute,
   wikiPageRoute,
 } from "./useWiki.js";
-
-function navigate(href: string): void {
-  window.history.pushState(null, "", href);
-  window.dispatchEvent(new PopStateEvent("popstate"));
-}
 
 export function WikiIndex(props: {
   readonly org: string;
@@ -52,7 +49,7 @@ export function WikiIndex(props: {
 
   return (
     <section
-      className="wiki-view wiki-index"
+      className="grid gap-4"
       data-testid="wiki-index"
       data-ef-stream={wiki.streamId}
       data-ef-offset={wiki.tree.checkpoint}
@@ -66,68 +63,105 @@ export function WikiIndex(props: {
       data-dispatches-refused={wiki.dispatch.counters.refused}
       data-stream-status={wiki.tree.status}
     >
-      <div className="wiki-heading">
-        <div>
-          <p className="eyebrow">Live StreamFS branch</p>
-          <h2>Wiki</h2>
-          <p>
-            {props.org} / {props.repo}
-          </p>
-        </div>
-        <code data-testid="wiki-tree-digest">{wiki.tree.digest}</code>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="m-0 mr-auto text-[20px] font-semibold">Wiki</h1>
+        <code
+          data-testid="wiki-tree-digest"
+          className="max-w-full truncate text-[12px] text-muted-foreground"
+        >
+          {wiki.tree.digest}
+        </code>
       </div>
 
-      <form className="wiki-new-page" onSubmit={(event) => void create(event)}>
-        <label htmlFor="wiki-new-slug">New page</label>
-        <div>
+      <form
+        className="grid gap-1 rounded-md border border-border p-4"
+        onSubmit={(event) => void create(event)}
+      >
+        <label htmlFor="wiki-new-slug" className="text-[13px] font-semibold">
+          New page
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
           <input
             id="wiki-new-slug"
             data-testid="wiki-new-slug"
+            className={cn(ghField, "min-w-[200px] flex-1")}
             value={slug}
             onChange={(event) => setSlug(event.currentTarget.value)}
             placeholder="getting-started"
             autoComplete="off"
             aria-describedby="wiki-slug-help"
           />
-          <span aria-hidden="true">.md</span>
-          <button type="submit" disabled={pendingSlug !== undefined}>
+          <span aria-hidden="true" className="text-muted-foreground">
+            .md
+          </span>
+          <button type="submit" disabled={pendingSlug !== undefined} className={ghButton(true)}>
             {pendingSlug === undefined ? "Create page" : "Creating…"}
           </button>
         </div>
-        <small id="wiki-slug-help">Lowercase letters, numbers, and hyphens.</small>
+        <small id="wiki-slug-help" className="text-muted-foreground">
+          Lowercase letters, numbers, and hyphens.
+        </small>
       </form>
 
       {error === undefined ? null : (
-        <p role="alert" data-testid="wiki-create-error">
+        <p role="alert" data-testid="wiki-create-error" className="m-0 text-destructive">
           {error}
         </p>
       )}
-      {wiki.tree.status === "loading" ? <p data-testid="wiki-loading">Loading wiki…</p> : null}
+      {wiki.tree.status === "loading" ? (
+        <p data-testid="wiki-loading" role="status" className="m-0 text-muted-foreground">
+          Loading wiki…
+        </p>
+      ) : null}
       {wiki.tree.status.startsWith("error:") ? (
-        <p role="alert" data-testid="wiki-refusal">
+        <p role="alert" data-testid="wiki-refusal" className="m-0 text-destructive">
           Wiki projection refused: {wiki.tree.status.slice("error:".length)}
         </p>
       ) : null}
       {wiki.tree.status !== "loading" && !wiki.tree.status.startsWith("error:") ? (
         wiki.pages.length === 0 ? (
-          <p data-testid="wiki-empty">This wiki has no pages yet.</p>
+          <Box className="grid place-items-center px-6 py-12 text-center">
+            <Oct name="wiki" size={24} className="text-muted-foreground" />
+            <p data-testid="wiki-empty" className="mt-3 mb-0 text-muted-foreground">
+              This wiki has no pages yet.
+            </p>
+          </Box>
         ) : (
-          <ul className="wiki-page-list" data-testid="wiki-page-list">
-            {wiki.pages.map((page) => (
-              <li
-                key={page.path}
-                data-testid="wiki-page-row"
-                data-page-path={page.path}
-                data-page-revision={page.revision}
-              >
-                <RouteLink href={wikiPageRoute(props.org, props.repo, page.slug)}>
-                  {page.slug}
-                </RouteLink>
-                <span>{page.size} bytes</span>
-                <code>{page.contentDigest.slice(0, 12)}</code>
-              </li>
-            ))}
-          </ul>
+          <Box
+            header={
+              <>
+                <Oct name="wiki" className="text-muted-foreground" />
+                <b className="font-semibold">Pages</b>
+                <Counter>{wiki.pages.length}</Counter>
+              </>
+            }
+          >
+            <ul className="m-0 list-none p-0" data-testid="wiki-page-list">
+              {wiki.pages.map((page) => (
+                <li
+                  key={page.path}
+                  data-testid="wiki-page-row"
+                  data-page-path={page.path}
+                  data-page-revision={page.revision}
+                  className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-3 first:border-t-0 hover:bg-muted"
+                >
+                  <Oct name="file" className="text-muted-foreground" />
+                  <RouteLink
+                    href={wikiPageRoute(props.org, props.repo, page.slug)}
+                    className="font-semibold"
+                  >
+                    {page.slug}
+                  </RouteLink>
+                  <span className="ml-auto text-[12px] text-muted-foreground">
+                    {page.size} bytes
+                  </span>
+                  <code className="text-[12px] text-muted-foreground">
+                    {page.contentDigest.slice(0, 12)}
+                  </code>
+                </li>
+              ))}
+            </ul>
+          </Box>
         )
       ) : null}
     </section>

@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Icon, List, ListRow, ListSection, PillButton, Segmented } from "@brett_lamy/ui";
+import { Button, Icon, List, ListRow, ListSection, Segmented, cn } from "@brett_lamy/ui";
 import {
   AGENT_EFFORTS,
   AGENT_HARNESSES,
   type AgentConfig,
   type AgentEntry,
 } from "@eforest/reducers";
-import { ChatAvatar, KFONT } from "../vendor/chatkit/index.js";
-import { MobileCredenza } from "../components/mobile/MobileOverlays.js";
-import { DesktopTouchKit } from "../components/touchkit/DesktopTouchKit.js";
+import { ChatAvatar } from "../blocks/chat/components/chat-avatar.js";
+import { MemberGroup, MemberItem, MemberList } from "../blocks/chat/components/member-list.js";
+import { AppSheet } from "../components/overlay.js";
+import { Box, ghButton, ghField, ghTextarea } from "../blocks/github/parts.js";
 import {
   registerAgentEvent,
   seedDefaultAgents,
@@ -103,17 +104,18 @@ function AgentForm(props: {
   };
   return (
     <form
-      className="new-repository-form agent-form"
+      className="grid gap-3"
       data-testid="agent-form"
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
       }}
     >
-      <div className="agent-form-grid">
-        <label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-1 text-[13px] font-semibold">
           <span>Handle</span>
           <input
+            className={ghField}
             autoFocus={!editing}
             value={handle}
             disabled={editing}
@@ -122,18 +124,20 @@ function AgentForm(props: {
             data-testid="agent-handle"
           />
         </label>
-        <label>
+        <label className="grid gap-1 text-[13px] font-semibold">
           <span>Display name</span>
           <input
+            className={ghField}
             value={config.name}
             onChange={(event) => set("name", event.currentTarget.value)}
             placeholder="Scout"
             data-testid="agent-name"
           />
         </label>
-        <label>
+        <label className="grid gap-1 text-[13px] font-semibold">
           <span>Harness</span>
           <select
+            className={ghField}
             value={config.harness}
             onChange={(event) => set("harness", event.currentTarget.value)}
           >
@@ -147,16 +151,17 @@ function AgentForm(props: {
             ))}
           </select>
         </label>
-        <label>
+        <label className="grid gap-1 text-[13px] font-semibold">
           <span>Model</span>
           <input
+            className={ghField}
             value={config.model}
             onChange={(event) => set("model", event.currentTarget.value)}
             placeholder="claude-sonnet-5"
           />
         </label>
       </div>
-      <label>
+      <label className="grid gap-1 text-[13px] font-semibold">
         <span>Effort</span>
         <Segmented
           aria-label="Effort"
@@ -165,22 +170,28 @@ function AgentForm(props: {
           onChange={(id: string) => set("effort", id as AgentConfig["effort"])}
         />
       </label>
-      <label>
+      <label className="grid gap-1 text-[13px] font-semibold">
         <span>System prompt</span>
         <textarea
+          className={ghTextarea}
           rows={4}
           value={config.systemPrompt}
           onChange={(event) => set("systemPrompt", event.currentTarget.value)}
           placeholder="Who this agent is and how it should work."
         />
       </label>
-      <label>
+      <label className="grid gap-1 text-[13px] font-semibold">
         <span>Tools (comma separated)</span>
-        <input value={tools} onChange={(event) => setTools(event.currentTarget.value)} />
+        <input
+          className={ghField}
+          value={tools}
+          onChange={(event) => setTools(event.currentTarget.value)}
+        />
       </label>
-      <label>
+      <label className="grid gap-1 text-[13px] font-semibold">
         <span>MCP servers (one per line: name url)</span>
         <textarea
+          className={ghTextarea}
           rows={3}
           value={mcp}
           onChange={(event) => setMcp(event.currentTarget.value)}
@@ -188,16 +199,17 @@ function AgentForm(props: {
         />
       </label>
       {error === undefined ? null : (
-        <p role="alert" className="new-repository-error">
+        <p role="alert" className="m-0 text-destructive">
           {error}
         </p>
       )}
-      <PillButton
-        label={busy ? "Dispatching…" : editing ? "Save agent" : "Register agent"}
-        tone={valid && !busy ? "tint" : "soft"}
+      <Button
+        className={ghButton((valid && !busy ? "tint" : "soft") === "tint")}
         onPress={() => void submit()}
-      />
-      <small>
+      >
+        {busy ? "Dispatching…" : editing ? "Save agent" : "Register agent"}
+      </Button>
+      <small className="text-muted-foreground">
         {editing ? "Appends one `agent.update` event" : "Appends one `agent.register` event"} to the
         workspace agent stream.
       </small>
@@ -233,16 +245,17 @@ function InviteForm(props: {
   };
   return (
     <form
-      className="new-repository-form"
+      className="grid gap-3"
       data-testid="invite-form"
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
       }}
     >
-      <label>
+      <label className="grid gap-1 text-[13px] font-semibold">
         <span>Email</span>
         <input
+          className={ghField}
           autoFocus
           type="email"
           value={email}
@@ -261,28 +274,31 @@ function InviteForm(props: {
         onChange={(id: string) => setRole(id === "admin" ? "admin" : "member")}
       />
       {error === undefined ? null : (
-        <p role="alert" className="new-repository-error">
+        <p role="alert" className="m-0 text-destructive">
           {error}
         </p>
       )}
       {result === undefined ? (
-        <PillButton
-          label={busy ? "Inviting…" : "Send invite"}
-          tone={valid && !busy ? "tint" : "soft"}
+        <Button
+          className={ghButton((valid && !busy ? "tint" : "soft") === "tint")}
           onPress={() => void submit()}
-        />
+        >
+          {busy ? "Inviting…" : "Send invite"}
+        </Button>
       ) : (
-        <div className="invite-result" data-testid="invite-result">
+        <div className="grid gap-2" data-testid="invite-result">
           <p>
             {result.emailed
               ? `Invitation emailed to ${email.trim().toLowerCase()} through Resend.`
               : "Invitation recorded. Email delivery is not configured here, so share the link yourself:"}
           </p>
-          <code>{result.link}</code>
-          <PillButton label="Done" tone="soft" onPress={props.onDone} />
+          <code className="break-all">{result.link}</code>
+          <Button className={ghButton()} onPress={props.onDone}>
+            Done
+          </Button>
         </div>
       )}
-      <small>
+      <small className="text-muted-foreground">
         Appends one `member.invite` event on the workspace member stream
         {props.emailDelivery === "resend" ? " and sends the email through Resend." : "."} The invite
         is bound to the email; membership is granted when that person signs in and accepts.
@@ -307,159 +323,167 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
   const pending = snapshot?.invites.filter((invite) => invite.status === "pending") ?? [];
   return (
     <section
-      className="members-page"
+      className="grid gap-4"
       data-testid="members-page"
       data-ef-stream={agents.streamId}
       data-ef-offset={agents.checkpoint}
       data-stream-status={agents.status}
-      style={{ fontFamily: KFONT }}
     >
-      <header className="members-head">
-        <div>
-          <p className="site-kicker">Workspace</p>
-          <h2>{props.org} · members</h2>
+      <header className="flex flex-wrap items-center gap-3">
+        <div className="mr-auto">
+          <p className="m-0 text-muted-foreground">Workspace</p>
+          <h1 className="m-0 text-[20px] font-semibold">{props.org} · members</h1>
         </div>
-        <div className="members-actions">
-          {roster.length === 0 && agents.status !== "loading" ? (
-            <button
-              type="button"
-              className="chat-edit-cancel members-button"
-              data-testid="seed-agents"
-              onClick={() =>
-                void seedDefaultAgents(agents.dispatch, new Set(roster.map((a) => a.handle))).catch(
-                  (cause: unknown) =>
-                    setSeedError(cause instanceof Error ? cause.message : "seed refused"),
-                )
-              }
-            >
-              Seed default agents
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="chat-edit-save members-button"
-            data-testid="add-member"
-            onClick={() => setSheet("add")}
+        {roster.length === 0 && agents.status !== "loading" ? (
+          <Button
+            className={ghButton()}
+            data-testid="seed-agents"
+            onPress={() =>
+              void seedDefaultAgents(agents.dispatch, new Set(roster.map((a) => a.handle))).catch(
+                (cause: unknown) =>
+                  setSeedError(cause instanceof Error ? cause.message : "seed refused"),
+              )
+            }
           >
-            + Add member
-          </button>
-        </div>
+            Seed default agents
+          </Button>
+        ) : null}
+        <Button className={ghButton(true)} data-testid="add-member" onPress={() => setSheet("add")}>
+          + Add member
+        </Button>
       </header>
       {seedError === undefined ? null : (
-        <p role="alert" className="new-repository-error">
+        <p role="alert" className="m-0 text-destructive">
           {seedError}
         </p>
       )}
 
-      <h3 className="members-section-title">
-        Humans <small>{snapshot === undefined ? "" : String(snapshot.humans.length)}</small>
-      </h3>
-      {humans.status === "loading" ? (
-        <p className="chat-channel-empty">Replaying identity…</p>
-      ) : null}
-      {humans.status.startsWith("error:") ? (
-        <p role="alert" className="projection-refusal">
-          Members could not be listed: {humans.status.slice("error:".length)}
-        </p>
-      ) : null}
-      <ul className="members-list" data-testid="members-humans">
-        {(snapshot?.humans ?? []).map((human) => (
-          <li key={human.sub} className="members-row" data-sub={human.sub}>
-            <ChatAvatar
-              user={{ name: human.email ?? shortSub(human.sub), c: color(human.sub), role: "" }}
-              size={32}
-            />
-            <div>
-              <strong>{human.email ?? shortSub(human.sub)}</strong>
-              <small>{shortSub(human.sub)}</small>
-            </div>
-            <span className={`members-role members-role-${human.role}`}>{human.role}</span>
-          </li>
-        ))}
-        {pending.map((invite) => (
-          <li
-            key={invite.token}
-            className="members-row members-row-pending"
-            data-testid="members-invite"
-          >
-            <ChatAvatar user={{ name: invite.email, c: "#555b58", role: "" }} size={32} />
-            <div>
-              <strong>{invite.email}</strong>
-              <small>invited · awaiting sign-in</small>
-            </div>
-            <span className="members-role members-role-pending">{invite.role} · pending</span>
-          </li>
-        ))}
-      </ul>
-
-      <h3 className="members-section-title">
-        Agents <small>{roster.length}</small>
-      </h3>
-      {agents.status.startsWith("error:") ? (
-        <p role="alert" className="projection-refusal">
-          Agent roster refused: {agents.status.slice("error:".length)}
-        </p>
-      ) : null}
-      {roster.length === 0 && agents.status !== "loading" ? (
-        <p className="chat-channel-empty">
-          No agents yet. Seed the default roster (@sol, @terra, @luna, @fable, @opus, @sonnet,
-          @haiku) or register your own.
-        </p>
-      ) : null}
-      <ul className="members-list agents-list" data-testid="members-agents">
-        {roster.map((agent) => (
-          <li key={agent.handle} className="members-row agent-row" data-handle={agent.handle}>
-            <ChatAvatar
-              user={{ name: agent.name, c: color(agent.handle), role: "", bot: true }}
-              size={32}
-              square
-            />
-            <div>
-              <strong>
-                {agent.name} <code>@{agent.handle}</code>
-              </strong>
-              <small>
-                {agent.harness} · {agent.model} · effort {agent.effort} · {agent.tools.length} tools
-                · {agent.mcpServers.length} MCP
-              </small>
-            </div>
-            <span className="members-role members-role-agent">agent</span>
-            {canManage ? (
-              <button
-                type="button"
-                className="chat-edit-cancel members-button"
-                data-testid={`edit-agent-${agent.handle}`}
-                onClick={() => {
-                  setEditing(agent);
-                  setSheet("edit");
+      <Box
+        header={
+          <h2 className="m-0 text-[14px] font-semibold">
+            Humans{" "}
+            <small className="font-normal text-muted-foreground">
+              {snapshot === undefined ? "" : String(snapshot.humans.length)}
+            </small>
+          </h2>
+        }
+      >
+        {humans.status === "loading" ? (
+          <p className="m-0 px-4 py-3 text-muted-foreground">Replaying identity…</p>
+        ) : null}
+        {humans.status.startsWith("error:") ? (
+          <p role="alert" className="m-0 px-4 py-3 text-destructive">
+            Members could not be listed: {humans.status.slice("error:".length)}
+          </p>
+        ) : null}
+        <MemberList className="h-auto" data-testid="members-humans">
+          <MemberGroup label="Members" count={snapshot?.humans.length ?? 0}>
+            {(snapshot?.humans ?? []).map((human) => (
+              <MemberItem
+                key={human.sub}
+                data-sub={human.sub}
+                user={{
+                  name: human.email ?? shortSub(human.sub),
+                  c: color(human.sub),
+                  role: color(human.sub),
                 }}
+                status="online"
+                badge={human.role}
               >
-                Configure
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+                {human.email ?? shortSub(human.sub)}
+              </MemberItem>
+            ))}
+          </MemberGroup>
+          {pending.length === 0 ? null : (
+            <MemberGroup label="Invited · awaiting sign-in" count={pending.length}>
+              {pending.map((invite) => (
+                <MemberItem
+                  key={invite.token}
+                  data-testid="members-invite"
+                  user={{ name: invite.email, c: "#555b58", role: "#a9adaa" }}
+                  status="offline"
+                  badge={`${invite.role} · pending`}
+                >
+                  {invite.email}
+                </MemberItem>
+              ))}
+            </MemberGroup>
+          )}
+        </MemberList>
+      </Box>
 
-      <DesktopTouchKit>
-        <MobileCredenza
-          open={sheet === "add"}
-          onClose={() => setSheet("none")}
-          label="Add member"
-          compact
-        >
-          <div className="new-repository-form">
-            <Segmented
-              aria-label="Member kind"
-              options={[
-                { id: "human", label: "Human" },
-                { id: "agent", label: "Agent" },
-              ]}
-              value={kind}
-              onChange={(id: string) => setKind(id === "agent" ? "agent" : "human")}
-            />
-          </div>
-          {sheet !== "add" ? null : kind === "human" ? (
+      <Box
+        header={
+          <h2 className="m-0 text-[14px] font-semibold">
+            Agents <small className="font-normal text-muted-foreground">{roster.length}</small>
+          </h2>
+        }
+      >
+        {agents.status.startsWith("error:") ? (
+          <p role="alert" className="m-0 px-4 py-3 text-destructive">
+            Agent roster refused: {agents.status.slice("error:".length)}
+          </p>
+        ) : null}
+        {roster.length === 0 && agents.status !== "loading" ? (
+          <p className="m-0 px-4 py-3 text-muted-foreground">
+            No agents yet. Seed the default roster (@sol, @terra, @luna, @fable, @opus, @sonnet,
+            @haiku) or register your own.
+          </p>
+        ) : null}
+        <ul className="m-0 list-none p-0" data-testid="members-agents">
+          {roster.map((agent) => (
+            <li
+              key={agent.handle}
+              data-handle={agent.handle}
+              className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-3 first:border-t-0"
+            >
+              <ChatAvatar
+                user={{ name: agent.name, c: color(agent.handle), role: "", bot: true }}
+                size={32}
+                square
+              />
+              <div className="min-w-0 flex-1">
+                <strong>
+                  {agent.name}{" "}
+                  <code className="font-normal text-muted-foreground">@{agent.handle}</code>
+                </strong>
+                <div className="text-[12px] text-muted-foreground">
+                  {agent.harness} · {agent.model} · effort {agent.effort} · {agent.tools.length}{" "}
+                  tools · {agent.mcpServers.length} MCP
+                </div>
+              </div>
+              <span className="rounded-full border border-border px-2 text-[12px] text-muted-foreground">
+                agent
+              </span>
+              {canManage ? (
+                <Button
+                  className={ghButton()}
+                  data-testid={`edit-agent-${agent.handle}`}
+                  onPress={() => {
+                    setEditing(agent);
+                    setSheet("edit");
+                  }}
+                >
+                  Configure
+                </Button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </Box>
+
+      <AppSheet open={sheet === "add"} onClose={() => setSheet("none")} title="Add member">
+        <div className="grid gap-3">
+          <Segmented
+            aria-label="Member kind"
+            options={[
+              { id: "human", label: "Human" },
+              { id: "agent", label: "Agent" },
+            ]}
+            value={kind}
+            onChange={(id: string) => setKind(id === "agent" ? "agent" : "human")}
+          />
+          {kind === "human" ? (
             <InviteForm
               onInvite={humans.invite}
               emailDelivery={snapshot?.emailDelivery ?? "unconfigured"}
@@ -473,52 +497,51 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
               onDone={() => setSheet("none")}
             />
           )}
-        </MobileCredenza>
-        <MobileCredenza
-          open={sheet === "edit"}
-          onClose={() => setSheet("none")}
-          label={editing === undefined ? "Configure agent" : `Configure @${editing.handle}`}
-          compact
-        >
-          {sheet === "edit" && editing !== undefined ? (
-            <>
-              <AgentForm
-                initial={editing}
-                onSubmit={async (handle, config) => {
-                  await agents.dispatch({
-                    type: "agent.update",
-                    payload: { v: 1, handle, config, expectedRevision: editing.revision },
-                    ts: Date.now(),
-                  });
-                }}
-                onDone={() => setSheet("none")}
-              />
-              <List inset>
-                <ListSection title="Danger">
-                  <ListRow
-                    title={`Remove @${editing.handle}`}
-                    leading={<Icon name="trash" />}
-                    destructive
-                    onPress={() =>
-                      void agents
-                        .dispatch({
-                          type: "agent.remove",
-                          payload: {
-                            v: 1,
-                            handle: editing.handle,
-                            expectedRevision: editing.revision,
-                          },
-                          ts: Date.now(),
-                        })
-                        .then(() => setSheet("none"))
-                    }
-                  />
-                </ListSection>
-              </List>
-            </>
-          ) : null}
-        </MobileCredenza>
-      </DesktopTouchKit>
+        </div>
+      </AppSheet>
+      <AppSheet
+        open={sheet === "edit" && editing !== undefined}
+        onClose={() => setSheet("none")}
+        title={editing === undefined ? "Configure agent" : `Configure @${editing.handle}`}
+      >
+        {editing === undefined ? null : (
+          <div className="grid gap-3">
+            <AgentForm
+              initial={editing}
+              onSubmit={async (handle, config) => {
+                await agents.dispatch({
+                  type: "agent.update",
+                  payload: { v: 1, handle, config, expectedRevision: editing.revision },
+                  ts: Date.now(),
+                });
+              }}
+              onDone={() => setSheet("none")}
+            />
+            <List className={cn("overflow-hidden rounded-xl border border-border")}>
+              <ListSection title="Danger">
+                <ListRow
+                  title={`Remove @${editing.handle}`}
+                  leading={<Icon name="trash" />}
+                  destructive
+                  onPress={() =>
+                    void agents
+                      .dispatch({
+                        type: "agent.remove",
+                        payload: {
+                          v: 1,
+                          handle: editing.handle,
+                          expectedRevision: editing.revision,
+                        },
+                        ts: Date.now(),
+                      })
+                      .then(() => setSheet("none"))
+                  }
+                />
+              </ListSection>
+            </List>
+          </div>
+        )}
+      </AppSheet>
     </section>
   );
 }

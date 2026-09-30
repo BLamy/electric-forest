@@ -41,6 +41,9 @@ export default defineConfig({
   },
   test: {
     include: ["packages/**/*.test.ts", "apps/web/src/**/*.test.ts"],
+    // @brett_lamy/ui@2.0.0 and Docstream import their stylesheets from ESM; let Vite transform
+    // them (CSS becomes an empty module under test) instead of Node's loader rejecting `.css`.
+    server: { deps: { inline: [/@brett_lamy\/ui/, /@brett_lamy\/docstream/] } },
     environment: "node",
     fileParallelism: false,
     // Harness scheduling budgets, NOT product budgets: sized for a heavily

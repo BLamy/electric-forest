@@ -8,7 +8,7 @@
     "format": "prettier --write \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"apps/**/*.{ts,tsx,json,md,html,css}\" \"packages/**/*.{ts,tsx,json,md,yml,yaml}\" \"packages/identity/**/*.mjs\" \"tools/**/*.mjs\"",
     "format:check": "prettier --check \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"apps/**/*.{ts,tsx,json,md,html,css}\" \"packages/**/*.{ts,tsx,json,md,yml,yaml}\" \"packages/identity/**/*.mjs\" \"tools/**/*.mjs\"",
     "lint": "eslint \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"tools/**/*.mjs\" \"vitest.config.ts\"",
-    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit",
     "pretest": "pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build",
     "test": "node tools/test.mjs",
     "build": "tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build",

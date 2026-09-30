@@ -61,7 +61,8 @@ try {
   await page.getByRole("button", { name: /brett@electric-forest.test/ }).click();
   await page.getByTestId("personal-account-nav").waitFor();
   assert.equal(await page.getByTestId("registry-empty").innerText(), "No repositories yet.");
-  const account = page.getByRole("button", { name: "brett · Personal account", exact: true });
+  // E5-T15: workspaces are tabs on the package's workspace rail (TabView), not buttons.
+  const account = page.getByRole("tab", { name: "brett · Personal account", exact: true });
   await account.waitFor();
 
   await page.getByTestId("registry-new").click();
@@ -89,7 +90,7 @@ try {
     JSON.stringify(dispatches),
   );
 
-  await page.getByRole("button", { name: "maple", exact: true }).click();
+  await page.getByRole("tab", { name: "maple", exact: true }).click();
   await page.waitForURL("**/organizations/maple");
   await page.goto(`${ready.url}/maple/reading-room`);
   await page.getByTestId("repository-file-table").waitFor();
@@ -128,7 +129,8 @@ try {
   await page.getByTestId("file-viewer").waitFor();
   await page.goto(`${ready.url}/maple/reading-room`);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator(".mobile-repository-shell").waitFor();
+  // E5-T15: phones render the package NavigationStack in the github-clone frame.
+  await page.locator('[data-layout="phone"] [data-slot="navigation-stack"]').waitFor();
   await page
     .getByTestId("repository-readme")
     .getByRole("heading", { name: "Electric Forest Reading Room" })
@@ -138,6 +140,8 @@ try {
     await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
     false,
   );
+  // E5-T15: at 390 px the workspace rail sits in the package ChatShell drawer.
+  await page.locator('[data-slot="chat-shell-nav-trigger"]').click();
   await account.click();
   await page.getByTestId("registry-new").waitFor();
   await page.getByTestId("registry-empty").waitFor({ state: "hidden" });

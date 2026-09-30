@@ -50,7 +50,9 @@ export interface MarkdownProps {
 export function Markdown(props: MarkdownProps): React.JSX.Element {
   const markdown = useMemo(() => sanitizeMarkdownForRender(props.source), [props.source]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const className = props.className ? `wiki-markdown ${props.className}` : "wiki-markdown";
+  // `wb-md` is the package's Markdown typography (styling only): Docstream still renders the
+  // sanitized source below, so every Markdown surface keeps this adapter's URL policy.
+  const className = props.className ? `wb-md min-w-0 ${props.className}` : "wb-md min-w-0";
 
   useLayoutEffect(() => {
     const root = containerRef.current;

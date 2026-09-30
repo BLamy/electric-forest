@@ -8,6 +8,7 @@ import {
   type AgentsState,
   type MemberInvite,
 } from "@eforest/reducers";
+import { LIVE_FOLLOW } from "../live.js";
 
 export interface HumanMember {
   readonly sub: string;
@@ -102,7 +103,7 @@ export function useAgentRoster(org: string): AgentRoster {
     apiPath: `/api/agents/${encodeURIComponent(org)}`,
     streamId,
     reducerId: AGENTS_REDUCER,
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 1_000,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });

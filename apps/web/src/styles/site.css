@@ -1,97 +1,33 @@
-/* Public site: landing, roadmap, docs. Shares the product token layer (tokens.css)
-   and adds a warmer forest-green marketing treatment on the same near-black canvas. */
+/* Public site: landing, roadmap, docs. Uses the same charcoal surfaces and blue accent as
+   the app (styles/app.css :root), with quiet neutral separators. */
 
 .site {
-  --site-bg: #0a0e0c;
-  --site-ink: var(--content-primary, #eef0ef);
-  --site-muted: #a3b0a8;
-  --site-green: #5fe39b;
-  --site-mint: #9df2c4;
-  --site-sky: #6eafff;
-  --site-red: #ef6374;
-  --site-line: rgb(120 200 150 / 14%);
-  --site-glass: rgb(12 20 16 / 55%);
+  --site-bg: var(--background);
+  --site-ink: var(--foreground);
+  --site-muted: var(--muted-foreground);
+  --site-accent: var(--primary);
+  /* Keep these as static rgb values for older browsers used by recorded sessions. */
+  --site-highlight: #a9c1ff;
+  --site-sky: var(--link);
+  --site-red: var(--destructive);
+  --site-line: rgb(255 255 255 / 4%);
+  --site-glass: rgb(23 25 30 / 72%);
   --site-maxw: 1160px;
-  --site-font: var(--font-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  --site-mono: var(--font-code, ui-monospace, SFMono-Regular, Menlo, monospace);
-
-  /* The legacy route stylesheet and Docstream both read these aliases; scope the dark
-     product values here exactly as .product-shell does so markdown surfaces match. */
-  --color-canvas-default: var(--surface-canvas);
-  --color-canvas-subtle: var(--surface-subtle);
-  --color-fg-default: var(--content-primary);
-  --color-fg-muted: var(--content-secondary);
-  --color-border-default: var(--border-subtle);
-  --color-accent-fg: var(--accent-primary);
-  --color-success-fg: var(--status-success);
-  --color-danger-fg: var(--status-danger);
-  --color-control-bg: var(--control-fill);
-  --color-control-hover-bg: var(--control-fill-strong);
-  --color-header-bg: var(--surface-chrome-translucent);
-  --background: var(--surface-canvas);
-  --foreground: var(--content-primary);
-  --card: var(--surface-raised);
-  --card-foreground: var(--content-primary);
-  --muted: var(--surface-subtle);
-  --muted-foreground: var(--content-secondary);
-  --border: var(--border-subtle);
-  --primary: var(--accent-primary);
-  --primary-foreground: #07140c;
+  --site-font: var(--font-ios);
+  --site-mono: var(--font-mono);
   position: relative;
   min-height: 100vh;
   color: var(--site-ink);
   font-family: var(--site-font);
   line-height: 1.5;
   background:
-    radial-gradient(52% 42% at 24% 12%, rgb(52 150 96 / 22%), transparent 70%),
-    radial-gradient(45% 46% at 82% 68%, rgb(40 110 170 / 16%), transparent 72%), var(--site-bg);
+    radial-gradient(52% 42% at 24% 12%, rgb(105 139 226 / 10%), transparent 70%),
+    radial-gradient(45% 46% at 82% 68%, rgb(94 130 214 / 8%), transparent 72%), var(--site-bg);
   -webkit-font-smoothing: antialiased;
 }
 
-.site * {
-  box-sizing: border-box;
-}
-
-/* The legacy route stylesheet styles bare elements (main, nav, article, a, button) as a
-   light GitHub-style card. Neutralize those under the public site with zero-specificity
-   :where() selectors so every .site-* rule below still wins. */
-.site :where(main, header, nav, article, footer, section) {
-  display: block;
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.site :where(a, button) {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  background: none;
-  box-shadow: none;
-}
-
-.site :where(a:hover, button:hover, .route-link-active, .route-link-active:hover) {
-  color: inherit;
-  border-color: transparent;
-  background: none;
-}
-
-.site :where(article p) {
-  margin-top: 0;
-  color: inherit;
-}
-
 .site :where(a:focus-visible, button:focus-visible) {
-  outline: 2px solid var(--site-green);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
@@ -103,7 +39,7 @@
 .site code {
   font-family: var(--site-mono);
   font-size: 0.92em;
-  color: var(--site-green);
+  color: var(--site-accent);
 }
 
 .site-wrap {
@@ -118,7 +54,7 @@
   top: 0;
   z-index: 20;
   border-bottom: 1px solid var(--site-line);
-  background: linear-gradient(to bottom, rgb(10 14 12 / 82%), rgb(10 14 12 / 40%));
+  background: linear-gradient(to bottom, rgb(16 17 21 / 90%), rgb(16 17 21 / 44%));
   backdrop-filter: blur(14px) saturate(140%);
 }
 
@@ -146,10 +82,10 @@
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #d6ffe8, var(--site-green));
+  background: radial-gradient(circle at 30% 30%, #edf2ff, var(--site-accent));
   box-shadow:
-    0 0 16px var(--site-green),
-    0 0 40px rgb(95 227 155 / 50%);
+    0 0 16px var(--site-accent),
+    0 0 40px rgb(143 174 255 / 18%);
 }
 
 .site-nav-links {
@@ -158,8 +94,7 @@
   gap: 6px;
 }
 
-.site-nav-links > a,
-.site-nav-links > .route-link {
+.site-nav-links > a {
   padding: 8px 14px;
   border-radius: 9px;
   color: var(--site-muted);
@@ -171,13 +106,12 @@
 }
 
 .site-nav-links > a:hover,
-.site-nav-links > .route-link:hover,
-.site-nav-links > .route-link-active {
+.site-nav-links > a[aria-current="page"] {
   color: var(--site-ink);
-  background: rgb(120 200 150 / 8%);
+  background: rgb(255 255 255 / 5%);
 }
 
-.site-nav-links > .route-link:has(.site-btn) {
+.site-nav-links > a:has(.site-btn) {
   padding: 0;
   background: none;
 }
@@ -187,13 +121,13 @@
   align-items: center;
   gap: 9px;
   padding: 9px 16px;
-  border: 1px solid rgb(180 255 215 / 60%);
+  border: 1px solid transparent;
   border-radius: 11px;
-  color: #04140b;
+  color: #10131a;
   font-size: 15px;
   font-weight: 600;
-  background: linear-gradient(180deg, #b8ffd6, var(--site-green));
-  box-shadow: 0 10px 30px -12px rgb(95 227 155 / 80%);
+  background: linear-gradient(180deg, #c1ceff, var(--site-accent));
+  box-shadow: 0 10px 30px -12px rgb(143 174 255 / 26%);
   cursor: pointer;
   transition:
     transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -205,19 +139,19 @@
   transform: translateY(-2px);
   filter: brightness(1.06);
   box-shadow:
-    0 0 40px -6px rgb(95 227 155 / 70%),
-    0 16px 40px -14px rgb(95 227 155 / 90%);
+    0 0 40px -6px rgb(143 174 255 / 22%),
+    0 16px 40px -14px rgb(143 174 255 / 30%);
 }
 
 .site-btn-ghost {
   color: var(--site-ink);
   border: 1px solid var(--site-line);
-  background: rgb(120 200 150 / 6%);
+  background: rgb(255 255 255 / 4%);
   box-shadow: none;
 }
 
 .site-btn-ghost:hover {
-  background: rgb(120 200 150 / 12%);
+  background: rgb(255 255 255 / 7%);
   box-shadow: none;
 }
 
@@ -253,20 +187,20 @@
   padding: 7px 13px;
   border: 1px solid var(--site-line);
   border-radius: 999px;
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 12.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  background: rgb(95 227 155 / 6%);
+  background: rgb(143 174 255 / 5%);
 }
 
 .site-pulse {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--site-mint);
-  box-shadow: 0 0 10px var(--site-mint);
+  background: var(--site-highlight);
+  box-shadow: 0 0 10px var(--site-highlight);
   animation: site-pulse 2s ease-in-out infinite;
 }
 
@@ -287,11 +221,11 @@
   font-weight: 800;
   line-height: 1.03;
   letter-spacing: -0.035em;
-  text-shadow: 0 2px 40px rgb(5 8 6 / 65%);
+  text-shadow: 0 2px 40px rgb(5 6 9 / 65%);
 }
 
 .site .grad {
-  background: linear-gradient(100deg, #e4fff0 0%, var(--site-green) 42%, var(--site-sky) 100%);
+  background: linear-gradient(100deg, #edf2ff 0%, var(--site-accent) 42%, var(--site-sky) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -337,7 +271,7 @@
 }
 
 .site-stat .n .u {
-  color: var(--site-green);
+  color: var(--site-accent);
 }
 
 .site-stat .l {
@@ -358,11 +292,11 @@
 
 .site-sheet {
   border-top: 1px solid var(--site-line);
-  background: linear-gradient(180deg, rgb(8 12 10 / 40%), rgb(8 12 10 / 86%));
+  background: linear-gradient(180deg, rgb(16 17 21 / 40%), rgb(16 17 21 / 86%));
 }
 
 .site-kicker {
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 12.5px;
   letter-spacing: 0.14em;
@@ -409,7 +343,7 @@
   padding: 26px;
   border: 1px solid var(--site-line);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgb(20 32 26 / 55%), rgb(10 16 13 / 50%));
+  background: linear-gradient(180deg, rgb(23 25 30 / 68%), rgb(16 17 21 / 56%));
   transition:
     transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
     border-color 0.3s,
@@ -418,8 +352,8 @@
 
 .site-card:hover {
   transform: translateY(-5px);
-  border-color: rgb(95 227 155 / 40%);
-  box-shadow: 0 24px 60px -30px rgb(95 227 155 / 55%);
+  border-color: rgb(143 174 255 / 20%);
+  box-shadow: 0 24px 60px -30px rgb(143 174 255 / 18%);
 }
 
 .site-card .ico {
@@ -430,7 +364,7 @@
   border: 1px solid var(--site-line);
   border-radius: 11px;
   font-size: 21px;
-  background: rgb(95 227 155 / 10%);
+  background: rgb(143 174 255 / 7%);
 }
 
 .site-card h3 {
@@ -448,7 +382,7 @@
 .site-card .tag {
   display: inline-block;
   margin-top: 14px;
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 11.5px;
   opacity: 0.9;
@@ -466,7 +400,7 @@
   border: 1px solid var(--site-line);
   border-radius: 18px;
   text-align: center;
-  background: linear-gradient(180deg, rgb(20 32 26 / 40%), rgb(10 16 13 / 30%));
+  background: linear-gradient(180deg, rgb(23 25 30 / 48%), rgb(16 17 21 / 34%));
 }
 
 .site-num .big {
@@ -475,7 +409,7 @@
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
-  background: linear-gradient(180deg, #eafff3, var(--site-green));
+  background: linear-gradient(180deg, #edf2ff, var(--site-accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -508,7 +442,7 @@
   padding: 18px 22px;
   border: 1px solid var(--site-line);
   border-radius: 14px;
-  background: linear-gradient(100deg, rgb(95 227 155 / 6%), rgb(20 32 26 / 50%) 40%);
+  background: linear-gradient(100deg, rgb(143 174 255 / 5%), rgb(23 25 30 / 58%) 40%);
   transition:
     transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
     border-color 0.3s,
@@ -517,14 +451,14 @@
 
 .site-layer:hover {
   transform: translateX(6px);
-  border-color: rgb(95 227 155 / 40%);
-  box-shadow: -8px 0 40px -20px rgb(95 227 155 / 60%);
+  border-color: rgb(143 174 255 / 20%);
+  box-shadow: -8px 0 40px -20px rgb(143 174 255 / 18%);
 }
 
 .site-layer .lv {
   flex: none;
   width: 42px;
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 12px;
   opacity: 0.8;
@@ -542,7 +476,7 @@
 }
 
 .site-layer.metal {
-  background: linear-gradient(100deg, rgb(110 175 255 / 12%), rgb(20 32 26 / 50%) 40%);
+  background: linear-gradient(100deg, rgb(110 175 255 / 10%), rgb(23 25 30 / 58%) 40%);
 }
 
 .site-layer.metal .lv {
@@ -554,7 +488,7 @@
   margin-top: 44px;
   border: 1px solid var(--site-line);
   border-radius: 16px;
-  background: #070b09;
+  background: #0c0d11;
   box-shadow: 0 40px 90px -50px rgb(0 0 0 / 90%);
 }
 
@@ -564,7 +498,7 @@
   gap: 8px;
   padding: 11px 14px;
   border-bottom: 1px solid var(--site-line);
-  background: rgb(15 24 19 / 70%);
+  background: rgb(23 25 30 / 76%);
 }
 
 .site-term-bar i {
@@ -597,14 +531,14 @@
   margin: 0;
   padding: 20px 22px;
   overflow-x: auto;
-  color: #cfe0d6;
+  color: #d2d5de;
   font-family: var(--site-mono);
   font-size: 13px;
   line-height: 1.65;
 }
 
 .site-term .c {
-  color: var(--site-green);
+  color: var(--site-accent);
 }
 
 .site-term .m {
@@ -612,7 +546,7 @@
 }
 
 .site-term .d {
-  color: #6b7d73;
+  color: #969ca8;
 }
 
 .site-diff {
@@ -626,7 +560,7 @@
   padding: 24px;
   border: 1px solid var(--site-line);
   border-radius: 16px;
-  background: rgb(10 16 13 / 40%);
+  background: rgb(23 25 30 / 32%);
 }
 
 .site-diff .no {
@@ -679,7 +613,7 @@
   border-top: 1px solid var(--site-line);
   color: var(--site-muted);
   font-size: 14px;
-  background: rgb(10 14 12 / 90%);
+  background: rgb(16 17 21 / 90%);
 }
 
 .site-footer-in {
@@ -716,7 +650,7 @@
 }
 
 .site-crumbs a {
-  color: var(--site-green);
+  color: var(--site-accent);
 }
 
 .site-article {
@@ -738,17 +672,17 @@
   padding: 14px 16px;
   border: 1px solid var(--site-line);
   border-radius: 12px;
-  background: rgb(10 16 13 / 40%);
+  background: rgb(23 25 30 / 32%);
   transition: border-color 0.2s;
 }
 
 .site-rung:hover {
-  border-color: rgb(95 227 155 / 40%);
+  border-color: rgb(143 174 255 / 20%);
 }
 
 .site-rung-id {
   grid-row: span 2;
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 13px;
 }
@@ -768,7 +702,7 @@
   margin-top: 40px;
   border: 1px solid var(--site-line);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgb(20 32 26 / 40%), rgb(10 16 13 / 30%));
+  background: linear-gradient(180deg, rgb(23 25 30 / 48%), rgb(16 17 21 / 34%));
 }
 
 .site-epic-head {
@@ -781,7 +715,7 @@
 }
 
 .site-epic-id {
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 1.4rem;
   font-weight: 600;
@@ -816,8 +750,8 @@
 }
 
 .site-epic-state-done {
-  color: var(--site-green);
-  background: rgb(95 227 155 / 12%);
+  color: var(--site-accent);
+  background: rgb(143 174 255 / 8%);
 }
 
 .site-epic-state-in-progress,
@@ -828,7 +762,7 @@
 
 .site-epic-state-pending {
   color: var(--site-muted);
-  background: rgb(120 200 150 / 8%);
+  background: rgb(255 255 255 / 5%);
 }
 
 .site-epic-progress {
@@ -839,14 +773,14 @@
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgb(120 200 150 / 12%);
+  background: rgb(255 255 255 / 6%);
 }
 
 .site-epic-bar span {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--site-green), var(--site-sky));
+  background: linear-gradient(90deg, var(--site-accent), var(--site-sky));
 }
 
 .site-epic-progress small {
@@ -873,11 +807,11 @@
 }
 
 .site-task > a:hover {
-  background: rgb(120 200 150 / 6%);
+  background: rgb(255 255 255 / 4%);
 }
 
 .site-task-id {
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 12.5px;
 }
@@ -895,7 +829,7 @@
   display: inline-block;
   margin-left: 8px;
   padding: 1px 7px;
-  border: 1px solid rgb(110 175 255 / 40%);
+  border: 1px solid rgb(110 175 255 / 24%);
   border-radius: 999px;
   color: var(--site-sky);
   font-family: var(--site-mono);
@@ -915,13 +849,13 @@
 }
 
 .site-status-verified {
-  color: var(--site-green);
-  background: rgb(95 227 155 / 12%);
+  color: var(--site-accent);
+  background: rgb(143 174 255 / 8%);
 }
 
 .site-status-pending {
   color: var(--site-muted);
-  background: rgb(120 200 150 / 8%);
+  background: rgb(255 255 255 / 5%);
 }
 
 .site-status-in-progress,
@@ -937,7 +871,7 @@
 
 .site-status-cancelled {
   color: var(--site-muted);
-  background: rgb(120 130 125 / 10%);
+  background: rgb(255 255 255 / 5%);
   text-decoration: line-through;
 }
 
@@ -970,7 +904,7 @@
 }
 
 .site-task-facts dt {
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 12px;
   letter-spacing: 0.08em;
@@ -1012,7 +946,7 @@
 .site-docstream a {
   color: var(--site-sky);
   text-decoration: underline;
-  text-decoration-color: rgb(110 175 255 / 40%);
+  text-decoration-color: rgb(110 175 255 / 28%);
 }
 
 .site-docstream pre,
@@ -1020,7 +954,7 @@
   overflow-x: auto;
   border: 1px solid var(--site-line);
   border-radius: 12px;
-  background: #070b09;
+  background: #0c0d11;
 }
 
 .site-docstream table {
@@ -1053,7 +987,7 @@
 
 .site-docs-section h4 {
   margin: 0 0 8px;
-  color: var(--site-green);
+  color: var(--site-accent);
   font-family: var(--site-mono);
   font-size: 11.5px;
   letter-spacing: 0.12em;
@@ -1076,12 +1010,12 @@
 
 .site-docs-section li a:hover {
   color: var(--site-ink);
-  background: rgb(120 200 150 / 8%);
+  background: rgb(255 255 255 / 5%);
 }
 
 .site-docs-section li[data-active="true"] a {
   color: var(--site-ink);
-  background: rgb(95 227 155 / 12%);
+  background: rgb(143 174 255 / 8%);
 }
 
 .site-docs-article {
@@ -1114,7 +1048,7 @@
   }
 
   .site-nav-links > a:not(.site-btn),
-  .site-nav-links > .route-link:not(:has(.site-btn)) {
+  .site-nav-links > a:not(:has(.site-btn)) {
     display: none;
   }
 

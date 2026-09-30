@@ -16,6 +16,7 @@ import {
   type StreamReducerResult,
 } from "@eforest/web-hooks";
 import { dispatchEvidenceUpload } from "./model.js";
+import { LIVE_FOLLOW } from "../live.js";
 
 const EVIDENCE_REDUCER = "evidence" as const;
 const EVIDENCE_CONTENT_REDUCER = "evidence-content" as const;
@@ -50,7 +51,7 @@ export function useEvidence(
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/main/events?stream=evidence&entityType=${encoded(entityType)}&entityId=${encoded(entityId)}`,
     streamId,
     reducerId: EVIDENCE_REDUCER,
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });
@@ -67,7 +68,7 @@ export function useEvidenceContent(
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/main/events?stream=evidence-content&attachmentId=${encoded(attachmentId)}`,
     streamId,
     reducerId: EVIDENCE_CONTENT_REDUCER,
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 100,
   });
   return { streamId, reducerId: EVIDENCE_CONTENT_REDUCER, projection };

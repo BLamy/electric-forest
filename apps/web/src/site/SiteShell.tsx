@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Badge } from "@brett_lamy/ui";
 import { RouteLink } from "../navigation.js";
 import { GITHUB_URL } from "./content.js";
 
@@ -84,8 +85,12 @@ export function StatusBadge(props: { readonly status: string }): React.JSX.Eleme
         ? "awaiting critic"
         : props.status;
   return (
-    <span className={`site-status site-status-${props.status}`} data-status={props.status}>
+    <Badge
+      variant="outline"
+      className={`site-status site-status-${props.status}`}
+      data-status={props.status}
+    >
       {label}
-    </span>
+    </Badge>
   );
 }

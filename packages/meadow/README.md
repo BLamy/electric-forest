@@ -33,8 +33,8 @@ The wiki index route is `/orgs/:org/repos/:repo/wiki`. The page route is
 `@eforest/meadow` adds no server route.
 <!-- /frozen:E5-T08:routes -->
 
+<!-- prettier-ignore-start -->
 <!-- frozen:E5-T06:outcome-events -->
-
 `pr.merged` carries `{ v: 1, targetMergeOffset, kind: "fast-forward" | "three-way",
 resultTreeDigest }` and is terminal; `pr.merge-conflicted` carries `{ v: 1,
 targetMergeOffset, conflicts: [{ path, kind }] }` where `conflicts` mirrors, in the
@@ -42,9 +42,10 @@ same order, the `fs/merge-conflict` events the merge batch appended to the targe
 stream, and flips the PR to `conflicted`. These are the only two events the executor
 may append to the PR stream per attempt.
 <!-- /frozen:E5-T06:outcome-events -->
+<!-- prettier-ignore-end -->
 
+<!-- prettier-ignore-start -->
 <!-- frozen:E5-T06:gate-and-refusals -->
-
 The executor runs only from lifecycle state `approved`. Refusal reasons:
 `pr/merge-not-approved` (any non-`approved` state, including `conflicted` — a
 conflicted PR re-merges only after every conflict is resolved on the target via
@@ -57,9 +58,10 @@ justification is required before merge), plus E1-T09/E1-T10 refusals passed thro
 untranslated (`merge/target-advanced`, `merge/target-conflicted`). A refused merge
 appends zero events to both the PR stream and the target stream.
 <!-- /frozen:E5-T06:gate-and-refusals -->
+<!-- prettier-ignore-end -->
 
+<!-- prettier-ignore-start -->
 <!-- frozen:E5-T06:recovery -->
-
 The target-stream append and the PR-stream outcome event are two appends with a crash
 window between them. Recovery is idempotent re-dispatch: before merging, the executor
 scans the target's events after `forkOffset` for an existing merge event whose
@@ -67,6 +69,7 @@ scans the target's events after `forkOffset` for an existing merge event whose
 PR outcome event citing that offset, never a second merge. Re-dispatching `pr.merge`
 on an already-merged PR refuses `pr/already-merged`.
 <!-- /frozen:E5-T06:recovery -->
+<!-- prettier-ignore-end -->
 
 The committed PR-merge fixtures and expected digests are immutable contract artifacts.
 Changing a frozen block or golden requires an explicit versioned contract update; tests

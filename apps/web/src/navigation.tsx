@@ -1,4 +1,27 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
+import { cn } from "@brett_lamy/ui";
+
+export type RepoSection = "code" | "pulls" | "issues" | "wiki" | "settings";
+
+/** Client-side navigation: every route is a pure function of `location.pathname`. */
+export function navigate(href: string): void {
+  if (`${window.location.pathname}${window.location.search}` === href) return;
+  window.history.pushState(null, "", href);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function repoBase(org: string, repo: string): string {
+  return `/orgs/${encodeURIComponent(org)}/repos/${encodeURIComponent(repo)}`;
+}
+
+export function repoSectionPath(org: string, repo: string, section: RepoSection): string {
+  if (section === "code") return `/${encodeURIComponent(org)}/${encodeURIComponent(repo)}`;
+  return `${repoBase(org, repo)}/${section}`;
+}
+
+export function repoLabelsPath(org: string, repo: string): string {
+  return `${repoBase(org, repo)}/labels`;
+}
 
 function isActiveRoute(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -8,12 +31,14 @@ function isActiveRoute(href: string, pathname: string): boolean {
 
 export function RouteLink(props: {
   readonly href: string;
-  readonly children: React.ReactNode;
+  readonly children: ReactNode;
   readonly className?: string;
   readonly "aria-label"?: string | undefined;
+  readonly "data-testid"?: string;
+  readonly onNavigate?: () => void;
 }): React.JSX.Element {
   const active = isActiveRoute(props.href, window.location.pathname);
-  const navigate = (event: MouseEvent<HTMLAnchorElement>): void => {
+  const follow = (event: MouseEvent<HTMLAnchorElement>): void => {
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
@@ -25,18 +50,17 @@ export function RouteLink(props: {
       return;
     }
     event.preventDefault();
-    window.history.pushState(null, "", props.href);
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    props.onNavigate?.();
+    navigate(props.href);
   };
   return (
     <a
       href={props.href}
-      onClick={navigate}
-      className={["route-link", active ? "route-link-active" : "", props.className]
-        .filter(Boolean)
-        .join(" ")}
+      onClick={follow}
+      className={cn("text-link hover:underline", props.className)}
       aria-current={active ? "page" : undefined}
       aria-label={props["aria-label"]}
+      data-testid={props["data-testid"]}
     >
       {props.children}
     </a>

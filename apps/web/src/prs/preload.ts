@@ -5,13 +5,13 @@
  * (when the app goes idle, when a repository route mounts, or on hover/focus of a PR link)
  * shares the exact same promise and module instance.
  */
-type PrDetailModule = typeof import("./PrDetail.js");
+type PrDetailModule = typeof import("../blocks/github/pull-request.js");
 
 let pending: Promise<PrDetailModule> | undefined;
 let warmed = false;
 
 export function loadPrDetail(): Promise<PrDetailModule> {
-  pending ??= import("./PrDetail.js").catch((error: unknown) => {
+  pending ??= import("../blocks/github/pull-request.js").catch((error: unknown) => {
     // Let a later attempt (e.g. the real navigation) retry after a transient chunk failure.
     pending = undefined;
     throw error;

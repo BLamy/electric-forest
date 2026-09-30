@@ -4,6 +4,7 @@ import type { RegistryState } from "@eforest/reducers";
 import type { ReferenceOption, ReferenceSources } from "@brett_lamy/docstream-editor";
 import { useAgentRoster, useHumanRoster, type HumanMember } from "../members/useRoster.js";
 import { useChatCatalog } from "./useChat.js";
+import { LIVE_FOLLOW } from "../live.js";
 
 /**
  * Autocomplete sources for the chat composer: `@` people and agents, `#` channels,
@@ -69,7 +70,7 @@ export function useChatReferenceSources(org: string): ReferenceSources {
     apiPath: "/registry/me",
     streamId: "__registry__",
     reducerId: "registry",
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
   });
 
   const data = useMemo<ReferenceData>(() => {

@@ -210,7 +210,13 @@ const views = [
     "apps/web/src/prs/usePrs.ts",
     ["repoPrIndexStreamId", "PR_INDEX_REDUCER"],
   ],
-  ["/pulls/:id/activity", "pr", "apps/web/src/prs/PrDetail.tsx", ["prTimeline", "data-ef-stream"]],
+  [
+    "/pulls/:id/activity",
+    "pr",
+    // E5-T15: the PR detail view moved from prs/PrDetail.tsx into the owned github-clone block.
+    "apps/web/src/blocks/github/pull-request.tsx",
+    ["prTimeline", "data-ef-stream"],
+  ],
   [
     "/:entity/evidence",
     "evidence",

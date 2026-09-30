@@ -439,7 +439,7 @@ describe("issue event model", () => {
   it("exports an exhaustive, singular workflow matrix", () => {
     expect(Object.keys(WORKFLOW_TRANSITIONS)).toHaveLength(5);
     for (const state of ISSUE_STATES)
-      expect(Object.keys(WORKFLOW_TRANSITIONS[state])).toHaveLength(7);
+      expect(Object.keys(WORKFLOW_TRANSITIONS[state])).toHaveLength(8);
   });
 
   it("cross-checks all 35 matrix cells and the registered projection reducer", () => {

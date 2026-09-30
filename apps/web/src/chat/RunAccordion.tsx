@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useStreamReducer } from "@eforest/web-hooks";
 import { AGENT_RUN_REDUCER, type AgentRunState } from "@eforest/reducers";
 import { diffLines, formatDuration, parseRun, type RunStep } from "./runSteps.js";
-import "./run-accordion.css";
+import { cn } from "@brett_lamy/ui";
+import { LIVE_FOLLOW } from "../live.js";
+
+const HEADER =
+  "inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent py-0.5 pr-1.5 pl-0.5 text-left text-inherit hover:bg-secondary hover:text-foreground";
+const SHIMMER =
+  "bg-[linear-gradient(90deg,#8f9391_0%,#e8eae9_50%,#8f9391_100%)] bg-[length:200%_100%] bg-clip-text text-transparent animate-[run-shimmer_1.6s_linear_infinite] motion-reduce:animate-none";
+const DETAIL =
+  "m-0 mb-1.5 ml-4 max-h-[280px] overflow-auto rounded-lg border border-border bg-[#0c0d0d] px-3 py-2 font-mono text-[12px] leading-normal text-muted-foreground [overflow-wrap:anywhere] whitespace-pre-wrap";
 
 /**
  * The Codex-style "Worked for 12s" dropdown under an agent's message: the run's whole
@@ -22,7 +30,7 @@ export function RunAccordion(props: {
     streamId: props.runStreamId,
     reducerId: AGENT_RUN_REDUCER,
     follow: live,
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 1_000,
   });
   const view = useMemo(() => parseRun(projection.records), [projection.records]);
@@ -46,34 +54,34 @@ export function RunAccordion(props: {
   const tools = view.steps.filter((step) => step.kind === "tool").length;
 
   return (
-    <div className="run-accordion" data-testid="run-accordion" data-status={view.status}>
+    <div
+      className="mt-1.5 max-w-full min-w-0 text-[13px] text-muted-foreground"
+      data-testid="run-accordion"
+      data-status={view.status}
+    >
       <button
         type="button"
-        className="run-accordion-header"
+        className={HEADER}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <Chevron open={open} />
-        <span
-          className={running ? "run-accordion-label run-accordion-shimmer" : "run-accordion-label"}
-        >
-          {label}
-        </span>
+        <span className={cn("truncate", running && SHIMMER)}>{label}</span>
         {tools > 0 ? (
-          <span className="run-accordion-meta">
+          <span className="text-[12px] text-tertiary-foreground">
             {tools} {tools === 1 ? "step" : "steps"}
           </span>
         ) : null}
       </button>
       {open ? (
-        <div className="run-accordion-body">
+        <div className="mt-1 mb-1.5 ml-2 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-0.5 border-l border-border pl-2.5 [&>*]:min-w-0">
           {view.steps.length === 0 ? (
-            <p className="run-step-empty">{running ? "Starting…" : "No steps recorded."}</p>
+            <p className="my-1">{running ? "Starting…" : "No steps recorded."}</p>
           ) : (
             view.steps.map((step) => <Step key={step.key} step={step} />)
           )}
-          {view.error !== null ? <p className="run-step-error">{view.error}</p> : null}
-          <p className="run-accordion-footer">
+          {view.error !== null ? <p className="my-1 text-destructive">{view.error}</p> : null}
+          <p className="mt-1.5 mb-0 flex flex-wrap gap-2 text-[11px] text-tertiary-foreground">
             {[
               view.model,
               view.costUsd === null ? null : `$${view.costUsd.toFixed(3)}`,
@@ -81,7 +89,7 @@ export function RunAccordion(props: {
             ]
               .filter(Boolean)
               .join(" · ")}
-            <code>{props.runStreamId}</code>
+            <code className="text-[11px] break-all">{props.runStreamId}</code>
           </p>
         </div>
       ) : null}
@@ -92,7 +100,10 @@ export function RunAccordion(props: {
 function Chevron(props: { readonly open: boolean }): React.JSX.Element {
   return (
     <svg
-      className={props.open ? "run-chevron run-chevron-open" : "run-chevron"}
+      className={cn(
+        "shrink-0 transition-transform duration-150 motion-reduce:transition-none",
+        props.open && "rotate-90",
+      )}
       width="12"
       height="12"
       viewBox="0 0 12 12"
@@ -107,28 +118,41 @@ function Step(props: { readonly step: RunStep }): React.JSX.Element {
   const { step } = props;
   const [open, setOpen] = useState(false);
   if (step.kind === "message") {
-    return <p className="run-step-message">{step.text}</p>;
+    return (
+      <p className="mx-1 my-1 text-foreground [overflow-wrap:anywhere] whitespace-pre-wrap">
+        {step.text}
+      </p>
+    );
   }
   const title =
     step.kind === "tool" ? step.title : step.kind === "thinking" ? "Thought" : `${step.channel}`;
   const pending = step.kind === "tool" && step.result === null;
   return (
     <div
-      className={`run-step run-step-${step.kind}`}
+      className="grid min-w-0 gap-1"
+      data-step-kind={step.kind}
       data-error={step.kind === "tool" && step.isError ? "true" : undefined}
     >
       <button
         type="button"
-        className="run-step-header"
+        className={HEADER}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <Chevron open={open} />
-        <span className={pending ? "run-step-title run-accordion-shimmer" : "run-step-title"}>
+        <span
+          className={cn(
+            "truncate",
+            pending && SHIMMER,
+            step.kind === "tool" && step.isError && "text-destructive",
+          )}
+        >
           {title}
         </span>
         {step.kind === "tool" && step.isError ? (
-          <span className="run-step-flag">failed</span>
+          <span className="rounded bg-(--ef-destructive-wash-12) px-1 text-[11px] text-destructive">
+            failed
+          </span>
         ) : null}
       </button>
       {open ? <StepDetail step={step} /> : null}
@@ -139,15 +163,24 @@ function Step(props: { readonly step: RunStep }): React.JSX.Element {
 function StepDetail(props: { readonly step: RunStep }): React.JSX.Element | null {
   const { step } = props;
   if (step.kind === "thinking" || step.kind === "raw") {
-    return <pre className="run-step-detail">{step.text}</pre>;
+    return <pre className={DETAIL}>{step.text}</pre>;
   }
   if (step.kind !== "tool") return null;
   return (
-    <div className="run-step-detail-group">
+    <div className="grid gap-1.5 [&>*]:min-w-0">
       {step.diff !== null ? (
-        <pre className="run-step-detail run-step-diff">
+        <pre className={DETAIL}>
           {diffLines(step.diff.before, step.diff.after).map((line, index) => (
-            <span key={String(index)} className={`run-diff-${line.kind}`}>
+            <span
+              key={String(index)}
+              className={
+                line.kind === "del"
+                  ? "text-destructive"
+                  : line.kind === "add"
+                    ? "text-success"
+                    : "text-tertiary-foreground"
+              }
+            >
               {line.kind === "del" ? "- " : line.kind === "add" ? "+ " : "  "}
               {line.text}
               {"\n"}
@@ -155,10 +188,10 @@ function StepDetail(props: { readonly step: RunStep }): React.JSX.Element | null
           ))}
         </pre>
       ) : (
-        <pre className="run-step-detail">{step.input}</pre>
+        <pre className={DETAIL}>{step.input}</pre>
       )}
       {step.result !== null && step.result !== "" ? (
-        <pre className="run-step-detail run-step-result">{step.result}</pre>
+        <pre className={cn(DETAIL, "text-muted-foreground")}>{step.result}</pre>
       ) : null}
     </div>
   );
