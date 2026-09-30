@@ -127,7 +127,7 @@ describe("evidence dispatch and application projection integration", () => {
     });
     expect(stateDigest(attachmentState)).toBe(
       stateDigest(
-        (await fixture.streams.read(attachmentStream)).reduce(
+        ((await fixture.streams.read(attachmentStream)) as readonly Event[]).reduce(
           attachmentReducer,
           attachmentInitialStateForStream(attachmentStream),
         ),

@@ -1,4 +1,4 @@
-import { OFFSET_BEFORE_FIRST, compareOffsets, type Event, type Offset } from "@eforest/protocol";
+import { compareOffsets, type Event, type Offset } from "@eforest/protocol";
 import { evidenceStreamId, type AttachmentListState } from "@eforest/evidence";
 import { parsePrStreamId } from "@eforest/pr";
 import {

@@ -99,10 +99,7 @@ const boardRecords = boardEvents
 assert.equal(boardRecords.length, 8);
 assert.deepEqual(
   boardRecords.map((record) => record.offset),
-  Array.from(
-    { length: 8 },
-    (_, index) => `0000000000000000_${String(index).padStart(16, "0")}`,
-  ),
+  Array.from({ length: 8 }, (_, index) => `0000000000000000_${String(index).padStart(16, "0")}`),
 );
 assert.ok(boardRecords.every((record) => record.type === "issue-board.replaced"));
 assert.equal(boardRecords.at(-1).offset, facts["board-offset"]);
@@ -247,20 +244,18 @@ assert.deepEqual(
   ],
 );
 const dispatchResponses = transcript.network.filter(
-  (entry) => entry.actor === "writer" && entry.direction === "response" && entry.url === "/api/dispatch",
+  (entry) =>
+    entry.actor === "writer" && entry.direction === "response" && entry.url === "/api/dispatch",
 );
 assert.equal(dispatchResponses.length, 8);
 const acceptedDispatchResponses = dispatchResponses.filter(
   (entry) =>
-    entry.status === 202 &&
-    !entry.headers.some(([name]) => name === "x-eforest-refusal-status"),
+    entry.status === 202 && !entry.headers.some(([name]) => name === "x-eforest-refusal-status"),
 );
 const refusedDispatchResponses = dispatchResponses.filter(
   (entry) =>
     entry.status === 200 &&
-    entry.headers.some(
-      ([name, value]) => name === "x-eforest-refusal-status" && value === "409",
-    ),
+    entry.headers.some(([name, value]) => name === "x-eforest-refusal-status" && value === "409"),
 );
 assert.equal(acceptedDispatchResponses.length, 7);
 assert.equal(refusedDispatchResponses.length, 1);
@@ -276,7 +271,8 @@ assert.deepEqual(
 );
 assert.ok(
   transcript.network.some(
-    (entry) => entry.actor === "follower" && entry.url.startsWith("/api/repos/maple/reading-room/board"),
+    (entry) =>
+      entry.actor === "follower" && entry.url.startsWith("/api/repos/maple/reading-room/board"),
   ),
 );
 assert.ok(
@@ -342,11 +338,15 @@ assert.deepEqual(
 );
 for (const generated of coverage.generatedSources) {
   assert.equal(
-    createHash("sha256").update(await readFile(resolve(root, generated.compiledPath))).digest("hex"),
+    createHash("sha256")
+      .update(await readFile(resolve(root, generated.compiledPath)))
+      .digest("hex"),
     generated.compiledSha256,
   );
   assert.equal(
-    createHash("sha256").update(await readFile(resolve(root, generated.sourceMapPath))).digest("hex"),
+    createHash("sha256")
+      .update(await readFile(resolve(root, generated.sourceMapPath)))
+      .digest("hex"),
     generated.sourceMapSha256,
   );
 }
@@ -427,7 +427,10 @@ for (const source of coverage.taskDiff.runtimeSources) {
   }
 }
 assert.equal(coverage.summary.materialSourceFiles, expectedSources.length);
-assert.equal(coverage.summary.runtimeSourcesClassified, expectedRuntimeSourceClassifications.length);
+assert.equal(
+  coverage.summary.runtimeSourcesClassified,
+  expectedRuntimeSourceClassifications.length,
+);
 assert.equal(coverage.summary.browserExecutedSources, 9);
 assert.equal(coverage.summary.serverOnlySources, 4);
 assert.equal(coverage.summary.requirementsTotal, expectedRequirementIds.length);

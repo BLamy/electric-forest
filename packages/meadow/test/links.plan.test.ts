@@ -27,6 +27,11 @@ import {
   type PrLinkNoopEvent,
 } from "../src/index.js";
 
+/** A persisted record: the event as the stream stores it, stamped with its application offset. */
+function recordAt(event: Event, offset: Offset): Event {
+  return Object.assign({}, event, { offset });
+}
+
 const PR_STREAM = "pr:maple/reading-room/42";
 const SOURCE_STREAM = "fs:maple/reading-room:feature:meta";
 const TARGET_STREAM = "fs:maple/reading-room:main:meta";
@@ -62,10 +67,10 @@ function openedEvent(closes?: readonly EntityRef[]): Event {
 }
 
 function openState(closes?: readonly EntityRef[]): MeadowPrState {
-  return meadowPrReducer(meadowPrInitialStateForStream(PR_STREAM), {
-    ...openedEvent(closes),
-    offset: OPENED_OFFSET,
-  });
+  return meadowPrReducer(
+    meadowPrInitialStateForStream(PR_STREAM),
+    recordAt(openedEvent(closes), OPENED_OFFSET),
+  );
 }
 
 function mergedState(closes: readonly EntityRef[] = [ISSUE_A]): {
@@ -230,16 +235,19 @@ describe("PR link reducer and post-terminal validation", () => {
     ]);
 
     const merged = mergedState().state;
-    const linked = meadowPrReducer(merged, {
-      ...event("pr.link-closed", {
-        v: 1,
-        ref: ISSUE_A,
-        issueOffset: offsetForOrdinal(30),
-        actor: "alice",
-        writer: "session",
-      }),
-      offset: offsetForOrdinal(6),
-    });
+    const linked = meadowPrReducer(
+      merged,
+      recordAt(
+        event("pr.link-closed", {
+          v: 1,
+          ref: ISSUE_A,
+          issueOffset: offsetForOrdinal(30),
+          actor: "alice",
+          writer: "session",
+        }),
+        offsetForOrdinal(6),
+      ),
+    );
     expect(linked.status).toBe("merged");
     expect(linked.links).toEqual([
       { ref: ISSUE_A, state: "closed", issueOffset: offsetForOrdinal(30) },
@@ -326,7 +334,7 @@ describe("planLinkPropagation", () => {
     const second = planLinkPropagation(OPEN_TRIGGER, state, issues);
     expect(canonicalJson(first)).toBe(canonicalJson(second));
     expect(first.map(({ kind }) => kind)).toEqual(["append-issue-link", "append-issue-link"]);
-    expect(first.map((step) => step.ref)).toEqual([ISSUE_A, ISSUE_B]);
+    expect(first.map((step) => ("ref" in step ? step.ref : undefined))).toEqual([ISSUE_A, ISSUE_B]);
   });
 
   it("records open-time dangling provenance and deduplicates its rerun", () => {
@@ -344,10 +352,7 @@ describe("planLinkPropagation", () => {
         },
       },
     ]);
-    const reduced = meadowPrReducer(state, {
-      ...plan[0]!.event,
-      offset: offsetForOrdinal(3),
-    });
+    const reduced = meadowPrReducer(state, recordAt(plan[0]!.event, offsetForOrdinal(3)));
     expect(planLinkPropagation(OPEN_TRIGGER, reduced, {})).toEqual([]);
     expect(
       planLinkPropagation(OPEN_TRIGGER, reduced, {
@@ -397,10 +402,7 @@ describe("planLinkPropagation", () => {
         },
       },
     ]);
-    const reduced = meadowPrReducer(state, {
-      ...plan[0]!.event,
-      offset: offsetForOrdinal(6),
-    });
+    const reduced = meadowPrReducer(state, recordAt(plan[0]!.event, offsetForOrdinal(6)));
     expect(planLinkPropagation(MERGE_TRIGGER, reduced, issues)).toEqual([]);
   });
 
@@ -416,10 +418,7 @@ describe("planLinkPropagation", () => {
         },
       },
     });
-    const reduced = meadowPrReducer(state, {
-      ...plan[0]!.event,
-      offset: offsetForOrdinal(6),
-    });
+    const reduced = meadowPrReducer(state, recordAt(plan[0]!.event, offsetForOrdinal(6)));
     expect(planLinkPropagation(MERGE_TRIGGER, reduced, {})).toEqual([]);
     expect(
       planLinkPropagation(MERGE_TRIGGER, reduced, {
@@ -433,10 +432,7 @@ describe("planLinkPropagation", () => {
     const first = planLinkPropagation(MERGE_TRIGGER, state, {
       [ISSUE_A.stream]: present("done"),
     });
-    const reduced = meadowPrReducer(state, {
-      ...first[0]!.event,
-      offset: offsetForOrdinal(6),
-    });
+    const reduced = meadowPrReducer(state, recordAt(first[0]!.event, offsetForOrdinal(6)));
     const conflictingReason: PrLinkNoopEvent = {
       type: "pr.link-noop",
       payload: {
@@ -456,7 +452,7 @@ describe("planLinkPropagation", () => {
         resolveIssueClose: async () => undefined,
       }),
     ).rejects.toMatchObject({ reason: "pr/link-duplicate" });
-    expect(meadowPrReducer(reduced, { ...conflictingReason, offset: offsetForOrdinal(7) })).toBe(
+    expect(meadowPrReducer(reduced, recordAt(conflictingReason, offsetForOrdinal(7)))).toBe(
       reduced,
     );
   });
@@ -495,10 +491,7 @@ describe("planLinkPropagation", () => {
         event: { payload: { ref: ISSUE_A, issueOffset: offsetForOrdinal(30) } },
       },
     ]);
-    const complete = meadowPrReducer(state, {
-      ...recovery[0]!.event,
-      offset: offsetForOrdinal(6),
-    });
+    const complete = meadowPrReducer(state, recordAt(recovery[0]!.event, offsetForOrdinal(6)));
     expect(planLinkPropagation(MERGE_TRIGGER, complete, issues)).toEqual([]);
     expect(
       planLinkPropagation(MERGE_TRIGGER, complete, {
@@ -551,7 +544,7 @@ describe("driveLinkPropagation", () => {
         expect(streamId).toBe(PR_STREAM);
         expect(expectedHead).toBe(prHead);
         prHead = offsetForOrdinal(6);
-        pr = meadowPrReducer(pr, { ...action, offset: prHead });
+        pr = meadowPrReducer(pr, recordAt(action, prHead));
         return { offset: prHead };
       },
       isFenceRefusal: (error) => error instanceof Error && error.message === "fence",

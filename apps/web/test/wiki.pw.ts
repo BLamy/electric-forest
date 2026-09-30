@@ -43,7 +43,6 @@ import {
   type Page,
 } from "playwright-core";
 import {
-  DISPOSABLE_CONTENT_STREAM,
   DISPOSABLE_UUID,
   HOME_BASE,
   HOME_CONTENT_STREAM,
@@ -282,7 +281,7 @@ function sessionCookieValue(sessionId: string): string {
     ";",
     1,
   )[0];
-  assert.ok(pair?.startsWith(`${SESSION_COOKIE}=`), "signed session cookie");
+  assert.ok(pair !== undefined && pair.startsWith(`${SESSION_COOKIE}=`), "signed session cookie");
   return pair.slice(SESSION_COOKIE.length + 1);
 }
 
@@ -528,10 +527,12 @@ try {
   await withTimeout(writerDispatchResponseHeld, "writer-dispatch-response-held");
   assert.equal(await writerEditor.getAttribute("data-dispatches-sent"), "1");
   assert.equal(await writerEditor.getAttribute("data-dispatches-confirmed"), "0");
-  const editedBytesVisibleBeforeAck = await writer.page.locator("body").evaluate(
-    (body, marker) => (body as HTMLElement).innerText.includes(marker),
-    "A live patch reached session B.",
-  );
+  const editedBytesVisibleBeforeAck = await writer.page
+    .locator("body")
+    .evaluate(
+      (body, marker) => (body as HTMLElement).innerText.includes(marker),
+      "A live patch reached session B.",
+    );
   assert.equal(
     editedBytesVisibleBeforeAck,
     false,
@@ -624,10 +625,7 @@ try {
   assert.equal(canonicalJson(afterFenceRecords), beforeFenceBytes, "no stale auto-retry");
   assert.equal(stalePatchPosts(), 1, "stale refusal has no automatic retry");
   await followerEditorPage.getByRole("button", { name: "Load latest" }).click();
-  assert.equal(
-    await followerEditorPage.getByTestId("wiki-source").inputValue(),
-    HOME_PATCH_TARGET,
-  );
+  assert.equal(await followerEditorPage.getByTestId("wiki-source").inputValue(), HOME_PATCH_TARGET);
   await staleRefusal.waitFor({ state: "detached" });
 
   await appendAtEnd(
@@ -689,7 +687,11 @@ try {
   });
   await writer.page.waitForURL(`${world.platformUrl}${guidePath}`);
   await followerEditorPage.getByTestId("wiki-editor-missing").waitFor();
-  assert.equal(followerViewPage.url(), `${world.platformUrl}${homePath}`, "old route stayed missing");
+  assert.equal(
+    followerViewPage.url(),
+    `${world.platformUrl}${homePath}`,
+    "old route stayed missing",
+  );
   assert.equal(
     await follower.page.locator('[data-testid="wiki-page-row"][data-page-path="home.md"]').count(),
     0,
@@ -909,12 +911,7 @@ try {
   const fullRecords = expectedRecords.map((record) => ({ ...record }));
   fullRecords[3] = {
     offset: offsetForOrdinal(3),
-    ...fileWriteEvent(
-      encoder.encode(HOME_PATCH_TARGET),
-      "home.md",
-      offsetForOrdinal(2),
-      WIKI_NOW,
-    ),
+    ...fileWriteEvent(encoder.encode(HOME_PATCH_TARGET), "home.md", offsetForOrdinal(2), WIKI_NOW),
   };
   const fullReplay = replayWithReducer(streamFsReducerDefinition, fullRecords, WIKI_STREAM);
   assert.equal(fullReplay.digest, replay.digest, "patch/full metadata tree parity");

@@ -14,7 +14,6 @@ import {
   evidenceContentStreamId,
   evidenceStreamId,
   uploadAttachment,
-  type AttachmentListState,
   type EvidenceClient,
   type EvidenceEntityRef,
 } from "@eforest/evidence";
@@ -26,7 +25,6 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   event,

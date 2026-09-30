@@ -1,6 +1,5 @@
-import type { Event, Offset } from "@eforest/protocol";
+import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 import {
-  OFFSET_BEFORE_FIRST,
   attachmentInitialStateForStream,
   attachmentReducer,
   contentInitialStateForStream,

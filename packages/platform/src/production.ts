@@ -166,7 +166,6 @@ export async function createPlatformProductionRuntime(
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
-  let gateway!: PlatformGateway;
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     ...(options.now === undefined ? {} : { now: options.now }),
@@ -205,7 +204,7 @@ export async function createPlatformProductionRuntime(
   });
   // Agent runs authenticate with in-memory, per-run branch capabilities (agents/).
   const agentCapabilities = new AgentCapabilities();
-  gateway = new PlatformGateway({
+  const gateway = new PlatformGateway({
     verifier: withAgentCapabilities(
       options.gatewayVerifier ??
         new GrantAwareVerifier({

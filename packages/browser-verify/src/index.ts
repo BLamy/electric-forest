@@ -337,7 +337,7 @@ async function startFixtureLoginProxy(
   port: number,
   upstreamUrl: string,
   subject: BrowserSubject,
-  extraSubjects: readonly BrowserSubject[] = [],
+  _extraSubjects: readonly BrowserSubject[] = [],
 ): Promise<FixtureLoginProxy> {
   const url = `http://127.0.0.1:${String(port)}`;
   const server = createHttpServer((request, response) => {
