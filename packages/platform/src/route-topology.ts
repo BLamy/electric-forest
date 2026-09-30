@@ -7,6 +7,7 @@ export type PlatformRouteId =
   | "chat"
   | "members"
   | "agents"
+  | "agent-runs"
   | "org-api"
   | "device-grants"
   | "cli-tokens"
@@ -62,6 +63,12 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   { id: "chat", match: "prefix", path: "/api/chat/", operation: "application.read-follow" },
   { id: "members", match: "prefix", path: "/api/members/", operation: "application.read-follow" },
   { id: "agents", match: "prefix", path: "/api/agents/", operation: "application.read-follow" },
+  {
+    id: "agent-runs",
+    match: "prefix",
+    path: "/api/agent-runs/",
+    operation: "application.read-follow",
+  },
   { id: "org-api", match: "prefix", path: "/api/orgs/", operation: "page" },
   { id: "auth-callback", match: "exact", path: "/auth/callback", operation: "page" },
   { id: "auth-login", match: "exact", path: "/auth/login", operation: "page" },

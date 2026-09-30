@@ -261,7 +261,8 @@ const captures: Capture[] = [];
 
 try {
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await page.goto(ready.url);
+  // `/` is a public page (no login redirect); start the fixture login explicitly.
+  await page.goto(new URL("/auth/login", ready.url).href);
   await loginWithFixture(page);
 
   await waitLive(page, "registry-browser");
@@ -439,24 +440,26 @@ try {
   await page.getByRole("tab", { name: /Activity/ }).click();
   const mergePanel = page.locator(".pr-merge-panel");
   const composer = page.getByRole("textbox", { name: "Pull request comment" });
-  const activityScroller = page.locator(".pr-detail-main");
+  // The PR page scrolls as one document inside the shell's main pane (no inner scrollers).
+  const activityScroller = page.locator(".product-stage");
   await mergePanel.waitFor();
   await composer.waitFor();
   await activityScroller.evaluate((scroller) => {
     const panel = scroller.querySelector<HTMLElement>(".pr-merge-panel");
     if (panel === null) return;
+    // Clear the sticky repository header that overlays the top of the pane.
+    const header = scroller.querySelector<HTMLElement>(".repo-chrome")?.offsetHeight ?? 0;
     scroller.scrollTo({
       top:
         scroller.scrollTop +
         panel.getBoundingClientRect().top -
         scroller.getBoundingClientRect().top -
+        header -
         20,
     });
   });
   await page.waitForFunction(() => {
-    const scroller = document
-      .querySelector<HTMLElement>(".pr-detail-main")
-      ?.getBoundingClientRect();
+    const scroller = document.querySelector<HTMLElement>(".product-stage")?.getBoundingClientRect();
     const panel = document.querySelector<HTMLElement>(".pr-merge-panel")?.getBoundingClientRect();
     const form = document.querySelector<HTMLElement>(".pr-comment-form")?.getBoundingClientRect();
     return (

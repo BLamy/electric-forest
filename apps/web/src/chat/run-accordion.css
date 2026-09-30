@@ -1,0 +1,178 @@
+/* Codex-style run accordion under agent messages. */
+.run-accordion {
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 0.35rem;
+  color: var(--ef-muted, #a6aaa8);
+  font-size: 13px;
+}
+
+.run-accordion-header,
+.run-step-header {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.15rem 0.35rem 0.15rem 0.15rem;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.run-accordion-header:hover,
+.run-step-header:hover {
+  color: var(--ef-fg, #e8eae9);
+  background: var(--ef-control-hover, #2a2c2b);
+}
+
+.run-chevron {
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+}
+
+.run-chevron-open {
+  transform: rotate(90deg);
+}
+
+.run-accordion-label,
+.run-step-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.run-accordion-meta {
+  color: var(--ef-subtle, #6f7371);
+  font-size: 12px;
+}
+
+.run-accordion-shimmer {
+  background: linear-gradient(90deg, #8f9391 0%, #e8eae9 50%, #8f9391 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: run-shimmer 1.6s linear infinite;
+}
+
+@keyframes run-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.run-accordion-body {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.1rem;
+  margin: 0.25rem 0 0.35rem 0.55rem;
+  border-left: 1px solid var(--ef-border, #2a2c2b);
+  padding-left: 0.65rem;
+}
+
+.run-step {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+/* Grid children default to min-width: auto; long paths and output must wrap instead. */
+.run-accordion-body > *,
+.run-step-detail-group > * {
+  min-width: 0;
+}
+
+.run-step[data-error="true"] .run-step-title {
+  color: #f87171;
+}
+
+.run-step-flag {
+  border-radius: 4px;
+  padding: 0 0.3rem;
+  color: #f87171;
+  background: rgb(248 113 113 / 12%);
+  font-size: 11px;
+}
+
+.run-step-message {
+  margin: 0.2rem 0 0.2rem 0.2rem;
+  color: var(--ef-fg, #d7d9d8);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.run-step-detail-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.run-step-detail {
+  max-height: 280px;
+  overflow: auto;
+  margin: 0 0 0.35rem 1.1rem;
+  border: 1px solid var(--ef-border, #2a2c2b);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: #c4c7c5;
+  background: #0c0d0d;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.run-step-result {
+  color: #9da19f;
+}
+
+.run-diff-del {
+  color: #f87171;
+}
+
+.run-diff-add {
+  color: #4ade80;
+}
+
+.run-diff-context,
+.run-diff-gap {
+  color: #7d817f;
+}
+
+.run-step-empty,
+.run-step-error {
+  margin: 0.2rem 0;
+}
+
+.run-step-error {
+  color: #f87171;
+}
+
+.run-accordion-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+  color: var(--ef-subtle, #6f7371);
+  font-size: 11px;
+}
+
+.run-accordion-footer code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* The message column must be allowed to shrink so an open accordion wraps, not overflows. */
+.chat-message-main:has(.run-accordion) {
+  min-width: 0;
+}

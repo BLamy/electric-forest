@@ -1,3 +1,5 @@
+import { useStreamReducer } from "@eforest/web-hooks";
+import type { RepositoryNamespaceState } from "@eforest/reducers";
 import { useState } from "react";
 import {
   BookOpen,
@@ -23,7 +25,7 @@ export function navigate(href: string): void {
 export function repoSectionPath(org: string, repo: string, section: RepoSection): string {
   const base = repoBase(org, repo);
   if (section === "code") {
-    return `/${encodeURIComponent(org)}/${encodeURIComponent(repo)}/tree/main`;
+    return `/${encodeURIComponent(org)}/${encodeURIComponent(repo)}`;
   }
   return `${base}/${section === "pulls" ? "pulls" : section}`;
 }
@@ -42,8 +44,21 @@ export function RepoHeader(props: {
   readonly active: RepoSection;
 }): React.JSX.Element {
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
+  const streamId = `repo-home:${props.org}/${props.repo}:namespace`;
+  const namespace = useStreamReducer<RepositoryNamespaceState>({
+    apiPath: `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/home/namespace`,
+    streamId,
+    reducerId: "repo-namespace",
+    followWaitMs: 10_000,
+  });
   return (
-    <div className="repo-chrome" data-testid="repo-chrome">
+    <div
+      className="repo-chrome"
+      data-testid="repo-chrome"
+      data-ef-stream={streamId}
+      data-ef-offset={namespace.checkpoint}
+      data-ef-digest={namespace.digest}
+    >
       <div className="repo-identity-line">
         <span className="repo-mark" aria-hidden="true">
           <GitPullRequest size={17} strokeWidth={1.8} />
@@ -51,7 +66,9 @@ export function RepoHeader(props: {
         <span>{props.org}</span>
         <span aria-hidden="true">/</span>
         <strong>{props.repo}</strong>
-        <span className="repo-visibility">Private</span>
+        <span className="repo-visibility" data-testid="repo-visibility">
+          {namespace.state.metadata?.visibility}
+        </span>
       </div>
       <nav className="repo-tabs" aria-label="Repository">
         {sections.map((section) => {

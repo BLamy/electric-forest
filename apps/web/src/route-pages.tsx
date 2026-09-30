@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from "react";
+import { lazy, useState } from "react";
 import {
   Avatar,
   Icon,
@@ -18,7 +18,9 @@ import {
   GitBranch,
   History,
   Plus,
-  Tag,
+  Folder,
+  FileText,
+  ArrowUp,
 } from "lucide-react";
 import { useDispatch, useStreamReducer, type StreamReducerResult } from "@eforest/web-hooks";
 import { isValidFsPath, type FsTree } from "@eforest/streamfs";
@@ -31,15 +33,17 @@ import type {
   RegistryState,
   RepositoryBranchesState,
   RepositoryBranch,
-  RepositoryNamespaceState,
-  RepositoryStatusState,
 } from "@eforest/reducers";
 import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
+import { useSyntaxLines } from "./components/code/syntax.js";
 import { humanizeRecord } from "./history.js";
 import { isWikiSlug } from "@eforest/meadow";
 import type { PrDetailTab } from "./prs/PrDetail.js";
+import { loadPrDetail } from "./prs/preload.js";
 import { Button } from "./components/ui/button.js";
+import { personalAccount } from "./personal-account.js";
+import { useWhoami } from "./chat/useWhoami.js";
 import { DesktopTouchKit } from "./components/touchkit/DesktopTouchKit.js";
 import { MobileCredenza } from "./components/mobile/MobileOverlays.js";
 
@@ -64,12 +68,8 @@ const PrListPage = lazy(async () => {
   return { default: module.PrListPage };
 });
 const PrDetailPage = lazy(async () => {
-  const module = await import("./prs/PrDetail.js");
+  const module = await loadPrDetail();
   return { default: module.PrDetailPage };
-});
-const RepositoryTree = lazy(async () => {
-  const module = await import("./components/trees/RepositoryTree.js");
-  return { default: module.RepositoryTree };
 });
 const Markdown = lazy(async () => {
   const module = await import("./components/markdown/Markdown.js");
@@ -188,10 +188,13 @@ function LatestCommitStrip(props: {
       </span>
       <div>
         <strong>
-          <span className="commit-actor">{props.actor}</span> {props.summary}
+          <span className="commit-actor">
+            {props.actor === "unknown-actor" ? "Latest change" : props.actor}
+          </span>{" "}
+          {props.summary}
         </strong>
       </div>
-      <code title={props.checkpoint}>{props.checkpoint.slice(-7)}</code>
+      <span className="sr-only">Event offset {props.checkpoint}</span>
       {when === undefined ? null : <small>{when}</small>}
       <RouteLink href={props.historyHref}>
         <History size={14} aria-hidden="true" />
@@ -201,186 +204,23 @@ function LatestCommitStrip(props: {
   );
 }
 
-function ProjectionFacts(props: {
-  readonly region: string;
-  readonly checkpoint: string;
-  readonly digest: string;
-  readonly status: string;
-}): React.JSX.Element {
-  return (
-    <dl className="projection-facts" data-testid={props.region + "-projection-facts"}>
-      <dt>Application checkpoint</dt>
-      <dd data-testid={`${props.region}-checkpoint`}>{props.checkpoint}</dd>
-      <dt>Canonical digest</dt>
-      <dd data-testid={`${props.region}-digest`}>{props.digest}</dd>
-      <dt>Stream</dt>
-      <dd data-testid={`${props.region}-stream-status`}>{props.status}</dd>
-    </dl>
-  );
-}
-
 function RepositoryHome(props: { readonly org: string; readonly repo: string }): React.JSX.Element {
-  const encodedOrg = encodeURIComponent(props.org);
-  const encodedRepo = encodeURIComponent(props.repo);
-  const base = `/api/repos/${encodedOrg}/${encodedRepo}/home`;
-  const namespace = useStreamReducer<RepositoryNamespaceState>({
-    apiPath: `${base}/namespace`,
-    streamId: `repo-home:${props.org}/${props.repo}:namespace`,
-    reducerId: "repo-namespace",
-    followWaitMs: 10_000,
-    reconnectDelayMs: 1_500,
-  });
-  const branches = useStreamReducer<RepositoryBranchesState>({
-    apiPath: `${base}/branches`,
-    streamId: `repo-home:${props.org}/${props.repo}:branches`,
-    reducerId: "repo-branches",
-    followWaitMs: 10_000,
-    reconnectDelayMs: 1_500,
-  });
-  const projectStatus = useStreamReducer<RepositoryStatusState>({
-    apiPath: `${base}/status`,
-    streamId: `repo-home:${props.org}/${props.repo}:status`,
-    reducerId: "repo-status",
-    followWaitMs: 10_000,
-    reconnectDelayMs: 1_500,
-  });
-  const metadata = namespace.state.metadata;
-  const branchRows = Object.values(branches.state.branches).sort((left, right) =>
-    left.name.localeCompare(right.name),
-  );
-  const statuses = [namespace.status, branches.status, projectStatus.status];
-  const refusal = statuses.find((status) => status.startsWith("error:"));
-
+  const branches = useBranchCatalog(props.org, props.repo);
+  if (branches.status === "loading") return <p role="status">Loading repository…</p>;
+  if (branches.status.startsWith("error:"))
+    return <p role="alert">This repository is unavailable or you do not have access.</p>;
+  const names = Object.keys(branches.state.branches).sort();
+  const branch = names.includes("main") ? "main" : names[0];
+  if (branch === undefined)
+    return (
+      <section className="repository-empty">
+        <BookMarked size={32} />
+        <h2>{props.repo}</h2>
+        <p>This repository has no branches yet.</p>
+      </section>
+    );
   return (
-    <section className="repository-home" data-testid="repository-home">
-      <div className="repository-heading">
-        <div>
-          <p className="eyebrow">Authorized live projections</p>
-          <h2 data-testid="route-repo">
-            {props.org} / {props.repo}
-          </h2>
-        </div>
-        <span
-          className={`project-status project-status-${projectStatus.state.status ?? "loading"}`}
-          data-testid="project-status"
-        >
-          {projectStatus.state.status ?? "loading"}
-        </span>
-      </div>
-
-      <nav aria-label="Repository settings">
-        <RouteLink
-          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/wiki`}
-        >
-          Wiki
-        </RouteLink>
-        <RouteLink
-          href={`/orgs/${encodeURIComponent(props.org)}/repos/${encodeURIComponent(props.repo)}/labels`}
-        >
-          Manage labels
-        </RouteLink>
-      </nav>
-
-      {refusal === undefined ? null : (
-        <p className="projection-refusal" role="alert" data-testid="repository-home-refusal">
-          Repository projection refused: {refusal.slice("error:".length)}
-        </p>
-      )}
-
-      <div className="repository-regions">
-        <section
-          className="repository-region"
-          data-testid="repo-namespace-region"
-          data-application-checkpoint={namespace.checkpoint}
-          data-state-digest={namespace.digest}
-          data-stream-status={namespace.status}
-        >
-          <p className="eyebrow">Namespace</p>
-          <h3>Repository metadata</h3>
-          <div className="metadata-slot" data-testid="repo-metadata-slot">
-            {metadata === null ? (
-              <p>Loading repository metadata…</p>
-            ) : (
-              <dl className="metadata-list">
-                <dt>Project</dt>
-                <dd data-testid="repo-project">{metadata.project}</dd>
-                <dt>Visibility</dt>
-                <dd data-testid="repo-visibility">{metadata.visibility}</dd>
-                <dt>Repository owner</dt>
-                <dd>{metadata.repoOwner}</dd>
-                <dt>Project owner</dt>
-                <dd>{metadata.projectOwner}</dd>
-              </dl>
-            )}
-          </div>
-          <ProjectionFacts
-            region="namespace"
-            checkpoint={namespace.checkpoint}
-            digest={namespace.digest}
-            status={namespace.status}
-          />
-        </section>
-
-        <section
-          className="repository-region"
-          data-testid="repo-branches-region"
-          data-application-checkpoint={branches.checkpoint}
-          data-state-digest={branches.digest}
-          data-stream-status={branches.status}
-        >
-          <p className="eyebrow">Branches</p>
-          <h3>Native forks</h3>
-          {branches.status === "loading" ? (
-            <p data-testid="branch-loading">Loading branch catalog…</p>
-          ) : branchRows.length === 0 ? (
-            <p data-testid="branch-empty">No native forks yet.</p>
-          ) : (
-            <ul className="branch-list" data-testid="branch-list">
-              {branchRows.map((branch) => (
-                <li key={branch.streamId} data-testid="branch-row" data-branch={branch.name}>
-                  <strong>
-                    <RouteLink
-                      href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(branch.name)}`}
-                      aria-label={`${branch.name} branch file tree`}
-                    >
-                      {branch.name}
-                    </RouteLink>
-                  </strong>
-                  <span data-testid={`branch-parent-${branch.name}`}>
-                    {branch.parentStreamId ?? "root"}
-                  </span>
-                  <code data-testid={`branch-fork-${branch.name}`}>{branch.forkOffset}</code>
-                </li>
-              ))}
-            </ul>
-          )}
-          <ProjectionFacts
-            region="branches"
-            checkpoint={branches.checkpoint}
-            digest={branches.digest}
-            status={branches.status}
-          />
-        </section>
-
-        <section
-          className="repository-region"
-          data-testid="repo-status-region"
-          data-application-checkpoint={projectStatus.checkpoint}
-          data-state-digest={projectStatus.digest}
-          data-stream-status={projectStatus.status}
-        >
-          <p className="eyebrow">Project state</p>
-          <h3 data-testid="project-state-value">{projectStatus.state.status ?? "loading"}</h3>
-          <p>Only charter-defined project states cross this stream boundary.</p>
-          <ProjectionFacts
-            region="status"
-            checkpoint={projectStatus.checkpoint}
-            digest={projectStatus.digest}
-            status={projectStatus.status}
-          />
-        </section>
-      </div>
-    </section>
+    <TreeBrowser key={`${props.org}/${props.repo}/${branch}`} {...props} branch={branch} path="" />
   );
 }
 
@@ -425,20 +265,24 @@ function BranchSelector(props: {
   readonly headCheckpoint: string;
   readonly digest: string;
 }): React.JSX.Element {
-  const [pendingBranch, setPendingBranch] = useState(props.branch);
   const selected = branchFor(props.org, props.repo, props.branch, props.projection);
-  const branches = Object.values(props.projection.state.branches).sort((left, right) =>
-    left.name.localeCompare(right.name),
-  );
+  // The catalog is a live projection, so branches registered after page load stream in.
+  // The branch in the URL is always an option even when the catalog has not caught up
+  // (or never will, e.g. a fork whose registration was skipped): otherwise the <select>
+  // silently shows its first option and the picker lies about which branch is on screen.
+  const catalog = Object.values(props.projection.state.branches);
+  const branches = (
+    catalog.some((branch) => branch.name === props.branch) ? catalog : [...catalog, selected]
+  ).sort((left, right) => left.name.localeCompare(right.name));
   const root = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${props.kind}`;
   const suffix =
     props.path === "" ? "" : `/${props.path.split("/").map(encodeURIComponent).join("/")}`;
   const navigate = (branch: string): void => {
+    if (branch === props.branch) return;
     const href = `${root}/${encodeURIComponent(branch)}${suffix}`;
     window.history.pushState(null, "", href);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
-  useEffect(() => setPendingBranch(props.branch), [props.branch]);
   return (
     <div
       className="branch-switcher"
@@ -455,29 +299,22 @@ function BranchSelector(props: {
         id="branch-switcher-select"
         data-testid="branch-selector"
         aria-label="Repository branch"
-        value={pendingBranch}
-        disabled={props.projection.status === "loading" || branches.length === 0}
-        onChange={(event) => setPendingBranch(event.currentTarget.value)}
+        value={props.branch}
+        disabled={props.projection.status === "loading" && catalog.length === 0}
+        onChange={(event) => navigate(event.currentTarget.value)}
       >
-        {branches.length === 0 ? <option value={props.branch}>{props.branch}</option> : null}
         {branches.map((branch) => (
           <option key={branch.streamId} value={branch.name}>
             {branch.name}
           </option>
         ))}
       </select>
-      {pendingBranch === props.branch ? null : (
-        <Button
-          type="button"
-          variant="secondary"
-          data-testid="apply-branch"
-          onClick={() => navigate(pendingBranch)}
-        >
-          Apply branch
-        </Button>
-      )}
-      <span data-testid="branch-parent-stream">{selected.parentStreamId ?? "root"}</span>
-      <code data-testid="branch-fork-checkpoint">{selected.forkOffset}</code>
+      <span className="sr-only" data-testid="branch-parent-stream">
+        {selected.parentStreamId ?? "root"}
+      </span>
+      <code className="sr-only" data-testid="branch-fork-checkpoint">
+        {selected.forkOffset}
+      </code>
     </div>
   );
 }
@@ -508,8 +345,18 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
     followWaitMs: 10_000,
     cacheKey: `registry:${props.org ?? "me"}:${String(refreshNonce)}`,
   });
-  const organizations = Object.keys(projection.state.orgs).sort();
-  const rows = registryRows(projection.state, props.org);
+  const user = useWhoami();
+  const personal = personalAccount(user);
+  const scope = props.org ?? personal?.namespace;
+  const personalOrg = personal === null ? undefined : projection.state.orgs[personal.namespace];
+  const personalOwned = user !== null && personalOrg?.owner === user.sub;
+  const organizations = Object.keys(projection.state.orgs)
+    .filter((name) => name !== personal?.namespace)
+    .sort();
+  const rows =
+    scope === undefined || (props.org === undefined && !personalOwned)
+      ? []
+      : registryRows(projection.state, scope);
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleRows =
@@ -539,12 +386,12 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
       <div className="registry-intro">
         <div>
           <h2 data-testid={props.org === undefined ? "route-home" : "route-org"}>
-            {props.org === undefined ? "Brett Lamy" : `Organization: ${props.org}`}
+            {props.org === undefined ? (personal?.name ?? "Your repositories") : props.org}
           </h2>
           <p className="registry-meta">
             {props.org === undefined
               ? "Create and browse your Electric Forest repositories."
-              : "Browse repositories reduced from this organization’s authorized event range."}
+              : "Repositories in this workspace."}
           </p>
         </div>
         {props.org === undefined ? (
@@ -612,7 +459,7 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
             </nav>
           ) : null}
           <div className="registry-table-toolbar">
-            <h2>All Repos</h2>
+            <h2>{props.org === undefined ? "Your repositories" : "Repositories"}</h2>
             <DesktopTouchKit>
               <form
                 className="registry-search-form"
@@ -651,6 +498,7 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
               type="button"
               onClick={() => setCreating(true)}
               data-testid="registry-new"
+              disabled={scope === undefined}
             >
               <Plus size={14} aria-hidden="true" />
               New
@@ -726,16 +574,22 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
           label="New repository"
           compact
         >
-          <NewRepositoryForm
-            org={props.org ?? organizations[0] ?? "maple"}
-            project={
-              rows.find((row) => row.org === (props.org ?? organizations[0]))?.project ?? "canopy"
-            }
-            projects={Object.keys(
-              projection.state.orgs[props.org ?? organizations[0] ?? ""]?.projects ?? {},
-            )}
-            onComplete={() => setCreating(false)}
-          />
+          {scope === undefined ? (
+            <p>Sign in to create a repository.</p>
+          ) : (
+            <NewRepositoryForm
+              key={scope}
+              org={scope}
+              project={rows[0]?.project ?? ""}
+              projects={Object.keys(projection.state.orgs[scope]?.projects ?? {})}
+              personal={props.org === undefined}
+              namespaceReady={props.org !== undefined || personalOwned}
+              namespaceConflict={
+                props.org === undefined && personalOrg !== undefined && !personalOwned
+              }
+              onComplete={() => setCreating(false)}
+            />
+          )}
         </MobileCredenza>
         <MobileCredenza
           open={menuRow !== undefined}
@@ -823,6 +677,9 @@ function dispatchErrorMessage(cause: unknown, fallback: string): string {
 function NewRepositoryForm(props: {
   readonly org: string;
   readonly project: string;
+  readonly personal?: boolean;
+  readonly namespaceReady?: boolean;
+  readonly namespaceConflict?: boolean;
   /** Projects already reduced for this org; a new project is created first when needed. */
   readonly projects: readonly string[];
   readonly onComplete: () => void;
@@ -848,18 +705,32 @@ function NewRepositoryForm(props: {
   const [error, setError] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const dispatch = useDispatch(`ns:org:${props.org}`);
+  const rootDispatch = useDispatch("ns:root");
+  const [namespaceCreated, setNamespaceCreated] = useState(false);
+  const [createdProjects, setCreatedProjects] = useState<readonly string[]>([]);
   const valid = /^[a-z0-9][a-z0-9-]{0,62}$/.test(name) && /^[a-z0-9](?:-?[a-z0-9])*$/.test(project);
   const submit = async (): Promise<void> => {
     if (!valid || busy) return;
     setBusy(true);
     setError(undefined);
     try {
-      if (!props.projects.includes(project)) {
+      if (props.namespaceConflict)
+        throw new Error("Your personal namespace is unavailable. No repository was created.");
+      if (props.personal && !props.namespaceReady && !namespaceCreated) {
+        await rootDispatch({
+          type: "ns.org.create",
+          payload: { v: 1, name: props.org },
+          ts: Date.now(),
+        });
+        setNamespaceCreated(true);
+      }
+      if (!props.projects.includes(project) && !createdProjects.includes(project)) {
         await dispatch({
           type: "ns.project.create",
           payload: { v: 1, name: project },
           ts: Date.now(),
         });
+        setCreatedProjects((previous) => [...previous, project]);
       }
       await dispatch({
         type: "ns.repo.create",
@@ -883,13 +754,15 @@ function NewRepositoryForm(props: {
     <form
       className="new-repository-form"
       data-testid="new-repository-form"
+      data-owner={props.org}
+      data-personal={props.personal ?? false}
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
       }}
     >
       <p className="new-repository-org">
-        <Icon name="person2" size={16} /> {props.org} /
+        <Icon name="person2" size={16} /> {props.org} {props.personal ? "· Personal account" : ""} /
       </p>
       <label>
         <span>Repository name</span>
@@ -961,7 +834,11 @@ function NewRepositoryForm(props: {
         tone={valid && !busy ? "tint" : "soft"}
         onPress={() => void submit()}
       />
-      <small>Creates one `ns.repo.create` event on the organization stream.</small>
+      <small>
+        {props.personal
+          ? "Creates a repository in your personal account. No workspace setup is needed."
+          : "Creates a repository in this workspace."}
+      </small>
     </form>
   );
 }
@@ -1036,6 +913,7 @@ function HistoryView(props: {
       data-stream-id={streamId}
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
+      data-ef-digest={projection.digest}
       data-application-checkpoint={projection.checkpoint}
       data-state-digest={projection.digest}
       data-stream-status={projection.status}
@@ -1139,7 +1017,13 @@ function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
   });
   return [...directories, ...files]
     .filter((entry): entry is TreeEntry => entry !== undefined)
-    .sort((left, right) => compareTreePaths(left.path, right.path));
+    .sort((left, right) =>
+      left.kind === right.kind
+        ? compareTreePaths(left.path, right.path)
+        : left.kind === "directory"
+          ? -1
+          : 1,
+    );
 }
 
 function TreeBrowser(props: TreeRoute): React.JSX.Element {
@@ -1190,6 +1074,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       data-testid="tree-browser"
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
+      data-ef-digest={projection.digest}
       data-application-checkpoint={projection.checkpoint}
       data-branch={branch.name}
       data-parent-stream={branch.parentStreamId ?? ""}
@@ -1203,7 +1088,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       data-reducer-version="2"
       data-stream-status={status}
     >
-      <div className="repo-title-row tree-heading">
+      <div className="repo-title-row tree-heading sr-only">
         <h2 data-testid="tree-title" className="repo-title">
           <BookMarked size={18} aria-hidden="true" />
           {props.repo}
@@ -1231,14 +1116,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
           <GitBranch size={14} aria-hidden="true" />
           {Object.keys(branches.state.branches).length || 1} Branches
         </span>
-        <span className="repo-toolbar-meta">
-          <Tag size={14} aria-hidden="true" />0 Tags
-        </span>
         <div className="repo-toolbar-actions">
-          <Button variant="secondary" type="button">
-            <Plus size={14} aria-hidden="true" />
-            Automation
-          </Button>
           <Button type="button" onClick={() => setCloneOpen(true)} data-testid="tree-code-menu">
             <Code2 size={14} aria-hidden="true" />
             Code
@@ -1351,21 +1229,132 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       ) : null}
       {!error && status !== "loading" ? (
         entries.length === 0 ? (
-          <p data-testid="tree-empty">This directory is empty.</p>
+          <div className="repository-empty" data-testid="tree-empty">
+            <BookMarked size={32} aria-hidden="true" />
+            <h2>{prefix === "" ? "Your repository is ready" : "This directory is empty"}</h2>
+            <p>
+              {prefix === ""
+                ? "Add your first files with the Electric Forest CLI."
+                : "Files added here will appear automatically."}
+            </p>
+            {prefix === "" ? (
+              <code>{`ef clone ${props.org}/${props.repo} ${props.branch}`}</code>
+            ) : (
+              <RouteLink href={rootHref}>Back to repository</RouteLink>
+            )}
+          </div>
         ) : (
-          <RepositoryTree
-            tree={projection.state}
-            selectedPath={prefix || undefined}
-            onOpen={(path, kind) => {
-              const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-              const href =
-                kind === "directory" ? `${rootHref}/${encodedPath}` : `${blobRoot}/${encodedPath}`;
-              window.history.pushState(null, "", href);
-              window.dispatchEvent(new PopStateEvent("popstate"));
-            }}
-          />
+          <div className="repository-file-table" data-testid="repository-file-table">
+            <table aria-label="Repository files">
+              <thead className="sr-only">
+                <tr>
+                  <th>Name</th>
+                  <th>Latest change</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prefix === "" ? null : (
+                  <tr>
+                    <td colSpan={3}>
+                      <RouteLink href={breadcrumbs.at(-2)?.href ?? rootHref}>
+                        <ArrowUp size={16} aria-hidden="true" />
+                        ..
+                      </RouteLink>
+                    </td>
+                  </tr>
+                )}
+                {entries.map((entry) => {
+                  const path = entry.path.split("/").map(encodeURIComponent).join("/");
+                  const href = `${entry.kind === "directory" ? rootHref : blobRoot}/${path}`;
+                  const record = [...projection.records].reverse().find((item) => {
+                    const payload = item.payload as { path?: string; to?: string };
+                    const changed = payload.path ?? payload.to;
+                    return (
+                      typeof changed === "string" &&
+                      (changed === entry.path ||
+                        (entry.kind === "directory" && changed.startsWith(`${entry.path}/`)))
+                    );
+                  });
+                  const change =
+                    record === undefined
+                      ? undefined
+                      : humanizeRecord(record as HistoryApplicationRecord);
+                  return (
+                    <tr key={entry.path} data-testid="repository-file-row" data-path={entry.path}>
+                      <td>
+                        <RouteLink href={href}>
+                          {entry.kind === "directory" ? (
+                            <Folder
+                              size={17}
+                              className="repository-folder-icon"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <FileText size={17} aria-hidden="true" />
+                          )}
+                          <span>{entry.name}</span>
+                        </RouteLink>
+                      </td>
+                      <td className="repository-file-change">{change?.summary ?? ""}</td>
+                      <td className="repository-file-time">
+                        {record === undefined ? "" : relativeTime(record.ts)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )
       ) : null}
+      {!error &&
+      status !== "loading" &&
+      entries.some((entry) => entry.kind === "file" && /^readme\.md$/i.test(entry.name)) ? (
+        <RepositoryReadme
+          org={props.org}
+          repo={props.repo}
+          branch={props.branch}
+          path={
+            entries.find((entry) => entry.kind === "file" && /^readme\.md$/i.test(entry.name))!.path
+          }
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function RepositoryReadme(props: TreeRoute): React.JSX.Element {
+  const streamId = fileViewStreamId(props.org, props.repo, props.branch, props.path);
+  const projection = useStreamReducer<FileContentState>({
+    apiPath: `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${encodeURIComponent(props.branch)}/blob/${props.path.split("/").map(encodeURIComponent).join("/")}`,
+    streamId,
+    reducerId: "file-content",
+    followWaitMs: 10_000,
+  });
+  return (
+    <section
+      className="repository-readme"
+      data-testid="repository-readme"
+      data-ef-stream={streamId}
+      data-ef-offset={projection.checkpoint}
+      data-ef-digest={projection.digest}
+    >
+      <header>
+        <BookMarked size={16} aria-hidden="true" />
+        <RouteLink
+          href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/blob/${encodeURIComponent(props.branch)}/${props.path.split("/").map(encodeURIComponent).join("/")}`}
+        >
+          {props.path.split("/").at(-1)}
+        </RouteLink>
+      </header>
+      {projection.status.startsWith("error:") ? (
+        <p role="alert">The README could not be loaded.</p>
+      ) : projection.state.text === null ? (
+        <p>Loading README…</p>
+      ) : (
+        <Markdown className="markdown-body" source={projection.state.text} />
+      )}
     </section>
   );
 }
@@ -1395,6 +1384,8 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
   const filePath = state.currentPath ?? props.path;
   const renderedMarkdown = /\.md$/i.test(filePath);
   const [fileMode, setFileMode] = useState<"preview" | "code">("preview");
+  const codeView = state.status === "text" && !(renderedMarkdown && fileMode === "preview");
+  const syntax = useSyntaxLines(codeView ? (state.text ?? "") : "");
   const lines =
     state.status === "text" && state.text !== null ? state.text.split("\n").length : undefined;
   const fileSegments = filePath.split("/").filter(Boolean);
@@ -1419,6 +1410,7 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
       data-testid="file-viewer"
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
+      data-ef-digest={projection.digest}
       data-application-checkpoint={projection.checkpoint}
       data-branch={branch.name}
       data-parent-stream={branch.parentStreamId ?? ""}
@@ -1568,7 +1560,19 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
                   <span className="file-line-number" aria-hidden="true">
                     {index + 1}
                   </span>
-                  <span className="file-line-text">{line}</span>
+                  <span className="file-line-text">
+                    {syntax?.[index] === undefined
+                      ? line
+                      : syntax[index].map((segment, part) =>
+                          segment.type === "plain" ? (
+                            segment.text
+                          ) : (
+                            <span key={part} className={`syntax-${segment.type}`}>
+                              {segment.text}
+                            </span>
+                          ),
+                        )}
+                  </span>
                 </span>
               ))}
             </pre>

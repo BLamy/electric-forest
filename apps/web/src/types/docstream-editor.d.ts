@@ -1,5 +1,5 @@
 /**
- * Typing shim for `@brett_lamy/docstream-editor` 0.3.4. The package ships TypeScript
+ * Typing shim for `@brett_lamy/docstream-editor` 0.7.0. The package ships TypeScript
  * source with extensionless relative imports, which this repo's NodeNext typecheck
  * rejects, so tsconfig.base.json maps the specifier here. Vite maps the same
  * specifier to the package's `src/editor/Editor.tsx` (see apps/web/vite.config.ts) so
@@ -17,11 +17,30 @@ declare module "@brett_lamy/docstream-editor" {
     readonly keywords?: readonly string[];
   }
 
+  export interface ReferenceOption {
+    readonly id: string;
+    readonly label?: string;
+    readonly description?: string;
+    readonly group?: string;
+  }
+
+  export type ReferenceSource =
+    | readonly (string | ReferenceOption)[]
+    | ((query: string) => readonly ReferenceOption[] | Promise<readonly ReferenceOption[]>);
+
+  /** "@" mentions, "#" tags/channels, "$" codebases ("$" is enabled by `codebases`). */
+  export interface ReferenceSources {
+    readonly mentions?: ReferenceSource;
+    readonly tags?: ReferenceSource;
+    readonly codebases?: ReferenceSource;
+  }
+
   export interface GitbookEditorProps {
     readonly markdown?: string;
     readonly onChange?: (markdown: string) => void;
     readonly toolbar?: boolean;
     readonly slashMenu?: boolean | { readonly items?: SlashItem[] };
+    readonly references?: boolean | ReferenceSources;
     readonly editable?: boolean;
     readonly placeholder?: string;
     readonly className?: string;

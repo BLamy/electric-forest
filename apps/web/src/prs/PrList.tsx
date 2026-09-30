@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Icon, IndexBar, List, ListRow, ListSection, SearchField, Spinner } from "@brett_lamy/ui";
+import { IndexBar, List, ListRow, ListSection, SearchField, Spinner } from "@brett_lamy/ui";
 import { Check, ChevronDown, CircleDot, GitPullRequest, Menu, Plus, Search } from "lucide-react";
 import type { PrIndexRow } from "@eforest/pr";
 import { Badge } from "../components/ui/badge.js";
@@ -11,7 +11,8 @@ import { Textarea } from "../components/ui/textarea.js";
 import { MobileProductShell } from "../components/mobile/MobileProductShell.js";
 import { MobileCredenza, MobileSideDrawer } from "../components/mobile/MobileOverlays.js";
 import { RouteLink } from "../navigation.js";
-import { RepoHeader, navigate, repoSectionPath, type RepoSection } from "./RepoChrome.js";
+import { navigate, repoSectionPath, type RepoSection } from "./RepoChrome.js";
+import { preloadPrDetail } from "./preload.js";
 import {
   branchNameFromStream,
   branchRows,
@@ -61,6 +62,16 @@ function CreatePrForm(props: {
   const selectedSource = branches.some((branch) => branch.streamId === source)
     ? source
     : defaultSource;
+  // Controlled like the source select: an uncontrolled defaultValue is fixed at first
+  // render, before the live branch catalog arrives, and then falls to the first option
+  // (alphabetically an agent branch, not main) as branches stream in.
+  const defaultTarget =
+    branches.find((branch) => branch.name === "main")?.streamId ??
+    `fs:${props.org}/${props.repo}:main:meta`;
+  const [target, setTarget] = useState("");
+  const selectedTarget = branches.some((branch) => branch.streamId === target)
+    ? target
+    : defaultTarget;
   const [prId, setPrId] = useState(() => `pr-${Date.now().toString(36)}`);
   const [error, setError] = useState<string>();
   const dispatch = usePrCreator(props.org, props.repo, prId);
@@ -73,11 +84,6 @@ function CreatePrForm(props: {
         event.preventDefault();
         setError(undefined);
         const form = new FormData(event.currentTarget);
-        const target = String(
-          form.get("target") ??
-            branches.find((branch) => branch.name === "main")?.streamId ??
-            `fs:${props.org}/${props.repo}:main:meta`,
-        );
         const title = String(form.get("title") ?? "");
         const body = String(form.get("body") ?? "");
         const closes = String(form.get("closes") ?? "").split(",");
@@ -86,7 +92,7 @@ function CreatePrForm(props: {
             org: props.org,
             repo: props.repo,
             sourceBranch: selectedSource,
-            targetBranch: target,
+            targetBranch: selectedTarget,
             forkOffset: selected?.forkOffset ?? "-1",
             title,
             body,
@@ -122,7 +128,8 @@ function CreatePrForm(props: {
           Target branch
           <Select
             name="target"
-            defaultValue={branches.find((branch) => branch.name === "main")?.streamId}
+            value={selectedTarget}
+            onChange={(event) => setTarget(event.target.value)}
           >
             {branches.map((branch) => (
               <option key={branch.streamId} value={branch.streamId}>
@@ -205,7 +212,6 @@ function DesktopPrList(props: {
       data-ef-reducer={props.binding.reducerId}
       data-stream-status={props.binding.projection.status}
     >
-      <RepoHeader org={props.org} repo={props.repo} active="pulls" />
       <div className="pr-page-width">
         <div className="pr-list-toolbar">
           <div className="pr-search-wrap">
@@ -259,6 +265,8 @@ function DesktopPrList(props: {
                 data-testid="pr-row"
                 data-pr-id={row.prId}
                 data-pr-status={row.status}
+                onPointerEnter={preloadPrDetail}
+                onFocus={preloadPrDetail}
               >
                 <GitPullRequest
                   className={`pr-row-icon pr-row-icon-${statusTone(row.status)}`}
@@ -366,36 +374,59 @@ function MobilePrList(props: {
       data-stream-status={props.binding.projection.status}
     >
       <SearchField q={query} setQ={setQuery} placeholder="Find pull request" />
-      <List inset>
-        <ListSection title={`${String(rows.length)} pull requests`}>
-          {rows.map((row) => (
-            <div id={`mobile-pr-${row.prId}`} key={row.prStream}>
-              <ListRow
-                rowRole="link"
-                leading={<Icon name="layers" />}
-                title={row.title}
-                subtitle={`#${row.prId} · ${row.status} · ${branchNameFromStream(row.sourceBranch)} → ${branchNameFromStream(row.targetBranch)}`}
-                trailing={row.author}
-                accessory="chevron"
-                onPress={() => navigate(detailPath(props.org, props.repo, row.prId))}
-              />
-            </div>
-          ))}
-        </ListSection>
-      </List>
+      <div className="mobile-pr-rows">
+        <List inset>
+          <ListSection title={`${String(rows.length)} pull requests`}>
+            {rows.map((row) => (
+              <div id={`mobile-pr-${row.prId}`} key={row.prStream}>
+                <ListRow
+                  rowRole="link"
+                  className="mobile-pr-row"
+                  leading={
+                    <GitPullRequest
+                      className={`pr-row-icon pr-row-icon-${statusTone(row.status)}`}
+                      size={20}
+                      aria-hidden="true"
+                    />
+                  }
+                  title={<span className="mobile-pr-row-title">{row.title}</span>}
+                  subtitle={
+                    <span className="mobile-pr-row-meta">
+                      <span>
+                        #{row.prId} · {row.status} · {row.author}
+                      </span>
+                      <span className="mobile-pr-row-branches">
+                        {branchNameFromStream(row.sourceBranch)} →{" "}
+                        {branchNameFromStream(row.targetBranch)}
+                      </span>
+                    </span>
+                  }
+                  accessory="chevron"
+                  onPress={() => navigate(detailPath(props.org, props.repo, row.prId))}
+                />
+              </div>
+            ))}
+          </ListSection>
+        </List>
+        {/* Jump by PR number, beside the rows it indexes (title initials were all "E"). */}
+        <IndexBar
+          items={rows.map((row) => ({
+            key: row.prId,
+            label: row.prId.replace(/^pr-/, "").slice(0, 3),
+            caption: `#${row.prId} ${row.status}`,
+            preview: <span>{row.title}</span>,
+          }))}
+          label="Jump to pull request"
+          width={28}
+          top={32}
+          bottom={22}
+          className="mobile-pr-index"
+          onJump={(prId: string) =>
+            document.getElementById(`mobile-pr-${prId}`)?.scrollIntoView({ block: "center" })
+          }
+        />
+      </div>
       <EmptyRows status={props.binding.projection.status} count={rows.length} mobile />
-      <IndexBar
-        items={rows.map((row) => ({
-          key: row.prId,
-          label: row.title.slice(0, 1).toUpperCase(),
-          caption: row.status,
-          preview: <span>{row.title}</span>,
-        }))}
-        label="Jump to pull request"
-        onJump={(prId: string) =>
-          document.getElementById(`mobile-pr-${prId}`)?.scrollIntoView({ block: "center" })
-        }
-      />
     </div>
   );
   const screen = {
@@ -473,6 +504,8 @@ export function PrListPage(props: {
 }): React.JSX.Element {
   const binding = usePrList(props.org, props.repo);
   const compact = useMedia("(max-width: 899px)");
+  // A PR list is one click from a PR detail: start loading its diff chunk now.
+  useEffect(() => preloadPrDetail(), []);
   return compact ? (
     <MobilePrList {...props} binding={binding} />
   ) : (

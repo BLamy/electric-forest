@@ -178,6 +178,7 @@ export class PlatformWebApp {
         case "chat":
         case "members":
         case "agents":
+        case "agent-runs":
         case "registry": {
           if (
             this.gateway !== undefined &&
@@ -186,7 +187,8 @@ export class PlatformWebApp {
               url.pathname.startsWith("/api/repos/") ||
               url.pathname.startsWith("/api/chat/") ||
               url.pathname.startsWith("/api/members/") ||
-              url.pathname.startsWith("/api/agents/")) &&
+              url.pathname.startsWith("/api/agents/") ||
+              url.pathname.startsWith("/api/agent-runs/")) &&
             !request.headers.has("authorization")
           ) {
             const identity = await resolveSessionBackedIdentity(request, {
@@ -214,7 +216,8 @@ export class PlatformWebApp {
               if (
                 url.pathname.startsWith("/api/chat/") ||
                 url.pathname.startsWith("/api/members/") ||
-                url.pathname.startsWith("/api/agents/")
+                url.pathname.startsWith("/api/agents/") ||
+                url.pathname.startsWith("/api/agent-runs/")
               ) {
                 return this.gateway.handleSessionChat(
                   request,

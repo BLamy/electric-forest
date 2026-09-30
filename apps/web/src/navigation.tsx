@@ -9,6 +9,7 @@ function isActiveRoute(href: string, pathname: string): boolean {
 export function RouteLink(props: {
   readonly href: string;
   readonly children: React.ReactNode;
+  readonly className?: string;
   readonly "aria-label"?: string | undefined;
 }): React.JSX.Element {
   const active = isActiveRoute(props.href, window.location.pathname);
@@ -31,7 +32,9 @@ export function RouteLink(props: {
     <a
       href={props.href}
       onClick={navigate}
-      className={active ? "route-link route-link-active" : "route-link"}
+      className={["route-link", active ? "route-link-active" : "", props.className]
+        .filter(Boolean)
+        .join(" ")}
       aria-current={active ? "page" : undefined}
       aria-label={props["aria-label"]}
     >

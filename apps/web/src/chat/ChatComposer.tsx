@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { Extension } from "@tiptap/core";
 import { Plugin } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
-import { GitbookEditor } from "@brett_lamy/docstream-editor";
+import { GitbookEditor, type ReferenceSources } from "@brett_lamy/docstream-editor";
 import { astToTiptap } from "@brett_lamy/docstream-editor/convert";
 import { parseMarkdown } from "@brett_lamy/docstream/gitbook";
 import { ChatIcon, chatIconPaths } from "../vendor/chatkit/index.js";
@@ -26,6 +26,8 @@ export function ChatComposer(props: {
   readonly onCancel?: () => void;
   readonly autofocus?: boolean;
   readonly compact?: boolean;
+  /** `@` people/agents, `#` channels, `$` codebases autocomplete. */
+  readonly references?: ReferenceSources;
 }): React.JSX.Element {
   const [markdown, setMarkdown] = useState(props.initialMarkdown ?? "");
   const [busy, setBusy] = useState(false);
@@ -128,6 +130,7 @@ export function ChatComposer(props: {
       <GitbookEditor
         toolbar={false}
         slashMenu
+        {...(props.references === undefined ? {} : { references: props.references })}
         placeholder={props.placeholder}
         className={
           props.compact ? "chat-composer-doc chat-composer-doc-compact" : "chat-composer-doc"

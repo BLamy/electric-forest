@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import type { OnDiffLineClickProps, SelectedLineRange } from "@pierre/diffs";
+import {
+  DEFAULT_THEMES,
+  preloadHighlighter,
+  type OnDiffLineClickProps,
+  type SelectedLineRange,
+} from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { List, ListRow, ListSection, PillButton, Segmented, Spinner } from "@brett_lamy/ui";
 import type { MeadowPrState } from "@eforest/meadow";
@@ -30,7 +35,7 @@ import { MobileProductShell } from "../components/mobile/MobileProductShell.js";
 import { PierrePathTree } from "../components/trees/RepositoryTree.js";
 import { EvidencePanel } from "../evidence/index.js";
 import { RouteLink } from "../navigation.js";
-import { RepoHeader, navigate, repoSectionPath } from "./RepoChrome.js";
+import { navigate, repoSectionPath } from "./RepoChrome.js";
 import { threadPrTimeline, type PrTimelineNode } from "./timeline.js";
 import {
   issueIdFromStream,
@@ -683,6 +688,18 @@ function ChangesView(props: {
   );
 }
 
+/**
+ * Warm @pierre/diffs' shared Shiki highlighter (engine + the default themes + the grammars our
+ * repositories mostly diff) so the first MultiFileDiff paints without waiting on it. Called by
+ * the optimistic preload in ./preload.ts once this chunk has loaded; failures are harmless.
+ */
+export function warmDiffHighlighter(): Promise<void> {
+  return preloadHighlighter({
+    themes: [DEFAULT_THEMES.dark, DEFAULT_THEMES.light],
+    langs: ["typescript", "tsx", "markdown", "json"],
+  });
+}
+
 function PierreFileDiff(props: {
   readonly file: PrDiffFile;
   readonly org: string;
@@ -895,7 +912,6 @@ function DesktopDetail(props: {
       data-ef-reducer="pr"
       data-stream-status={props.binding.projection.status}
     >
-      <RepoHeader org={props.org} repo={props.repo} active="pulls" />
       <div className="pr-detail-top">
         <PrTitle prId={props.prId} binding={props.binding} />
         <div className="pr-top-actions">

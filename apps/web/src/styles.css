@@ -48,7 +48,6 @@
   --pr-green: #48b979;
   --pr-green-soft: #173525;
   --pr-red: #ef6374;
-  min-height: 100vh;
   color: #e8eae9;
   background: var(--pr-bg);
   font-size: 14px;
@@ -616,14 +615,18 @@
   padding: 1.25rem 0 4rem;
 }
 
+/* Like GitHub, the PR page scrolls as one document (the shell's main pane): no fixed-height
+   grid, no inner scrollers. Cards size to their content; the sidebar is a plain column. */
 .pr-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 17.5rem;
+  align-items: start;
   gap: 2rem;
 }
 
 .pr-detail-main {
   display: grid;
+  align-content: start;
   gap: 1.25rem;
 }
 
@@ -658,6 +661,8 @@
 
 .pr-app .wiki-markdown .docs-article,
 .mobile-pr-shell .wiki-markdown .docs-article {
+  /* Docstream gives its article a page-sized min-height; a PR body is a card, not a page. */
+  min-height: 0;
   max-width: none;
   margin: 0;
   padding: 0;
@@ -1092,6 +1097,78 @@
   padding: 0.75rem 2rem 6rem 0;
 }
 
+/* Compact PR rows: title wraps to two lines, meta and branches wrap below it; nothing
+   trails the title, so rows never squeeze it down to a single ellipsized letter. */
+.mobile-pr-rows {
+  position: relative;
+}
+
+.mobile-pr-row [data-tkrow] {
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.mobile-pr-row [data-tkrow] > svg:last-child,
+.mobile-pr-row [data-tkrow] > div > svg:last-child {
+  align-self: center;
+}
+
+.mobile-pr-row .pr-row-icon {
+  flex-shrink: 0;
+  margin-top: 0.75rem;
+  color: var(--pr-green, #3fb950);
+}
+
+.mobile-pr-row .pr-row-icon-merged {
+  color: #a77bed;
+}
+
+.mobile-pr-row .pr-row-icon-closed {
+  color: var(--pr-red, #f85149);
+}
+
+.mobile-pr-row-title {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.mobile-pr-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.5rem;
+  margin-top: 0.2rem;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.mobile-pr-row-meta > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mobile-pr-row-branches {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+}
+
+.mobile-pr-index {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The personal-account avatar is pinned top-right over the navigation bar; keep the
+   PR screens' trailing nav items ("New", the status badge) clear of it. */
+.mobile-product-layout:has(> .mobile-personal-account) .mobile-new-button,
+.mobile-product-layout:has(> .mobile-personal-account) .pr-state-badge {
+  margin-right: 2.5rem;
+}
+
 .mobile-pr-master [data-slot="search-field"] {
   margin: 0 0.75rem 0.75rem;
 }
@@ -1181,25 +1258,6 @@
 .mobile-pr-detail .pr-detail-main,
 .mobile-pr-detail .pr-diff-stack {
   margin-top: 1rem;
-}
-
-@media (min-width: 900px) {
-  .pr-detail-page .pr-detail-grid {
-    height: calc(100vh - 18.75rem);
-    min-height: 34rem;
-    overflow: hidden;
-  }
-
-  .pr-detail-page .pr-detail-main,
-  .pr-detail-page .pr-detail-aside {
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-  }
-
-  .pr-detail-page .pr-detail-main {
-    padding-right: 0.45rem;
-  }
 }
 
 @media (max-width: 960px) {

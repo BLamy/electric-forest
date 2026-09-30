@@ -6,6 +6,9 @@ import { Markdown } from "../components/markdown/Markdown.js";
 import { MobileSideDrawer } from "../components/mobile/MobileOverlays.js";
 import { DesktopTouchKit } from "../components/touchkit/DesktopTouchKit.js";
 import { ChatComposer } from "./ChatComposer.js";
+import type { ReferenceSources } from "@brett_lamy/docstream-editor";
+import { useChatReferenceSources } from "./referenceSources.js";
+import { RunAccordion } from "./RunAccordion.js";
 import { useChatChannel } from "./useChat.js";
 import { useWhoami } from "./useWhoami.js";
 import type { ChatChannelBinding } from "./types.js";
@@ -22,7 +25,15 @@ function authorColor(actor: string): string {
 }
 
 function displayName(actor: string): string {
+  if (actor.startsWith("agent:")) return actor.slice("agent:".length);
   return actor.replace(/^auth0\|/, "").split("@")[0] ?? actor;
+}
+
+const RUN_MARKER = /^\[eforest-run\]: eforest:(agent-run:\S+)$/m;
+
+/** The agent run log a message links (invisible `[eforest-run]` definition). */
+function runOf(body: string): string | undefined {
+  return RUN_MARKER.exec(body)?.[1];
 }
 
 function clock(ts: number): string {
@@ -57,8 +68,17 @@ function MessageRow(props: {
   readonly onOpenThread: ((id: string) => void) | undefined;
   readonly onError: (message: string) => void;
   readonly inThread?: boolean;
+  readonly references: ReferenceSources;
+  readonly org: string;
+  /** Runs that already have a final reply; their "working…" notes drop the accordion. */
+  readonly answeredRuns: ReadonlySet<string>;
 }): React.JSX.Element {
   const { message } = props;
+  const linkedRun = message.actor.startsWith("agent:") ? runOf(message.body) : undefined;
+  const runStreamId =
+    linkedRun !== undefined && message.id.includes("-status-") && props.answeredRuns.has(linkedRun)
+      ? undefined
+      : linkedRun;
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const user = {
@@ -156,6 +176,7 @@ function MessageRow(props: {
           </p>
         ) : editing ? (
           <ChatComposer
+            references={props.references}
             placeholder="Edit your message"
             initialMarkdown={message.body}
             compact
@@ -172,7 +193,12 @@ function MessageRow(props: {
             }
           />
         ) : (
-          <Markdown source={message.body} className="chat-markdown" />
+          <>
+            <Markdown source={message.body} className="chat-markdown" />
+            {runStreamId === undefined ? null : (
+              <RunAccordion org={props.org} runStreamId={runStreamId} />
+            )}
+          </>
         )}
         {confirmingDelete ? (
           <div className="chat-delete-confirm" data-testid="chat-delete-confirm">
@@ -236,10 +262,20 @@ export function ChatChannelPage(props: {
   readonly channel: string;
 }): React.JSX.Element {
   const binding = useChatChannel(props.org, props.channel);
+  const references = useChatReferenceSources(props.org);
+  const answeredRuns = new Set(
+    binding.projection.state.messages
+      .filter((message) => message.actor.startsWith("agent:") && !message.id.includes("-status-"))
+      .map((message) => runOf(message.body))
+      .filter((run): run is string => run !== undefined),
+  );
   const me = useWhoami();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [threadId, setThreadId] = useState<string | undefined>(undefined);
+  // `?thread=<root id>` (e.g. from a pull request's "Requested in #channel" link) opens it.
+  const [threadId, setThreadId] = useState<string | undefined>(
+    () => new URLSearchParams(window.location.search).get("thread") ?? undefined,
+  );
   const all = binding.projection.state.messages;
   const roots = all.filter((message) => message.threadOf === null);
   const repliesOf = (id: string): ChatMessage[] =>
@@ -253,8 +289,11 @@ export function ChatChannelPage(props: {
     if (el) el.scrollTop = el.scrollHeight;
   }, [roots.length]);
   useEffect(() => {
-    if (threadId !== undefined && threadRoot === undefined) setThreadId(undefined);
-  }, [threadId, threadRoot]);
+    // Only once messages have replayed: a deep-linked thread must survive the first load.
+    if (threadId !== undefined && threadRoot === undefined && all.length > 0) {
+      setThreadId(undefined);
+    }
+  }, [threadId, threadRoot, all.length]);
 
   const status = binding.projection.status;
   const refused = status.startsWith("error:");
@@ -323,6 +362,9 @@ export function ChatChannelPage(props: {
                   </div>
                 ) : null}
                 <MessageRow
+                  references={references}
+                  answeredRuns={answeredRuns}
+                  org={props.org}
                   message={message}
                   replies={repliesOf(message.id)}
                   mine={me !== null && me.sub === message.actor}
@@ -345,7 +387,11 @@ export function ChatChannelPage(props: {
           </p>
         )}
         <div className="chat-composer">
-          <ChatComposer placeholder={`Message #${props.channel}`} onSend={(text) => send(text)} />
+          <ChatComposer
+            references={references}
+            placeholder={`Message #${props.channel}`}
+            onSend={(text) => send(text)}
+          />
           <small>
             <Icon name="wave" size={12} /> Docstream editor · <kbd>/</kbd> for blocks · Enter sends
             from a plain line, continues a block otherwise · <kbd>⌘</kbd>
@@ -367,6 +413,9 @@ export function ChatChannelPage(props: {
             <div className="chat-thread" data-testid="chat-thread" data-thread-root={threadRoot.id}>
               <div className="chat-thread-scroll ck-scroll">
                 <MessageRow
+                  references={references}
+                  answeredRuns={answeredRuns}
+                  org={props.org}
                   message={threadRoot}
                   replies={[]}
                   mine={me !== null && me.sub === threadRoot.actor}
@@ -385,6 +434,9 @@ export function ChatChannelPage(props: {
                 ) : null}
                 {repliesOf(threadRoot.id).map((reply) => (
                   <MessageRow
+                    references={references}
+                    answeredRuns={answeredRuns}
+                    org={props.org}
                     key={reply.offset || reply.id}
                     message={reply}
                     replies={[]}
@@ -401,6 +453,7 @@ export function ChatChannelPage(props: {
               </div>
               <div className="chat-composer chat-thread-composer">
                 <ChatComposer
+                  references={references}
                   placeholder={`Reply in thread`}
                   autofocus
                   compact

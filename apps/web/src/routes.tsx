@@ -235,12 +235,20 @@ export function AppRoutes(): React.JSX.Element {
   }
   const repository = repositoryRoute(pathname);
   const mobileRepository = compact && repository !== undefined && repository.active !== "pulls";
+  // Compact pull-request routes render their own complete MobileProductShell (tab bar,
+  // navigation stack, drawer). Nesting that inside the desktop chat frame put the
+  // workspace rail beside it and squeezed the list, so they get the screen to themselves.
+  const mobilePulls = compact && repository?.active === "pulls";
   return (
     <main className="app-shell-repository" data-testid="app-shell">
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      {mobileRepository ? (
+      {mobilePulls ? (
+        <article id="main-content" className="mobile-pulls-route" tabIndex={-1}>
+          <Route pathname={pathname} />
+        </article>
+      ) : mobileRepository ? (
         <MobileRepositoryRoute
           pathname={pathname}
           org={repository.org}

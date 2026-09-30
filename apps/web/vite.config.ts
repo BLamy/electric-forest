@@ -48,6 +48,11 @@ export default defineConfig({
     // an otherwise clean session into requestfailed telemetry.
     sourcemap: "inline",
     rollupOptions: {
+      // The editor's live JSX code blocks load Docstream's playground, which imports
+      // @agent-wasm/core lazily; its worker asset does not bundle. Leave it external (as
+      // the editor's own demo does) — the app never renders live previews, and if one is
+      // attempted Docstream reports the missing runtime instead of breaking the page.
+      external: ["@agent-wasm/core"],
       output: {
         // Keep source locations in the inline map without embedding every
         // dependency's full source text in the eagerly loaded shell asset.

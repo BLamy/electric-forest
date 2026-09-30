@@ -75,6 +75,8 @@ export function WorkspaceRail({
         <button
           key={w.id}
           title={w.title ?? w.label}
+          aria-label={w.title ?? w.label}
+          aria-pressed={w.active ?? false}
           onClick={() => {
             kvib([5]);
             onSelect?.(w.id);

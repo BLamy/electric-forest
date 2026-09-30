@@ -22,7 +22,9 @@ import { seedDefaultAgents } from "../../members/useRoster.js";
 import { agentsStreamId } from "@eforest/reducers";
 import { MobileCredenza } from "../mobile/MobileOverlays.js";
 import { DesktopTouchKit } from "../touchkit/DesktopTouchKit.js";
+import { personalAccount } from "../../personal-account.js";
 import { repositoryRoute } from "./repository-route.js";
+import { StreamDevtools } from "./StreamDevtools.js";
 
 /**
  * The Discord-style product frame from TouchKit's chatkit: a workspace rail (one tile
@@ -516,6 +518,42 @@ function WorkspaceNav(props: {
   );
 }
 
+function PersonalNav(props: {
+  readonly name: string;
+  readonly namespace: string;
+  readonly repositories: readonly string[];
+  readonly onSheet: (sheet: Sheet) => void;
+}): React.JSX.Element {
+  return (
+    <div className="forest-personal-nav" data-testid="personal-account-nav">
+      <div className="forest-nav-head">
+        <button className="forest-workspace-button" onClick={() => props.onSheet("account-menu")}>
+          <span>{props.name}</span>
+          <Icon name="person" size={16} />
+        </button>
+        <span className="forest-personal-caption">Personal account</span>
+        <RouteLink href="/" className="forest-tab forest-tab-active">
+          <Icon name="layers" size={16} />
+          Your repositories<small>{props.repositories.length}</small>
+        </RouteLink>
+      </div>
+      <div className="forest-personal-repositories">
+        <span className="forest-personal-caption">Repositories</span>
+        {props.repositories.map((repo) => (
+          <RouteLink
+            key={repo}
+            href={`/${encodeURIComponent(props.namespace)}/${encodeURIComponent(repo)}`}
+          >
+            <Icon name="layers" size={15} />
+            {repo}
+          </RouteLink>
+        ))}
+        {props.repositories.length === 0 ? <p>No personal repositories yet.</p> : null}
+      </div>
+    </div>
+  );
+}
+
 export function ForestShell(props: {
   readonly pathname: string;
   readonly header?: ReactNode;
@@ -524,8 +562,16 @@ export function ForestShell(props: {
 }): React.JSX.Element {
   const registry = useRegistry();
   const user = useWhoami();
-  const orgs = Object.keys(registry.state.orgs).sort();
-  const org = currentOrg(props.pathname, orgs);
+  const personal = personalAccount(user);
+  const orgs = Object.keys(registry.state.orgs)
+    .filter((name) => name !== personal?.namespace)
+    .sort();
+  const routedOrg = currentOrg(props.pathname, orgs);
+  const personalActive =
+    props.pathname === "/" ||
+    props.pathname === "/repositories" ||
+    (personal !== null && routedOrg === personal.namespace);
+  const org = personalActive ? personal?.namespace : routedOrg;
   const repository = repositoryRoute(props.pathname);
   const [sheet, setSheet] = useState<Sheet>("none");
   const rows = useMemo(
@@ -539,15 +585,32 @@ export function ForestShell(props: {
       ),
     [registry.state.orgs],
   );
-  const repos = rows.filter((row) => row.org === org).map((row) => row.repo);
+  const repos =
+    personalActive &&
+    (user === null || org === undefined || registry.state.orgs[org]?.owner !== user.sub)
+      ? []
+      : rows.filter((row) => row.org === org).map((row) => row.repo);
   const diagnosticRepo = repository ?? rows[0];
-  const workspaces: Workspace[] = orgs.map((name) => ({
-    id: name,
-    label: name.slice(0, 1).toUpperCase(),
-    color: workspaceColor(name),
-    active: name === org,
-    title: name,
-  }));
+  const workspaces: Workspace[] = [
+    ...(personal === null
+      ? []
+      : [
+          {
+            id: "__personal__",
+            label: personal.name.slice(0, 1).toUpperCase(),
+            color: "#6eafff",
+            active: personalActive,
+            title: `${personal.name} · Personal account`,
+          },
+        ]),
+    ...orgs.map((name) => ({
+      id: name,
+      label: name.slice(0, 1).toUpperCase(),
+      color: workspaceColor(name),
+      active: name === org,
+      title: name,
+    })),
+  ];
   const chat = chatRoute(props.pathname);
   const codebaseActive =
     chat === undefined &&
@@ -569,12 +632,21 @@ export function ForestShell(props: {
           <WorkspaceRail
             workspaces={workspaces}
             tint="var(--accent-primary)"
-            onSelect={(id) => navigate(`/organizations/${encodeURIComponent(id)}`)}
+            onSelect={(id) =>
+              navigate(id === "__personal__" ? "/" : `/organizations/${encodeURIComponent(id)}`)
+            }
             onAdd={() => setSheet("create-workspace")}
           />
         </ChatShell.Rail>
         <ChatShell.Nav>
-          {org === undefined ? (
+          {personalActive && personal !== null ? (
+            <PersonalNav
+              name={personal.name}
+              namespace={personal.namespace}
+              repositories={repos}
+              onSheet={setSheet}
+            />
+          ) : org === undefined ? (
             <div className="forest-nav-empty" data-testid="workspace-nav-empty" />
           ) : (
             <WorkspaceNav
@@ -594,17 +666,18 @@ export function ForestShell(props: {
             {props.header}
             <div className="product-content">{props.children}</div>
             {props.diagnostics === undefined ? null : (
-              <details className="product-diagnostics">
-                <summary>Stream diagnostics</summary>
-                {props.diagnostics}
-                {diagnosticRepo === undefined ? null : (
-                  <RouteLink
-                    href={`/inspect/${encodeURIComponent(diagnosticRepo.org)}/${encodeURIComponent(diagnosticRepo.repo)}/main`}
-                  >
-                    Open Stream Inspector
-                  </RouteLink>
-                )}
-              </details>
+              <StreamDevtools
+                diagnostics={props.diagnostics}
+                inspector={
+                  diagnosticRepo === undefined ? undefined : (
+                    <RouteLink
+                      href={`/inspect/${encodeURIComponent(diagnosticRepo.org)}/${encodeURIComponent(diagnosticRepo.repo)}/main`}
+                    >
+                      Open Stream Inspector
+                    </RouteLink>
+                  )
+                }
+              />
             )}
           </div>
         </ChatShell.Main>

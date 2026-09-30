@@ -925,6 +925,11 @@ export async function bootWorld(
       EF_RESEND_URL: resend.url,
       EF_RESEND_API_KEY: "re_test_admin",
       EF_RESEND_FROM: "Electric Forest <invites@electric-forest.test>",
+      // Agent replies stay off unless the developer opts in from their own shell; the
+      // harness CLIs authenticate from the machine's own Claude Code / Codex logins.
+      ...(process.env.EF_AGENT_RESPONDER === undefined
+        ? {}
+        : { EF_AGENT_RESPONDER: process.env.EF_AGENT_RESPONDER }),
     },
     {
       now: () => nowSeconds * 1_000,
@@ -1088,6 +1093,7 @@ export async function bootWorld(
       if (closed) return;
       closed = true;
       await closeServer(platformServer);
+      runtime.agentResponder?.stop();
       await runtime.registry.stop();
       runtime.gateway.terminate();
       runtime.namespaces.terminate();
@@ -1230,7 +1236,11 @@ export async function loginWithFixture(
     } else {
       // Older emulate snapshots expose one transformed form instead of an
       // account picker; retain the explicit subject-selection bridge there.
-      assert.equal(await forms.count(), 1, "fixture account picker did not expose the requested account");
+      assert.equal(
+        await forms.count(),
+        1,
+        "fixture account picker did not expose the requested account",
+      );
       form = forms.first();
       await form.evaluate((element, email) => {
         const input = document.createElement("input");

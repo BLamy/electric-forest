@@ -4,7 +4,6 @@ interface RepositoryRoute {
   readonly org: string;
   readonly repo: string;
   readonly active: RepoSection;
-  readonly ownsHeader: boolean;
 }
 
 function decoded(value: string | undefined): string | undefined {
@@ -33,13 +32,12 @@ export function repositoryRoute(pathname: string): RepositoryRoute | undefined {
             : section === "settings"
               ? "settings"
               : "code";
-    return { org, repo, active, ownsHeader: section === "pulls" };
+    return { org, repo, active };
   }
   if (segments.length >= 2 && ["tree", "blob", "history"].includes(segments[2] ?? "")) {
     const org = decoded(segments[0]);
     const repo = decoded(segments[1]);
-    if (org !== undefined && repo !== undefined)
-      return { org, repo, active: "code", ownsHeader: false };
+    if (org !== undefined && repo !== undefined) return { org, repo, active: "code" };
   }
   if (
     segments.length === 2 &&
@@ -47,8 +45,7 @@ export function repositoryRoute(pathname: string): RepositoryRoute | undefined {
   ) {
     const org = decoded(segments[0]);
     const repo = decoded(segments[1]);
-    if (org !== undefined && repo !== undefined)
-      return { org, repo, active: "code", ownsHeader: false };
+    if (org !== undefined && repo !== undefined) return { org, repo, active: "code" };
   }
   return undefined;
 }

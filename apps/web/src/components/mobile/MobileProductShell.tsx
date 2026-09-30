@@ -9,6 +9,8 @@ import {
 import { NavigationStack, SplitView, TabBar, TouchKitProvider, type Screen } from "@brett_lamy/ui";
 import { TOUCHKIT_DARK_TOKEN_BRIDGE } from "../touchkit/tokens.js";
 import "../../styles/tokens.css";
+import { useWhoami } from "../../chat/useWhoami.js";
+import { personalAccount } from "../../personal-account.js";
 
 export type MobileRepoSection = "code" | "pulls" | "issues" | "wiki" | "settings";
 export type MobileWindowClass = "compact" | "medium" | "regular";
@@ -126,6 +128,7 @@ export interface MobileProductShellProps {
  */
 export function MobileProductShell(props: MobileProductShellProps): React.JSX.Element {
   const windowClass = useMobileWindowClass(props.windowClass);
+  const personal = personalAccount(useWhoami());
   const [refreshVersion, setRefreshVersion] = useState(0);
   const refresh = useCallback(() => {
     setRefreshVersion((version) => version + 1);
@@ -178,6 +181,15 @@ export function MobileProductShell(props: MobileProductShellProps): React.JSX.El
         data-window-class={windowClass}
         aria-label={`${props.org} / ${props.repo}`}
       >
+        {personal !== null && (
+          <button
+            className="mobile-personal-account"
+            aria-label={`${personal.name} · Personal account`}
+            onClick={() => navigateToRoute("/")}
+          >
+            {personal.name.slice(0, 1).toUpperCase()}
+          </button>
+        )}
         <SplitView
           wc={windowClass}
           sidebar={props.sidebar}
