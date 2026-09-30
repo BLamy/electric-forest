@@ -1,0 +1,8 @@
+E5-T15 J4 (desktop): hostile Markdown on issue body, PR comment, wiki page and chat message stays inert.
+Use this exact hostile text (HOSTILE) every time:
+Hostile [x](javascript:alert(1)) [y](//evil.example) [vb](vbscript:msgbox(1)) <img src=x onerror="alert(2)"> <iframe srcdoc="<script>alert(3)</script>"></iframe> <script>alert(4)</script> **bold survives**
+1. Sign in (see SETUP). Create an issue in <BASE>/orgs/maple/repos/reading-room/issues with title "QA hostile" and body HOSTILE. On the issue page: "bold survives" renders bold; no alert dialog appears; no image or iframe is embedded; the javascript:/vbscript: links are not clickable as script (inspect: no href starting with javascript: or vbscript:).
+2. Open <BASE>/orgs/maple/repos/reading-room/pulls/60, and post a comment with body HOSTILE. Same expectations on the rendered comment.
+3. Create wiki page "qa-hostile" (Wiki -> New page), edit it, set "Markdown source" to HOSTILE, Save changes, and view the page. Same expectations.
+4. Open <BASE>/chat/maple/general and send HOSTILE as a chat message. Same expectations for the rendered message.
+5. No alert/confirm dialog may appear at any point; zero console errors.

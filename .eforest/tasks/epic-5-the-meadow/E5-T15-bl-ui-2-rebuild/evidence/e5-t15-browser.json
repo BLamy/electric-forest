@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "01b571ecf822452c81827b296555a4ff5f254a3d",
+  "browser": {
+    "executablePath": "/Users/blamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
+    "version": "108.0.5359.0"
+  },
+  "viewports": {
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "reducedMotion": true,
+  "captures": [
+    {
+      "name": "00-personal-home.jpg",
+      "route": "/",
+      "viewport": "desktop",
+      "sha256": "c248f00d768458691d964c199f918783b95d58a7ac4a4281329dd67bc4a31c8c"
+    },
+    {
+      "name": "01-repo-list.jpg",
+      "route": "/organizations/maple",
+      "viewport": "desktop",
+      "sha256": "0002a38dc7801ac6ac4dcf72a065a911e8c12b417e9b40b81964385fcb7df852"
+    },
+    {
+      "name": "02-repo-home.jpg",
+      "route": "/maple/reading-room",
+      "viewport": "desktop",
+      "sha256": "f3982ffd566698092f1ace2cd60c60cacf8983a01651b4ec88b6d3a8d6b92da8"
+    },
+    {
+      "name": "03-tree.jpg",
+      "route": "/maple/reading-room/tree/main",
+      "viewport": "desktop",
+      "sha256": "3cb5cde7c83a8fc22d22b67431da31dc8685bb6b95ba7eac6993815f5f40716b"
+    },
+    {
+      "name": "04-blob.jpg",
+      "route": "/maple/reading-room/blob/main/README.md",
+      "viewport": "desktop",
+      "sha256": "dbb326c105f9bc94a68b39e914320c7896b59c306d8bf2939641777af1762e1c"
+    },
+    {
+      "name": "05-history.jpg",
+      "route": "/maple/reading-room/history/main",
+      "viewport": "desktop",
+      "sha256": "b82dacff12529a2f89e5dc0d78c8febc81a7ab4ffdc91f801cf880d0456afa56"
+    },
+    {
+      "name": "06-issues.jpg",
+      "route": "/orgs/maple/repos/reading-room/issues",
+      "viewport": "desktop",
+      "sha256": "e6feb2211cbdcbb15be655e1fa0918eac4934432be78bcfa6ac4b842f286695e"
+    },
+    {
+      "name": "07-issue-detail.jpg",
+      "route": "/orgs/maple/repos/reading-room/issues/visual-capstone",
+      "viewport": "desktop",
+      "sha256": "ae27cd3681e60f382ed4683265ed4ca637d9e34810f89cdf5ef44e1645350335"
+    },
+    {
+      "name": "08-pulls.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls",
+      "viewport": "desktop",
+      "sha256": "9551db7742347690b1e5b73246c28788c461187508f66b0196ca7f772725f823"
+    },
+    {
+      "name": "09-pr-activity.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60",
+      "viewport": "desktop",
+      "sha256": "4179d8717a228bc470cf07a50742e792f5b7d2ccf1057b2a9ffc45f366326b93"
+    },
+    {
+      "name": "10-pr-commits.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60/commits",
+      "viewport": "desktop",
+      "sha256": "7f84c68d17664639bb9ffb08cb1bd177403885b7876d79f4a2c13e9c6c9485ed"
+    },
+    {
+      "name": "11-pr-checks.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60/checks",
+      "viewport": "desktop",
+      "sha256": "2917ffa2ceb2ef5a7fb4db67fa06ef210d90e60fe5337219c0f120e08fbea27e"
+    },
+    {
+      "name": "12-pr-changes.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60/changes",
+      "viewport": "desktop",
+      "sha256": "c6f69e4faf65020a726080d307dc1b262fe6104702ea24203e6eec2ad9428bf6"
+    },
+    {
+      "name": "13-wiki-page.jpg",
+      "route": "/orgs/maple/repos/reading-room/wiki/home",
+      "viewport": "desktop",
+      "sha256": "137ea93185f0c06384151f557289f504f05f3c4b6cf2881cd26e1894038d2627"
+    },
+    {
+      "name": "14-wiki-editor.jpg",
+      "route": "/orgs/maple/repos/reading-room/wiki/home/edit",
+      "viewport": "desktop",
+      "sha256": "06e6cbc26b88e9ff56e11611ce625d6e428788dd1d2cd5adfec90e11361bcb87"
+    },
+    {
+      "name": "15-settings.jpg",
+      "route": "/orgs/maple/repos/reading-room/settings",
+      "viewport": "desktop",
+      "sha256": "10102044ad27a7211f8050937fee8ab3dfcf3cbbe1cc23db0ddc87a55769065b"
+    },
+    {
+      "name": "16-labels.jpg",
+      "route": "/orgs/maple/repos/reading-room/labels",
+      "viewport": "desktop",
+      "sha256": "69a1af6695583fc7f10ff1f1c5b92a4ec320cb16ce7e0a341d843f1b4c711aed"
+    },
+    {
+      "name": "17-chat-run.jpg",
+      "route": "/chat/maple/general",
+      "viewport": "desktop",
+      "sha256": "02afd2020758b984a66ada35487a4c612d960341f51922efda942a86861f5741"
+    },
+    {
+      "name": "18-members.jpg",
+      "route": "/members/maple",
+      "viewport": "desktop",
+      "sha256": "60be218c573435695535f92de76d6175cf59e474e9b3455f74e95fb0a689a1ee"
+    },
+    {
+      "name": "20-mobile-repo-list.jpg",
+      "route": "/organizations/maple",
+      "viewport": "mobile",
+      "sha256": "496e2cdceb0610e02f9e1c63599d9db397e95dcc84f95364a4b2d5aefc8d1714"
+    },
+    {
+      "name": "21-mobile-repo-home.jpg",
+      "route": "/maple/reading-room",
+      "viewport": "mobile",
+      "sha256": "94559c85bcda37fc305799fbc92c13329f6b6a8ddd82645881b8446d53ed6556"
+    },
+    {
+      "name": "22-mobile-tree.jpg",
+      "route": "/maple/reading-room/tree/main/apps",
+      "viewport": "mobile",
+      "sha256": "67ddcbcb082986e7e54464de71b2e642ccababf7f9a80dabba81328122924cb6"
+    },
+    {
+      "name": "23-mobile-blob.jpg",
+      "route": "/maple/reading-room/blob/main/apps/web/product.ts",
+      "viewport": "mobile",
+      "sha256": "3fffb22185e864f2e08386d91c02ae930a0152db337a3298bdac9a73389be497"
+    },
+    {
+      "name": "24-mobile-history.jpg",
+      "route": "/maple/reading-room/history/main",
+      "viewport": "mobile",
+      "sha256": "592e9f36f581803f90dc1b10665dc23d0ba319b16a6ec437029c6d2b2685caa7"
+    },
+    {
+      "name": "25-mobile-issues.jpg",
+      "route": "/orgs/maple/repos/reading-room/issues",
+      "viewport": "mobile",
+      "sha256": "8225aef2f5e05af4cd23972f4a0a97d858c01d32b1f233dd1372317f762c0dba"
+    },
+    {
+      "name": "26-mobile-issue.jpg",
+      "route": "/orgs/maple/repos/reading-room/issues/visual-capstone",
+      "viewport": "mobile",
+      "sha256": "c394a370857ad239de4d0feb2775b15d39bcf8bd86974162cb488c512abc21ea"
+    },
+    {
+      "name": "27-mobile-pulls.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls",
+      "viewport": "mobile",
+      "sha256": "24574d97ebf2065473953cc362ec86ecf74d2e3ad130a6a69a51cc2b4bd10de9"
+    },
+    {
+      "name": "28-mobile-pr.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60",
+      "viewport": "mobile",
+      "sha256": "00955ad0abb5cbcbb3e146beb0c2469f0d5ad2292b57934086106883eeeadcdb"
+    },
+    {
+      "name": "29-mobile-pr-changes.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60/changes",
+      "viewport": "mobile",
+      "sha256": "55a4dc6268c599efd0c57b62bc6a071206d230aa03a5046169573ce221b270a6"
+    },
+    {
+      "name": "30-mobile-wiki.jpg",
+      "route": "/orgs/maple/repos/reading-room/wiki/home",
+      "viewport": "mobile",
+      "sha256": "421020eb638284e96f05fa9a00d6f0609fa27d56716437963089b9bbf548a68d"
+    },
+    {
+      "name": "31-mobile-wiki-editor.jpg",
+      "route": "/orgs/maple/repos/reading-room/wiki/home/edit",
+      "viewport": "mobile",
+      "sha256": "ed4a5ac07fb0f996ad1b6b8e782d29877344951fe3d452a3890262b5058cae76"
+    },
+    {
+      "name": "32-mobile-settings.jpg",
+      "route": "/orgs/maple/repos/reading-room/settings",
+      "viewport": "mobile",
+      "sha256": "6393431085f7dfa05a89043396b31cfacf5795a77bfa853d1fdc8f899df33f60"
+    },
+    {
+      "name": "33-mobile-labels.jpg",
+      "route": "/orgs/maple/repos/reading-room/labels",
+      "viewport": "mobile",
+      "sha256": "ec361dcd2181d7385713fc4bf77ba789a73ca4c3129c25bc3141358e29f4f93a"
+    },
+    {
+      "name": "34-mobile-members.jpg",
+      "route": "/members/maple",
+      "viewport": "mobile",
+      "sha256": "87712830acacba94b34ecf4dcc0db7f19b3b00e8751db63e99ea08294f8bb380"
+    },
+    {
+      "name": "35-mobile-chat.jpg",
+      "route": "/chat/maple/general",
+      "viewport": "mobile",
+      "sha256": "c0916d0241501aeba4e55c2d03ee291834d02823051ed799a3bf6e2ffe700d54"
+    },
+    {
+      "name": "36-mobile-chat-drawer.jpg",
+      "route": "/chat/maple/general",
+      "viewport": "mobile",
+      "sha256": "837322ab83b28ec556a8fc5f68e8917702858b49b08bb70f677cdea88b27ae3d"
+    },
+    {
+      "name": "37-hostile-pr-comment.jpg",
+      "route": "/orgs/maple/repos/reading-room/pulls/60",
+      "viewport": "desktop",
+      "sha256": "c7928cc99cc1ada5bed40a1c1fd437d9ff10e6dfb37cc70c0c1f6a25e125f486"
+    },
+    {
+      "name": "19-public-landing.jpg",
+      "route": "/",
+      "viewport": "desktop",
+      "sha256": "272e3954da2c13f90352538927dfaa662ac1a829e26ba3a78fe903ab4945ebac"
+    },
+    {
+      "name": "38-mobile-public-landing.jpg",
+      "route": "/",
+      "viewport": "mobile",
+      "sha256": "8f0b0acca73cbd20ac3574edba719168afe93ffb58967dc3fee3a75f414a02ce"
+    }
+  ],
+  "keyboard": {
+    "reached": {
+      "skipLink": true,
+      "rail": true,
+      "sidebar": true,
+      "globalHeader": true,
+      "repoTabs": true,
+      "prTabs": true
+    },
+    "stops": 90,
+    "arrows": {
+      "Repository": [
+        "Pull requests",
+        "Wiki",
+        "Settings",
+        "Code",
+        "Issues"
+      ],
+      "Pull request": [
+        "Activity\n3",
+        "Commits",
+        "Checks",
+        "Changes\n2",
+        "Activity\n3"
+      ]
+    },
+    "shiftTab": {
+      "from": "",
+      "to": "Upload evidence"
+    }
+  },
+  "contrastColors": {
+    "--background": [
+      16,
+      17,
+      20
+    ],
+    "--card": [
+      23,
+      25,
+      30
+    ],
+    "--popover": [
+      30,
+      32,
+      38
+    ],
+    "--foreground": [
+      238,
+      240,
+      245
+    ],
+    "--muted-foreground": [
+      165,
+      170,
+      181
+    ],
+    "--tertiary-foreground": [
+      150,
+      156,
+      168
+    ],
+    "--primary": [
+      143,
+      174,
+      255
+    ],
+    "--primary-foreground": [
+      16,
+      19,
+      26
+    ],
+    "--link": [
+      156,
+      195,
+      255
+    ],
+    "--border": [
+      104,
+      108,
+      117
+    ],
+    "--ring": [
+      161,
+      187,
+      255
+    ]
+  },
+  "contrastFailures": [],
+  "contrast": {
+    "--foreground on --background": 16.56,
+    "--muted-foreground on --background": 8.11,
+    "--tertiary-foreground on --background": 6.85,
+    "--foreground on --card": 15.42,
+    "--muted-foreground on --card": 7.55,
+    "--tertiary-foreground on --card": 6.38,
+    "--foreground on --popover": 14.28,
+    "--muted-foreground on --popover": 6.99,
+    "--tertiary-foreground on --popover": 5.91,
+    "--link on --background": 10.49,
+    "--primary-foreground on --primary": 8.55,
+    "--border on --background": 3.59,
+    "--ring on --background": 9.95
+  },
+  "resize": {
+    "offset": "0000000000000000_0000000000000002",
+    "sameDocument": true
+  },
+  "mobileLineage": {
+    "/organizations/maple": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/maple/reading-room": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/maple/reading-room/tree/main/apps": {
+      "inStack": true,
+      "screens": 3
+    },
+    "/maple/reading-room/blob/main/apps/web/product.ts": {
+      "inStack": true,
+      "screens": 5
+    },
+    "/maple/reading-room/history/main": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/orgs/maple/repos/reading-room/issues": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/orgs/maple/repos/reading-room/issues/visual-capstone": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/orgs/maple/repos/reading-room/pulls": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/orgs/maple/repos/reading-room/pulls/60": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/orgs/maple/repos/reading-room/pulls/60/changes": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/orgs/maple/repos/reading-room/wiki/home": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/orgs/maple/repos/reading-room/wiki/home/edit": {
+      "inStack": true,
+      "screens": 3
+    },
+    "/orgs/maple/repos/reading-room/settings": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/orgs/maple/repos/reading-room/labels": {
+      "inStack": true,
+      "screens": 2
+    },
+    "/members/maple": {
+      "inStack": true,
+      "screens": 1
+    },
+    "/chat/maple/general": {
+      "shell": true,
+      "main": true,
+      "trigger": true,
+      "sidebar": true
+    }
+  },
+  "internalScroll": {
+    "prDiff": true,
+    "fileContentOverflowX": {
+      "overflowX": "auto",
+      "scrollWidth": 510,
+      "clientWidth": 356
+    }
+  },
+  "navigationStack": {
+    "screensAtRoot": 1,
+    "screensAfterPush": 3,
+    "screensAfterPop": 2,
+    "reducedMotionDistinct": [
+      "matrix(1, 0, 0, 1, 401.7, 0)",
+      "matrix(1, 0, 0, 1, 0, 0)"
+    ],
+    "settledTransform": "matrix(1, 0, 0, 1, 0, 0)",
+    "motionAllowedIntermediateFrames": 29,
+    "afterBackControl": "/maple/reading-room/tree/main",
+    "afterHistoryBack": "/maple/reading-room/tree/main",
+    "deepScreens": 5
+  },
+  "chatDrawer": {
+    "closedBefore": true,
+    "focusMovedIn": true,
+    "closedByEscape": true,
+    "focusReturned": true,
+    "openedByKeyboard": true,
+    "navigatedFromDrawer": "/organizations/maple",
+    "closedOnNavigation": true
+  },
+  "negative": {
+    "loading": "repo home while projections are held",
+    "/maple/mobile-kit": "empty",
+    "/orgs/maple/repos/mobile-kit/wiki": "empty",
+    "/orgs/maple/repos/mobile-kit/labels": "empty",
+    "/orgs/maple/repos/mobile-kit/issues": "empty",
+    "/orgs/maple/repos/mobile-kit/pulls": "empty",
+    "/maple/unknown-repo": "unknown",
+    "/lost/deep/trail": "unknown",
+    "/orgs/maple/repos/reading-room/wiki/missing-page": "unknown",
+    "unreachable": "every /api and /registry request aborted"
+  },
+  "hostileMarkdown": {
+    "issue-body": {
+      "regions": 1,
+      "adapterWrapped": true,
+      "unsafe": [],
+      "pwned": null,
+      "orphanMarkdownViews": 0,
+      "boldSurvived": true
+    },
+    "pr-comment": {
+      "regions": 1,
+      "adapterWrapped": true,
+      "unsafe": [],
+      "pwned": null,
+      "orphanMarkdownViews": 0,
+      "boldSurvived": true
+    },
+    "wiki-page": {
+      "regions": 1,
+      "adapterWrapped": true,
+      "unsafe": [],
+      "pwned": null,
+      "orphanMarkdownViews": 0,
+      "boldSurvived": true
+    },
+    "chat-message": {
+      "regions": 1,
+      "adapterWrapped": true,
+      "unsafe": [],
+      "pwned": null,
+      "orphanMarkdownViews": 0,
+      "boldSurvived": true
+    }
+  },
+  "journeyConsoleErrors": [],
+  "journeyPageErrors": [],
+  "negativeStateConsoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ]
+}

@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E5-T15** — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(builder working)*
+1. **E5-T15** — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(awaiting independent critic)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -112,7 +112,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [x] `512` [E5-T12](epic-5-the-meadow/E5-T12-negotiation-replay-harness/readme.md) — "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation" *(deps: E5-T07, E5-T10)*
 - [x] `513` [E5-T13](epic-5-the-meadow/E5-T13-issue-to-merge/readme.md) — "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases" *(deps: E5-T08, E5-T11, E5-T12)*
 - [x] `514` [E5-T14](epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md) — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" **[CAPSTONE]** *(deps: E5-T13)*
-- [~] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14)*
+- [?] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14)*
 
 ## Epic 6 — `epic-6-the-loop`
 

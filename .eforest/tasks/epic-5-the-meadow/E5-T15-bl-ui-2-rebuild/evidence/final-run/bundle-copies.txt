@@ -1,0 +1,9 @@
+maps=502
+@brett_lamy/docstream <- @brett_lamy+docstream@1.5.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@_a7b160f9e3181955de29ae6bfe289a03 chunks=3
+@brett_lamy/docstream-editor <- @brett_lamy+docstream-editor@1.5.0_8f8df79f19972bca8f8621bb725cb1ee chunks=1
+@brett_lamy/ui <- @brett_lamy+ui@2.0.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1__8dbb8b2b36c2d6a5269961c381b49315 chunks=1
+PACKAGE @brett_lamy/docstream copies=1 @brett_lamy+docstream@1.5.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@_a7b160f9e3181955de29ae6bfe289a03
+PACKAGE @brett_lamy/docstream-editor copies=1 @brett_lamy+docstream-editor@1.5.0_8f8df79f19972bca8f8621bb725cb1ee
+PACKAGE @brett_lamy/ui copies=1 @brett_lamy+ui@2.0.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1__8dbb8b2b36c2d6a5269961c381b49315
+E5_T15_BUNDLE_SINGLE_COPY_OK
+EXIT=0
