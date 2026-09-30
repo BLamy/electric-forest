@@ -3,7 +3,7 @@ id: E5-T15
 epic: 5
 title: "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks"
 priority: 515
-status: pending
+status: in-progress
 depends_on: [E5-T14]
 estimate: L
 capstone: false
