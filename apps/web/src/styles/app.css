@@ -234,7 +234,9 @@
   --accent: rgb(151 158 174 / 10%);
   --accent-foreground: #eef0f5;
   --destructive: #ef6374;
-  --border: #15171c;
+  /* WCAG 1.4.11: borders are the only boundary of fields, Box lists and panels, so the
+     token clears 3:1 on --background (3.59), --card (3.34), --popover (3.09), --muted (3.41). */
+  --border: #686c75;
   --input: rgb(151 158 174 / 8%);
   --ring: #a1bbff;
   --radius: 0.625rem;
