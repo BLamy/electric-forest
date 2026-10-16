@@ -51,16 +51,19 @@ function safeAssetPath(root: string, pathname: string): string | null {
  */
 export const SESSION_SHELL_MARKER = '<meta name="ef-session" content="replayed">';
 
+/** Only browser-verify harnesses install the optional proof receipt endpoint. */
+export const PROOF_RECEIPT_SHELL_MARKER = '<meta name="ef-proof-receipt" content="available">';
+
 async function fileResponse(
   path: string,
   transform?: (text: string) => string,
+  cacheControl = "no-store",
 ): Promise<Response | null> {
   try {
     const bytes = await readFile(path);
-    const immutableAsset = path.includes(`${sep}assets${sep}`) && extname(path) !== ".html";
     return new Response(transform === undefined ? bytes : transform(bytes.toString("utf8")), {
       headers: {
-        "cache-control": immutableAsset ? "public, max-age=31536000, immutable" : "no-store",
+        "cache-control": cacheControl,
         "content-type": CONTENT_TYPES[extname(path)] ?? "application/octet-stream",
       },
     });
@@ -73,6 +76,8 @@ async function fileResponse(
 export interface SpaHandlerOptions extends WhoamiOptions {
   readonly webRoot: string;
   readonly retainLoginTarget?: boolean;
+  /** Test-only marker for the browser-verify proof receipt endpoint. */
+  readonly proofReceiptAvailable?: boolean;
 }
 
 export async function spaResponse(request: Request, options: SpaHandlerOptions): Promise<Response> {
@@ -121,11 +126,18 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
     return notFound();
   }
   if (url.pathname.startsWith("/assets/") && extname(url.pathname) !== "") {
-    const asset = await fileResponse(assetPath);
+    const asset = await fileResponse(assetPath, undefined, "public, max-age=31536000, immutable");
     return asset ?? notFound();
   }
   const shell = await fileResponse(resolve(options.webRoot, "index.html"), (html) =>
-    identity === null ? html : html.replace(/<head>/i, `<head>${SESSION_SHELL_MARKER}`),
+    identity === null
+      ? html
+      : html.replace(
+          /<head>/i,
+          `<head>${SESSION_SHELL_MARKER}${
+            options.proofReceiptAvailable ? PROOF_RECEIPT_SHELL_MARKER : ""
+          }`,
+        ),
   );
   return shell ?? notFound();
 }

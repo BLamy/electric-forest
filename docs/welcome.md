@@ -59,7 +59,7 @@ Losing every index loses nothing.
 | Understand why there is no `.git`                | [Streams, not git](/docs/concepts/streams-not-git) |
 | See how issues, PRs and files are the same thing | [One model](/docs/concepts/one-model)              |
 | Learn how work gets proven, not just claimed     | [Evidence doctrine](/docs/doctrine/evidence)       |
-| See what is built and what is next               | [The roadmap](/roadmap)                            |
+| See what is built and what is next               | [Roadmap](/roadmap)                                |
 
 {% hint style="success" %}
 These docs are Markdown files in the repository's `docs/` folder, rendered by

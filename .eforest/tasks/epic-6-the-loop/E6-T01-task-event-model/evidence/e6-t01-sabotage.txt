@@ -1,0 +1,10 @@
+# Sabotage sentinel: E6_T01_CRITIC_ROLE_GUARD removed from packages/tasks/src/reducer.ts, packages/tasks rebuilt,
+# then: vitest run packages/tasks/test/refusals.test.ts packages/platform/test/tasks.test.ts (exit 1).
+# Only the builder-verifies scenario goes red (real door accepted 202 instead of 409; pure validator raised nothing).
+5:     × refuses every frozen scenario before append with byte-identical head and dump 243ms
+7:     × refuses builder-verifies before append and leaves head and digest untouched 4ms
+9:⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+12:AssertionError: builder-verifies: {"ok":true,"actor":"builder-birch","identityOffset":"-1","offset":"0000000000000000_0000000000000005"}: expected 202 to be 409 // Object.is equality
+31:AssertionError: expected undefined to be an instance of TaskRefusalError
+43: Test Files  2 failed (2)
+44:      Tests  2 failed | 27 passed (29)

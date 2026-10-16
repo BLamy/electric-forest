@@ -24,6 +24,8 @@ import { PullList } from "./blocks/github/pulls-tab.js";
 import { IssueList } from "./blocks/github/issues-tab.js";
 import type { PullRequestTab } from "./blocks/github/pull-request.js";
 import { LIVE_FOLLOW } from "./live.js";
+import { useRefreshRegistry, useRegistryProjection } from "./registry-context.js";
+import { repositorySearchHref } from "./repository-search.js";
 
 const LabelManagement = lazy(async () => {
   const module = await import("./label-management.js");
@@ -143,15 +145,9 @@ function registryRows(state: RegistryState, selectedOrg?: string): readonly Repo
 }
 
 function RegistryBrowse(props: { readonly ui: Layout; readonly org?: string }): React.JSX.Element {
-  const [refreshNonce, setRefreshNonce] = useState(0);
+  const refreshRegistry = useRefreshRegistry();
   const [syncStatus, setSyncStatus] = useState<string | undefined>(undefined);
-  const projection = useStreamReducer<RegistryState>({
-    apiPath: "/registry/me",
-    streamId: "__registry__",
-    reducerId: "registry",
-    ...LIVE_FOLLOW,
-    cacheKey: `registry:${props.org ?? "me"}:${String(refreshNonce)}`,
-  });
+  const projection = useRegistryProjection();
   const user = useWhoami();
   const personal = personalAccount(user);
   const scope = props.org ?? personal?.namespace;
@@ -181,6 +177,11 @@ function RegistryBrowse(props: { readonly ui: Layout; readonly org?: string }): 
     recent === undefined ? [] : [recent, ...rows.filter((row) => row !== recent)].slice(0, 3);
   const error = projection.status.startsWith("error:");
   const openFirst = (): void => {
+    const exact = repositorySearchHref(query, registryRows(projection.state));
+    if (exact !== undefined) {
+      navigate(exact);
+      return;
+    }
     const first = visibleRows[0];
     if (first !== undefined)
       navigate(`/${encodeURIComponent(first.org)}/${encodeURIComponent(first.repo)}`);
@@ -311,7 +312,7 @@ function RegistryBrowse(props: { readonly ui: Layout; readonly org?: string }): 
               data-testid="registry-sync"
               onPress={() => {
                 setSyncStatus("Registry projection refreshed from the authorized durable stream.");
-                setRefreshNonce((value) => value + 1);
+                refreshRegistry();
               }}
             >
               Sync from GitHub

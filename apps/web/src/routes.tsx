@@ -3,7 +3,7 @@ import { IdentityRegion } from "./identity.js";
 import { ForestShell } from "./components/shell/ForestShell.js";
 import { repositoryRoute } from "./components/shell/repository-route.js";
 import { preloadPrDetail, preloadPrDetailWhenIdle } from "./prs/preload.js";
-import { hasReplayedSession, publicSitePage } from "./site/session.js";
+import { hasProofReceipt, hasReplayedSession, publicSitePage } from "./site/session.js";
 import { isHosted } from "./preview.js";
 
 interface ProofReceiptValue {
@@ -142,6 +142,7 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
   const session = hasReplayedSession();
+  const proofReceipt = hasProofReceipt();
   const site = publicSitePage(pathname, session);
   const inRepository = site === undefined && repositoryRoute(pathname) !== undefined;
   // Optimistically load the PR detail chunk (@pierre/diffs + Shiki): right away inside a
@@ -169,7 +170,7 @@ export function AppRoutes(): React.JSX.Element {
         diagnostics={
           <>
             <IdentityRegion />
-            <ProofReceipt />
+            {proofReceipt ? <ProofReceipt /> : null}
           </>
         }
       />

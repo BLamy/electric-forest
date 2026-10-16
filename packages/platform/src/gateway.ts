@@ -23,7 +23,9 @@ import {
   isRepoLabelsStreamId,
   labelInitialState,
   labelReducer,
+  repoIssuesStreamId,
   repoLabelsStreamId,
+  replayIssueCatalog,
   LabelRefusalError,
   LabelSchemaError,
   LabelUnknownActionError,
@@ -82,6 +84,7 @@ import {
   compareOffsets,
   isEvent,
   OFFSET_BEFORE_FIRST,
+  stateDigest,
   type Event,
   type Offset,
 } from "@eforest/protocol";
@@ -222,10 +225,51 @@ import { isOrgRosterStreamId, validateOrgRosterDispatch } from "./org/validators
 import { checkAgentRunPayload, validateAgentRunDispatch } from "./agents/run-validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 import {
+  ProjectRefusalError,
+  ProjectSchemaError,
+  ProjectUnknownActionError,
+  fenceTaskLoopAction,
+  guardTaskLoopAction,
+  isProjectActionType,
+  isProjectStreamId,
+  projectInitialStateForStream,
+  projectProjectionBytes,
+  projectReducer,
+  projectStreamId,
+  type ProjectActorRole,
+  type ProjectFenceAppender,
+  type ProjectRecordResolver,
+} from "./loop/index.js";
+import {
+  TaskRefusalError,
+  TaskSchemaError,
+  TaskUnknownActionError,
+  isTaskActionType,
+  projectQueue,
+  queueDigest,
+  queueProof,
+  renderQueueMarkdown,
+  taskInitialStateForStream,
+  taskReducer,
+  type QueueProof,
+  type QueueSourceStream,
+  type TaskBranchRef,
+  type TaskRole,
+} from "@eforest/tasks";
+import type { RunAppendEvent } from "@eforest/loop";
+import {
   IssueBoardMaterializer,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
 import { PrIndexMaterializer } from "./pr/index-store.js";
+import {
+  AgentRunCoordinator,
+  AgentRunError,
+  type AgentRunAcquireInput,
+  type AgentRunEventInput,
+  type AgentRunLeaseInput,
+  type AgentRunMutationInput,
+} from "./agent-runs.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -246,6 +290,8 @@ export interface PlatformGatewayOptions {
   readonly boardCacheDir?: IssueBoardMaterializerOptions["cacheDir"];
   /** E5-T06 merge machinery. Production resolves these to StreamFs repositories. */
   readonly prMerge?: PlatformPrMergeOptions;
+  /** E6-T07 durable agent-run lease and evidence protocol. */
+  readonly agentRuns?: AgentRunCoordinator;
 }
 
 export interface PlatformPrMergeOptions {
@@ -554,7 +600,27 @@ async function validateIssueDispatch(
   issueBoards: IssueBoardMaterializer,
   issueSource?: IssueEnvelopeSource,
   streams?: StreamAdapter,
+  actorRole?: ProjectActorRole,
 ): Promise<Offset | undefined> {
+  const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
+  if (identity === null) throw new IssueSchemaError();
+  if (isTaskActionType(event.type)) {
+    if (streams === undefined) throw new TaskUnknownActionError();
+    await validateTaskDispatch(records, event, streamId, actionValidators, streams, actorRole);
+    try {
+      await issueBoards.assertIssueDeclared(
+        identity[1]!,
+        identity[2]!,
+        streamId,
+        offsetForOrdinal(0),
+      );
+    } catch (error) {
+      throw new IssueRefusalError(
+        error instanceof Error ? error.message : "repo-issues/migration-required",
+      );
+    }
+    return undefined;
+  }
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
   const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
@@ -569,8 +635,6 @@ async function validateIssueDispatch(
     ...(issueSource === undefined ? {} : { issueSource }),
   });
   if (streams !== undefined) await validateIssueLinkCitation(streams, streamId, action);
-  const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
-  if (identity === null) throw new IssueSchemaError();
   if (action.type === "issue.labeled" || action.type === "issue.unlabeled") {
     const labels = await issueBoards.labelsForRepo(identity[1]!, identity[2]!);
     const labelId = (action.payload as { readonly label: string }).label;
@@ -915,6 +979,171 @@ async function validateEvidenceDispatch(
   });
 }
 
+function taskEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): Event {
+  try {
+    return evidenceEventWithoutServerMetadata(value, fallbackOffset);
+  } catch {
+    throw new TaskSchemaError();
+  }
+}
+
+/**
+ * E6-T03: offset-stamped, metadata-stripped records of any stream the loop guard or a
+ * queue proof needs to replay (`project:`, `repo-issues:`, `issue:`); `undefined` when
+ * the stream does not exist. A record the task/evidence normalizer rejects is passed
+ * through untouched so the target reducer can treat it as its own no-op.
+ */
+function projectRecordResolver(streams: StreamAdapter): ProjectRecordResolver {
+  return async (targetStreamId) => {
+    let values: readonly unknown[];
+    try {
+      values = await streams.read(targetStreamId);
+    } catch (error) {
+      if (isDurableNotFound(error)) return undefined;
+      throw error;
+    }
+    return values.map((record, index) => {
+      try {
+        return evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index));
+      } catch {
+        return record as Event;
+      }
+    });
+  };
+}
+
+/**
+ * E6-T03 fence appender: compare-and-append at the project stream's durable sequence.
+ * The stream is minted on demand; a lost race (`Stream-Seq` conflict) reports `false`.
+ */
+function projectFenceAppender(streams: StreamAdapter): ProjectFenceAppender {
+  return async (streamId, event, ordinal) => {
+    if (ordinal === 0) {
+      try {
+        await streams.create(streamId);
+      } catch (error) {
+        if (!isDurableExistsConflict(error)) throw error;
+      }
+    }
+    const sequence = offsetForOrdinal(ordinal);
+    try {
+      await streams.append(streamId, event, { sequence, applicationOffset: sequence });
+      return true;
+    } catch (error) {
+      if (isDurableConflict(error)) return false;
+      throw error;
+    }
+  };
+}
+
+/** Role of the dispatching credential: an owner/admin web session is human, a grant is an agent. */
+function projectActorRoleOf(decision: AuthzDecision | undefined): ProjectActorRole | undefined {
+  if (decision === undefined || !decision.allowed) return undefined;
+  switch (decision.basis) {
+    case "repo-owner":
+    case "org-owner":
+    case "membership:admin":
+      return "human";
+    case "grant:write":
+      return "agent";
+    default:
+      return undefined;
+  }
+}
+
+async function validateProjectDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+  actorRole: ProjectActorRole | undefined,
+): Promise<void> {
+  const normalized = records.map((record, index) =>
+    taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const nextOffset = offsetForOrdinal(normalized.length);
+  const action = taskEventWithoutServerMetadata(event, nextOffset);
+  const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
+  await actionValidators.validate(action, {
+    streamId,
+    state: normalized.reduce(projectReducer, projectInitialStateForStream(streamId)),
+    headOffset: normalized.at(-1)
+      ? ((normalized.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: normalized,
+    ...(typeof stampedActor === "string" ? { actor: stampedActor } : {}),
+    ...(actorRole === undefined ? {} : { actorRole }),
+    resolveRecords: projectRecordResolver(streams),
+  });
+}
+
+async function validateTaskDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+  actorRole: ProjectActorRole | undefined,
+): Promise<void> {
+  const normalized = records.map((record, index) =>
+    taskEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const nextOffset = offsetForOrdinal(normalized.length);
+  const action = taskEventWithoutServerMetadata(event, nextOffset);
+  const stampedActor = (event.payload as { readonly actor?: unknown }).actor;
+  // E6-T03: the project guard decides first (a read; nothing is written), so a paused,
+  // complete, or invalid loop refuses the claim, the verdict, the start, and the rework
+  // with the project's own reason before any task-state validation.
+  const resolveProject = projectRecordResolver(streams);
+  await guardTaskLoopAction(streamId, event.type, resolveProject);
+  await actionValidators.validate(action, {
+    streamId,
+    state: normalized.reduce(taskReducer, taskInitialStateForStream(streamId)),
+    headOffset: normalized.at(-1)
+      ? ((normalized.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: normalized,
+    ...(typeof stampedActor === "string" ? { actor: stampedActor } : {}),
+    resolveStream: async (targetStreamId): Promise<EvidenceResolvedStream | undefined> => {
+      if (!isEvidenceStreamId(targetStreamId)) return undefined;
+      let values: readonly unknown[];
+      try {
+        values = await streams.read(targetStreamId);
+      } catch (error) {
+        if (isDurableNotFound(error)) return undefined;
+        throw error;
+      }
+      const targetRecords = values.map((record, index) =>
+        evidenceEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+      );
+      return { records: targetRecords, state: reduceEvidenceState(targetStreamId, targetRecords) };
+    },
+  });
+  // Only an otherwise-accepted task loop event is fenced: the guard decision is
+  // committed as a `project.fenced` record at the project stream's durable sequence,
+  // bound to the record this event becomes (stream, offset, type, writer identity), so a
+  // pause racing from another gateway process has exactly one winner and a refused
+  // dispatch never writes anywhere (see `fenceTaskLoopAction`).
+  const writer = (event.payload as { readonly writer?: { sub?: unknown; seq?: unknown } }).writer;
+  await fenceTaskLoopAction(
+    streamId,
+    event.type,
+    {
+      offset: nextOffset,
+      writer: {
+        sub: typeof writer?.sub === "string" ? writer.sub : "",
+        seq: typeof writer?.seq === "number" ? writer.seq : 0,
+      },
+    },
+    { actor: typeof stampedActor === "string" ? stampedActor : "", role: actorRole ?? "agent" },
+    action.ts,
+    { resolve: resolveProject, appendAt: projectFenceAppender(streams) },
+  );
+}
+
 interface BranchProjectionMetadata {
   readonly name: string;
   readonly streamId: string;
@@ -1244,6 +1473,36 @@ function failure(status: number, code: ErrorCode, reason: string): Response {
   return json(status, { error: { code, reason } });
 }
 
+function bodyRecord(value: unknown): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("request body must be an object");
+  }
+  return value as Record<string, unknown>;
+}
+
+function bodyString(body: Record<string, unknown>, key: string): string {
+  const value = body[key];
+  if (typeof value !== "string" || value.length === 0) throw new TypeError(`missing ${key}`);
+  return value;
+}
+
+function bodyOffset(body: Record<string, unknown>, key: string): Offset | "-1" {
+  const value = body[key];
+  if (typeof value !== "string" || (value !== "-1" && !isWellFormedOffset(value))) {
+    throw new TypeError(`invalid ${key}`);
+  }
+  return value as Offset | "-1";
+}
+
+async function requestBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    return bodyRecord(await request.json());
+  } catch (error) {
+    if (error instanceof TypeError && error.message.startsWith("missing ")) throw error;
+    throw new TypeError("malformed_json", { cause: error });
+  }
+}
+
 /**
  * Map a pure refusal to its transport response. Private-unauthorized and
  * nonexistent targets share one refusal (`authz/not-found`), so their
@@ -1364,6 +1623,7 @@ export class PlatformGateway {
   private readonly issueBoards: IssueBoardMaterializer;
   private readonly prIndexes: PrIndexMaterializer;
   private readonly prMerge: PlatformPrMergeOptions | undefined;
+  private readonly agentRuns: AgentRunCoordinator;
   private readonly prMergeTails = new Map<string, Promise<void>>();
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
@@ -1382,6 +1642,7 @@ export class PlatformGateway {
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
     this.actionValidators = options.actionValidators ?? registerApplicationValidators();
     this.prMerge = options.prMerge;
+    this.agentRuns = options.agentRuns ?? new AgentRunCoordinator({ streams: options.streams });
     this.issueBoards =
       options.issueBoards ??
       new IssueBoardMaterializer({
@@ -1404,10 +1665,13 @@ export class PlatformGateway {
       case "chat":
       case "members":
       case "agents":
-      case "agent-runs":
         return this.chatRoute(request, url);
       case "registry":
         return this.registryRoute(request, url);
+      case "agent-runs":
+        return /^\/api\/agent-runs\/(?:leases|runs)(?:\/|$)/.test(url.pathname)
+          ? this.agentRunRoute(request, url)
+          : this.chatRoute(request, url);
       default:
         return failure(404, "invalid_request", "not_found");
     }
@@ -1415,6 +1679,169 @@ export class PlatformGateway {
 
   terminate(): void {
     this.views?.terminate?.();
+  }
+
+  /**
+   * E6-T07's authenticated runtime door. Agent-run requests intentionally do not
+   * reuse the general dispatch classifier: a capability is narrower than a grant,
+   * and every branch/evidence/verdict mutation is checked against the replayed lease.
+   */
+  private async agentRunRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "POST" && request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    let context: AuthorizationContext;
+    try {
+      context = await this.authzContext(request.headers.get("authorization"));
+    } catch (error) {
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      return failure(401, "unauthorized", "malformed_token");
+    }
+    if (
+      context.principal.kind !== "identified" ||
+      context.principal.sub.length === 0 ||
+      typeof context.principal.grantId !== "string" ||
+      context.principal.grantId.length === 0
+    ) {
+      return failure(401, "unauthorized", "missing_agent_credential");
+    }
+    const actor = context.principal.sub;
+    try {
+      const parts = url.pathname.split("/").filter(Boolean);
+      if (request.method === "POST" && url.pathname === "/api/agent-runs/leases") {
+        const body = await requestBody(request);
+        const input: AgentRunAcquireInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: bodyString(body, "runId"),
+          actor,
+          role: body.role as TaskRole,
+          branch: body.branch as TaskBranchRef,
+          projectOffset: bodyOffset(body, "projectOffset"),
+          queueProof: body.queueProof as QueueProof,
+        };
+        return canonicalResponse(201, await this.agentRuns.acquire(input));
+      }
+
+      if (parts[2] === "leases" && parts.length === 4 && request.method === "POST") {
+        throw new AgentRunError("invalid_request");
+      }
+      if (parts[2] === "leases" && parts.length === 5 && request.method === "POST") {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunLeaseInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          leaseId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+        };
+        const action = parts[4];
+        if (action === "heartbeat")
+          return canonicalResponse(200, await this.agentRuns.heartbeat(input));
+        if (action === "release")
+          return canonicalResponse(200, await this.agentRuns.release(input));
+        if (action === "revoke") {
+          return canonicalResponse(
+            200,
+            await this.agentRuns.revoke({ ...input, reason: bodyString(body, "reason") }),
+          );
+        }
+        throw new AgentRunError("invalid_request");
+      }
+
+      if (
+        parts[2] === "runs" &&
+        parts.length === 5 &&
+        parts[4] === "events" &&
+        request.method === "POST"
+      ) {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunEventInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+          expectedOffset: bodyOffset(body, "expectedOffset"),
+          event: body.event as RunAppendEvent,
+        };
+        return canonicalResponse(200, await this.agentRuns.appendRunEvent(input));
+      }
+
+      if (
+        parts[2] === "runs" &&
+        parts.length === 5 &&
+        parts[4] === "mutations" &&
+        request.method === "POST"
+      ) {
+        const body = await requestBody(request);
+        const token = request.headers.get("x-eforest-capability");
+        if (token === null || token.length === 0)
+          throw new AgentRunError("capability/invalid-token");
+        const input: AgentRunMutationInput = {
+          org: bodyString(body, "org"),
+          repo: bodyString(body, "repo"),
+          taskId: bodyString(body, "taskId"),
+          runId: decodeURIComponent(parts[3]!),
+          actor,
+          token,
+          expectedOffset: bodyOffset(body, "expectedOffset"),
+          event: body.event as RunAppendEvent,
+          operationId: bodyString(body, "operationId"),
+          target: body.target as AgentRunMutationInput["target"],
+          stream: bodyString(body, "stream"),
+          expectedTargetOffset: bodyOffset(body, "expectedTargetOffset"),
+          mutation: body.mutation as Event,
+        };
+        return canonicalResponse(200, await this.agentRuns.appendMutation(input));
+      }
+
+      if (parts[2] === "runs" && parts.length === 4 && request.method === "GET") {
+        const org = url.searchParams.get("org");
+        const repo = url.searchParams.get("repo");
+        const taskId = url.searchParams.get("taskId");
+        if (org === null || repo === null || taskId === null) {
+          throw new TypeError("missing run identity query");
+        }
+        return canonicalResponse(
+          200,
+          await this.agentRuns.inspect({
+            org,
+            repo,
+            taskId,
+            runId: decodeURIComponent(parts[3]!),
+          }),
+        );
+      }
+      return failure(404, "invalid_request", "not_found");
+    } catch (error) {
+      if (error instanceof AgentRunError) {
+        const status =
+          error.code === "missing_agent_credential"
+            ? 401
+            : error.code === "invalid_request"
+              ? 400
+              : 409;
+        return json(status, { error: { code: "agent_run_refused", reason: error.code } });
+      }
+      if (error instanceof SyntaxError || error instanceof TypeError) {
+        return failure(
+          400,
+          "invalid_request",
+          error instanceof TypeError ? error.message : "malformed_json",
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -2275,10 +2702,23 @@ export class PlatformGateway {
       }
       if (
         !namespaceEvent &&
+        isTaskActionType(parsed.event.type) &&
+        !isIssueStreamId(parsed.streamId)
+      ) {
+        throw new TaskUnknownActionError();
+      }
+      if (
+        !namespaceEvent &&
         isLabelActionType(parsed.event.type) &&
         !isRepoLabelsStreamId(parsed.streamId)
       ) {
         throw new LabelUnknownActionError();
+      }
+      if (
+        !namespaceEvent &&
+        isProjectActionType(parsed.event.type) !== isProjectStreamId(parsed.streamId)
+      ) {
+        throw new ProjectUnknownActionError();
       }
       if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
         throw new PrUnknownActionError();
@@ -2341,8 +2781,21 @@ export class PlatformGateway {
       // that recovery shortcut, after authz and unknown-action classification;
       // the lane still owns full envelope and workflow validation before append.
       if (isIssueStreamId(parsed.streamId)) {
-        if (!isIssueActionType(parsed.event.type)) throw new IssueUnknownActionError();
+        if (!isIssueActionType(parsed.event.type) && !isTaskActionType(parsed.event.type))
+          throw new IssueUnknownActionError();
         if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
+      }
+      if (isIssueStreamId(parsed.streamId) && isTaskActionType(parsed.event.type)) {
+        // A loop event needs an opened task: refuse before the writer lane touches a
+        // stream that does not exist yet, with the same reason replay would give.
+        let existing: readonly unknown[];
+        try {
+          existing = await this.streams.read(parsed.streamId);
+        } catch (error) {
+          if (isDurableNotFound(error)) throw new TaskRefusalError("task/not-opened");
+          throw error;
+        }
+        if (existing.length === 0) throw new TaskRefusalError("task/not-opened");
       }
       if (isPrStreamId(parsed.streamId)) {
         if (parsed.event.type === "pr.merge") {
@@ -2596,8 +3049,8 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
-          if (isAgentRunStreamId(parsed.streamId)) {
-            // A run log is minted by its own `agent.run.started`.
+          if (isAgentRunStreamId(parsed.streamId) || isProjectStreamId(parsed.streamId)) {
+            // Run logs and project state streams are minted on their first admitted event.
             try {
               await this.streams.create(parsed.streamId);
             } catch (error) {
@@ -2628,10 +3081,21 @@ export class PlatformGateway {
                 this.issueBoards,
                 parsed.issueSource,
                 this.streams,
+                projectActorRoleOf(repoDecision),
               );
             }
             if (isRepoLabelsStreamId(parsed.streamId)) {
               await validateLabelDispatch(records, stamped, parsed.streamId, this.actionValidators);
+            }
+            if (isProjectStreamId(parsed.streamId)) {
+              await validateProjectDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.streams,
+                projectActorRoleOf(repoDecision),
+              );
             }
             if (isChatStreamId(parsed.streamId)) {
               await validateChatDispatch(records, stamped, parsed.streamId, this.actionValidators);
@@ -2738,7 +3202,13 @@ export class PlatformGateway {
             error instanceof EvidenceRefusalError ||
             error instanceof ChatUnknownActionError ||
             error instanceof ChatSchemaError ||
-            error instanceof ChatRefusalError
+            error instanceof ChatRefusalError ||
+            error instanceof TaskUnknownActionError ||
+            error instanceof TaskSchemaError ||
+            error instanceof TaskRefusalError ||
+            error instanceof ProjectUnknownActionError ||
+            error instanceof ProjectSchemaError ||
+            error instanceof ProjectRefusalError
           ) {
             throw error;
           }
@@ -2847,7 +3317,9 @@ export class PlatformGateway {
         error instanceof PrUnknownActionError ||
         error instanceof LabelUnknownActionError ||
         error instanceof EvidenceUnknownActionError ||
-        error instanceof ChatUnknownActionError
+        error instanceof ChatUnknownActionError ||
+        error instanceof TaskUnknownActionError ||
+        error instanceof ProjectUnknownActionError
       ) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
@@ -2858,9 +3330,16 @@ export class PlatformGateway {
         error instanceof PrMergeSchemaError ||
         error instanceof LabelSchemaError ||
         error instanceof EvidenceSchemaError ||
-        error instanceof ChatSchemaError
+        error instanceof ChatSchemaError ||
+        error instanceof TaskSchemaError ||
+        error instanceof ProjectSchemaError
       ) {
         return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof ProjectRefusalError) {
+        return json(409, {
+          error: { class: "validator-rejected", reason: error.reason, project: error.at },
+        });
       }
       if (error instanceof ChatRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
@@ -2884,6 +3363,9 @@ export class PlatformGateway {
         return json(409, { error: { class: "validator-rejected", reason: error.code } });
       }
       if (error instanceof EvidenceRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof TaskRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
@@ -3234,16 +3716,42 @@ export class PlatformGateway {
     const applicationEvents = segments.length === 5 && segments[4] === "events";
     const boardRoute = segments.length === 4 && segments[3] === "board";
     const pullsRoute = segments.length === 4 && segments[3] === "pulls";
+    const projectRoute = segments.length === 4 && segments[3] === "project";
+    const queueRoute = segments.length === 4 && segments[3] === "queue";
     const blobRoute = segments.length >= 6 && segments[4] === "blob";
     if (
       (!applicationEvents &&
         homeRegion === undefined &&
         !blobRoute &&
         !boardRoute &&
-        !pullsRoute) ||
+        !pullsRoute &&
+        !projectRoute &&
+        !queueRoute) ||
       segments.some((s) => s === "")
     ) {
       return failure(404, "invalid_request", "not_found");
+    }
+    if (projectRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryProjectRoute(request, org, repo, trustedContext);
+    }
+    if (queueRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryQueueRoute(request, org, repo, trustedContext);
     }
     if (boardRoute) {
       let org: string;
@@ -3751,6 +4259,113 @@ export class PlatformGateway {
       ),
       identityOffset: decision.identityOffset,
       basis: decision.basis,
+    });
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/project` (E6-T03): the replayed `project/v1` state of
+   * `project:<org>/<repo>`, its digest, and the exact `.eforest/project.json` bytes it
+   * projects to. Read-only; the only way to change it is a dispatch on that stream.
+   */
+  private async repositoryProjectRoute(
+    request: Request,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    // A malformed name is a 404 before any state is touched (the pure decision refuses
+    // the malformed target; an allowing test oracle must not turn it into a 500).
+    if (!isAuthzName(org) || !isAuthzName(repo))
+      return failure(404, "invalid_request", "not_found");
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    const streamId = projectStreamId(org, repo);
+    const records = (await projectRecordResolver(this.streams)(streamId)) ?? [];
+    const state = records.reduce(projectReducer, projectInitialStateForStream(streamId));
+    return json(200, {
+      streamId,
+      offset: state.head,
+      digest: stateDigest(state),
+      state,
+      projection: projectProjectionBytes(state),
+    });
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/queue` (E6-T04): the task queue derived by replaying the
+   * repository issue catalog and every task stream it lists — queue digest, every source
+   * head consumed, per-task blocked reasons, the in-flight task, `nextEligible` with its
+   * proof, and the `QUEUE.md` rendering. Read-only and rebuilt on every call: there is no
+   * queue table to drift from task truth.
+   */
+  private async repositoryQueueRoute(
+    request: Request,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    if (!isAuthzName(org) || !isAuthzName(repo))
+      return failure(404, "invalid_request", "not_found");
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    const resolve = projectRecordResolver(this.streams);
+    const catalogStream = repoIssuesStreamId(org, repo);
+    const catalogRecords = (await resolve(catalogStream)) ?? [];
+    const tasks: QueueSourceStream[] = [];
+    let catalog: ReturnType<typeof replayIssueCatalog> | undefined;
+    try {
+      catalog = replayIssueCatalog(catalogStream, catalogRecords);
+    } catch {
+      catalog = undefined;
+    }
+    for (const stream of Object.keys(catalog?.issues ?? {}).sort()) {
+      tasks.push({ stream, records: (await resolve(stream)) ?? [] });
+    }
+    const projection = projectQueue({
+      catalog: { stream: catalogStream, records: catalogRecords },
+      tasks,
+    });
+    return json(200, {
+      streamId: catalogStream,
+      offset: projection.sources.catalog.offset,
+      digest: queueDigest(projection),
+      projection,
+      proof: queueProof(projection),
+      markdown: renderQueueMarkdown(projection),
     });
   }
 

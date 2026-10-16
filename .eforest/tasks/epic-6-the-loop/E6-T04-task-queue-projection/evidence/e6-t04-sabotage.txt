@@ -1,0 +1,27 @@
+E6_T04_SABOTAGE sentinel=E6_T04_BARE_EPIC_GUARD mutation="bare-epic dependency satisfied by any verified task of the epic (guard set to false)"
+--- focused suite against sabotaged build ---
+     × selects the same task and renders the same tuples and markdown for every valid frozen graph 119ms
+     × agrees with build_queue.py on random DAGs 735ms
+     × derives the queue from the catalog and task streams, cites every head, and re-decides at the new head 657ms
+     × holds every frozen graph to its committed projection, markdown, and digest 8ms
+     × satisfies a bare epic dependency only by that epic's unique verified capstone 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: e6-t04-endpoint.txt: expected 'E6_T04_QUEUE {"catalog":{"offset":"-1…' to be 'E6_T04_QUEUE {"catalog":{"offset":"-1…' // Object.is equality
+AssertionError: bare-epic-noncapstone-first: expected '{"gate":null,"nextUp":["E2-T01","E1-T…' to be '{"gate":null,"nextUp":["E1-T02"],"sel…' // Object.is equality
+AssertionError: dag-13: expected '{"gate":"E1-T02","nextUp":["E2-T01","…' to be '{"gate":"E1-T02","nextUp":["E3-T01"],…' // Object.is equality
+AssertionError: bare-epic-noncapstone-first: queue.json: expected '{"decision":{"inFlight":null,"kind":"…' to be '{"decision":{"inFlight":null,"kind":"…' // Object.is equality
+AssertionError: expected false to be true // Object.is equality
+      Tests  5 failed | 11 passed (16)
+vitest-exit=1
+--- evidence script against sabotaged build ---
+E6_T04_FIXTURE catalog=repo-issues:maple/loom@0000000000000000_0000000000000006 tasks=7 next=E2-T01
+E6_T04_DIGEST 1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec
+E6_T04_QUEUE_MD sha256=dae6f93c83215b4a195c56558968c5e034eaf1d19ac01ac5cfc906516c66cce3 bytes=1252
+E6_T04_REBUILD processes=3 shuffled=2 byte-identical=true digest=1b4e09ecdf1c69bda02161d0a83f231fa542c67a77c7bfaceac88bd669d775ec
+AssertionError [ERR_ASSERTION]: bare-epic-noncapstone-first
++ '{"decision":{"inFlight":null,"kind":"eligible","nextEligible":"E2-T01"},"org":"maple","repo":"loom","sources":{"catalog":{"offset":"0000000000000000_00000000
+  actual: '{"decision":{"inFlight":null,"kind":"eligible","nextEligible":"E2-T01"},"org":"maple","repo":"loom","sources":{"catalog":{"offset":"0000000000000000_
+evidence-exit=1
+--- make verify-E6-T04 against sabotaged build ---
+make: *** [_v-e6-t04] Error 1
+make-exit=2

@@ -1,0 +1,89 @@
+{
+  "name": "mixed-epics-interleaved-priority",
+  "valid": true,
+  "tasks": [
+    {
+      "id": "E1-T01",
+      "epic": 1,
+      "priority": "101",
+      "title": "Task E1-T01 does one thing",
+      "status": "verified",
+      "depends_on": [],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E1-T02",
+      "epic": 1,
+      "priority": "102",
+      "title": "Task E1-T02 does one thing",
+      "status": "verified",
+      "depends_on": [
+        "E1-T01"
+      ],
+      "estimate": "M",
+      "capstone": true
+    },
+    {
+      "id": "E2-T01",
+      "epic": 2,
+      "priority": "201",
+      "title": "Task E2-T01 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E1"
+      ],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E2-T02",
+      "epic": 2,
+      "priority": "150.25",
+      "title": "Task E2-T02 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E2-T01"
+      ],
+      "estimate": "M",
+      "capstone": false,
+      "queueJumpReason": "hotfix"
+    },
+    {
+      "id": "E2-T03",
+      "epic": 2,
+      "priority": "203",
+      "title": "Task E2-T03 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E2-T02"
+      ],
+      "estimate": "M",
+      "capstone": true
+    },
+    {
+      "id": "E3-T01",
+      "epic": 3,
+      "priority": "301",
+      "title": "Task E3-T01 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E2"
+      ],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E3-T02",
+      "epic": 3,
+      "priority": "302",
+      "title": "Task E3-T02 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E3-T01"
+      ],
+      "estimate": "M",
+      "capstone": true
+    }
+  ]
+}

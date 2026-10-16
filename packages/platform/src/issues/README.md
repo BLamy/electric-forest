@@ -55,3 +55,12 @@ byte-identical without weakening the seven-action envelope.
 Epic 6 may add event types only with an envelope version bump and regenerated
 goldens. Browser evidence is intentionally not applicable to this server/library
 module; the browser write path is E5-T04.
+
+## Sibling event family (E6-T01)
+
+A task is an issue with evidence, so an issue stream may also carry the loop family
+`task.*` (`@eforest/tasks`, reducer `tasks/v1`). The issue envelope, its seven-plus-one
+actions, and every issue golden are unchanged: the issue reducer and the issue board
+skip `task.*` records as deterministic no-ops (`isIssueSiblingEvent`), the dispatch door
+validates them with the task validator, and the same stream replays to two digests — the
+`issue` projection and the `tasks/v1` projection.

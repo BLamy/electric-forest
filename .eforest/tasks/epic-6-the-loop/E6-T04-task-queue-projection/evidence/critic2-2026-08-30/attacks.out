@@ -1,0 +1,32 @@
+--- P-cycle-2caps
+cycle-2caps {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E1-T01","E2-T01"]},{"reason":"capstone/multiple","refs":["E2"]}]} {"E1-T01":["dep/epic-multiple-capstones@E2"],"E2-T01":["dep/unverified:pending@E1-T01"],"E2-T02":[]}
+--- P-zero-cap: bare ref to capstone-less epic
+zero-cap-deadlock {"kind":"eligible","nextEligible":"E2-T01","inFlight":null} {"E1-T01":["dep/epic-no-capstone@E2"],"E2-T01":[]}
+zero-cap-but-startable {"kind":"eligible","nextEligible":"E2-T01","inFlight":null} {"E1-T01":["dep/epic-capstone-unverified:pending@E2"],"E2-T01":[],"E2-T02":[]}
+zero-cap-verified-epic (fixture shape) {"kind":"invalid","violations":[{"reason":"capstone/none-in-completed-epic","refs":["E2"]}]} {"E1-T01":["dep/epic-no-capstone@E2"],"E2-T01":["status/not-startable:verified@E2-T01"]}
+--- P-refuted-cap / implemented-cap
+cap-refuted-deps-ok {"kind":"rework","nextEligible":"E1-T01","inFlight":"E1-T01"} {"E1-T01":[],"E2-T01":["dep/epic-capstone-unverified:refuted@E1"]}
+cap-refuted-deps-unmet {"kind":"in-flight","nextEligible":null,"inFlight":"E1-T01"} {"E1-T01":["dep/epic-capstone-unverified:pending@E3"],"E2-T01":["dep/epic-capstone-unverified:refuted@E1"],"E3-T01":[]}
+cap-implemented {"kind":"in-flight","nextEligible":null,"inFlight":"E1-T01"} {"E1-T01":["status/not-startable:implemented@E1-T01"],"E2-T01":["dep/epic-capstone-unverified:implemented@E1"]}
+--- P-self-epic-noncap
+self-epic-noncap {"kind":"eligible","nextEligible":"E1-T02","inFlight":null} {"E1-T01":["dep/epic-capstone-unverified:pending@E1"],"E1-T02":[]}
+self-epic-noncap-cap-verified {"kind":"eligible","nextEligible":"E1-T01","inFlight":null} {"E1-T01":[],"E1-T02":["status/not-startable:verified@E1-T02"]}
+--- P-latent-deadlock
+latent-deadlock-active {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E2-T01","E3-T01"]}]} {"E1-T01":["status/not-startable:in-progress@E1-T01"],"E2-T01":["dep/epic-capstone-unverified:pending@E3"],"E3-T01":["dep/unverified:pending@E2-T01"]}
+latent-deadlock-active-verified {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E2-T01","E3-T01"]}]} {"E1-T01":["status/not-startable:verified@E1-T01"],"E2-T01":["dep/epic-capstone-unverified:pending@E3"],"E3-T01":["dep/unverified:pending@E2-T01"]}
+latent-deadlock-nocycle-active {"kind":"in-flight","nextEligible":null,"inFlight":"E1-T01"} {"E1-T01":["status/not-startable:in-progress@E1-T01"],"E2-T01":["dep/epic-no-capstone@E3"],"E3-T01":["dep/epic-capstone-unverified:pending@E2"]}
+refuted-unsatisfiable {"kind":"in-flight","nextEligible":null,"inFlight":"E1-T01"} {"E1-T01":["dep/epic-no-capstone@E2"],"E2-T01":["dep/epic-capstone-unverified:refuted@E1"]}
+refuted-unsatisfiable-nocap {"kind":"invalid","violations":[{"reason":"capstone/none-in-completed-epic","refs":["E2"]}]} {"E1-T01":["dep/epic-no-capstone@E2"],"E2-T01":["status/not-startable:verified@E2-T01"]}
+--- P-refuted-only
+refuted-only {"kind":"rework","nextEligible":"E1-T01","inFlight":"E1-T01"} {"E1-T01":[]}
+refuted-only-plus-verified {"kind":"rework","nextEligible":"E1-T02","inFlight":"E1-T02"} {"E1-T01":["status/not-startable:verified@E1-T01"],"E1-T02":[]}
+--- all verified / exhausted invariants
+all-verified-2-epics {"kind":"exhausted","nextEligible":null,"inFlight":null} {"E1-T01":["status/not-startable:verified@E1-T01"],"E2-T01":["status/not-startable:verified@E2-T01"]}
+all-verified-capless-epic {"kind":"invalid","violations":[{"reason":"capstone/none-in-completed-epic","refs":["E1"]}]} {"E1-T01":["status/not-startable:verified@E1-T01"],"E2-T01":["status/not-startable:verified@E2-T01"]}
+--- misc
+deadlock-plus-missing (ordering of reasons) {"kind":"invalid","violations":[{"reason":"dep/missing","refs":["E9-T01"]},{"reason":"dep/epic-missing","refs":["E7"]}]} {"E1-T01":["dep/missing@E9-T01"],"E2-T01":["dep/epic-missing@E7"]}
+deadlock-only-through-two-capstone-epic {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E1-T01","E2-T02"]},{"reason":"capstone/multiple","refs":["E2"]}]} {"E1-T01":["dep/epic-multiple-capstones@E2"],"E2-T01":[],"E2-T02":["dep/epic-capstone-unverified:pending@E1"]}
+epic-ref-to-capstone-and-verified-noncap {"kind":"eligible","nextEligible":"E1-T02","inFlight":null} {"E1-T01":["status/not-startable:verified@E1-T01"],"E1-T02":[],"E2-T01":["dep/epic-capstone-unverified:pending@E1"]}
+split-suffix-id {"kind":"invalid","violations":[{"reason":"spec/unparseable","refs":["E1-T02a"]}]} {"E1-T01":["status/not-startable:verified@E1-T01"],"E1-T02":[]}
+cycle-with-active-outside {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E2-T01","E2-T02"]}]} {"E1-T01":["status/not-startable:in-progress@E1-T01"],"E2-T01":["dep/unverified:pending@E2-T02"],"E2-T02":["dep/unverified:pending@E2-T01"]}
+self-epic-two-caps {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E1-T01"]},{"reason":"capstone/multiple","refs":["E1"]}]} {"E1-T01":["dep/epic-multiple-capstones@E1"],"E1-T02":[]}

@@ -234,3 +234,35 @@ describe("shared reducer registry", () => {
     ).toThrow("malformed status transition");
   });
 });
+
+describe("tasks/v1 registry binding", () => {
+  it("binds the task projection to issue streams by id and replays the frozen fixture", async () => {
+    const { readFileSync } = await import("node:fs");
+    const evidence = new URL(
+      "../../../.eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/evidence/",
+      import.meta.url,
+    );
+    const streamId = "issue:maple/reading-room/E6-T01-golden";
+    const definition = requireReducer("tasks/v1", streamId);
+    expect(definition.matchesStream("pr:maple/reading-room/1")).toBe(false);
+    expect(reducerForStream(streamId)?.id).toBe("issue");
+    const log = readFileSync(new URL("e6-t01-task.jsonl", evidence), "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Parameters<typeof definition.reduce>[1]);
+    const expected = readFileSync(new URL("e6-t01-task.digest", evidence), "utf8").trim();
+    expect(replayWithReducer(definition, log, streamId).digest).toBe(expected);
+    const stamped = log.map((record) => ({
+      ...record,
+      payload: {
+        ...(record.payload as object),
+        actor: "alice",
+        writer: { v: 1, sub: "alice", seq: 1 },
+      },
+    }));
+    expect(replayWithReducer(definition, stamped, streamId).digest).toBe(expected);
+    expect(replayWithReducer(requireReducer("issue", streamId), log, streamId).digest).not.toBe(
+      expected,
+    );
+  });
+});

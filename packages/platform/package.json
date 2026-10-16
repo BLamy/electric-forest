@@ -22,11 +22,13 @@
     "@eforest/evidence": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/issues": "workspace:*",
+    "@eforest/loop": "workspace:*",
     "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/reducers": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
+    "@eforest/streamfs": "workspace:*",
+    "@eforest/tasks": "workspace:*"
   },
   "devDependencies": {
     "@eforest/server": "workspace:*"

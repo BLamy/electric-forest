@@ -1,0 +1,40 @@
+{
+  "name": "refuted-blocked-deps",
+  "valid": true,
+  "tasks": [
+    {
+      "id": "E1-T01",
+      "epic": 1,
+      "priority": "101",
+      "title": "Task E1-T01 does one thing",
+      "status": "pending",
+      "depends_on": [],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E1-T02",
+      "epic": 1,
+      "priority": "102",
+      "title": "Task E1-T02 does one thing",
+      "status": "refuted",
+      "depends_on": [
+        "E1-T01"
+      ],
+      "estimate": "M",
+      "capstone": false
+    },
+    {
+      "id": "E1-T03",
+      "epic": 1,
+      "priority": "103",
+      "title": "Task E1-T03 does one thing",
+      "status": "pending",
+      "depends_on": [
+        "E1-T02"
+      ],
+      "estimate": "M",
+      "capstone": true
+    }
+  ]
+}

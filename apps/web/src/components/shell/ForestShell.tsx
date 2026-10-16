@@ -28,6 +28,7 @@ import { repositoryRoute } from "./repository-route.js";
 import { repositoryStack, routeCrumbs, routeTitle } from "./stack.js";
 import { StreamDevtools } from "./StreamDevtools.js";
 import { LIVE_FOLLOW } from "../../live.js";
+import { RegistryProvider } from "../../registry-context.js";
 
 /**
  * The Electric Forest frame at every width, composed from the discord-clone block (the
@@ -45,12 +46,15 @@ function workspaceColor(name: string): string {
   return WORKSPACE_COLORS[hash % WORKSPACE_COLORS.length]!;
 }
 
-function useRegistry() {
+function useRegistry(refreshNonce: number) {
   return useStreamReducer<RegistryState>({
     apiPath: "/registry/me",
     streamId: "__registry__",
     reducerId: "registry",
     ...LIVE_FOLLOW,
+    // One shared tail survives route remounts; idle registry polls stay bounded.
+    followWaitMs: 10_000,
+    cacheKey: `registry:me:${String(refreshNonce)}`,
   });
 }
 
@@ -447,7 +451,8 @@ export function ForestShell(props: {
   /** Renders the routed page for a path (each NavigationStack level is a route). */
   readonly render: (pathname: string) => ReactNode;
 }): React.JSX.Element {
-  const registry = useRegistry();
+  const [registryRefresh, setRegistryRefresh] = useState(0);
+  const registry = useRegistry(registryRefresh);
   const user = useWhoami();
   const personal = personalAccount(user);
   const orgs = Object.keys(registry.state.orgs)
@@ -605,7 +610,7 @@ export function ForestShell(props: {
   const orgName = personalActive ? personal?.name : org;
 
   return (
-    <>
+    <RegistryProvider value={registry} onRefresh={() => setRegistryRefresh((value) => value + 1)}>
       <DiscordClone
         workspaces={workspaces}
         workspace={personalActive ? "__personal__" : (org ?? null)}
@@ -766,7 +771,7 @@ export function ForestShell(props: {
         onClose={() => setSheet("none")}
         title="New channel"
       >
-        {org === undefined ? null : (
+        {org === undefined || sheet !== "create-channel" ? null : (
           <CreateChannelForm
             org={org}
             onComplete={(channel) => {
@@ -781,12 +786,14 @@ export function ForestShell(props: {
         onClose={() => setSheet("none")}
         title="Search repositories"
       >
-        <RepositorySearch rows={rows} onClose={() => setSheet("none")} />
+        {sheet === "search" ? (
+          <RepositorySearch rows={rows} onClose={() => setSheet("none")} />
+        ) : null}
       </AppSheet>
       <AppSheet open={sheet === "account-menu"} onClose={() => setSheet("none")} title="Account">
         <AccountMenu user={user} onClose={() => setSheet("none")} />
       </AppSheet>
-    </>
+    </RegistryProvider>
   );
 }
 

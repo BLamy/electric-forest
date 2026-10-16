@@ -36,6 +36,7 @@ import { chatCatalogReducerDefinition, chatChannelReducerDefinition } from "./ch
 import { membersReducerDefinition } from "./members.js";
 import { agentsReducerDefinition } from "./agents.js";
 import { agentRunReducerDefinition } from "./agent-runs.js";
+import { tasksReducerDefinition } from "@eforest/tasks";
 
 export * from "./registry.js";
 export * from "./repo-home.js";
@@ -46,6 +47,7 @@ export * from "./chat.js";
 export * from "./members.js";
 export * from "./agents.js";
 export * from "./agent-runs.js";
+export { tasksReducerDefinition } from "@eforest/tasks";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -163,6 +165,7 @@ const definitions: readonly ReducerDefinition[] = [
   issueReducerDefinition,
   issueBoardReducerDefinition,
   labelReducerDefinition,
+  tasksReducerDefinition,
   prReducerDefinition,
   prIndexReducerDefinition,
   evidenceReducerDefinition,

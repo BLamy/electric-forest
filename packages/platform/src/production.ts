@@ -8,6 +8,7 @@ import { OidcClient, OidcTransactions } from "./auth/oidc.js";
 import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
 import { PlatformGateway, type PlatformGatewayOptions } from "./gateway.js";
+import { AgentRunCoordinator } from "./agent-runs.js";
 import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
@@ -30,6 +31,8 @@ export interface PlatformEnvironment {
   readonly EF_SESSION_SECRET: string;
   readonly EF_SESSION_TTL: string;
   readonly EFOREST_SERVER_URL: string;
+  readonly EF_OIDC_PROXY_TARGET?: string;
+  readonly EF_PUBLIC_ORIGIN?: string;
   readonly EF_WEB_ROOT?: string;
   readonly EF_RESEND_URL?: string;
   readonly EF_RESEND_API_KEY?: string;
@@ -44,6 +47,7 @@ export interface PlatformProductionRuntime {
   readonly bearer: BearerVerifier;
   readonly namespaces: NamespaceDispatcher;
   readonly gateway: PlatformGateway;
+  readonly agentRuns: AgentRunCoordinator;
   readonly registry: RegistryProjector;
   readonly rateLimiter: FixedWindowRateLimiter;
   readonly app: PlatformWebApp;
@@ -146,6 +150,17 @@ export function readPlatformEnvironment(
       required(environment, "EFOREST_SERVER_URL"),
       "EFOREST_SERVER_URL",
     ),
+    ...(environment.EF_OIDC_PROXY_TARGET === undefined
+      ? {}
+      : {
+          EF_OIDC_PROXY_TARGET: absoluteHttpUrl(
+            environment.EF_OIDC_PROXY_TARGET,
+            "EF_OIDC_PROXY_TARGET",
+          ),
+        }),
+    ...(environment.EF_PUBLIC_ORIGIN === undefined
+      ? {}
+      : { EF_PUBLIC_ORIGIN: absoluteHttpUrl(environment.EF_PUBLIC_ORIGIN, "EF_PUBLIC_ORIGIN") }),
     ...(webRoot === undefined ? {} : { EF_WEB_ROOT: webRoot }),
     ...(boardCacheDir === undefined ? {} : { EF_BOARD_CACHE_DIR: boardCacheDir }),
     ...(environment.EF_RESEND_URL === undefined
@@ -185,6 +200,11 @@ export async function createPlatformProductionRuntime(
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
+  const agentRuns = new AgentRunCoordinator({
+    streams,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.random === undefined ? {} : { random: options.random }),
+  });
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     ...(options.now === undefined ? {} : { now: options.now }),
@@ -237,6 +257,7 @@ export async function createPlatformProductionRuntime(
     streams,
     namespaces,
     registry,
+    agentRuns,
     rateLimiter,
     prMerge: {
       resolveBranch: async (streamId) => {
@@ -275,6 +296,10 @@ export async function createPlatformProductionRuntime(
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
     ...(webRoot === undefined ? {} : { webRoot }),
+    ...(config.EF_OIDC_PROXY_TARGET === undefined
+      ? {}
+      : { oidcProxyTarget: config.EF_OIDC_PROXY_TARGET }),
+    ...(config.EF_PUBLIC_ORIGIN === undefined ? {} : { publicOrigin: config.EF_PUBLIC_ORIGIN }),
     ...(config.EF_RESEND_URL === undefined || config.EF_RESEND_API_KEY === undefined
       ? {}
       : {
@@ -309,6 +334,7 @@ export async function createPlatformProductionRuntime(
     bearer,
     namespaces,
     gateway,
+    agentRuns,
     registry,
     rateLimiter,
     app,

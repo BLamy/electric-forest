@@ -1,0 +1,13 @@
+chain-epics-1000 {"kind":"eligible","nextEligible":"E1-T01","inFlight":null} 70ms
+chain-epics-cyclic-1000 {"kind":"invalid","violations":[{"reason":"dep/cycle","refs":["E1-T01","E10-T01","E100-T01","E1000-T
+chain-epics-5000 {"kind":"eligible","nextEligible":"E1-T01","inFlight":null} 2066ms
+chain-epics-cyclic-5000 THREW RangeError: Maximum call stack size exceeded
+chain-epics-20000 {"kind":"eligible","nextEligible":"E1-T01","inFlight":null} 37204ms
+chain-epics-cyclic-20000 THREW RangeError: Maximum call stack size exceeded
+big-7001 ok tasks=1000 decision={"kind":"rework","nextEligible":"E39-T12","inFlight":"E39-T12"} bare-epic-deps=426 warnings=0 635ms
+big-7002 ok tasks=1000 decision={"kind":"in-flight","nextEligible":null,"inFlight":"E37-T12"} bare-epic-deps=452 warnings=0 615ms
+big-7003 ok tasks=1000 decision={"kind":"rework","nextEligible":"E24-T07","inFlight":"E24-T07"} bare-epic-deps=464 warnings=0 625ms
+big-7004 ok tasks=1000 decision={"kind":"in-flight","nextEligible":null,"inFlight":"E24-T15"} bare-epic-deps=391 warnings=0 626ms
+big-7005 ok tasks=1000 decision={"kind":"in-flight","nextEligible":null,"inFlight":"E6-T02"} bare-epic-deps=422 warnings=0 639ms
+big-7006 ok tasks=1000 decision={"kind":"in-flight","nextEligible":null,"inFlight":"E7-T20"} bare-epic-deps=438 warnings=0 648ms
+BIG compared=6 mismatches=0 kinds={"rework":2,"in-flight":4}

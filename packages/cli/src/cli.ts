@@ -24,6 +24,7 @@ import { runWatch } from "./sync/uplink.js";
 import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 import { runWatchCommand } from "./sync/watch-command.js";
 import { reducerById, reducerForStream } from "@eforest/reducers";
+import { projectReducerDefinition } from "@eforest/platform";
 import { runSessionCapture, runSessionReplay } from "./session/dump.js";
 
 const REPLAY_USAGE =
@@ -36,6 +37,8 @@ const MERGE_USAGE =
   "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)";
 
 function reducerSpecifier(value: string): string {
+  // E6-T03: `project/v1` is registered by @eforest/platform, not the reducer registry.
+  if (value === projectReducerDefinition.id) return value;
   return reducerById(value) === undefined ? resolve(value) : value;
 }
 
