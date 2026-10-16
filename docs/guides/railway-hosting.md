@@ -113,20 +113,33 @@ mode, fixture credentials or seed. It checks `production-artifact.json` against 
 emitted runtime/web byte before opening the private store or public listener. Runtime
 configuration must use the following public values and a fresh dedicated volume:
 
-For the dedicated `electric-forest` service, set **Railway Config File** to the absolute
-repository path `/railway.production.toml`. This config selects `Dockerfile.production`
-and `node packages/platform/dist/src/hosted-bin.js`, a single replica, `/readyz` with a
-60-second timeout, three failure restarts, zero overlap and a 15-second drain. Keep the
-root `railway.toml` and `Dockerfile` attached to the preview service. Railway's
-[repository config overrides dashboard settings](https://docs.railway.com/config-as-code#using-a-custom-config-as-code-file);
-`RAILWAY_DOCKERFILE_PATH` alone does not override the root config's explicit preview
-Dockerfile selection. Confirm the selected config and Dockerfile in deployment details
+For the dedicated `electric-forest` service, leave **Railway Config File** empty and
+configure its supported service settings through the dashboard or Railway MCP:
+
+| Setting               | Production value                                |
+| --------------------- | ----------------------------------------------- |
+| Builder               | `DOCKERFILE`                                    |
+| Dockerfile path       | `Dockerfile.production`                         |
+| Start command         | `node packages/platform/dist/src/hosted-bin.js` |
+| Replicas              | One                                             |
+| Healthcheck / timeout | `/readyz` / 60 seconds                          |
+| Restart policy        | On failure, at most three retries               |
+| Overlap / drain       | Zero seconds / 15 seconds                       |
+
+Set the service variable `RAILWAY_DOCKERFILE_PATH=Dockerfile.production`, as described
+in Railway's [custom Dockerfile instructions](https://docs.railway.com/builds/dockerfiles#custom-dockerfile-path).
+Confirm the actual Dockerfile and start command in deployment details and build logs
 before accepting the release.
 
-Railway [deprecates Config as Code with a 2026-12-01 cutoff](https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code)
-for existing services; new services cannot opt into it. This is the existing service's
-immediate deployment repair. Broader hosting qualification must migrate its configuration
-to Railway Infrastructure as Code before that cutoff.
+The former root preview config is preserved byte-for-byte as
+`docs/examples/railway-preview-config.toml`; it is an example, outside Railway's default
+config discovery. Keep the root preview `Dockerfile` unchanged and the existing preview
+service pinned to its verified source revision. Do not restore a root `railway.toml` or
+`railway.json`: [repository config overrides service settings](https://docs.railway.com/config-as-code#understanding-config-source)
+and previously forced the preview recipe on production. Railway rejects Config as Code
+opt-in for new services; its [deprecation notice](https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code)
+also gives existing legacy configurations a 2026-12-01 cutoff. This service uses supported
+service settings rather than a custom Config as Code file.
 
 ```text
 EF_DEPLOYMENT_MODE=production
