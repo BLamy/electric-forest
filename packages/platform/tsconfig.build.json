@@ -8,6 +8,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["test/**/*.ts", "dist"],
   "references": [
+    { "path": "../server/tsconfig.build.json" },
     { "path": "../evidence/tsconfig.build.json" },
     { "path": "../issues/tsconfig.build.json" },
     { "path": "../meadow/tsconfig.build.json" },

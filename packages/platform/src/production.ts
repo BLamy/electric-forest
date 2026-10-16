@@ -125,6 +125,13 @@ function optionalAbsolutePath(value: string | undefined, name: string): string |
 export function readPlatformEnvironment(
   environment: NodeJS.ProcessEnv = process.env,
 ): PlatformEnvironment {
+  if (
+    environment.EF_DEPLOYMENT_MODE === "preview" ||
+    environment.EF_PREVIEW_AUTH !== undefined ||
+    environment.EF_PREVIEW_DATA_DIR !== undefined
+  ) {
+    throw new Error("preview configuration requires the explicit preview entrypoint");
+  }
   const webRoot = optionalAbsolutePath(environment.EF_WEB_ROOT, "EF_WEB_ROOT");
   const boardCacheDir = optionalAbsolutePath(environment.EF_BOARD_CACHE_DIR, "EF_BOARD_CACHE_DIR");
   return {

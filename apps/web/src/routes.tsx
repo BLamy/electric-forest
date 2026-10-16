@@ -4,6 +4,7 @@ import { ForestShell } from "./components/shell/ForestShell.js";
 import { repositoryRoute } from "./components/shell/repository-route.js";
 import { preloadPrDetail, preloadPrDetailWhenIdle } from "./prs/preload.js";
 import { hasReplayedSession, publicSitePage } from "./site/session.js";
+import { isPreview } from "./preview.js";
 
 interface ProofReceiptValue {
   readonly identityStream: string;
@@ -40,6 +41,7 @@ function isProofReceipt(value: unknown): value is ProofReceiptValue {
 function ProofReceipt(): React.JSX.Element | null {
   const [receipt, setReceipt] = useState<ProofReceiptValue>();
   useEffect(() => {
+    if (isPreview()) return;
     const controller = new AbortController();
     let retry: ReturnType<typeof setTimeout> | undefined;
     const load = async (): Promise<void> => {

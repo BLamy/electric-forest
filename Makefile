@@ -788,3 +788,12 @@ verify-task-board:
 	@pnpm task-board:check
 
 # --- end verify section ---
+.PHONY: verify-E12-T00
+verify-E12-T00:
+	@pnpm --filter @eforest/platform build
+	@pnpm --filter @eforest/cli build
+	@pnpm --filter @eforest/web build
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/preview.test.ts
+	@node tools/verify/e12_t00_preview.mjs
+	@node tools/verify/e12_t00_browser.mjs
+	@echo "verify-E12-T00: OK"

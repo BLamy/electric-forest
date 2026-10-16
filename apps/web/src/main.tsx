@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { AppRoutes } from "./routes.js";
+import { PreviewNotice } from "./preview.js";
 // One copy each: @brett_lamy/ui@2.0.0 imports the same @brett_lamy/docstream@1.5.0 sheet.
 import "@brett_lamy/ui/styles.css";
 import "@brett_lamy/docstream/styles.css";
@@ -8,4 +9,11 @@ import "./styles/app.css";
 
 const root = document.getElementById("root");
 if (root === null) throw new Error("missing application root");
-createRoot(root).render(<AppRoutes />);
+createRoot(root).render(
+  <div className="flex h-full min-h-0 flex-col">
+    <PreviewNotice />
+    <div className="min-h-0 flex-1">
+      <AppRoutes />
+    </div>
+  </div>,
+);

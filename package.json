@@ -16,6 +16,7 @@
     "ef": "node packages/cli/dist/src/bin.js",
     "scenario:e5-negotiation": "node --experimental-strip-types tools/scenarios/issue_to_merge_session.ts",
     "server:serve": "node packages/server/dist/src/bin.js",
+    "preview:serve": "node packages/platform/dist/src/preview-bin.js",
     "record:replay": "bash tools/replay/record-e2-t12.sh"
   },
   "devDependencies": {

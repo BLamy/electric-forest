@@ -396,7 +396,7 @@ function AccountMenu(props: {
           />
         </ListSection>
       </List>
-      <form action="/auth/logout" method="post" onSubmit={props.onClose}>
+      <form action="/auth/logout" method="post">
         <button className={cn(ghButton(), "w-full")} type="submit">
           Log out
         </button>
