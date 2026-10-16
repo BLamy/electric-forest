@@ -72,6 +72,7 @@ async function fileResponse(
 
 export interface SpaHandlerOptions extends WhoamiOptions {
   readonly webRoot: string;
+  readonly retainLoginTarget?: boolean;
 }
 
 export async function spaResponse(request: Request, options: SpaHandlerOptions): Promise<Response> {
@@ -88,6 +89,15 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
   // Emitted bundles are public because the public site is built from the same bundle;
   // they never carry a secret. Application routes remain behind the session gate.
   if (identity === null && !emittedAsset && !favicon && !isPublicSiteRoute(url.pathname)) {
+    if (options.retainLoginTarget === true) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: `/auth/login?next=${encodeURIComponent(`${url.pathname}${url.search}`)}`,
+          "cache-control": "no-store",
+        },
+      });
+    }
     return redirectToLogin();
   }
   if (favicon) {

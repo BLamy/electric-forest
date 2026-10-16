@@ -10,7 +10,7 @@ import { ChatAvatar } from "../blocks/chat/components/chat-avatar.js";
 import { MemberGroup, MemberItem, MemberList } from "../blocks/chat/components/member-list.js";
 import { AppSheet } from "../components/overlay.js";
 import { Box, ghButton, ghField, ghTextarea } from "../blocks/github/parts.js";
-import { isPreview } from "../preview.js";
+import { agentsDisabled, isPreview } from "../preview.js";
 import {
   registerAgentEvent,
   seedDefaultAgents,
@@ -310,6 +310,7 @@ function InviteForm(props: {
 
 export function MembersPage(props: { readonly org: string }): React.JSX.Element {
   const preview = isPreview();
+  const disabled = agentsDisabled();
   const humans = useHumanRoster(props.org);
   const agents = useAgentRoster(props.org);
   const [sheet, setSheet] = useState<"none" | "add" | "edit">("none");
@@ -336,7 +337,7 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
           <p className="m-0 text-muted-foreground">Workspace</p>
           <h1 className="m-0 text-[20px] font-semibold">{props.org} · members</h1>
         </div>
-        {!preview && roster.length === 0 && agents.status !== "loading" ? (
+        {!disabled && roster.length === 0 && agents.status !== "loading" ? (
           <Button
             className={ghButton()}
             data-testid="seed-agents"
@@ -354,10 +355,11 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
           + Add member
         </Button>
       </header>
-      {preview ? (
-        <p data-testid="preview-agents-off">
-          Agent execution and external integrations are disabled in this public preview. Agent
-          configuration is unavailable.
+      {disabled ? (
+        <p data-testid={preview ? "preview-agents-off" : "hosted-agents-off"}>
+          Agent execution and external integrations are disabled
+          {preview ? " in this public preview" : " on this deployment"}. Agent configuration is
+          unavailable.
         </p>
       ) : null}
       {seedError === undefined ? null : (
@@ -434,8 +436,8 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
         ) : null}
         {roster.length === 0 && agents.status !== "loading" ? (
           <p className="m-0 px-4 py-3 text-muted-foreground">
-            {preview
-              ? "Agent execution is off in this preview."
+            {disabled
+              ? "Agent execution is off on this deployment."
               : "No agents yet. Seed the default roster (@sol, @terra, @luna, @fable, @opus, @sonnet, @haiku) or register your own."}
           </p>
         ) : null}
@@ -464,7 +466,7 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
               <span className="rounded-full border border-border px-2 text-[12px] text-muted-foreground">
                 agent
               </span>
-              {canManage && !preview ? (
+              {canManage && !disabled ? (
                 <Button
                   className={ghButton()}
                   data-testid={`edit-agent-${agent.handle}`}
@@ -487,10 +489,10 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
             aria-label="Member kind"
             options={[
               { id: "human", label: "Human" },
-              ...(preview ? [] : [{ id: "agent", label: "Agent" }]),
+              ...(disabled ? [] : [{ id: "agent", label: "Agent" }]),
             ]}
             value={kind}
-            onChange={(id: string) => setKind(!preview && id === "agent" ? "agent" : "human")}
+            onChange={(id: string) => setKind(!disabled && id === "agent" ? "agent" : "human")}
           />
           {kind === "human" ? (
             <InviteForm

@@ -75,3 +75,4 @@ verify-E5-T01
 verify-E5-T02
 verify-E5-T03
 verify-E12-T00
+verify-E12-T10

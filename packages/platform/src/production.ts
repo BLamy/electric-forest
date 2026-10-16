@@ -17,6 +17,7 @@ import { createHarnessReplyGenerator } from "./agents/harness.js";
 import { AgentCapabilities, withAgentCapabilities } from "./agents/capabilities.js";
 import type { AgentWorkspaceOptions } from "./agents/workspace.js";
 import { createPlatformServer } from "./server.js";
+import type { PlatformWebAppOptions } from "./auth/routes.js";
 import {
   DEFAULT_PLATFORM_RATE_LIMIT,
   FixedWindowRateLimiter,
@@ -70,6 +71,8 @@ export interface PlatformProductionRuntimeOptions {
   readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
   /** Answer @mentions of registered agents with this generator (overrides the env switch). */
   readonly agentReplyGenerator?: AgentReplyGenerator;
+  /** Dedicated hosted composition; local emulator/device contracts remain defaults. */
+  readonly hosted?: PlatformWebAppOptions["hosted"];
 }
 
 /**
@@ -168,8 +171,17 @@ export async function createPlatformProductionRuntime(
     clientId: config.EF_OIDC_CLIENT_ID,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.oidcFetch === undefined ? {} : { fetch: options.oidcFetch }),
+    ...(options.hosted === undefined ? {} : { requireVerifiedEmail: true }),
   });
-  const transactions = new OidcTransactions(options.random);
+  const transactions = new OidcTransactions(
+    options.random,
+    options.hosted === undefined
+      ? undefined
+      : {
+          now: options.now ?? Date.now,
+          ttlMs: options.hosted.transactionTtlMs,
+        },
+  );
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
@@ -218,6 +230,7 @@ export async function createPlatformProductionRuntime(
           bearer,
           identity,
           ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
+          ...(options.hosted === undefined ? {} : { opaqueOnly: true }),
         }),
       agentCapabilities,
     ),
@@ -257,7 +270,7 @@ export async function createPlatformProductionRuntime(
     sessionSecret: config.EF_SESSION_SECRET,
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
     gateway,
-    deviceVerifier: bearer,
+    ...(options.hosted === undefined ? { deviceVerifier: bearer } : { hosted: options.hosted }),
     rateLimiter,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),

@@ -104,3 +104,61 @@ The ordinary production runtime rejects preview flags. Switching to it also requ
 the remaining E12 implementation and proof; adding API keys to this fixture entrypoint
 does not silently enable production mode. Use a fresh production data boundary rather
 than promoting publicly writable fixture identities and content into production state.
+
+## Authenticated private runtime
+
+Build `Dockerfile.production` with the exact full source revision as
+`EF_BUILD_REVISION`. This separate image starts `hosted-bin.js`; it inherits no preview
+mode, fixture credentials or seed. It checks `production-artifact.json` against every
+emitted runtime/web byte before opening the private store or public listener. Runtime
+configuration must use the following public values and a fresh dedicated volume:
+
+```text
+EF_DEPLOYMENT_MODE=production
+EF_PUBLIC_ORIGIN=https://electric-forest-production.up.railway.app
+EF_OIDC_ISSUER=https://dev-8qqftel4x1s5wed3.us.auth0.com/
+EF_OIDC_CLIENT_ID=H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk
+EF_DATA_DIR=/data/forest-private
+EF_WEB_ROOT=/app/apps/web/dist
+EF_AGENT_RESPONDER=off
+PORT=8080
+```
+
+The runtime generates one private session-signing key in `session.key` (0600) inside
+its data directory (0700). A synced initialization journal is resumable only before the
+first listener; the ready marker binds the key hash and issuer/client. A ready store
+with a missing key or required authority stream stops. Never replace the key, remove
+markers, or initialize production from the public preview volume. Do not set
+`EF_SESSION_SECRET`, `EFOREST_SERVER_URL`, preview flags, model/harness credentials or
+email integration keys on this service.
+
+Register exactly the following public application values in Auth0:
+
+- Callback: `https://electric-forest-production.up.railway.app/auth/callback`
+- Allowed logout URL: `https://electric-forest-production.up.railway.app/`
+- Allowed web origin: `https://electric-forest-production.up.railway.app`
+
+Sign in through `/auth/login`, verify the Auth0/private-data build indicator, then use
+**Add workspace** to create your own organization. **Account → CLI tokens** (also linked
+in the hosted banner) reaches the existing token page. Mint a dedicated local credential
+and supply it through T11's secure local setup; never put it in chat or shell arguments.
+This milestone accepts opaque web-minted `ef_cli_` grants at the gateway and refuses
+Auth0 ID/access JWTs as API credentials. Hosted device registration is disabled until
+its API/native client audience is separately qualified. Token scopes must still match
+the gateway's explicit authorization; T11 qualifies branch-scoped CLI write input.
+
+The initial limits exposed by `/api/build` are: 8 MiB buffered request body, 30 seconds
+through response headers for finite requests, 10-minute browser-bound login transactions,
+24-hour sessions (a shorter positive `EF_SESSION_TTL` is permitted), readiness within
+60 seconds and drain within 15 seconds. Hosted long-poll holds are at most 10 seconds;
+larger `waitMs` requests receive 400. Normal web follows use 1.5 seconds. Established
+SSE responses leave the header deadline after headers and are cancelled when their socket
+closes; shutdown closes listeners/connections and drains accepted handlers before closing
+the private provider. Cookie mutations require the exact configured Origin. CLI bearer
+dispatch has a separate policy and cannot fall back to a privileged cookie.
+
+`make verify-E12-T10` builds its complete dependency closure, runs focused preserved
+local/preview contracts, then drives an isolated dedicated issuer through the real hosted
+gateway/provider over HTTP and browser flows. Fixture keys/data stay in that task's ignored
+`work/` directory. Its synthetic proof does not establish the separate actual Auth0
+operator-login requirement or complete the remaining public-launch qualification tasks.

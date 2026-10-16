@@ -91,15 +91,18 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
   private readonly bearer: BearerVerifier;
   private readonly identity: IdentityStore;
   private readonly operationId: () => string;
+  private readonly opaqueOnly: boolean;
 
   constructor(options: {
     readonly bearer: BearerVerifier;
     readonly identity: IdentityStore;
     readonly operationId?: () => string;
+    readonly opaqueOnly?: boolean;
   }) {
     this.bearer = options.bearer;
     this.identity = options.identity;
     this.operationId = options.operationId ?? randomUUID;
+    this.opaqueOnly = options.opaqueOnly ?? false;
   }
 
   async verifyAuthorization(header: string | null): Promise<RequestIdentity> {
@@ -123,6 +126,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       };
     }
     const token = bearerToken(header);
+    this.admitTokenShape(token);
     const jwtShaped = token.split(".").length === 3;
     const verified = jwtShaped ? await this.bearer.verifyAuthorization(header) : undefined;
     const snapshot = await this.identity.snapshot();
@@ -220,6 +224,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     header: string | null,
   ): Promise<{ readonly grantId: string; readonly identity: RequestIdentity }> {
     const token = bearerToken(header);
+    this.admitTokenShape(token);
     // Device credentials are JWTs and must earn E2-T03 signature/claim validity
     // before the identity stream is consulted. Web-mint credentials are opaque.
     const jwtShaped = token.split(".").length === 3;
@@ -236,5 +241,11 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     if (verified === undefined) throw new UnauthorizedError("malformed_token");
     if (verified.sub !== grant.sub) throw new TokenRevokedError(snapshot.offset);
     return { grantId: grant.grantId, identity: verified };
+  }
+
+  private admitTokenShape(token: string): void {
+    if (this.opaqueOnly && !/^ef_cli_[A-Za-z0-9_-]{43}$/.test(token)) {
+      throw new UnauthorizedError("malformed_token");
+    }
   }
 }

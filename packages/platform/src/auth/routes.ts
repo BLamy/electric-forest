@@ -42,6 +42,8 @@ export interface PlatformWebAppOptions {
   readonly testProofReceipt?: () => Promise<unknown | undefined>;
   /** Outbound email (invites). Omitted → invites are recorded but never emailed. */
   readonly resend?: ResendConfig;
+  /** Explicit hosted policy; legacy local emulators retain their existing contract. */
+  readonly hosted?: { readonly origin: string; readonly transactionTtlMs: number };
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}): Response {
@@ -56,13 +58,14 @@ function refusal(reason: AuthRefusalReason): Response {
   return json(status, { error: { class: "auth-refused", reason } });
 }
 
-function redirect(location: string, cookie?: string): Response {
+function redirect(location: string, cookie?: string | readonly string[]): Response {
+  const headers = new Headers({ location, "cache-control": "no-store" });
+  for (const value of typeof cookie === "string" ? [cookie] : (cookie ?? [])) {
+    headers.append("set-cookie", value);
+  }
   return new Response(null, {
     status: 302,
-    headers: {
-      location,
-      ...(cookie === undefined ? {} : { "set-cookie": cookie }),
-    },
+    headers,
   });
 }
 
@@ -90,6 +93,52 @@ function shell(content: string): string {
 }
 
 const SAFE_NEXT_PATH = /^\/(?!\/)[A-Za-z0-9/_\-.~%]*$/;
+
+/** A return target remains a local path through URL parsing and repeated decoding. */
+export function safeLocalReturn(value: string | null): string | undefined {
+  if (value === null || value.length > 2_048) return undefined;
+  let decoded = value;
+  for (let count = 0; count < 4; count += 1) {
+    if (
+      !decoded.startsWith("/") ||
+      decoded.startsWith("//") ||
+      /[\\\s#]/.test(decoded) ||
+      [...decoded].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
+    )
+      return undefined;
+    if (/%(?:2f|5c|00|0a|0d)/i.test(decoded)) return undefined;
+    let next: string;
+    try {
+      next = decodeURIComponent(decoded);
+    } catch {
+      return undefined;
+    }
+    if (next === decoded) {
+      const url = new URL(value, "https://local.invalid");
+      return url.origin === "https://local.invalid" && !url.pathname.startsWith("//")
+        ? value
+        : undefined;
+    }
+    decoded = next;
+  }
+  return undefined;
+}
+
+const LOGIN_COOKIE = "ef_login";
+function loginBinding(cookie: string | null): string | undefined {
+  const values =
+    cookie
+      ?.split(";")
+      .map((part) => part.trim())
+      .filter((part) => part.startsWith(`${LOGIN_COOKIE}=`)) ?? [];
+  if (values.length !== 1) return undefined;
+  const value = values[0]!.slice(LOGIN_COOKIE.length + 1);
+  return /^[A-Za-z0-9_-]{43}$/.test(value) ? value : undefined;
+}
+
+function loginCookie(value: string, maxAge: number): string {
+  return `${LOGIN_COOKIE}=${value}; Path=/auth; HttpOnly; SameSite=Lax; Secure; Max-Age=${String(maxAge)}`;
+}
 
 function nextPathFromCookie(cookie: string | null): string | undefined {
   if (cookie === null) return undefined;
@@ -135,6 +184,7 @@ export class PlatformWebApp {
   private readonly webRoot: string | undefined;
   private readonly mailer: ResendMailer | undefined;
   private testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
+  private readonly hosted: PlatformWebAppOptions["hosted"];
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -156,6 +206,7 @@ export class PlatformWebApp {
     this.webRoot = options.webRoot;
     this.mailer = options.resend === undefined ? undefined : new ResendMailer(options.resend);
     this.testProofReceipt = options.testProofReceipt;
+    this.hosted = options.hosted;
   }
 
   installTestProofReceiptForHarness(receipt: () => Promise<unknown | undefined>): void {
@@ -166,7 +217,21 @@ export class PlatformWebApp {
   }
 
   async handle(request: Request): Promise<Response> {
-    const url = new URL(request.url);
+    let url = new URL(request.url);
+    if (this.hosted !== undefined) {
+      url = new URL(`${this.hosted.origin}${url.pathname}${url.search}`);
+      request = new Request(url, request);
+      if (!["GET", "HEAD"].includes(request.method)) {
+        const bearerDispatch =
+          url.pathname === "/api/dispatch" && request.headers.has("authorization");
+        if (!bearerDispatch && request.headers.get("origin") !== this.hosted.origin) {
+          return json(403, { error: { class: "origin-refused" } });
+        }
+        if (!bearerDispatch && request.headers.has("authorization")) {
+          return json(401, { error: { class: "web-session-required" } });
+        }
+      }
+    }
     try {
       if (url.pathname === "/__proof/e3-t02") {
         return await this.proofReceipt(request);
@@ -302,11 +367,27 @@ export class PlatformWebApp {
       sessionSecret: this.sessionSecret,
       sessionTtlMs: this.sessionTtlMs,
       now: this.now,
+      ...(this.hosted === undefined ? {} : { retainLoginTarget: true }),
     });
   }
 
   private async login(request: Request, url: URL): Promise<Response> {
     if (request.method !== "GET") return refusal("bad-state");
+    if (this.hosted !== undefined) {
+      const binding = Buffer.from(this.random(32)).toString("base64url");
+      const next = safeLocalReturn(url.searchParams.get("next"));
+      const transaction = this.transactions.create({
+        binding,
+        ...(next === undefined ? {} : { next }),
+      });
+      return redirect(
+        await this.oidc.authorizationUrl(`${this.hosted.origin}/auth/callback`, transaction),
+        [
+          loginCookie(binding, Math.floor(this.hosted.transactionTtlMs / 1_000)),
+          "ef_next=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+        ],
+      );
+    }
     const transaction = this.transactions.create();
     const callback = `${url.origin}/auth/callback`;
     const next = url.searchParams.get("next");
@@ -330,14 +411,21 @@ export class PlatformWebApp {
     const state = url.searchParams.get("state");
     const code = url.searchParams.get("code");
     if (!validQueryValue(state)) throw new AuthRefusedError("bad-state");
-    const transaction = this.transactions.consume(state);
+    const transaction = this.transactions.consume(
+      state,
+      this.hosted === undefined ? undefined : loginBinding(request.headers.get("cookie")),
+    );
     if (!validQueryValue(code)) throw new AuthRefusedError("bad-token");
     const claims = await this.oidc.exchangeCode(code, `${url.origin}/auth/callback`, transaction);
     const sessionId = Buffer.from(this.random(24)).toString("base64url");
     await this.identity.login(claims.sub, claims.email, sessionId);
-    // One Set-Cookie per response: the session cookie must never share a header with
-    // another cookie (the HTTP layer joins them). `ef_next` is consumed here and
-    // cleared by the next plain /auth/login; it expires on its own within ten minutes.
+    if (this.hosted !== undefined) {
+      return redirect(transaction.next ?? "/", [
+        signedSessionCookie(this.sessionSecret, sessionId, this.sessionTtlMs / 1_000, true),
+        loginCookie("", 0),
+        "ef_next=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+      ]);
+    }
     const next = nextPathFromCookie(request.headers.get("cookie"));
     return redirect(
       next ?? "/",
@@ -482,6 +570,9 @@ export class PlatformWebApp {
 
   private async logout(request: Request): Promise<Response> {
     if (request.method !== "POST") return refusal("bad-state");
+    if (this.hosted !== undefined && request.headers.has("authorization")) {
+      return json(401, { error: { class: "web-session-required" } });
+    }
     const parsed = parseSessionCookie(request.headers.get("cookie"), this.sessionSecret);
     if (parsed.kind === "malformed") return refusal("bad-token");
     if (parsed.kind === "valid") {
@@ -490,7 +581,12 @@ export class PlatformWebApp {
         await this.identity.endSession(parsed.sessionId);
       }
     }
-    return redirect("/", clearedSessionCookie());
+    return redirect(
+      "/",
+      this.hosted === undefined
+        ? clearedSessionCookie()
+        : [clearedSessionCookie(true), loginCookie("", 0)],
+    );
   }
 
   private async home(request: Request): Promise<Response> {
@@ -714,7 +810,10 @@ export class PlatformWebApp {
   private async cliTokensPage(request: Request): Promise<Response> {
     if (request.method !== "GET") return refusal("bad-state");
     const session = await this.webSession(request);
-    if (session instanceof Response) return session;
+    if (session instanceof Response)
+      return this.hosted === undefined
+        ? session
+        : redirect("/auth/login?next=%2Fsettings%2Fcli-tokens");
     const initial = this.cliTokenList(session.snapshot, session.sub);
     return html(
       shell(`<main data-auth-state="logged-in" data-identity-offset="${escape(session.snapshot.offset)}" data-identity-digest="${session.snapshot.digest}">

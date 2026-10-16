@@ -20,6 +20,7 @@ import { Oct, ghButton, ghField, userOf } from "../../blocks/github/parts.js";
 import { useChatCatalog } from "../../chat/useChat.js";
 import { useWhoami, type WhoamiUser } from "../../chat/useWhoami.js";
 import { seedDefaultAgents } from "../../members/useRoster.js";
+import { agentsDisabled } from "../../preview.js";
 import { RouteLink, navigate, repoSectionPath } from "../../navigation.js";
 import { personalAccount } from "../../personal-account.js";
 import { AppSheet } from "../overlay.js";
@@ -178,8 +179,7 @@ function CreateWorkspaceForm(props: { readonly onComplete: () => void }): React.
     setError(undefined);
     try {
       await dispatch({ type: "ns.org.create", payload: { v: 1, name }, ts: Date.now() });
-      // Every workspace starts with the default agent roster, as ordinary events.
-      await seedDefaultAgents(seedAgents, new Set());
+      if (!agentsDisabled()) await seedDefaultAgents(seedAgents, new Set());
       props.onComplete();
       navigate(`/organizations/${encodeURIComponent(name)}`);
     } catch (cause) {

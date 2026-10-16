@@ -13,12 +13,17 @@ function signature(secret: string, sessionId: string): string {
   return createHmac("sha256", secret).update(sessionId).digest("base64url");
 }
 
-export function signedSessionCookie(secret: string, sessionId: string, ttlSeconds: number): string {
-  return `${SESSION_COOKIE}=${sessionId}.${signature(secret, sessionId)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${String(Math.floor(ttlSeconds))}`;
+export function signedSessionCookie(
+  secret: string,
+  sessionId: string,
+  ttlSeconds: number,
+  secure = false,
+): string {
+  return `${SESSION_COOKIE}=${sessionId}.${signature(secret, sessionId)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${String(Math.floor(ttlSeconds))}${secure ? "; Secure" : ""}`;
 }
 
-export function clearedSessionCookie(): string {
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+export function clearedSessionCookie(secure = false): string {
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? "; Secure" : ""}`;
 }
 
 export function parseSessionCookie(header: string | null, secret: string): CookieResult {
