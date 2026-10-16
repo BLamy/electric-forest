@@ -1,0 +1,121 @@
+{
+  "query": {
+    "startDate": "2026-10-16T21:03:40.000Z",
+    "endDate": "2026-10-16T21:03:50.000Z",
+    "limit": 500
+  },
+  "result": {
+    "scope": "deployment",
+    "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+    "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+    "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "status": "BUILDING",
+    "build": [
+      {
+        "timestamp": "2026-10-16T21:03:44.712247209Z",
+        "severity": "info",
+        "message": "✓ 6886 modules transformed.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"4pyTIDY4ODYgbW9kdWxlcyB0cmFuc2Zvcm1lZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:44.711794139Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:46.639879229Z",
+        "severity": "info",
+        "message": "rendering chunks...\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"cmVuZGVyaW5nIGNodW5rcy4uLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:46.639421212Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:49.038175903Z",
+        "severity": "info",
+        "message": "[plugin vite:reporter] \n(!) /app/node_modules/.pnpm/gpu-lexer@0.0.2/node_modules/gpu-lexer/dist/index.js is dynamically imported by /app/apps/web/src/components/code/syntax.ts, /app/node_modules/.pnpm/@brett_lamy+docstream-editor@1.5.0_8f8df79f19972bca8f8621bb725cb1ee/node_modules/@brett_lamy/docstream-editor/dist/editor/gpu-highlight.js but also statically imported by /app/node_modules/.pnpm/@brett_lamy+docstream@1.5.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@_a7b160f9e3181955de29ae6bfe289a03/node_modules/@brett_lamy/docstream/dist/docs/HighlightedCode.js, dynamic import will not move module into another chunk.\n\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"W3BsdWdpbiB2aXRlOnJlcG9ydGVyXSAKKCEpIC9hcHAvbm9kZV9tb2R1bGVzLy5wbnBtL2dwdS1sZXhlckAwLjAuMi9ub2RlX21vZHVsZXMvZ3B1LWxleGVyL2Rpc3QvaW5kZXguanMgaXMgZHluYW1pY2FsbHkgaW1wb3J0ZWQgYnkgL2FwcC9hcHBzL3dlYi9zcmMvY29tcG9uZW50cy9jb2RlL3N5bnRheC50cywgL2FwcC9ub2RlX21vZHVsZXMvLnBucG0vQGJyZXR0X2xhbXkrZG9jc3RyZWFtLWVkaXRvckAxLjUuMF84ZjhkZjc5ZjE5OTcyYmNhOGY4NjIxYmI3MjVjYjFlZS9ub2RlX21vZHVsZXMvQGJyZXR0X2xhbXkvZG9jc3RyZWFtLWVkaXRvci9kaXN0L2VkaXRvci9ncHUtaGlnaGxpZ2h0LmpzIGJ1dCBhbHNvIHN0YXRpY2FsbHkgaW1wb3J0ZWQgYnkgL2FwcC9ub2RlX21vZHVsZXMvLnBucG0vQGJyZXR0X2xhbXkrZG9jc3RyZWFtQDEuNS4wX0BhZ2VudC13YXNtK2NvcmVAMC40LjBfQGVtbmFwaStjb3JlQDEuMTEuMV9AZW1uYXBpK3J1bnRpbWVAX2E3YjE2MGY5ZTMxODE5NTVkZTI5YWU2YmZlMjg5YTAzL25vZGVfbW9kdWxlcy9AYnJldHRfbGFteS9kb2NzdHJlYW0vZGlzdC9kb2NzL0hpZ2hsaWdodGVkQ29kZS5qcywgZHluYW1pYyBpbXBvcnQgd2lsbCBub3QgbW92ZSBtb2R1bGUgaW50byBhbm90aGVyIGNodW5rLgoK\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:49.037790704Z\""
+          }
+        ]
+      }
+    ]
+  }
+}

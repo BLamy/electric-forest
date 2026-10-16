@@ -1,0 +1,33 @@
+{
+  "name": "deadlines",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "command": [
+    "node",
+    "tools/verify/e12_t10_deadlines.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines"
+  ],
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "startedAt": "2026-10-16T21:03:09.870495+00:00",
+  "endedAt": "2026-10-16T21:03:14.734454+00:00",
+  "elapsedSeconds": 4.863496,
+  "exitCode": 0,
+  "before": {
+    "head": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+    "trackedChanges": ""
+  },
+  "after": {
+    "head": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+    "trackedChanges": ""
+  },
+  "candidateUnchanged": true,
+  "stdout": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines.stdout.log",
+    "bytes": 65,
+    "sha256": "bc57f36b266447be578e1eb98c84800cfa3c2dde50c0229ed716feb8e1720eb5"
+  },
+  "stderr": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines.stderr.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "checkedAtUTC": "2026-10-16T20:04:18.166276+00:00",
+  "command": [
+    "npx",
+    "--yes",
+    "replayqa@0.2.4",
+    "project",
+    "--ignore-config",
+    "--project",
+    "proj-electric-forest-ms8w0nv1"
+  ],
+  "exitCode": 1,
+  "qaProject": "proj-electric-forest-ms8w0nv1",
+  "requestedJourney": "E12-T10 Auth0 login and private workspace",
+  "actualJourneyRun": false,
+  "log": "project.log",
+  "productionCredentialsUsed": false,
+  "integration": "configured QA project; no QA tunnel/journey MCP tools exposed in this session"
+}

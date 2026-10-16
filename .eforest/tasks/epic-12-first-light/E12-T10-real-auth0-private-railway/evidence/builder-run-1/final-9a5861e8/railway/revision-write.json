@@ -1,0 +1,12 @@
+{
+  "environment": {
+    "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "name": "production"
+  },
+  "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+  "variableNames": [
+    "EF_BUILD_REVISION"
+  ],
+  "skippedDeploys": true,
+  "staged": null
+}

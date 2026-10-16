@@ -1,0 +1,309 @@
+{
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "method": "standalone Python models; no product imports; fixture-only dumps; no comparison between opaque transport cursors and application offsets",
+  "browserZeroErrors": true,
+  "records": [
+    {
+      "path": "http/identity-before-restart.jsonl",
+      "layer": "identity",
+      "bytesSha256": "3a0277058540bee5a93623d0cb63a93f03a06f242bee2abd6dc415d11eb02f72",
+      "records": 7,
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "transportCursor": "0000000000000000_0000000000001841",
+      "independentDigest": "56f082bd2483aee6b55870e1ffa7b3fc6f9e6da0169d01516bb0edbd4deaad14",
+      "receiptDigest": "56f082bd2483aee6b55870e1ffa7b3fc6f9e6da0169d01516bb0edbd4deaad14",
+      "comparison": "equal"
+    },
+    {
+      "path": "http/identity-after-restart.jsonl",
+      "layer": "identity",
+      "bytesSha256": "3a0277058540bee5a93623d0cb63a93f03a06f242bee2abd6dc415d11eb02f72",
+      "records": 7,
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "transportCursor": "0000000000000000_0000000000001841",
+      "independentDigest": "56f082bd2483aee6b55870e1ffa7b3fc6f9e6da0169d01516bb0edbd4deaad14",
+      "receiptDigest": "56f082bd2483aee6b55870e1ffa7b3fc6f9e6da0169d01516bb0edbd4deaad14",
+      "comparison": "equal"
+    },
+    {
+      "path": "http/identity-final.jsonl",
+      "layer": "identity",
+      "bytesSha256": "8644e2c66488560e2d249fd7ef3d73383913f38a6cf2590ab27ecde8e0d520a0",
+      "records": 10,
+      "lastApplicationOffset": "0000000000000000_0000000000000009",
+      "transportCursor": "0000000000000000_0000000000002405",
+      "independentDigest": "b37eff0902a798c98373cd50384890227595fb44e47d8850637342059aa054fd",
+      "receiptDigest": "b37eff0902a798c98373cd50384890227595fb44e47d8850637342059aa054fd",
+      "comparison": "equal"
+    },
+    {
+      "path": "http/ns-root.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "06a8cc27f88597e88b73a5c22daf082969e3b1dd47c077700effc96ab7a50998",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    },
+    {
+      "path": "http/ns-org-private-ada.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640",
+      "records": 3,
+      "lastApplicationOffset": "0000000000000000_0000000000000002",
+      "transportCursor": null,
+      "independentDigest": "d2d1e532230c3b556c675b5ce72ca1cd7eaead048edf1f684362962e2d8f0222",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    },
+    {
+      "path": "http/ns-org-private-grace.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "344cd0106ed9bd1165dd4ead23c7211ab6325cce8fff624f244873db1307fbc7",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    },
+    {
+      "path": "http/fs-private-ada-notebook-main-meta.jsonl",
+      "layer": "branch-genesis",
+      "bytesSha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4",
+      "records": 1,
+      "lastApplicationOffset": "0000000000000000_0000000000000000",
+      "transportCursor": null,
+      "independentDigest": "708e708d54b86024ffcbc35f215bad45437705a90d780008fcb763abcbb31c2b",
+      "receiptDigest": null,
+      "comparison": "exact dedicated branch-genesis record; no metadata projection digest claim"
+    },
+    {
+      "path": "browser/ada-login-deep-return.jsonl",
+      "layer": "identity",
+      "bytesSha256": "8bd710634cff4ce0aacee6c1130312f780c6e1919fd4fd6f9819187d7cb86f11",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "independentDigest": "f07ae9a242eb2b39bae60ac7fb70342b9b8723e406068d4aa3feeeb688e66df6",
+      "receiptDigest": "f07ae9a242eb2b39bae60ac7fb70342b9b8723e406068d4aa3feeeb688e66df6",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/ada-organization.jsonl",
+      "layer": "identity",
+      "bytesSha256": "8bd710634cff4ce0aacee6c1130312f780c6e1919fd4fd6f9819187d7cb86f11",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "independentDigest": "f07ae9a242eb2b39bae60ac7fb70342b9b8723e406068d4aa3feeeb688e66df6",
+      "receiptDigest": "f07ae9a242eb2b39bae60ac7fb70342b9b8723e406068d4aa3feeeb688e66df6",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/grace-organization.jsonl",
+      "layer": "identity",
+      "bytesSha256": "16e312c78e3a9240889a3688172f732be6d8315696618287e56c1697429348b9",
+      "records": 4,
+      "lastApplicationOffset": "0000000000000000_0000000000000003",
+      "transportCursor": "0000000000000000_0000000000000798",
+      "independentDigest": "b79c6a15dd92f92ecf94fc1d5c65388c794844df716b0dc365a3ddcc5641a4d8",
+      "receiptDigest": "b79c6a15dd92f92ecf94fc1d5c65388c794844df716b0dc365a3ddcc5641a4d8",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/two-profiles-live.jsonl",
+      "layer": "chat-channel",
+      "bytesSha256": "9dc8e9c77395a4c6c8d9c8102b60e64879d15332df0d731b28e49d31f3ce4b63",
+      "records": 1,
+      "lastApplicationOffset": "0000000000000000_0000000000000000",
+      "transportCursor": null,
+      "independentDigest": "bdf85b9233e9988e2b385442616d580fedf0282f969c3e45e43f636695092b98",
+      "receiptDigest": "bdf85b9233e9988e2b385442616d580fedf0282f969c3e45e43f636695092b98",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/witness-reconnected.jsonl",
+      "layer": "chat-channel",
+      "bytesSha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "receiptDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/browser-grant-minted.jsonl",
+      "layer": "identity",
+      "bytesSha256": "de8563b2a6071d91dca0210f650037c436f8666c4e14d0192657d26029c55ff0",
+      "records": 6,
+      "lastApplicationOffset": "0000000000000000_0000000000000005",
+      "transportCursor": "0000000000000000_0000000000001407",
+      "independentDigest": "13b7ad13d8a3c2fbf54baef22a3f90491b9e6c23b749e16751c0400dfcba51b1",
+      "receiptDigest": "13b7ad13d8a3c2fbf54baef22a3f90491b9e6c23b749e16751c0400dfcba51b1",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/browser-grant-revoked.jsonl",
+      "layer": "identity",
+      "bytesSha256": "23fba8a967b4d55a789d8ba1a213b8d2ad8313cc48cedfe50df38db8d381bf2c",
+      "records": 7,
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "transportCursor": "0000000000000000_0000000000001597",
+      "independentDigest": "ccf39c9844558ed567309f21aaff14416c5997daeeec1884c6d0056e283edef4",
+      "receiptDigest": "ccf39c9844558ed567309f21aaff14416c5997daeeec1884c6d0056e283edef4",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/browser-identity-before-restart.jsonl",
+      "layer": "identity",
+      "bytesSha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5",
+      "records": 8,
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "transportCursor": "0000000000000000_0000000000001765",
+      "independentDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "receiptDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/browser-identity-after-restart.jsonl",
+      "layer": "identity",
+      "bytesSha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5",
+      "records": 8,
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "transportCursor": "0000000000000000_0000000000001765",
+      "independentDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "receiptDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/active-session-after-restart.jsonl",
+      "layer": "chat-channel",
+      "bytesSha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "receiptDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/active-session-restarted.jsonl",
+      "layer": "identity",
+      "bytesSha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5",
+      "records": 8,
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "transportCursor": "0000000000000000_0000000000001765",
+      "independentDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "receiptDigest": "e7a2ef07c68023e5f172b70014a71aaf017bc0db9f77acf6d5a867864ed6edf3",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/relogin-preserves-state.jsonl",
+      "layer": "chat-channel",
+      "bytesSha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "receiptDigest": "0dbec0949c13cc1f46aa254a66a0e701187f635ee18eaa78e1e1a4b722b5be31",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/browser-identity-final.jsonl",
+      "layer": "identity",
+      "bytesSha256": "788a248620fa7a4db7276df8019f4e22c5f1996fbd90fe0b5df812554aa8a70e",
+      "records": 9,
+      "lastApplicationOffset": "0000000000000000_0000000000000008",
+      "transportCursor": "0000000000000000_0000000000001969",
+      "independentDigest": "728b8c9d54fc4d14f95990211df810f015727a37608c04adb1cb339e4e4564db",
+      "receiptDigest": "728b8c9d54fc4d14f95990211df810f015727a37608c04adb1cb339e4e4564db",
+      "comparison": "equal"
+    },
+    {
+      "path": "browser/ns-root.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "449a3d2c4070a01e294d8ef0b12ad3bca6203228d668d0c039b2b555e614e35f",
+      "records": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "transportCursor": null,
+      "independentDigest": "36a52f508a7f6fe243a5b14891e321b363584a4c5aa931a628e96f69254492ea",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    },
+    {
+      "path": "browser/ns-org-browser-ada.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "records": 0,
+      "lastApplicationOffset": "-1",
+      "transportCursor": null,
+      "independentDigest": "b5951e393d7f610fba2f9907d90273cd501799b532b44cbc82f1a25f88c0065b",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    },
+    {
+      "path": "browser/ns-org-browser-grace.jsonl",
+      "layer": "namespace",
+      "bytesSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "records": 0,
+      "lastApplicationOffset": "-1",
+      "transportCursor": null,
+      "independentDigest": "b5951e393d7f610fba2f9907d90273cd501799b532b44cbc82f1a25f88c0065b",
+      "receiptDigest": null,
+      "comparison": "independently reduced; namespace relationship checked below"
+    }
+  ],
+  "persistence": [
+    {
+      "layer": "identity",
+      "folder": "http",
+      "before": "identity-before-restart.jsonl",
+      "after": "identity-after-restart.jsonl",
+      "byteIdentical": true,
+      "sha256": "3a0277058540bee5a93623d0cb63a93f03a06f242bee2abd6dc415d11eb02f72"
+    },
+    {
+      "layer": "identity",
+      "folder": "browser",
+      "before": "browser-identity-before-restart.jsonl",
+      "after": "browser-identity-after-restart.jsonl",
+      "byteIdentical": true,
+      "sha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5"
+    },
+    {
+      "layer": "chat-channel",
+      "folder": "http",
+      "before": "chat-before.jsonl",
+      "after": "chat-final.jsonl",
+      "byteIdentical": true,
+      "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+    },
+    {
+      "layer": "chat-channel",
+      "folder": "browser",
+      "before": "witness-reconnected.jsonl",
+      "after": "active-session-after-restart.jsonl",
+      "byteIdentical": true,
+      "sha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0"
+    }
+  ],
+  "namespace": {
+    "owners": {
+      "browser-ada": "auth0|e12-t10-fixture-ada",
+      "browser-grace": "auth0|e12-t10-fixture-grace"
+    },
+    "digest": "051aee035722981ef3d70475924546806083b9d2eb672819e99d31828ef6cd5a",
+    "httpNamespaceDigest": "bda82a49c2159fb11d861a44a412ef8ef57928387bdc23d2b2359ca8d3218e45",
+    "httpRepositoriesPrivate": true
+  },
+  "modelDigests": {
+    "identity.py": "5b81c89b8e4ddcb4b32973b3a9729f45c5342397ddaed790344e0c75ee40696d",
+    "chat.py": "4823ec1b13d530382c27fd751dba2fd5a78708cbdbbee6c9114524961218e12f",
+    "namespace.py": "f1615d836f7efebf0f50df2770944ed221cde6d83ed4d36c2f7c7fe75a951fc8",
+    "replay_final.py": "e59ef57a3b0b7ecda8cf263edf266965fdf59883dd14b493d869e2cbc8cba9f0"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "source": "independent standalone Python chat reducer; no product imports",
+  "golden": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl",
+  "goldenSHA256": "42efd9c81759f43d818e5c4d5d6fe1b554677b744f44131396ed6fe4a91210ba",
+  "frozenDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+  "modelSHA256": "4823ec1b13d530382c27fd751dba2fd5a78708cbdbbee6c9114524961218e12f",
+  "mutationBytes": 1,
+  "results": [
+    {
+      "label": "baseline",
+      "command": [
+        "python3",
+        ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py",
+        ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl",
+        "--expect",
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+      ],
+      "exitCode": 0,
+      "output": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-baseline.log",
+      "outputSHA256": "de2e84e2aed66eac1483ed218fdba7f98428c9dcd011a3c4b346ea5e779b706e"
+    },
+    {
+      "label": "mutant",
+      "command": [
+        "python3",
+        ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py",
+        ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-one-byte.jsonl",
+        "--expect",
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+      ],
+      "exitCode": 1,
+      "output": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-mutant.log",
+      "outputSHA256": "4207453d6e5d3417feae7f427f856ef74aeb14abe130549b1823c8b112c82b59"
+    },
+    {
+      "label": "restored",
+      "command": [
+        "python3",
+        ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py",
+        ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl",
+        "--expect",
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+      ],
+      "exitCode": 0,
+      "output": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-restored.log",
+      "outputSHA256": "de2e84e2aed66eac1483ed218fdba7f98428c9dcd011a3c4b346ea5e779b706e"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "service": {
+    "id": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+    "name": "electric-forest"
+  },
+  "source": {
+    "repo": "BLamy/electric-forest",
+    "branch": "codex/railway-hosting",
+    "commitSha": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+    "image": null
+  },
+  "staged": null
+}

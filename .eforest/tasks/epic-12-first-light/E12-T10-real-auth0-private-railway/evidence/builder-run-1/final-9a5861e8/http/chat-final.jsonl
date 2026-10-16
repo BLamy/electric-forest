@@ -1,0 +1,1 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"auth0|e12-t10-fixture-ada","body":"A private accepted mutation survives restart.","id":"http-persistent-message","v":1,"writer":{"seq":1,"sub":"auth0|e12-t10-fixture-ada","v":1}},"ts":1800000000000,"type":"chat.message.post"}

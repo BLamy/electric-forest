@@ -1,0 +1,257 @@
+{
+  "task": "E12-T10",
+  "role": "builder",
+  "frozenAt": "2026-10-16T20:08:28.561838+00:00",
+  "parent": "475272dde13493acf125aa8786599716e98db42c",
+  "activation": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+  "originalFreeze": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze.json",
+    "sha256": "3fd839a2b85439e16042615f19b3d6dfe4c7e03e099563be6dad430f0d07c6e6",
+    "preservedByteForByte": true
+  },
+  "changedFilesFromParent": [
+    {
+      "path": "Makefile",
+      "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+      "bytes": 45771
+    },
+    {
+      "path": "docs/guides/railway-hosting.md",
+      "sha256": "beeb2203dfb91542d2723fba4d5ef514b190d1f43253ed18b6f3bc2ee288c8ef",
+      "bytes": 11454
+    },
+    {
+      "path": "packages/platform/src/hosted.ts",
+      "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+      "bytes": 13429
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+      "bytes": 9414
+    },
+    {
+      "path": "packages/platform/test/hosted.test.ts",
+      "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+      "bytes": 17156
+    },
+    {
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+      "bytes": 8273
+    },
+    {
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+      "bytes": 24433
+    }
+  ],
+  "cumulativeImplementationFiles": [
+    {
+      "path": "Dockerfile.production",
+      "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+      "bytes": 1596
+    },
+    {
+      "path": "Makefile",
+      "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+      "bytes": 45771
+    },
+    {
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+      "bytes": 28851
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+      "bytes": 704
+    },
+    {
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+      "bytes": 20049
+    },
+    {
+      "path": "apps/web/src/preview.tsx",
+      "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+      "bytes": 2367
+    },
+    {
+      "path": "apps/web/src/routes.tsx",
+      "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+      "bytes": 5947
+    },
+    {
+      "path": "docs/guides/railway-hosting.md",
+      "sha256": "beeb2203dfb91542d2723fba4d5ef514b190d1f43253ed18b6f3bc2ee288c8ef",
+      "bytes": 11454
+    },
+    {
+      "path": "packages/platform/src/auth/grants.ts",
+      "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+      "bytes": 9201
+    },
+    {
+      "path": "packages/platform/src/auth/oidc.ts",
+      "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+      "bytes": 8815
+    },
+    {
+      "path": "packages/platform/src/auth/routes.ts",
+      "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+      "bytes": 36841
+    },
+    {
+      "path": "packages/platform/src/auth/session.ts",
+      "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+      "bytes": 2307
+    },
+    {
+      "path": "packages/platform/src/hosted-artifact.ts",
+      "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+      "bytes": 1338
+    },
+    {
+      "path": "packages/platform/src/hosted-bin.ts",
+      "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+      "bytes": 1268
+    },
+    {
+      "path": "packages/platform/src/hosted-storage.ts",
+      "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+      "bytes": 6266
+    },
+    {
+      "path": "packages/platform/src/hosted.ts",
+      "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+      "bytes": 13429
+    },
+    {
+      "path": "packages/platform/src/production.ts",
+      "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+      "bytes": 12775
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+      "bytes": 9414
+    },
+    {
+      "path": "packages/platform/src/web/spa.ts",
+      "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+      "bytes": 5337
+    },
+    {
+      "path": "packages/platform/test/hosted.test.ts",
+      "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+      "bytes": 17156
+    },
+    {
+      "path": "tools/build_hosted_artifact.mjs",
+      "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+      "bytes": 637
+    },
+    {
+      "path": "tools/verify/cold_clone_targets.txt",
+      "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+      "bytes": 1414
+    },
+    {
+      "path": "tools/verify/e12_t10_browser.mjs",
+      "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+      "bytes": 17743
+    },
+    {
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+      "bytes": 8273
+    },
+    {
+      "path": "tools/verify/e12_t10_fixture.mjs",
+      "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+      "bytes": 14762
+    },
+    {
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+      "bytes": 24433
+    },
+    {
+      "path": "tools/verify/e12_t10_identity_reducer.mjs",
+      "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+      "bytes": 268
+    }
+  ],
+  "diagnosis": {
+    "reason": "A keepalive/connection idle timer from the previous socket phase incorrectly consumed the next admitted request budget. Native parser-owned header/receive clocks and independent keepalive idle now accompany the existing admitted body/handler/finite-response deadline. No custom parser, pipeline restriction, first-byte-through-application clock claim, or fixture deadline increase.",
+    "artifacts": [
+      {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/receipt.json",
+        "sha256": "eb5e760398682f20dcb38753827c76f0d74fe49ef81aebe4f049ecc31205e7ed",
+        "bytes": 2553
+      },
+      {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/native-receipt.json",
+        "sha256": "a716dedd2b4abbd145a446cf9a0ca684073df825461b6a605d77e1002868301b",
+        "bytes": 2531
+      },
+      {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/native-phases.json",
+        "sha256": "287e2b5ba0420a4b23f22c431f93972bbf94ff760d24922b1cf4cad65d6a100d",
+        "bytes": 4071
+      }
+    ]
+  },
+  "selfValidation": [
+    {
+      "command": "pnpm --filter @eforest/platform build",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm exec prettier --check packages/platform/src/server.ts packages/platform/src/hosted.ts packages/platform/test/hosted.test.ts tools/verify/e12_t10_hosted.mjs tools/verify/e12_t10_deadlines.mjs docs/guides/railway-hosting.md && pnpm exec eslint packages/platform/src/server.ts packages/platform/src/hosted.ts packages/platform/test/hosted.test.ts tools/verify/e12_t10_hosted.mjs tools/verify/e12_t10_deadlines.mjs && git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm exec vitest run --maxWorkers=1 packages/platform/test/hosted.test.ts packages/platform/test/auth.test.ts packages/platform/test/cli-tokens.test.ts packages/platform/test/spa.test.ts packages/platform/test/preview.test.ts",
+      "result": "5 files / 96 tests passed",
+      "artifact": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/focused-repaired.log",
+        "sha256": "63f2838c2f6cddfc05fab9e70347bff92a2f5704e2b61df5e54c8a48df2be2e3",
+        "bytes": 231
+      }
+    },
+    {
+      "command": "node tools/verify/e12_t10_deadlines.mjs .eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-phases",
+      "result": "9 actual socket phase/idle/pipeline/SSE cases passed",
+      "artifact": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-phases/deadlines.json",
+        "sha256": "02635ba799c64777aad8da25385445578e5fbe183626c87bd099a2153830dc6a",
+        "bytes": 6066
+      }
+    },
+    {
+      "command": "node tools/verify/e12_t10_hosted.mjs .eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-http",
+      "result": "77 HTTP checks passed at unchanged 1000ms tightened fixture deadline",
+      "artifact": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-http/http.json",
+        "sha256": "3160bf45d5edca46a237d99ce4e4da9e388ce5319226c9b72ea0c87c85fde9a4",
+        "bytes": 138885
+      }
+    },
+    {
+      "command": "node tools/verify/e12_t10_browser.mjs .eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-browser",
+      "result": "30 scenes, 5 verified MP4s, zero console/page/request errors",
+      "artifact": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/deadline-diagnosis/repaired-browser/browser.json",
+        "sha256": "303daf1e6e1ff353bd3dfccd7963043a933b501cf25be395beffac70fbe5e940",
+        "bytes": 80453
+      }
+    }
+  ],
+  "selfCheckSourceNote": "Reports sourceRevision is the committed parent475; these are builder worktree self-checks of the repaired files before the new immutable candidate. Native driver changed only lint globals and server changed only its explanatory comment after the passing runs.",
+  "immutableAudit": "Pending parent source commit and fresh full ordered audit; prior475 gates are not credit for these changes.",
+  "officialColdClone": "Not run by builder; fresh critic owns exactly one late cold clone.",
+  "actualAuth0AndRailwayProof": "Pending parent deployment of the audited replacement candidate and actual operator login/restart receipt. Replay QA final evidence and any literal N/A declaration remain parent owned.",
+  "freeze": "No further source changes by builder until parent explicitly diagnoses and authorizes a new candidate."
+}

@@ -1,0 +1,12 @@
+{
+  "model": "namespace.py",
+  "productImports": false,
+  "frozenFixture": "packages/platform/fixtures/ns/two-orgs-shared-repo-name",
+  "frozenExpectedViewDigest": "fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f",
+  "sourceModelSha256": "f1615d836f7efebf0f50df2770944ed221cde6d83ed4d36c2f7c7fe75a951fc8",
+  "baselineExit": 0,
+  "oneByteMutationExit": 1,
+  "restoredExit": 0,
+  "changedBytes": 1,
+  "noProductionDataUsed": true
+}

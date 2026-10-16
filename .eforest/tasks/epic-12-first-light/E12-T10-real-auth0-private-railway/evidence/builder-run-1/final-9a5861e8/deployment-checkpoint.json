@@ -1,0 +1,235 @@
+{
+  "recordedAt": "2026-10-16T21:11:22.555183+00:00",
+  "task": "E12-T10",
+  "scope": "Healthy production build/deployment checkpoint. Real Auth0 round-trip and operator restart proof remain absent; task is not implemented or verified.",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "imageDigest": "sha256:8e0d1de92341b27d8d2fb40a7048ca78a40e5c88eac4938a159eb5de3f49448d",
+  "imageDescriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:8e0d1de92341b27d8d2fb40a7048ca78a40e5c88eac4938a159eb5de3f49448d",
+    "size": 1625,
+    "annotations": {
+      "org.opencontainers.image.created": "2026-10-16T21:04:26Z"
+    },
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "artifactDigest": "b22287783bcaa4c93dd49ee1c9d43422b1e6c5ab96d0a793dc349aa67e737f15",
+  "artifactFileCount": 740,
+  "projectId": "e0864588-a320-4ba3-96df-95ad0a07ee81",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+  "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+  "deploymentStatus": "SUCCESS",
+  "origin": "https://electric-forest-production.up.railway.app",
+  "serviceConfig": {
+    "source": {
+      "repo": "BLamy/electric-forest",
+      "branch": "codex/railway-hosting",
+      "commitSha": "9a5861e82ec99ab2f275181a527aab5c2bfb0622"
+    },
+    "networking": {
+      "serviceDomains": {
+        "electric-forest-production.up.railway.app": {
+          "port": 8080
+        }
+      }
+    },
+    "build": {
+      "builder": "DOCKERFILE",
+      "buildEnvironment": "V3",
+      "dockerfilePath": "Dockerfile.production"
+    },
+    "deploy": {
+      "startCommand": "node packages/platform/dist/src/hosted-bin.js",
+      "healthcheckPath": "/readyz",
+      "limitOverride": {
+        "containers": {
+          "cpu": 1,
+          "memoryBytes": 2000000000
+        }
+      },
+      "healthcheckTimeout": 60,
+      "restartPolicyMaxRetries": 3,
+      "useLegacyStacker": false,
+      "ipv6EgressEnabled": false,
+      "runtime": "V2",
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "drainingSeconds": 15,
+      "overlapSeconds": 0
+    },
+    "configFile": "",
+    "volumeMounts": {
+      "10dc46b1-5ea6-43e7-b847-dffb238a003e": {
+        "mountPath": "/data"
+      }
+    }
+  },
+  "volume": [
+    {
+      "id": "10dc46b1-5ea6-43e7-b847-dffb238a003e",
+      "name": "forest-private-data",
+      "mountPath": "/data",
+      "sizeMB": 1024,
+      "region": "us-west2",
+      "state": "live"
+    }
+  ],
+  "tcpProxies": [],
+  "variableNamesOnly": [
+    "EF_AGENT_RESPONDER",
+    "EF_BUILD_REVISION",
+    "EF_DATA_DIR",
+    "EF_DEPLOYMENT_MODE",
+    "EF_OIDC_CLIENT_ID",
+    "EF_OIDC_ISSUER",
+    "EF_PUBLIC_ORIGIN",
+    "EF_SESSION_TTL",
+    "EF_WEB_ROOT",
+    "NODE_ENV",
+    "PORT",
+    "RAILWAY_DOCKERFILE_PATH"
+  ],
+  "actualVariableValuesRead": false,
+  "buildLogCoverage": {
+    "method": "Contiguous bounded API windows, each below its declared limit, ending with a terminal SUCCESS read. Exact duplicated entries deduplicated for counting only; raw window receipts preserved.",
+    "uniqueEntries": 692,
+    "windows": [
+      {
+        "path": "final-9a5861e8/railway/build-window-1.json",
+        "bytes": 59412,
+        "sha256": "c7140be1b3573f9f50533461731e3f90a4a7a401ecde51575f73c81769489753",
+        "entryCount": 59,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:02:53.000Z",
+          "endDate": "2026-10-16T21:03:20.000Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-window-2.json",
+        "bytes": 153650,
+        "sha256": "5c5b63ab17faf304146533437e4a87434571ad4590c9ca3f38c21cdfb42f44d1",
+        "entryCount": 85,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:03:20.000Z",
+          "endDate": "2026-10-16T21:03:40.000Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-window-3.json",
+        "bytes": 4533,
+        "sha256": "a455c8e4c4699399b6b745efb7e92b6ef1a15928906dbd62f6c69e5377d24708",
+        "entryCount": 3,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:03:40.000Z",
+          "endDate": "2026-10-16T21:03:50.000Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-window-4a.json",
+        "bytes": 288958,
+        "sha256": "3809cd1dcdb28165af4f5a515064514fae53b3493731b736ac3a7e38554b1e4a",
+        "entryCount": 247,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:03:50.000Z",
+          "endDate": "2026-10-16T21:03:54.805Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-window-4b.json",
+        "bytes": 314666,
+        "sha256": "3e640c45317e60675e53a12806425decf4e447a819afa35fe3d7b681fbe54896",
+        "entryCount": 275,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:03:54.805Z",
+          "endDate": "2026-10-16T21:03:55.000Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-window-4c.json",
+        "bytes": 9815,
+        "sha256": "4725416264ab1ab177b57cd31bff615617bcc96dfdf57dc9df352dbed2f6cc56",
+        "entryCount": 9,
+        "limit": 500,
+        "query": {
+          "startDate": "2026-10-16T21:03:55.000Z",
+          "endDate": "2026-10-16T21:04:10.000Z",
+          "limit": 500
+        }
+      },
+      {
+        "path": "final-9a5861e8/railway/build-and-startup-final.json",
+        "bytes": 9026,
+        "sha256": "807e1f5dde38fadcb63dab00cbbac5681674ffa152de1efbe6e3ec9599f2b94a",
+        "entryCount": 14,
+        "limit": 100,
+        "query": {
+          "startDate": "2026-10-16T21:04:10.000Z",
+          "limit": 100,
+          "types": [
+            "build",
+            "deploy"
+          ]
+        }
+      }
+    ],
+    "supersededTruncatedWindow": {
+      "path": "railway/build-window-4.json",
+      "returnedEntries": 501,
+      "requestedLimit": 500,
+      "notComplete": true,
+      "replacement": [
+        "build-window-4a.json",
+        "build-window-4b.json",
+        "build-window-4c.json"
+      ]
+    }
+  },
+  "publicChecks": {
+    "commandReceipt": "public-command.json",
+    "results": "railway/public.json",
+    "healthReadyBuildDeployment": true,
+    "initialEntryAssetsVerified": 2,
+    "auth0RedirectVerified": true,
+    "actualOperatorLogin": false
+  },
+  "fixtures": {
+    "nativePhases": 9,
+    "httpRecords": 77,
+    "browserScenes": 30,
+    "independentDumps": 23,
+    "byteExactPersistenceComparisons": 4,
+    "productionCredentialsUsed": false
+  },
+  "auth0": {
+    "issuer": "https://dev-8qqftel4x1s5wed3.us.auth0.com/",
+    "clientId": "H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk",
+    "registrationSaved": false,
+    "actualOperatorLogin": false,
+    "draft": "Three exact URLs typed; first two chip values and third input observed. No Save action issued. Final draft readback/screenshot unavailable after Chrome debugger detached.",
+    "clientSecretRead": false
+  },
+  "pending": [
+    "Reconnect Chrome automation, review and obtain action-time confirmation before saving exact Auth0 URLs",
+    "Real Auth0 operator login and synthetic mutation, controlled restart with preserved login/data",
+    "Implemented claim, fresh independent critic/cold-clone/judge and committed readbacks",
+    "E12-T11 CLI/private project mirroring, after T10 verification"
+  ],
+  "sourceStorage": "Full source versions remain content-addressed Git blobs linked by the four source/changeset.json receipts; no generated textual patch is persisted. Complete E14 product changeset/CAS remains pending."
+}

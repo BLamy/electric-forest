@@ -1,0 +1,519 @@
+{
+  "kind": "source-changeset-provenance",
+  "task": "E12-T10",
+  "changeset": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555",
+  "parent": "475272dde13493acf125aa8786599716e98db42c",
+  "storage": "complete immutable files already stored in content-addressed Git blobs; no generated textual patch is persisted",
+  "scope": "source provenance only; does not claim the E14 product changeset/CAS format is implemented",
+  "parentChangeset": {
+    "commit": "475272dde13493acf125aa8786599716e98db42c",
+    "receiptSha256": "ce64efd095be303c247569ddf89d12a831370f353be706470d151ef0941d2787"
+  },
+  "files": [
+    {
+      "path": "Makefile",
+      "before": {
+        "gitBlob": "0cf2416993918f98d5e4343a9294311af2b149c5",
+        "contentAddress": "git-object:0cf2416993918f98d5e4343a9294311af2b149c5",
+        "sha256": "de359d86dc587a4e4a8bd94260cce38244731f30ab8c13abc596b40a3fe80824",
+        "bytes": 45729,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:Makefile"
+      },
+      "after": {
+        "gitBlob": "a4bfc538f974ed6edbdb9ddae010eb9089a01439",
+        "contentAddress": "git-object:a4bfc538f974ed6edbdb9ddae010eb9089a01439",
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:Makefile"
+      }
+    },
+    {
+      "path": "docs/guides/railway-hosting.md",
+      "before": {
+        "gitBlob": "1cc40bacf1a4475c5eb8ff5f0ad6af20eca16d59",
+        "contentAddress": "git-object:1cc40bacf1a4475c5eb8ff5f0ad6af20eca16d59",
+        "sha256": "f7d96fbfca4b945e66391ed33855229146145456551e676f29ff8b8003d20484",
+        "bytes": 10274,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:docs/guides/railway-hosting.md"
+      },
+      "after": {
+        "gitBlob": "0a03703cc54af85434e2355adf7b801d1b06e536",
+        "contentAddress": "git-object:0a03703cc54af85434e2355adf7b801d1b06e536",
+        "sha256": "beeb2203dfb91542d2723fba4d5ef514b190d1f43253ed18b6f3bc2ee288c8ef",
+        "bytes": 11454,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:docs/guides/railway-hosting.md"
+      }
+    },
+    {
+      "path": "packages/platform/src/hosted.ts",
+      "before": {
+        "gitBlob": "121b2fc6cc79b97e740395b41b34280d10bf89e9",
+        "contentAddress": "git-object:121b2fc6cc79b97e740395b41b34280d10bf89e9",
+        "sha256": "a91aa33bc3f8436cf2d910e0034ac70bbd27248b7977c0b7428c5802e9e86900",
+        "bytes": 13321,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:packages/platform/src/hosted.ts"
+      },
+      "after": {
+        "gitBlob": "3516b1f24c6ba5fd4b341b2c31d58cd9e164691c",
+        "contentAddress": "git-object:3516b1f24c6ba5fd4b341b2c31d58cd9e164691c",
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/hosted.ts"
+      }
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "before": {
+        "gitBlob": "416da95f75d28717663a2c83b8eb095c122a0435",
+        "contentAddress": "git-object:416da95f75d28717663a2c83b8eb095c122a0435",
+        "sha256": "0f3a1b7fe522f733c4d85a08600be0bcc94242711943e69dc1054ca20c0ce591",
+        "bytes": 9841,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:packages/platform/src/server.ts"
+      },
+      "after": {
+        "gitBlob": "891dcea411c9c5260af79fc1bb3fb9619c433257",
+        "contentAddress": "git-object:891dcea411c9c5260af79fc1bb3fb9619c433257",
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/server.ts"
+      }
+    },
+    {
+      "path": "packages/platform/test/hosted.test.ts",
+      "before": {
+        "gitBlob": "47548618850a926964cc91f06c02f86dd5b5c604",
+        "contentAddress": "git-object:47548618850a926964cc91f06c02f86dd5b5c604",
+        "sha256": "1ef9b1a1e1a32a7d13e32af4853ce56c4c167aa6ddb35e610be72a81a13b6dd6",
+        "bytes": 14985,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:packages/platform/test/hosted.test.ts"
+      },
+      "after": {
+        "gitBlob": "a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f",
+        "contentAddress": "git-object:a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f",
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/test/hosted.test.ts"
+      }
+    },
+    {
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "before": null,
+      "after": {
+        "gitBlob": "dba5f31032c55a5e0526903154c6c93d765d298f",
+        "contentAddress": "git-object:dba5f31032c55a5e0526903154c6c93d765d298f",
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_deadlines.mjs"
+      }
+    },
+    {
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "before": {
+        "gitBlob": "24fb937ce367a5d3e2c439484d882d217f6243c4",
+        "contentAddress": "git-object:24fb937ce367a5d3e2c439484d882d217f6243c4",
+        "sha256": "db6436912a2f6c90eb4c838bc73efaa91c243fe55854360a75d3aee988c8d9e8",
+        "bytes": 24239,
+        "treeReference": "475272dde13493acf125aa8786599716e98db42c:tools/verify/e12_t10_hosted.mjs"
+      },
+      "after": {
+        "gitBlob": "42b40620460b6eaa1825700b1705e8259000b3ce",
+        "contentAddress": "git-object:42b40620460b6eaa1825700b1705e8259000b3ce",
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_hosted.mjs"
+      }
+    }
+  ],
+  "cumulativeImplementation": {
+    "base": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+    "files": [
+      {
+        "path": "Dockerfile.production",
+        "before": null,
+        "after": {
+          "gitBlob": "14247f55baae41422b7891481c80d9bcf66ba283",
+          "contentAddress": "git-object:14247f55baae41422b7891481c80d9bcf66ba283",
+          "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+          "bytes": 1596,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:Dockerfile.production"
+        }
+      },
+      {
+        "path": "Makefile",
+        "before": {
+          "gitBlob": "f883956f626bfa454ee6c689039f6a68229939fa",
+          "contentAddress": "git-object:f883956f626bfa454ee6c689039f6a68229939fa",
+          "sha256": "028ff3b190541aa232d5335a24592b89dee9eb0c64bf768c3c868981903ee03b",
+          "bytes": 45264,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:Makefile"
+        },
+        "after": {
+          "gitBlob": "a4bfc538f974ed6edbdb9ddae010eb9089a01439",
+          "contentAddress": "git-object:a4bfc538f974ed6edbdb9ddae010eb9089a01439",
+          "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+          "bytes": 45771,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:Makefile"
+        }
+      },
+      {
+        "path": "apps/web/src/components/shell/ForestShell.tsx",
+        "before": {
+          "gitBlob": "91696196dfd2484c0621de5fa357dab8eb9fbedc",
+          "contentAddress": "git-object:91696196dfd2484c0621de5fa357dab8eb9fbedc",
+          "sha256": "b0c98b773ef90553619ec603ce2cefa8f7c47655c8edcedddf345469a0b372a8",
+          "bytes": 28860,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:apps/web/src/components/shell/ForestShell.tsx"
+        },
+        "after": {
+          "gitBlob": "02356056f373f8c175c2c1a55787ce929c910b70",
+          "contentAddress": "git-object:02356056f373f8c175c2c1a55787ce929c910b70",
+          "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+          "bytes": 28851,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:apps/web/src/components/shell/ForestShell.tsx"
+        }
+      },
+      {
+        "path": "apps/web/src/main.tsx",
+        "before": {
+          "gitBlob": "6ff935a60133bbec21e48b992c46cc01637bd1a7",
+          "contentAddress": "git-object:6ff935a60133bbec21e48b992c46cc01637bd1a7",
+          "sha256": "3bf6664e858564336e92556e62642a4a4451ef9965783c435a02fd59fc451030",
+          "bytes": 669,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:apps/web/src/main.tsx"
+        },
+        "after": {
+          "gitBlob": "396870726f80ad226a6ef69e0b9fad70a1afb51f",
+          "contentAddress": "git-object:396870726f80ad226a6ef69e0b9fad70a1afb51f",
+          "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+          "bytes": 704,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:apps/web/src/main.tsx"
+        }
+      },
+      {
+        "path": "apps/web/src/members/MembersPage.tsx",
+        "before": {
+          "gitBlob": "705c546e9317f6fb0cb3ad10fb5121c183750160",
+          "contentAddress": "git-object:705c546e9317f6fb0cb3ad10fb5121c183750160",
+          "sha256": "56554f98653b08c4ded293e31a38b410ea4d86433c99e47f0dc2b5a590cbfc7a",
+          "bytes": 19904,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:apps/web/src/members/MembersPage.tsx"
+        },
+        "after": {
+          "gitBlob": "a7750dc0cbf28fbfe996cfd5e4fdc3f60a2112b5",
+          "contentAddress": "git-object:a7750dc0cbf28fbfe996cfd5e4fdc3f60a2112b5",
+          "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+          "bytes": 20049,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:apps/web/src/members/MembersPage.tsx"
+        }
+      },
+      {
+        "path": "apps/web/src/preview.tsx",
+        "before": {
+          "gitBlob": "d95b72ec466d265539e0e90652faa0d9671a7dc6",
+          "contentAddress": "git-object:d95b72ec466d265539e0e90652faa0d9671a7dc6",
+          "sha256": "d638f4806da65c81d808e2b64548fe36c7824b4c3fe11e9d94e2c04b1d0893b7",
+          "bytes": 1101,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:apps/web/src/preview.tsx"
+        },
+        "after": {
+          "gitBlob": "4801a50fd0e16ce9369f798fab3379e039374493",
+          "contentAddress": "git-object:4801a50fd0e16ce9369f798fab3379e039374493",
+          "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+          "bytes": 2367,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:apps/web/src/preview.tsx"
+        }
+      },
+      {
+        "path": "apps/web/src/routes.tsx",
+        "before": {
+          "gitBlob": "b839d9272ab3aaf533e761490beef5d025b6d441",
+          "contentAddress": "git-object:b839d9272ab3aaf533e761490beef5d025b6d441",
+          "sha256": "ac853603a60634412d188a604653affb3db811c2e1e3f333216658abe0e69dcb",
+          "bytes": 5949,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:apps/web/src/routes.tsx"
+        },
+        "after": {
+          "gitBlob": "d50689f64aeccea29f598d131321234f4a71f152",
+          "contentAddress": "git-object:d50689f64aeccea29f598d131321234f4a71f152",
+          "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+          "bytes": 5947,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:apps/web/src/routes.tsx"
+        }
+      },
+      {
+        "path": "docs/guides/railway-hosting.md",
+        "before": {
+          "gitBlob": "ada4eb19e983816214881d6c2537c8fedd74358f",
+          "contentAddress": "git-object:ada4eb19e983816214881d6c2537c8fedd74358f",
+          "sha256": "a475e216494dac1deca7ff41149b3cfd3b426b7e2b42681dbf9e9124531237d6",
+          "bytes": 6751,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:docs/guides/railway-hosting.md"
+        },
+        "after": {
+          "gitBlob": "0a03703cc54af85434e2355adf7b801d1b06e536",
+          "contentAddress": "git-object:0a03703cc54af85434e2355adf7b801d1b06e536",
+          "sha256": "beeb2203dfb91542d2723fba4d5ef514b190d1f43253ed18b6f3bc2ee288c8ef",
+          "bytes": 11454,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:docs/guides/railway-hosting.md"
+        }
+      },
+      {
+        "path": "packages/platform/src/auth/grants.ts",
+        "before": {
+          "gitBlob": "4c886fb41d92f013ea5f368a8671942ec95c3d79",
+          "contentAddress": "git-object:4c886fb41d92f013ea5f368a8671942ec95c3d79",
+          "sha256": "a5f1df4ae2626a6a58760f3415b2a4af1176135bbaba548ff16945332ac79f53",
+          "bytes": 8823,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/auth/grants.ts"
+        },
+        "after": {
+          "gitBlob": "7147084a30e447ae4eea10e9972193fee95fce95",
+          "contentAddress": "git-object:7147084a30e447ae4eea10e9972193fee95fce95",
+          "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+          "bytes": 9201,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/auth/grants.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/auth/oidc.ts",
+        "before": {
+          "gitBlob": "9900bdc1ef4b1b846951f8fcb83afaeae66b75e3",
+          "contentAddress": "git-object:9900bdc1ef4b1b846951f8fcb83afaeae66b75e3",
+          "sha256": "53e8a4b83fc95de80b7a1f22439f5f9dd97060c9d1c157703fec3e6471b09ebd",
+          "bytes": 7543,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/auth/oidc.ts"
+        },
+        "after": {
+          "gitBlob": "a3aac9e68f3ae96cf06b8be1405b273723300034",
+          "contentAddress": "git-object:a3aac9e68f3ae96cf06b8be1405b273723300034",
+          "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+          "bytes": 8815,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/auth/oidc.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/auth/routes.ts",
+        "before": {
+          "gitBlob": "cc370cf175efe35319c2d546ffb4e60b7e334bf5",
+          "contentAddress": "git-object:cc370cf175efe35319c2d546ffb4e60b7e334bf5",
+          "sha256": "66046baacee7973b3bd2d6e17180eb1260444fa0861f633eac432de80177370d",
+          "bytes": 33024,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/auth/routes.ts"
+        },
+        "after": {
+          "gitBlob": "bdb4e0a5b61b862de101b9f77f4fc84d7dfabf42",
+          "contentAddress": "git-object:bdb4e0a5b61b862de101b9f77f4fc84d7dfabf42",
+          "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+          "bytes": 36841,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/auth/routes.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/auth/session.ts",
+        "before": {
+          "gitBlob": "d5d38e0da38b61f53107152ef47e68da5e4970b0",
+          "contentAddress": "git-object:d5d38e0da38b61f53107152ef47e68da5e4970b0",
+          "sha256": "5b2b16276add7120449dc61c6446a1bd5edd5fc5f34e3f5cd2e940f7d034a6c9",
+          "bytes": 2212,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/auth/session.ts"
+        },
+        "after": {
+          "gitBlob": "60f4a3b0b2310d518543cfb901b0f39ea79d32cd",
+          "contentAddress": "git-object:60f4a3b0b2310d518543cfb901b0f39ea79d32cd",
+          "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+          "bytes": 2307,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/auth/session.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/hosted-artifact.ts",
+        "before": null,
+        "after": {
+          "gitBlob": "64e65aff310ecee571f04bd677e121fcb1268c0b",
+          "contentAddress": "git-object:64e65aff310ecee571f04bd677e121fcb1268c0b",
+          "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+          "bytes": 1338,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/hosted-artifact.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/hosted-bin.ts",
+        "before": null,
+        "after": {
+          "gitBlob": "94429148b1f2849f5b8e8f66f8a1ad4803d262bd",
+          "contentAddress": "git-object:94429148b1f2849f5b8e8f66f8a1ad4803d262bd",
+          "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+          "bytes": 1268,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/hosted-bin.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/hosted-storage.ts",
+        "before": null,
+        "after": {
+          "gitBlob": "57b236a2b0e094a6b8ad0786bc9dd53a6dc5969e",
+          "contentAddress": "git-object:57b236a2b0e094a6b8ad0786bc9dd53a6dc5969e",
+          "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+          "bytes": 6266,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/hosted-storage.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/hosted.ts",
+        "before": null,
+        "after": {
+          "gitBlob": "3516b1f24c6ba5fd4b341b2c31d58cd9e164691c",
+          "contentAddress": "git-object:3516b1f24c6ba5fd4b341b2c31d58cd9e164691c",
+          "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+          "bytes": 13429,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/hosted.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/production.ts",
+        "before": {
+          "gitBlob": "52775b10b7796b0e769a96e35b1f6edced13e69d",
+          "contentAddress": "git-object:52775b10b7796b0e769a96e35b1f6edced13e69d",
+          "sha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+          "bytes": 12181,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/production.ts"
+        },
+        "after": {
+          "gitBlob": "74ca3b24ca64d2d395a46b76b1638f3270790481",
+          "contentAddress": "git-object:74ca3b24ca64d2d395a46b76b1638f3270790481",
+          "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+          "bytes": 12775,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/production.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/server.ts",
+        "before": {
+          "gitBlob": "f10743acee0c86fc8230a872f67189296f075e8d",
+          "contentAddress": "git-object:f10743acee0c86fc8230a872f67189296f075e8d",
+          "sha256": "cdb038b9791867ba8770f4e474bd7580721f3d9c42feeeaf39505a20dc256a13",
+          "bytes": 3776,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/server.ts"
+        },
+        "after": {
+          "gitBlob": "891dcea411c9c5260af79fc1bb3fb9619c433257",
+          "contentAddress": "git-object:891dcea411c9c5260af79fc1bb3fb9619c433257",
+          "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+          "bytes": 9414,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/server.ts"
+        }
+      },
+      {
+        "path": "packages/platform/src/web/spa.ts",
+        "before": {
+          "gitBlob": "146367214b499ef4d4065c8b15c2d3fc0b24caab",
+          "contentAddress": "git-object:146367214b499ef4d4065c8b15c2d3fc0b24caab",
+          "sha256": "7ae4a4bd0bfec0d578eae5d7182c4a0d4fd0df21ee08736a1a9b8b72ffb6388b",
+          "bytes": 5017,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:packages/platform/src/web/spa.ts"
+        },
+        "after": {
+          "gitBlob": "3448db100af880bab4de4aca41d474d8593fbcdf",
+          "contentAddress": "git-object:3448db100af880bab4de4aca41d474d8593fbcdf",
+          "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+          "bytes": 5337,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/src/web/spa.ts"
+        }
+      },
+      {
+        "path": "packages/platform/test/hosted.test.ts",
+        "before": null,
+        "after": {
+          "gitBlob": "a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f",
+          "contentAddress": "git-object:a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f",
+          "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+          "bytes": 17156,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:packages/platform/test/hosted.test.ts"
+        }
+      },
+      {
+        "path": "tools/build_hosted_artifact.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "f01840748414cb79b7e675f8f67687e58ecdbb3b",
+          "contentAddress": "git-object:f01840748414cb79b7e675f8f67687e58ecdbb3b",
+          "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+          "bytes": 637,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/build_hosted_artifact.mjs"
+        }
+      },
+      {
+        "path": "tools/verify/cold_clone_targets.txt",
+        "before": {
+          "gitBlob": "3ae4917eef81dbe15011f014d0426fab3a0e97cf",
+          "contentAddress": "git-object:3ae4917eef81dbe15011f014d0426fab3a0e97cf",
+          "sha256": "c8616af4659f2680e1eaa0d31497d69c9d69ea58220502d7fd52816f1b143bc8",
+          "bytes": 1399,
+          "treeReference": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20:tools/verify/cold_clone_targets.txt"
+        },
+        "after": {
+          "gitBlob": "35fd1fb591bdb9798104037ca9b08ac62791fa07",
+          "contentAddress": "git-object:35fd1fb591bdb9798104037ca9b08ac62791fa07",
+          "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+          "bytes": 1414,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/cold_clone_targets.txt"
+        }
+      },
+      {
+        "path": "tools/verify/e12_t10_browser.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "e12fe887daadf35bbdabddd230db21e6dddd913f",
+          "contentAddress": "git-object:e12fe887daadf35bbdabddd230db21e6dddd913f",
+          "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+          "bytes": 17743,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_browser.mjs"
+        }
+      },
+      {
+        "path": "tools/verify/e12_t10_deadlines.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "dba5f31032c55a5e0526903154c6c93d765d298f",
+          "contentAddress": "git-object:dba5f31032c55a5e0526903154c6c93d765d298f",
+          "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+          "bytes": 8273,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_deadlines.mjs"
+        }
+      },
+      {
+        "path": "tools/verify/e12_t10_fixture.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "941154b7e9585d7b0e8b918ad411b26b7fd89ead",
+          "contentAddress": "git-object:941154b7e9585d7b0e8b918ad411b26b7fd89ead",
+          "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+          "bytes": 14762,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_fixture.mjs"
+        }
+      },
+      {
+        "path": "tools/verify/e12_t10_hosted.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "42b40620460b6eaa1825700b1705e8259000b3ce",
+          "contentAddress": "git-object:42b40620460b6eaa1825700b1705e8259000b3ce",
+          "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+          "bytes": 24433,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_hosted.mjs"
+        }
+      },
+      {
+        "path": "tools/verify/e12_t10_identity_reducer.mjs",
+        "before": null,
+        "after": {
+          "gitBlob": "71e8b280e8d725b1fd461c7833f9c9e2200fb4f5",
+          "contentAddress": "git-object:71e8b280e8d725b1fd461c7833f9c9e2200fb4f5",
+          "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+          "bytes": 268,
+          "treeReference": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555:tools/verify/e12_t10_identity_reducer.mjs"
+        }
+      }
+    ]
+  }
+}

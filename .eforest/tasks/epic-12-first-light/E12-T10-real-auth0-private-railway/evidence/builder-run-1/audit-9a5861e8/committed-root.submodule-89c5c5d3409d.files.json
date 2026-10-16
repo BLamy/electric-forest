@@ -1,0 +1,5346 @@
+[
+  {
+    "path": ".github/workflows/ci.yml",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "84d4eee3a193a89dacfb14d06c09216d16f46fe7",
+    "sha256": "a1f3c030a278facd3f9e425a74d3d6811b3886415277dc4d6d255353f162f7d0",
+    "bytes": 681
+  },
+  {
+    "path": ".github/workflows/release.yml",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fec3c18a7bb022b3fde0b7a6cfb428f9048db359",
+    "sha256": "51726787e59990bb2f1463a28efeb4d8d5d07f3b756fabbd1922598a63e8d63f",
+    "bytes": 4803
+  },
+  {
+    "path": ".gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ad57b411f063ac4e5be5c5c2ef4e6d54f02fa37a",
+    "sha256": "052b3bfb4a89e98299979f37e2401f2d752cdcb2d44976bd80cf7feae469fd69",
+    "bytes": 251
+  },
+  {
+    "path": ".node-version",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a45fd52cc5891570d6299fab38643103c3955474",
+    "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53",
+    "bytes": 3
+  },
+  {
+    "path": ".nvmrc",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a45fd52cc5891570d6299fab38643103c3955474",
+    "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53",
+    "bytes": 3
+  },
+  {
+    "path": ".prettierignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "445b70a5907d901437147aaeaaf9e72b6d841be7",
+    "sha256": "9ea7217a8c8c65e6ff58679eed5e3c01a2820034b74d4a128fb495adf93c2d68",
+    "bytes": 45
+  },
+  {
+    "path": ".prettierrc",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "47e2a96c4ab9bdebc751d2d595ab84d86ae7b17f",
+    "sha256": "6da26ab50300a9ddf2a4dad86c2392740983d412643054b9c4c6550b8699d187",
+    "bytes": 107
+  },
+  {
+    "path": "AGENTS.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9ea10a2944bf17ec612717eee5a246ba20868ec8",
+    "sha256": "b7f7b1e50d63bee806714fcf1c4ad62412a07290a9b5aa409795ec3b7577ef72",
+    "bytes": 4561
+  },
+  {
+    "path": "CHANGELOG.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "02198c91c048ca6604ee076a387eb6edf9ce3bd9",
+    "sha256": "c80c5ea429d08e477a8b828a945adc7f74af7888214928dcdc72609efa9d4235",
+    "bytes": 5635
+  },
+  {
+    "path": "LICENSE",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b2712700ec7bf5a1bb067ca09f7b8c60362e895d",
+    "sha256": "d18ee1e6112671ef51e446ef260ba2c335ae64412c10c4fb70a798a7fac39ef7",
+    "bytes": 11332
+  },
+  {
+    "path": "README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a7cd8c18de5e06831d89912bcb13a1f7e18bb97b",
+    "sha256": "d5c0e3c262476efc6088037cd2ad3eb16457cddcb24e9832097fe28af2e85260",
+    "bytes": 61980
+  },
+  {
+    "path": "apps/web/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5ef6a520780202a1d6addd833d800ccb1ecac0bb",
+    "sha256": "207e265ff4901f9ad9f96d8ce08530e04f9fc600815472a66d0a446096d654cd",
+    "bytes": 480
+  },
+  {
+    "path": "apps/web/AGENTS.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7148443e874ec16bf0fd1be4e3eddd3745786861",
+    "sha256": "112c5734f170e02fa4cd15a2c20147e1f0ef1f1787b2dfa269dac0fd42c26434",
+    "bytes": 324
+  },
+  {
+    "path": "apps/web/CLAUDE.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "43c994c2d3617f947bcb5adf1933e21dabe46bb5",
+    "sha256": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+    "bytes": 11
+  },
+  {
+    "path": "apps/web/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e215bc4ccf138bbc38ad58ad57e92135484b3c0f",
+    "sha256": "60b55ff7df79af72590f9524208e46642bc32bdc175cdad41349681c0e2f958f",
+    "bytes": 1450
+  },
+  {
+    "path": "apps/web/app/api/docs-chat/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c94e52f9205a20718f376c5fcef0a807399bce64",
+    "sha256": "e001e9a1431994cc6ddb1491d66e90d16b3ec846f6c622787b82155536c1574e",
+    "bytes": 4480
+  },
+  {
+    "path": "apps/web/app/api/search/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "60c438c87b95bca9ed604449780fea125f70402f",
+    "sha256": "767a0cd6b5a560d78254758d3e8b136394471717770502fa7baecc42d1bb41a5",
+    "bytes": 1877
+  },
+  {
+    "path": "apps/web/app/docs/agent-vault/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a21a87681188cca72a36fb40b769634c8182d21b",
+    "sha256": "818dd2fe2287ae003d041d02933d80d435ab74426eb15a69323e32c049720417",
+    "bytes": 206
+  },
+  {
+    "path": "apps/web/app/docs/agent-vault/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "dacd1a8fe34451eb81dd70adf2a4b2681ad86f49",
+    "sha256": "6afb402dd1e5d96ee89de78c922614d1fa04b6c65423286225dcf76a3ed611ec",
+    "bytes": 4938
+  },
+  {
+    "path": "apps/web/app/docs/apple/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cb5fae840cbe75249ef2757d220e118ffc6a68b9",
+    "sha256": "1e82f80c506a75b51d45b8fe2fbf4402ce764d331aa32945c1c2a46c47119df6",
+    "bytes": 200
+  },
+  {
+    "path": "apps/web/app/docs/apple/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6e85de651f038113311d30a5da6fe08744879a6b",
+    "sha256": "2cd88a2bef543fa8073fba2e59e24a1053c3779d9daa7754dad007dfc62858ae",
+    "bytes": 2186
+  },
+  {
+    "path": "apps/web/app/docs/architecture/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9b944c204f564976bfb64e947cd6198cf5b69df3",
+    "sha256": "b063b9723ce246dc5610f8f2bd295151ac36cd57a12c88672aba82cc85d415a1",
+    "bytes": 207
+  },
+  {
+    "path": "apps/web/app/docs/architecture/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bd6d1998fb08755246c895444edfea8360a35e7f",
+    "sha256": "45b4485e9df716d1cd79e299b481f763b9c34875e08c577c2bb1c29a23af4ee9",
+    "bytes": 2412
+  },
+  {
+    "path": "apps/web/app/docs/auth0/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a3f8a60f57fd9a5ea5bc6412e540fe46f50ee9ea",
+    "sha256": "640ccc3fc612cd022c2998066e6edac4c00afec6939bbe85a4c0a788e20df32f",
+    "bytes": 200
+  },
+  {
+    "path": "apps/web/app/docs/auth0/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f3c1cced6e529f7c0cbeaaa3302ce88e2cdd6eb8",
+    "sha256": "9261cdf654cdb123a96603c4f173fca8e5df45474c5c69be8bde74e408c93787",
+    "bytes": 3632
+  },
+  {
+    "path": "apps/web/app/docs/authentication/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "db743ab2494c115b6d120a9e3382591c1608c4a5",
+    "sha256": "475445a34935dd15729b22844116970b558d03ab68dda228332e4a19ee601a2b",
+    "bytes": 209
+  },
+  {
+    "path": "apps/web/app/docs/authentication/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b2b482592941a3cfda348cfc7ea2909d92e7b9b2",
+    "sha256": "95fb39e7be41ab6900c09716564b7cddd5d50d9994b021afa29b94a97fba5f7e",
+    "bytes": 3655
+  },
+  {
+    "path": "apps/web/app/docs/aws/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "094f79283e76e212e518745ca8cdd5a8b599c6fb",
+    "sha256": "a78f10eac2d5b4dc266a80bd5e920bcd7e0716d654be771dc49c0899eba96c1d",
+    "bytes": 198
+  },
+  {
+    "path": "apps/web/app/docs/aws/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "967d2ed03fa36badde9b9cccaaee4760bff4a14e",
+    "sha256": "985c43eec650d61cf0368fff30eafa15be5d731df28e52f00b94cc4e7e894c11",
+    "bytes": 2253
+  },
+  {
+    "path": "apps/web/app/docs/configuration/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d38b79b69a3550afc471812394164644d3198b41",
+    "sha256": "afc19fdd65e721f2b7e26646f1ee438b7264aa85f1438beacd806d9f9203a25d",
+    "bytes": 208
+  },
+  {
+    "path": "apps/web/app/docs/configuration/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3f4778c811e9183cd654660166c95058e91dd5e2",
+    "sha256": "35e8d734480ec45e56bd7097766d687e83f2c732b6f9d21678b82afbc54d5dbb",
+    "bytes": 12033
+  },
+  {
+    "path": "apps/web/app/docs/durable-streams/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "01f230155bc1ea917f453e1fef47b88a09de0e66",
+    "sha256": "8f0e5fabbcde425a571c68e35588350f29f7ffdc7878a093aa0c3de54fa11673",
+    "bytes": 210
+  },
+  {
+    "path": "apps/web/app/docs/durable-streams/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3fb40a68983e3718297bdbf35f83e8358f6015a5",
+    "sha256": "6dc97b83b2849abed6a910e25cd0a34230a5aa5647e0b56e5800cdc2758e4869",
+    "bytes": 2617
+  },
+  {
+    "path": "apps/web/app/docs/github/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bf5ecac6ab5e91ed944ae7b3c3369dc83cbc6660",
+    "sha256": "988e3d730ebe67baa3bd6d4bf98e9695666232d159b2e0902049931cb9927200",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/github/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "36f6aff32261ed5ee97ed218db26d9510384d573",
+    "sha256": "3f68155df17532046f0e4c43324b95a92c96f7ae51c5017477dd44329293af07",
+    "bytes": 7188
+  },
+  {
+    "path": "apps/web/app/docs/google/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "417156ca5e08377f698bc83059f0ec2c5c474d37",
+    "sha256": "9ccb9e6eb9d9956ac7e41de41713ae3251562586d5f5b588d626e5771f10b88f",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/google/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5d5d101f95e6c33f67e504762986f7a4a1b6068f",
+    "sha256": "921e72193510ce9330b40a18e932cc4abdf758dd3881fea27dd25972533c3058",
+    "bytes": 3307
+  },
+  {
+    "path": "apps/web/app/docs/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4165852b35bccef0f32233429219a91040c2bb8b",
+    "sha256": "fa79ee4cc5356b61abd53408651587060d850ec587977c789586a2602bf7bb49",
+    "bytes": 830
+  },
+  {
+    "path": "apps/web/app/docs/linear/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "90e0fb8612c651bea5966809a2ac52af980d6086",
+    "sha256": "bdd59279de93f2a1bf7bbabf051221ed65be0c74805630bbc12942bf3f0ea61a",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/linear/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9ae32878d6e0137b1da47a9fe010fe8dabda8821",
+    "sha256": "22f89afe12b1aec74ba6e6345e3bd5466221411c6a783cc3949f752a9a55dbcd",
+    "bytes": 4061
+  },
+  {
+    "path": "apps/web/app/docs/microsoft/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5d29ee3e4f33cfada1b0125781d6e42d748086b",
+    "sha256": "bd06b93ccbc5df18e34994f1b7b73b5f65ede598858e36a29a7619c9ce858b38",
+    "bytes": 204
+  },
+  {
+    "path": "apps/web/app/docs/microsoft/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "07b2a4f91432bf035047648168b69a37797575a0",
+    "sha256": "b7da2830d31739754ff01007fdf8872e6393caf26b68eb7362a1536c38259297",
+    "bytes": 1922
+  },
+  {
+    "path": "apps/web/app/docs/mongoatlas/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "374a112faf9c52a3918dfda78e46f52066d133cc",
+    "sha256": "94637d263f2d0541959f000dcd386dba246f9681257d350ef0e036a97fcd58f0",
+    "bytes": 205
+  },
+  {
+    "path": "apps/web/app/docs/mongoatlas/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "39768baf0493c64dd346da4c60da79800ef90e8d",
+    "sha256": "bc141eda214f1a50853b31edb5f58fbb17e38357f0ea62a3c131b36b33d3e846",
+    "bytes": 2218
+  },
+  {
+    "path": "apps/web/app/docs/nextjs/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b863332c4d61be99b6e72138be3505c016ebc5c1",
+    "sha256": "d105decbc4d105d3e5bc23bfe8005ff16c83749765901441803ed1c93a70fb54",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/nextjs/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eedad42b1061ff09d786eb6b9bd89e5aa69b957e",
+    "sha256": "d873144bb309aec1327acb23206953c0171fd13e46017c90aada58efeae54789",
+    "bytes": 4595
+  },
+  {
+    "path": "apps/web/app/docs/nuxt/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8eeaee51cbb17d415d707ac696094885b09b32d8",
+    "sha256": "75dc817c8835e477b36828108eccfbc3b845b888842a191a745c8a7c70e3f31a",
+    "bytes": 199
+  },
+  {
+    "path": "apps/web/app/docs/nuxt/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "95403788b4f9ccfc2cb5186089327667be77df00",
+    "sha256": "8fd1c97508e0bd3ae7497341aaa726a1c8821132f4a075dce17a42b7af7094f5",
+    "bytes": 4721
+  },
+  {
+    "path": "apps/web/app/docs/okta/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "138d9ec90c5a8910e89f940daf538856ea255360",
+    "sha256": "a3e4413c5fac057ca114e2bfd1186ea7c94118e452107857ff7620485fdd7cb8",
+    "bytes": 199
+  },
+  {
+    "path": "apps/web/app/docs/okta/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "073b394c7ecb18cbed813b0c613a95fa865d254a",
+    "sha256": "fa36c3ef8498ea82da08f4a7033ea460be9f85bc7eb9e714b36c8ec640fd2d4d",
+    "bytes": 2960
+  },
+  {
+    "path": "apps/web/app/docs/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e1e787231f61d89da417456da3295f2b2566d73e",
+    "sha256": "51935a09cf6579cc662b8098de83b8d8439c469a81f641c5bcc9c452bb1650e3",
+    "bytes": 3379
+  },
+  {
+    "path": "apps/web/app/docs/programmatic-api/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "396c646676760660aefdc7c01b153e32c0509fbf",
+    "sha256": "797b7276549fddccfaa4800c57f343c41b0a809bebabbe3bf90ee15d67efef9f",
+    "bytes": 211
+  },
+  {
+    "path": "apps/web/app/docs/programmatic-api/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8b49c9c4c78614ad1952648cd8593a53242c359e",
+    "sha256": "ebd0980fd2c1e1dd995bec07e7fed9fa8b0ffd015bf9e977016559662b4781af",
+    "bytes": 6965
+  },
+  {
+    "path": "apps/web/app/docs/resend/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "81d669c4614dac3d8abe4856ebf3ebc3659a4fd6",
+    "sha256": "66e29bed1d2728007fad4a21d40da9a04a991b4c45ef0c817d316abc38e54115",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/resend/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "09d69c1f9d2878f222226f525b3d23ed02af2dcb",
+    "sha256": "41750fc3f953215eb5dfa640d28db681a377cc0dd56d4475248a26ea4b80a0a2",
+    "bytes": 1156
+  },
+  {
+    "path": "apps/web/app/docs/slack/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ffbc31f1c3fda085db550bc7a1730fc9784fe192",
+    "sha256": "3399971211e9c085e6389d6347a4feda24a4ca1a6e89fadcbd20a5a814988f41",
+    "bytes": 200
+  },
+  {
+    "path": "apps/web/app/docs/slack/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ce2d8b0b9cf52d34979c2364c6cf62fd07aeed6e",
+    "sha256": "3f857e56c6ea177e559c506f72c70c0e01388398794d18d476b2eddea695d48b",
+    "bytes": 8751
+  },
+  {
+    "path": "apps/web/app/docs/stripe/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "19661b5193294c76cca678feb21f9e7b5fac019f",
+    "sha256": "ab4567ae9977f12ebdfdaf98666401d68922f32cd26d20ce2f73fc217b1ad390",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/stripe/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1b7a05b79dd96da352f64516e3288b1d97828cd7",
+    "sha256": "8afc02db3c291dc898a60abb338f83bfe47e88369269dddb8b98279fe2062b7c",
+    "bytes": 2086
+  },
+  {
+    "path": "apps/web/app/docs/twilio/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ca56681da0d1658b01035b6545a92f9edc407235",
+    "sha256": "fbd78629cc509df35732d9c1216859459f7f4907cc7b56acc986ca3961eab2d1",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/twilio/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0ec7cae1148fd21e90810236d9c4421ffafa80f1",
+    "sha256": "f18cee97f651755c5c47c81daf33b7bdccebaa7e098a2899b13b7fbf0ad71d6c",
+    "bytes": 5112
+  },
+  {
+    "path": "apps/web/app/docs/vercel/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "50b038854c9fef99f6aea96fdac153e3ba3fd51c",
+    "sha256": "2e54eb215e2c3f6faf11a53e9cea257b05fc67735baa4871a1a7b63f244ae8e3",
+    "bytes": 201
+  },
+  {
+    "path": "apps/web/app/docs/vercel/page.mdx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "475d7b05103d024929fd3f66efc529dc95528d22",
+    "sha256": "b401bd0be956ce2ebef27c3a1c4ad2e42625d7f52d002c426e257bf57af24faf",
+    "bytes": 3294
+  },
+  {
+    "path": "apps/web/app/favicon.ico",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "718d6fea4835ec2d246af9800eddb7ffb276240c",
+    "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+    "bytes": 25931
+  },
+  {
+    "path": "apps/web/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7d44f2d9b1cc6de34fead6296e3ed5c899e3cacd",
+    "sha256": "3dd2a18e0d88d4bc4733571930bf1a01f64fd3c0c812735d769ca3f482d4281a",
+    "bytes": 3813
+  },
+  {
+    "path": "apps/web/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "595b2999fa93236c92707606c249458dc6c52196",
+    "sha256": "4be4995595410f02b206aee421a333acfcb11a56ba0de71fe39f8414d3f5d936",
+    "bytes": 5150
+  },
+  {
+    "path": "apps/web/app/og/[...slug]/route.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e9b777f12d11508b463e956c29da4bc59e159437",
+    "sha256": "2af01ef3c8e66151c55b91dc25a5f9ff5bca9effe00ec6066a469983fee9b24a",
+    "bytes": 409
+  },
+  {
+    "path": "apps/web/app/og/og-image.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "17cad1df72afd7d4b6c2aceceb0e3f3c7ac57b45",
+    "sha256": "753ddda3538603e1830d93f1ccc00d63d87b06d4d8f1e68d19bed27de05a9a64",
+    "bytes": 2690
+  },
+  {
+    "path": "apps/web/app/og/route.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e37a1955ae76edb02ec73f31a56007502958d16e",
+    "sha256": "2b18e944d135ba62b6292912dcd1d7e6a21454cfc7f3af7545cf4d83b03c0d93",
+    "bytes": 157
+  },
+  {
+    "path": "apps/web/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8e7032cbfa00a58c54529c7a04ee85d1275953b0",
+    "sha256": "b7675d93aa3bc8f4b01fda998476b58de01b1ad1f1c909dccb15eff1d46d242f",
+    "bytes": 11177
+  },
+  {
+    "path": "apps/web/components.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "02e61e07044c3cdfad1b3e89161cd6717e602abe",
+    "sha256": "a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+    "bytes": 517
+  },
+  {
+    "path": "apps/web/components/code.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "282c87fcf072457995351e974c0e4f21711bbbdc",
+    "sha256": "d10a15fcc54c61634eaad2ffc1060a4a001bf4ce5ccc6609bfa960e4d88f28e4",
+    "bytes": 5417
+  },
+  {
+    "path": "apps/web/components/docs-chat.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "752ef8a0531545ce57b802a7737dbb0da61f35f5",
+    "sha256": "18e81ebbf8388899056917e6c616f93eaab0c513f59c55a74b56996ab29836c1",
+    "bytes": 16849
+  },
+  {
+    "path": "apps/web/components/docs-mobile-nav.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9cd0517f253b7fe93b1b62d395d7816cde4399b5",
+    "sha256": "185c0f06dd87eb6957562723a73c41acdb0ab17349b37308f9ad7eec091b0d1b",
+    "bytes": 4562
+  },
+  {
+    "path": "apps/web/components/docs-nav.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "31914b2c8c4b103adbd480c9dc5519b5eb7c8cc8",
+    "sha256": "76e770f6a0deb4504dae03f0e22ce57745311229482c28fec8813562777afef6",
+    "bytes": 3232
+  },
+  {
+    "path": "apps/web/components/hero-terminal.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8c617fe28d90616b715f4d0a186c0771a8aab765",
+    "sha256": "9c62f84040bed10e776a56117ef7ab262fbfac109dcd6ad1e85c17ea6d94dc94",
+    "bytes": 3372
+  },
+  {
+    "path": "apps/web/components/search.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "28e8c5b50069a2af4f119003eddcf99ceebc498e",
+    "sha256": "ae68ba2245d047dead42c369038d3cdafe06ab4679b7e9a6604d150e51c27552",
+    "bytes": 7865
+  },
+  {
+    "path": "apps/web/components/theme-provider.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4305ad06655d54b8e4d54f7304f45ef9a36d03c0",
+    "sha256": "dd2288c2c5148f8f0b6803ade73329a4843b7314fd25fd1ee0bed562318cf9e6",
+    "bytes": 323
+  },
+  {
+    "path": "apps/web/components/theme-toggle.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b27bbcbd9d923faeab1a99bf12791d74f79ce898",
+    "sha256": "c631278232ae83f04cb18fd10713ed97c58b52fe7a601a151b1a96cdb0652632",
+    "bytes": 1721
+  },
+  {
+    "path": "apps/web/components/ui/dialog.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f454fb491bfeb803b56554387fc6535fbe1cf53b",
+    "sha256": "44866d29539b1edc823de678ec7ff618da35b07fdddb71e540811e3ee1f34817",
+    "bytes": 2902
+  },
+  {
+    "path": "apps/web/components/ui/sheet.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1811b8a3272b9602c5e0bb971ed8cbcfd6adaa77",
+    "sha256": "8a940f97749dee2b7c11ad64f5e41bcc3f63f7e70d6d7242666995b30ddb948f",
+    "bytes": 3434
+  },
+  {
+    "path": "apps/web/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "05e726d1b4201bc8c7716d2b058279676582e8c0",
+    "sha256": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+    "bytes": 465
+  },
+  {
+    "path": "apps/web/lib/docs-navigation.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "063849cad6c01fc361869ddbaaed9887cb5c9db3",
+    "sha256": "7cf93d3e5cf5d80a45c971f30174d6ae167261fd911020e76499091a428d3d84",
+    "bytes": 1313
+  },
+  {
+    "path": "apps/web/lib/github.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cb280b73e5b8d4fd6ef6348bb2f17dd424195a6b",
+    "sha256": "71c7a1511fe3a120c394e9d9cb460d5eeeab0990e61d82e88d6a655b7aac0fcd",
+    "bytes": 599
+  },
+  {
+    "path": "apps/web/lib/mdx-to-markdown.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "af5399172a13b6d2fc748e2e48461795eb0cf4c1",
+    "sha256": "0823dd4f0e746f90a4d89a7883fba4dbc93b1143d53fb0ba28f2b41e54bdfdcc",
+    "bytes": 1111
+  },
+  {
+    "path": "apps/web/lib/page-metadata.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d1b41a44c6db9676f8098844d865efcb8be8275d",
+    "sha256": "0b6424d1cb3d1e1a3f9515f681edba963c0bd789b01ee6d299898bd5b5edc326",
+    "bytes": 1026
+  },
+  {
+    "path": "apps/web/lib/page-titles.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c6625eccf1e3bce9f233d36ad25b250ff857a3ed",
+    "sha256": "cb1c1b511681ee9403a8209e508416cccb458cf4d348bd851293418780afbc9c",
+    "bytes": 827
+  },
+  {
+    "path": "apps/web/lib/rate-limit.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7baf1cf10076cf868b7277dc7c8f984813930955",
+    "sha256": "b344914e212ffa6215bfe4c5bfe2a7bbbc541af275433d23cbe530d0d74a0db6",
+    "bytes": 1454
+  },
+  {
+    "path": "apps/web/lib/search-index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bff2fae7040447f4b8eb50bf2ecca1917fb7ba63",
+    "sha256": "b10201581a0ff39f243090906ccc4f715cc048c5caf48690389086a4d242953b",
+    "bytes": 1508
+  },
+  {
+    "path": "apps/web/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "apps/web/mdx-components.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "90e4f22ca2c8cab4c4c2f5370e0a4c777ed8b8c0",
+    "sha256": "b6bda48ec16fc3700495c1a2853ce941186f5f895f3041d98b5024ec28d30841",
+    "bytes": 3052
+  },
+  {
+    "path": "apps/web/next.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3bda7cec4097a4d636959eddc42cf4cf4e42e9ec",
+    "sha256": "7074621c901efa281ab568cb851418084abc6907096a50690505955d6c01f351",
+    "bytes": 731
+  },
+  {
+    "path": "apps/web/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c7cf8dd243fe31a8ba374156bef6bd2c31bd1430",
+    "sha256": "7db41010d740a408e6de99617dd74335391e6d6043c876dd4cd5f6b109ad03df",
+    "bytes": 1380
+  },
+  {
+    "path": "apps/web/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "apps/web/public/Geist-Regular.ttf",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f5bc1e0f89cf3f04cb20b4f9ff48155b35421964",
+    "sha256": "ec77e679049dfbdc9eea027a32c8c579c589b93a79283d56310c9f75003c356a",
+    "bytes": 125956
+  },
+  {
+    "path": "apps/web/public/GeistPixel-Square.ttf",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "caa0a610af8788ce5bb1672bb94c7b7de6d68e2e",
+    "sha256": "a077fa6e645fae15e59df7662e486d8dad785a0eff9aa34c9a685411c6125d17",
+    "bytes": 94800
+  },
+  {
+    "path": "apps/web/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cfffa8722c37da4cb586bd349715776b97f9c99b",
+    "sha256": "93deeaeb0116ced27732a6ba851f301a7d8094a013760e375675a0895d95cce1",
+    "bytes": 682
+  },
+  {
+    "path": "emulate.config.example.yaml",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e4ae82d6d60e0508a4ea7f0cd8c506799ff82ffe",
+    "sha256": "14cfeac70788f1c99d5049cb6bf9204e16e35403dc97c2b7969c98e7ce0a6a0a",
+    "bytes": 3425
+  },
+  {
+    "path": "eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2fa8efb4a0aeee846098303cb3df599c50bc5692",
+    "sha256": "6f456c041ff4979645bfb7c4b4724a1fe28f38779676397460e37e666968bdc1",
+    "bytes": 567
+  },
+  {
+    "path": "examples/nextjs-embedded/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2a6afb95f724e8db19c4537cca56590f182fc8e",
+    "sha256": "7f6d2d9bc04bc9033658ad9b075ff4e982fd168891925ccd4622ada5600fc484",
+    "bytes": 167
+  },
+  {
+    "path": "examples/nextjs-embedded/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "74d8b101f9dd4b480e3ebcfcc11178e65fa91c4d",
+    "sha256": "6e4083b089b5ef59b02d92da3fb2a5330d3d4b573e1608d2961973833aa72e72",
+    "bytes": 2784
+  },
+  {
+    "path": "examples/nextjs-embedded/components.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8d886db5756307e013bc8ae97c05220fb7b6ab7a",
+    "sha256": "7f89b1e9e3995be8620be3162df8e08b7dd512f894fb0accb559193138fdc390",
+    "bytes": 520
+  },
+  {
+    "path": "examples/nextjs-embedded/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "05e726d1b4201bc8c7716d2b058279676582e8c0",
+    "sha256": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+    "bytes": 465
+  },
+  {
+    "path": "examples/nextjs-embedded/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "518aeba5329063d0c63fee9c6bb5f8aaa59f7706",
+    "sha256": "db0bf983f41dd05a8b1b2d3c92551e9deb8dfa999e56ee08e458f4b14081d0e1",
+    "bytes": 274
+  },
+  {
+    "path": "examples/nextjs-embedded/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "058eb7564de79f625d2d7abec84ea3dc7ba4f75a",
+    "sha256": "fe70089090e977b026ceb7feadbfd4fc995bd210fa7c6f845f3d2007d9788148",
+    "bytes": 1095
+  },
+  {
+    "path": "examples/nextjs-embedded/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/api/auth/[provider]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d8f3cf9c406454b24e8be8731faae774212d30c5",
+    "sha256": "b2fa642ede5c69d34f7ebff8034e4c5b63ed1541a0cbd3718debf76b6580ab84",
+    "bytes": 739
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/api/auth/callback/[provider]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1970cf3c51e55671f11c28262aded3e118c7ff2f",
+    "sha256": "4d1bceb208b6b67dddfebd3624e96e6ed40fd59bc3be1b6d565cabdaf96a3cf2",
+    "bytes": 2268
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/api/auth/signout/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "297b16d903400bee5f80b0eba1e70f2be6f53fa0",
+    "sha256": "462f8b86e172e3bdbb88176b444852b28a41dcd8b68ced4166fad62655a0b54d",
+    "bytes": 247
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/dashboard/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fe89d2e28e29061430a0742457ae46bfb6943f6b",
+    "sha256": "100d8af347629f917b9e524bf8c47c3fd67cd97c61d7de2064d90af0c3175d8f",
+    "bytes": 2910
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/emulate/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8427bf27b0f3c197b46b6e23683da8bb6ca82d08",
+    "sha256": "f26be2a414a47381f296d366bc5a586724e99ca96cec8f292c5697a5865dd971",
+    "bytes": 896
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cb1a6018a07a41e7eb890de8b1016cd632d666cc",
+    "sha256": "25b93f10bb8f1581ab75d7c98920b310662ece7816fd799fb2a8db724129b28d",
+    "bytes": 5855
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "39d4da53be77c195f3afaae52233d67e8d2977e9",
+    "sha256": "c1ea44a8d707600094db08d316106932a1914a35e60ab2f33a4d4043c6a5a202",
+    "bytes": 795
+  },
+  {
+    "path": "examples/nextjs-embedded/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1e2ce8175f5bf84654a111e6e28c065456cac029",
+    "sha256": "03738d569988fc96fed34c73c817cfd5f6d3f45674051b0ae87a2e64cdf1af44",
+    "bytes": 3223
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/avatar.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "17f3ffd5dde16cff82db9d98104fd63b489645c8",
+    "sha256": "2b4bfe729d8724c0b1184b40267046fa8ebec39d1915ffc7431a212d2c84f335",
+    "bytes": 3010
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/badge.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e1997af40f8040cba4ed5561e1f6babac9dfa9f9",
+    "sha256": "a8769bd6d55d095ce53281b37db00bfc362d556f23cebcc92904f2d5e010ca8b",
+    "bytes": 1904
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/button-variants.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9d9aa8880345799f279ca2157b87fc140c96c4d3",
+    "sha256": "fc7a16438da19a86de084b08e6c7e8a6af71376e63880fbb84ddce18750a0ec9",
+    "bytes": 2707
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb1dbdf75d4c8a4260b2a7b26576a86c286c85f4",
+    "sha256": "962338a72f9a492fad75fba41b2d60558a40f19c03ba09f77379ed98f94ccdfd",
+    "bytes": 542
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/card.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3117fa100da712825d184480272aacba272bdf15",
+    "sha256": "416626239dd19342dd99189e13786a7e56a619ab85dc738d6ada616360736e02",
+    "bytes": 2496
+  },
+  {
+    "path": "examples/nextjs-embedded/src/components/ui/separator.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2c55c81c75dda4930c76952483d7dcc31edc57e",
+    "sha256": "7632ddc28460902b9fc89cc0784c77271c2da5800b9fe5629fcc4de8e699b50a",
+    "bytes": 545
+  },
+  {
+    "path": "examples/nextjs-embedded/src/lib/providers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "213fd0211dc8abc1216097b81760c29a0e269759",
+    "sha256": "240f23151aae3d49fb71ce17aa41d37df65c47ab37bf0631ae5518db7c54bde2",
+    "bytes": 1582
+  },
+  {
+    "path": "examples/nextjs-embedded/src/lib/session.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8f46d80eff3161efc94fc8cf047dd01f538ab153",
+    "sha256": "e99efa92c0c80eff019880a8efa0fb4d486042e815382493800885f546e94113",
+    "bytes": 796
+  },
+  {
+    "path": "examples/nextjs-embedded/src/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "examples/nextjs-embedded/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "examples/nuxt-embedded/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5c2f7ae3c1b7157d14ce75725b3fe3483bbc8856",
+    "sha256": "20f49de3f55fe8fea337edde28a4b497bf6e595e4f1a0db89dfc3eff28501795",
+    "bytes": 161
+  },
+  {
+    "path": "examples/nuxt-embedded/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a0ffe80d6d679d99140ce6d6006a9051af228891",
+    "sha256": "2fcc3c09ce9aeff76bf5c5d6fc84bf0b0519e30f3c1bb4642716991a6c4b98ab",
+    "bytes": 3279
+  },
+  {
+    "path": "examples/nuxt-embedded/app/app.vue",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8d35e83cfc39f866272d5a701fd4c43e2f95cd95",
+    "sha256": "ca2b7112b76a17555ab869a242211c6f0f83988824ccf7c10374c3db521f77b6",
+    "bytes": 1582
+  },
+  {
+    "path": "examples/nuxt-embedded/app/pages/dashboard.vue",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7ffa1ee9cc67ad0389a1d0a743bbc84b905cef9c",
+    "sha256": "33657aeda91d153166ea1c90cb60824c9baa4be65db00b9f4e6dbce93a290402",
+    "bytes": 2485
+  },
+  {
+    "path": "examples/nuxt-embedded/app/pages/index.vue",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "71fc45c6d5e2cfcb11f3c62d6bbd11677cb9ce72",
+    "sha256": "5212e04b750ea0aa0ba66938a7522299ae17f118c7f7e739ab4e19bcc8403ce9",
+    "bytes": 692
+  },
+  {
+    "path": "examples/nuxt-embedded/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6e1fc71a19842a440194d9eaa405532f8e39f4b7",
+    "sha256": "5083d7de4bdc903b7a875c7e5a190b100b6759762bc53ff9a5e7e9059c96cc48",
+    "bytes": 162
+  },
+  {
+    "path": "examples/nuxt-embedded/nuxt.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "30f86d08d32fe729ed138d01e5b1988532748052",
+    "sha256": "50508bfc3752847cd7961c67098a3b18c5d2b022bfbd5fc7801c2d41e9f31363",
+    "bytes": 342
+  },
+  {
+    "path": "examples/nuxt-embedded/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "44f5de6577e6ab0addf52fc95e6c2f926e482b3d",
+    "sha256": "838e5c161ae919f18358461ddbf19afdf02529274857de0099bc558cc4137ad9",
+    "bytes": 805
+  },
+  {
+    "path": "examples/nuxt-embedded/server/api/auth/[provider].get.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c0d7c9442557a36aaff10faab57512de3f887c58",
+    "sha256": "e8ee35270d6a622188bee0a1c65df2f858e5669a10a1a0395ba00cb0b132e9da",
+    "bytes": 752
+  },
+  {
+    "path": "examples/nuxt-embedded/server/api/auth/callback/[provider].get.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "29ac8325d7cd2244c7cb4ce179b6813f6ac8f057",
+    "sha256": "5a958570657b9013aca2d278120e84034823b618c87249fe72ecf7fa9de11455",
+    "bytes": 2239
+  },
+  {
+    "path": "examples/nuxt-embedded/server/api/auth/signout.post.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3543ae4959abcb6525b03319415747531c1df866",
+    "sha256": "73b973d7fd0d15fbff1282b8777a960699b6f595bc06dcd8a42a3fe75f89d669",
+    "bytes": 107
+  },
+  {
+    "path": "examples/nuxt-embedded/server/api/providers.get.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e1efdc00a150b23970ee69ce1a5f62e93ec04096",
+    "sha256": "38c978784aba743138f8f9fe29853767110c07566f4e8e5ec70602fc5c3c01f4",
+    "bytes": 275
+  },
+  {
+    "path": "examples/nuxt-embedded/server/api/session.get.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "34b69d8ae260f8d0cd6e2e0d8d59274384dbc816",
+    "sha256": "76880725fa7093db85e349da62ff0c7479d99c9eb83a97d64e6972a7ba747e50",
+    "bytes": 238
+  },
+  {
+    "path": "examples/nuxt-embedded/server/routes/emulate/[...path].ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8c6458bd4e36492bc6b2591b8bcb1ac59194939c",
+    "sha256": "62417b6ded39746b941182d6e86aaaed71f2993646e2df0c39ac07e7765b4ca0",
+    "bytes": 1109
+  },
+  {
+    "path": "examples/nuxt-embedded/server/utils/providers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5599dfc1840512b82b76ac58c105c9ad66f6a1af",
+    "sha256": "c61c6c8330d8a7de25e33cd705faffd063c7c4de5264f8acca4ad40a53ba0e1b",
+    "bytes": 1799
+  },
+  {
+    "path": "examples/nuxt-embedded/server/utils/session.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cdb3f07f464eb1255769c4b0c1964c285c796bb5",
+    "sha256": "bbff4cf1998b0230bd3b48bfebe87a2eae4cecc73bd5db3a3e7ce6dbca52e36d",
+    "bytes": 1036
+  },
+  {
+    "path": "examples/nuxt-embedded/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4b34df1571f7bfb636c02bbb718603cc2d9d1382",
+    "sha256": "56f5b528cc102a257b71c01305f8b1456762d85793bd610bf613f2d7c3e1fc84",
+    "bytes": 41
+  },
+  {
+    "path": "examples/oauth/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5ef6a520780202a1d6addd833d800ccb1ecac0bb",
+    "sha256": "207e265ff4901f9ad9f96d8ce08530e04f9fc600815472a66d0a446096d654cd",
+    "bytes": 480
+  },
+  {
+    "path": "examples/oauth/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a6fda8911eb81b6da8f63ade411ab2cb89da09de",
+    "sha256": "3cd01d753fc8ed296c075994ca4a5530cfa50f942612757bc23cef804d56f1fe",
+    "bytes": 1379
+  },
+  {
+    "path": "examples/oauth/components.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8d886db5756307e013bc8ae97c05220fb7b6ab7a",
+    "sha256": "7f89b1e9e3995be8620be3162df8e08b7dd512f894fb0accb559193138fdc390",
+    "bytes": 520
+  },
+  {
+    "path": "examples/oauth/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "05e726d1b4201bc8c7716d2b058279676582e8c0",
+    "sha256": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+    "bytes": 465
+  },
+  {
+    "path": "examples/oauth/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4f305dccca1999e534dc1bb7160142c78f66de38",
+    "sha256": "beb39d5934ec926d8f32f2b5e6880719cddf7d8a336f8fd6905830ed18bf6a56",
+    "bytes": 206
+  },
+  {
+    "path": "examples/oauth/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8800e2b833da044fe6b3d6c946fa56268b40b137",
+    "sha256": "fc0e97a1c2406e64f13f4059561a3fdf0ce08c43af9b533bc645786843240237",
+    "bytes": 949
+  },
+  {
+    "path": "examples/oauth/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/oauth/src/app/api/auth/[provider]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4f462b27c3022754a9d8b029d9a1af0726214fc4",
+    "sha256": "f2104e4d4c36a3c279fbc0408d6de14d0e1d15dfe9b6a364494f2abfaf7bc046",
+    "bytes": 743
+  },
+  {
+    "path": "examples/oauth/src/app/api/auth/callback/[provider]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0c2f7d8b26154919254c2795271096b4fff90113",
+    "sha256": "8305f202fd3a02c27afde166c09c64f9b213ffa564e2708407ab8f305821d2e5",
+    "bytes": 2288
+  },
+  {
+    "path": "examples/oauth/src/app/api/auth/signout/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "297b16d903400bee5f80b0eba1e70f2be6f53fa0",
+    "sha256": "462f8b86e172e3bdbb88176b444852b28a41dcd8b68ced4166fad62655a0b54d",
+    "bytes": 247
+  },
+  {
+    "path": "examples/oauth/src/app/dashboard/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5e8edf293c2a026013697881d781257aaf5a929a",
+    "sha256": "05d7a7fe339fa11a0fea450bcab5a1d0e5dba64fec2a63a0a733c1f1df5718fd",
+    "bytes": 2871
+  },
+  {
+    "path": "examples/oauth/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cb1a6018a07a41e7eb890de8b1016cd632d666cc",
+    "sha256": "25b93f10bb8f1581ab75d7c98920b310662ece7816fd799fb2a8db724129b28d",
+    "bytes": 5855
+  },
+  {
+    "path": "examples/oauth/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4b2f2406c166c2ab307398d0cd9bab5b2c0e2db0",
+    "sha256": "3fee44c06e0b8a950e9b71106f3bcbda092351ad12b3fe4c75dafcb7edb751d2",
+    "bytes": 768
+  },
+  {
+    "path": "examples/oauth/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bc2b2171993da2a3c3ed8d8fbad049e372f4dc2c",
+    "sha256": "673456d29b8f9d29db2cc72c41d5ec961dd56c41e0ac6f0cb7a1326f2ecd9be0",
+    "bytes": 3265
+  },
+  {
+    "path": "examples/oauth/src/components/ui/avatar.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "17f3ffd5dde16cff82db9d98104fd63b489645c8",
+    "sha256": "2b4bfe729d8724c0b1184b40267046fa8ebec39d1915ffc7431a212d2c84f335",
+    "bytes": 3010
+  },
+  {
+    "path": "examples/oauth/src/components/ui/badge.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e1997af40f8040cba4ed5561e1f6babac9dfa9f9",
+    "sha256": "a8769bd6d55d095ce53281b37db00bfc362d556f23cebcc92904f2d5e010ca8b",
+    "bytes": 1904
+  },
+  {
+    "path": "examples/oauth/src/components/ui/button-variants.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9d9aa8880345799f279ca2157b87fc140c96c4d3",
+    "sha256": "fc7a16438da19a86de084b08e6c7e8a6af71376e63880fbb84ddce18750a0ec9",
+    "bytes": 2707
+  },
+  {
+    "path": "examples/oauth/src/components/ui/button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb1dbdf75d4c8a4260b2a7b26576a86c286c85f4",
+    "sha256": "962338a72f9a492fad75fba41b2d60558a40f19c03ba09f77379ed98f94ccdfd",
+    "bytes": 542
+  },
+  {
+    "path": "examples/oauth/src/components/ui/card.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3117fa100da712825d184480272aacba272bdf15",
+    "sha256": "416626239dd19342dd99189e13786a7e56a619ab85dc738d6ada616360736e02",
+    "bytes": 2496
+  },
+  {
+    "path": "examples/oauth/src/components/ui/dialog.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "62c98596c7249752d1e6529d43b9760249462bb0",
+    "sha256": "a0431036e4eb969c3b33abe20b2101848307e50291139a3261a99af8818b1150",
+    "bytes": 3873
+  },
+  {
+    "path": "examples/oauth/src/components/ui/input.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "abb87eb98445ac6499bb1b2b1332f880d06d6fc9",
+    "sha256": "064c589290aa236d5e7e7f32c8745a273c7c00cbb12b4966cf96e29e9a81a2ef",
+    "bytes": 1046
+  },
+  {
+    "path": "examples/oauth/src/components/ui/label.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "680d9a6571bb89d2a43c5c6c14b92991a2e83059",
+    "sha256": "eebf6f3ad4de87489da1ca9d0f24a8aaf4d77a94f362db130721531e568600f7",
+    "bytes": 524
+  },
+  {
+    "path": "examples/oauth/src/components/ui/separator.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2c55c81c75dda4930c76952483d7dcc31edc57e",
+    "sha256": "7632ddc28460902b9fc89cc0784c77271c2da5800b9fe5629fcc4de8e699b50a",
+    "bytes": 545
+  },
+  {
+    "path": "examples/oauth/src/components/ui/textarea.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d102c701b7558a85d568cd8afc80722fee508e86",
+    "sha256": "276a7fca0a431b7af5ea9c9ddca0de298f7c303bd1f8bdf330f1414ef981d3f7",
+    "bytes": 847
+  },
+  {
+    "path": "examples/oauth/src/lib/providers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "62a7901cb4239af82aa209f3172ebbc2019a3c63",
+    "sha256": "3db7380de7fa3c0ef271647cb9e3e04a9c1390f576ea70eb8bd2ddaa81210297",
+    "bytes": 2446
+  },
+  {
+    "path": "examples/oauth/src/lib/session.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "dcd04834d721c9d129f856a5aa8706199a966373",
+    "sha256": "9d36126d8a545c22837423c9622952d0a4e0b3df3ac342ecbe3573e13372ea57",
+    "bytes": 665
+  },
+  {
+    "path": "examples/oauth/src/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "examples/oauth/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "examples/resend-magic-link/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2a6afb95f724e8db19c4537cca56590f182fc8e",
+    "sha256": "7f6d2d9bc04bc9033658ad9b075ff4e982fd168891925ccd4622ada5600fc484",
+    "bytes": 167
+  },
+  {
+    "path": "examples/resend-magic-link/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7462a8846129435edd8b2400d4c14051a6f81594",
+    "sha256": "5df318a2ff90217e5a6cce82a9ae7ab503c49eae8e474641bab9fdb0598da1c5",
+    "bytes": 3031
+  },
+  {
+    "path": "examples/resend-magic-link/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c03c2a9580ff42a53a461167f6cbc5df0f4963d1",
+    "sha256": "94ba2b8f8a0c0d68380d657964b5e6b4e6972c66a9ead42d3dd858ac0a7aaf51",
+    "bytes": 345
+  },
+  {
+    "path": "examples/resend-magic-link/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb3a7aac118e8712a7f931fbec0d927af25b4f55",
+    "sha256": "67cbe8d43849dea78c882a3b74165aa73bb0339f1743ee0901edd7448a47ad47",
+    "bytes": 394
+  },
+  {
+    "path": "examples/resend-magic-link/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eaf4f2a4bf9b5d6a9e2e94a56820bf438a1257e0",
+    "sha256": "51abf118f1d1d88d3ccfb8e863dfbfa1ea0ac3c6999d4f68bc09f38697245ca1",
+    "bytes": 842
+  },
+  {
+    "path": "examples/resend-magic-link/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/actions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "49d08aa40cb2970abd30064ace8b6d6161b9a813",
+    "sha256": "7de325c308fd560d408bfc6f58b461131c425e416ac8909a43696546550e9da4",
+    "bytes": 2452
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/dashboard/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ed5e8d7ecbae7555307c1580e54bc356504e6af3",
+    "sha256": "d87c3b10c276b0045b292698220258ab06f87d96d7f4147a5005aa44402ace44",
+    "bytes": 1163
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/emulate/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d77c142ae64f2bec18118a53127b68537834c8e6",
+    "sha256": "39995d7c617eab4eaa96f8b370ac459a62d7689a5362d662f4909f9d25e56502",
+    "bytes": 317
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/favicon.ico",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "718d6fea4835ec2d246af9800eddb7ffb276240c",
+    "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+    "bytes": 25931
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f15fad39310b870c5c2a7d4bffde60f1e2367f61",
+    "sha256": "2d05859d8979e44d7f016df85ee344778bee6632765b23a67b3feb53712058be",
+    "bytes": 1895
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ba51a14516c4f39fb4fb1acfcbaa2a3157b93621",
+    "sha256": "6e4bcb424e102d3f5ca84ee3d466fec832ff96485db1bab6681892e98f1b8e9d",
+    "bytes": 768
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2561ac5e4afe7c430e5ec09ae7f84905531a3de7",
+    "sha256": "d96d21abf010bba6a698e2d38d87f39b09c5b3f681a40dbde8c19bd0bdbe9764",
+    "bytes": 792
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/sign-in-form.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "65a4397b26570976ba858445131d56a99675f212",
+    "sha256": "57e47e12d75bf8f20448a8e5e89d24b4ae8ffd8b88da81561bcb830dfa39081d",
+    "bytes": 1046
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/verify/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf27e7a2b74146cfc580f0e11e37283fe8b0853f",
+    "sha256": "f05404b55ead9f125bbae26115beac508c6919a06242c8f2f7627005f4607f30",
+    "bytes": 1691
+  },
+  {
+    "path": "examples/resend-magic-link/src/app/verify/verify-form.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7aec6a76f07da7214f04afa82635fd38b86f362a",
+    "sha256": "ec87399842d5fb431191c031d8928530a81e0437a4134e19ab005b89a0c0091d",
+    "bytes": 1176
+  },
+  {
+    "path": "examples/resend-magic-link/src/components/ui/button-variants.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c30f468d0132a60cddc651128b5af605f7429c22",
+    "sha256": "fb383f962b573699d7354d88b1af7419fa809075c61b83dab202c4d5f582d1e3",
+    "bytes": 1308
+  },
+  {
+    "path": "examples/resend-magic-link/src/components/ui/button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb1dbdf75d4c8a4260b2a7b26576a86c286c85f4",
+    "sha256": "962338a72f9a492fad75fba41b2d60558a40f19c03ba09f77379ed98f94ccdfd",
+    "bytes": 542
+  },
+  {
+    "path": "examples/resend-magic-link/src/components/ui/card.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ddb86da914b1495fcc10f1955be4f38e038f4944",
+    "sha256": "812b780da2f5b66b5d088153a1efbb2a918db83a6e4ed41af491930dbd6e72df",
+    "bytes": 1472
+  },
+  {
+    "path": "examples/resend-magic-link/src/lib/resend.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "556f9d00b9e1fe9d40213a218e1ff71069049d45",
+    "sha256": "4349ce4f48733c15424a622cdd4ab97f882ad69eae5672f0f4126df0fe384368",
+    "bytes": 275
+  },
+  {
+    "path": "examples/resend-magic-link/src/lib/session.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1a362165b2bb39211e9f275d0bea387e52f6b875",
+    "sha256": "7da31824ff1b481ba2d1a2da7435c32ae18925969356df7574b84247679d1781",
+    "bytes": 1375
+  },
+  {
+    "path": "examples/resend-magic-link/src/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "examples/resend-magic-link/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "examples/stripe-checkout/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2a6afb95f724e8db19c4537cca56590f182fc8e",
+    "sha256": "7f6d2d9bc04bc9033658ad9b075ff4e982fd168891925ccd4622ada5600fc484",
+    "bytes": 167
+  },
+  {
+    "path": "examples/stripe-checkout/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1577d6f10194c82b01d12630c981409a174d468b",
+    "sha256": "50ae0d0080fdeebc331d4003f87238e3e00c592698eb7a76ae25caa5b36b1329",
+    "bytes": 2728
+  },
+  {
+    "path": "examples/stripe-checkout/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c03c2a9580ff42a53a461167f6cbc5df0f4963d1",
+    "sha256": "94ba2b8f8a0c0d68380d657964b5e6b4e6972c66a9ead42d3dd858ac0a7aaf51",
+    "bytes": 345
+  },
+  {
+    "path": "examples/stripe-checkout/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "db6240f5ea6a162d04448af2733ad0f57c6eca12",
+    "sha256": "dda140cc743f717fbcd7c7731791b9f0a2c677036121d20960e96d3f778c3a62",
+    "bytes": 472
+  },
+  {
+    "path": "examples/stripe-checkout/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eff2cf4220e74234b391e3434b844d1e91020735",
+    "sha256": "356b42497e034414401643be7ddd65a70797250c4e7aea1641be526f5c949254",
+    "bytes": 736
+  },
+  {
+    "path": "examples/stripe-checkout/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/stripe-checkout/public/products/hoodie.webp",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "182d191dfd02a7596ee7645cc6765289a3435576",
+    "sha256": "1d74f3c03c894fa970ce74e75e225f73ecb42e63af41df678e472bff7582cad0",
+    "bytes": 15180
+  },
+  {
+    "path": "examples/stripe-checkout/public/products/mug.webp",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d19a320886860820867f3b58d2e04d3fe950d380",
+    "sha256": "a7b375dd32c79ad68e580c173e4d802d06ea05a746d0c1a9378cc70baf732d89",
+    "bytes": 10212
+  },
+  {
+    "path": "examples/stripe-checkout/public/products/stickers.webp",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b4a2f74cf7190250374dfb21790f8c3c45d142e0",
+    "sha256": "588ddef4c56a252117aa5c20333aed076ad7593a63a0a18d99bc9f9914e439fd",
+    "bytes": 8080
+  },
+  {
+    "path": "examples/stripe-checkout/public/products/tshirt.webp",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a237e02b7de590cafbda04838111e87d6e7a511a",
+    "sha256": "fc97755fa681a08c6115fee16ba019039d2e6f9779ab1d5a8986e45eab4b841a",
+    "bytes": 10736
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/actions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8ad71ec5651d624bc081e0ddd2fb310981a6172",
+    "sha256": "d5b4f42f6365232ca951898f486042a6857453db377fd8653b2dfb1def8d20de",
+    "bytes": 1003
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/api/webhooks/stripe/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "68008fd1daf6b0e55ee265d84b95924c805d109d",
+    "sha256": "742f3a3be73dd3c2b16c76d6add472b2ea9db10fa3f4bf71d9d5169501046f0e",
+    "bytes": 1241
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/cart/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6a16a1e38f5951375226647b87fe8b3fb585f03b",
+    "sha256": "f85153152ac472168b2bf001613eacaa3dc48bbeb100a98042c15d272efaa58a",
+    "bytes": 5036
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/emulate/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5f84526db6b5d46379cba6d48d34a9fd05ae6cae",
+    "sha256": "f8943605eaf8f1b31ea58cbceb8d1040e621ec538550d36e45c30e712baf1e5a",
+    "bytes": 1320
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/favicon.ico",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "718d6fea4835ec2d246af9800eddb7ffb276240c",
+    "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+    "bytes": 25931
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0c295f2ea04e51a14941e75eeb10c29969ff1d5c",
+    "sha256": "3a27f976034c599ea12dfa7f941e0594de82d79990125afcff7ad910710c3769",
+    "bytes": 832
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0ec4c20cbccc49b7edd6cfdf95b3228bb94076d9",
+    "sha256": "c083ae6c5c5f89d808a5339d9261149e2f0edc2340bf931d64e52f8be52ecb09",
+    "bytes": 1691
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61a43ce78910c587a69fcfedb63075332e6d7a2f",
+    "sha256": "2fb9efb41b9880ff26566e1d2e8c987447b2516cc1493106a91b63655b75a365",
+    "bytes": 2779
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/products/[id]/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2f8f84bae8c681f62363cd1185e0ded7218452ef",
+    "sha256": "866210a39d84b67cbf2a79e1581f1a61ed161f3ff80e7f1cbb257935512e004f",
+    "bytes": 3005
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/success/clear-cart.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a28938d2e0db936e6f74c48d65274a02699ba995",
+    "sha256": "0fc8d4102cb71bd3300e4bc9b25598b382583e245e95afa45bed5d454939a474",
+    "bytes": 231
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/success/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1b7f8eea39113edb7243e0b3681453094ae99805",
+    "sha256": "ff7eeb584fc6d1721a8c2269507c2175208e5a5283c818e8368df95bb9c9d05d",
+    "bytes": 3066
+  },
+  {
+    "path": "examples/stripe-checkout/src/app/v1/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "07c28197fa7ddfab52b0544bc9a1c6cdf2883909",
+    "sha256": "ec3ce0bfd5e0090319f91374f4ad950bae9eb52ae8d60ea862d9c8795b376df1",
+    "bytes": 699
+  },
+  {
+    "path": "examples/stripe-checkout/src/components/add-to-cart-client.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "40aa42438af32aab83d0af6e0399d4d6329122e5",
+    "sha256": "4de43d7c905ad9025e9a4d961d00a7f044e206368de1f2acc427882434c3e63f",
+    "bytes": 1921
+  },
+  {
+    "path": "examples/stripe-checkout/src/components/cart-button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "434ee32b2e817dbb3fb7520d7f7f6bf02e777405",
+    "sha256": "85019f16aaebad5015b33d5cc4f8e9d0463db8bc42106814dc6ae8abb30f71df",
+    "bytes": 455
+  },
+  {
+    "path": "examples/stripe-checkout/src/lib/cart.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e8ef1b9777bfb131cad95329b5fd2bcd5e8089a1",
+    "sha256": "3da754939584e8f720f989ee00540229473c3f3c501c625bac39a4860069694e",
+    "bytes": 696
+  },
+  {
+    "path": "examples/stripe-checkout/src/lib/orders.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5e1c5fb20f1d1f0e0118be55513e4e87206ed33d",
+    "sha256": "0f02282f1850102455b9c8b51d95904c4fe5601b33d79d029c6e94774757ca06",
+    "bytes": 830
+  },
+  {
+    "path": "examples/stripe-checkout/src/lib/products.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fccd2ccb43035de6673144e17696b1241f946839",
+    "sha256": "7a503f3524d6bf2eb87ba61ab9d73b08f1c442d30e581618cca114132751d04a",
+    "bytes": 406
+  },
+  {
+    "path": "examples/stripe-checkout/src/lib/stripe.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9aa754e6256e02470351d59b8ee35abf6c54d485",
+    "sha256": "b268ff3043ea61cfcc8946c3e62db790816dbb6d34b81953d445fe9fbf2565b0",
+    "bytes": 266
+  },
+  {
+    "path": "examples/stripe-checkout/src/lib/use-cart.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5df1f619b470618352c0f1c6452185a4855e79ff",
+    "sha256": "47bb156b015d2bdc3d10843a58d1f8d7e6d98a4fac6421e0ba4c46b9eb52d2a6",
+    "bytes": 2471
+  },
+  {
+    "path": "examples/stripe-checkout/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "examples/twilio-sms-verification/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2a6afb95f724e8db19c4537cca56590f182fc8e",
+    "sha256": "7f6d2d9bc04bc9033658ad9b075ff4e982fd168891925ccd4622ada5600fc484",
+    "bytes": 167
+  },
+  {
+    "path": "examples/twilio-sms-verification/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "dbbd368baa32997689af623551c0e359989ef908",
+    "sha256": "f200e369fd41f16456880500801d327552a5207764809f076dc3d8bd563e75ef",
+    "bytes": 4107
+  },
+  {
+    "path": "examples/twilio-sms-verification/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c03c2a9580ff42a53a461167f6cbc5df0f4963d1",
+    "sha256": "94ba2b8f8a0c0d68380d657964b5e6b4e6972c66a9ead42d3dd858ac0a7aaf51",
+    "bytes": 345
+  },
+  {
+    "path": "examples/twilio-sms-verification/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d7911550aeb78d4e8d890de7e2ab00e0d627b207",
+    "sha256": "ac259da39cbda7bbdfedfe00bdb7d4405175454c1b588bb084a12cc4c4f27534",
+    "bytes": 559
+  },
+  {
+    "path": "examples/twilio-sms-verification/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d724b16600ee2f1cf6241db7d5411a5b0e1470d9",
+    "sha256": "6d71c696906d5d353db99f566569a533b46ef7c23d76b31f773c9d074131e705",
+    "bytes": 847
+  },
+  {
+    "path": "examples/twilio-sms-verification/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/actions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "de866563e8a63b5cc7383afced344a80c6940b9d",
+    "sha256": "cd678a4a721616ebf0e5287ec8dabb5994fe10e5318f92dc249fc7ff9b192e88",
+    "bytes": 1852
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/api/verification/start/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "815deb6b7f9383cfdafc561cf8a2353dafd36f50",
+    "sha256": "93cab65c3256f4fcf9acb06fef61590f91f2f38fe56bb32c1204c848f4b040f2",
+    "bytes": 1070
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/dashboard/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "479cbbdb318bf1496ebadf363d3c3f5c934a85ea",
+    "sha256": "fad64b558de5fe9539c0436ba24bb71af800495789ff49768ce830e740f8f7f5",
+    "bytes": 1169
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/emulate/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "acc427fa0e02309c36855f98c6642b24a869051a",
+    "sha256": "2558e57ccf1048b4c3499049de9f74bf0a49f50b3e2270a293a4a4e6a4920d1b",
+    "bytes": 250
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f15fad39310b870c5c2a7d4bffde60f1e2367f61",
+    "sha256": "2d05859d8979e44d7f016df85ee344778bee6632765b23a67b3feb53712058be",
+    "bytes": 1895
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f86ef0cd25c88808a3b5b0b6a5e2751cd6ea0088",
+    "sha256": "5e406357d301c2b20072f4eb67a237133bdbc30b14526b91f37d3ca207ee993e",
+    "bytes": 773
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aee74aa8e374175f6bd80fc3192fb6fedd19e479",
+    "sha256": "f4e495e0ffb99db15a4a4e384abc72b6c63c9f3f665ceb90ae9bbad29edeff8d",
+    "bytes": 811
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/phone-form.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "93223c6c18cf7b0b98bae88118d090c2c56faa7c",
+    "sha256": "90d50796f6919e543f9179ca84aae36e108c990f7be729e4ef562ac9d2c28b3e",
+    "bytes": 1080
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/verify/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9e57061b4a07f7663a657f4a40e04b9f07b2af4e",
+    "sha256": "202e95f00c0b4d6ad8a0fcb8ff54861ed09b19ce6f6191e6693454cdfd3b314d",
+    "bytes": 1937
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/app/verify/verify-form.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7aec6a76f07da7214f04afa82635fd38b86f362a",
+    "sha256": "ec87399842d5fb431191c031d8928530a81e0437a4134e19ab005b89a0c0091d",
+    "bytes": 1176
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/components/ui/button-variants.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c30f468d0132a60cddc651128b5af605f7429c22",
+    "sha256": "fb383f962b573699d7354d88b1af7419fa809075c61b83dab202c4d5f582d1e3",
+    "bytes": 1308
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/components/ui/button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb1dbdf75d4c8a4260b2a7b26576a86c286c85f4",
+    "sha256": "962338a72f9a492fad75fba41b2d60558a40f19c03ba09f77379ed98f94ccdfd",
+    "bytes": 542
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/components/ui/card.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ddb86da914b1495fcc10f1955be4f38e038f4944",
+    "sha256": "812b780da2f5b66b5d088153a1efbb2a918db83a6e4ed41af491930dbd6e72df",
+    "bytes": 1472
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/lib/session.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4e353c4248d2ae21c17c8078e83c483949a8b15f",
+    "sha256": "b4b04e295e051e80ca4af192a0b44c56c816c0ba5e15929690eee3db7a1403f3",
+    "bytes": 1267
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/lib/twilio.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5e721d18fc8e9e62eb3d725775bdbebf35605d36",
+    "sha256": "9a4b22808b38df1798a38267d661e22e29ece6b3ffccf038ebf30840bd374974",
+    "bytes": 3109
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "examples/twilio-sms-verification/src/lib/verification.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "490b185a655d6be2ba3aaa50d9499b164f4e81de",
+    "sha256": "cb52a035997a8de25f0ea2bbf9610eafb50e53a8da67708ca629e28c4a845b16",
+    "bytes": 596
+  },
+  {
+    "path": "examples/twilio-sms-verification/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "examples/vercel-blob-sharing/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2a6afb95f724e8db19c4537cca56590f182fc8e",
+    "sha256": "7f6d2d9bc04bc9033658ad9b075ff4e982fd168891925ccd4622ada5600fc484",
+    "bytes": 167
+  },
+  {
+    "path": "examples/vercel-blob-sharing/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8999768f506410a0e0b9458bd371b9b79c256344",
+    "sha256": "3888090748fae0e77d236ed09d0d941473c1a50a2ea7b8943b07318d22be56ff",
+    "bytes": 4102
+  },
+  {
+    "path": "examples/vercel-blob-sharing/eslint.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c03c2a9580ff42a53a461167f6cbc5df0f4963d1",
+    "sha256": "94ba2b8f8a0c0d68380d657964b5e6b4e6972c66a9ead42d3dd858ac0a7aaf51",
+    "bytes": 345
+  },
+  {
+    "path": "examples/vercel-blob-sharing/next.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "88996dfdb6fa9481fa84cb681eaff90ea1acdbac",
+    "sha256": "d1206b87ca923144c7b5a237cefb20c113e8a3dd6e6362d7aeb6c4411d248aed",
+    "bytes": 623
+  },
+  {
+    "path": "examples/vercel-blob-sharing/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e66bb937357787a178a0e013c6181fee23f3fc8d",
+    "sha256": "f72b9af8423960faf70090f76cd02d02ee500a61faabe142944f4a229615aee3",
+    "bytes": 886
+  },
+  {
+    "path": "examples/vercel-blob-sharing/postcss.config.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "61e36849cf7cfa9f1f71b4a3964a4953e3e243d3",
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "bytes": 94
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/actions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1275deba900950e123b03126f20d1ebe3ee12646",
+    "sha256": "1fcfc686240865b7cec2d86960db615c91a5c52264b647c6c333cd6e1463c286",
+    "bytes": 936
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/emulate/[...path]/route.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6ce67cd3c82c3726d41e3dd17eab80486b1facbd",
+    "sha256": "262613d9c33ac2a30103626b9ac6e6500372ec5878004d6589ae758801a08e0e",
+    "bytes": 250
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/error.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d43252fc8035b662048c8a71963d75d1929c9e40",
+    "sha256": "f35633463035d08e685a819cba57abbbfcbf45babdc1dff9744b6908f095f323",
+    "bytes": 812
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/f/[...pathname]/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2fe567d3b02731150e0891aa913b894ad6f72e9c",
+    "sha256": "9eb64922766f834d9d6ca084c98631f677bf13ebe83196162da751d1b0f38339",
+    "bytes": 2977
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/favicon.ico",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "718d6fea4835ec2d246af9800eddb7ffb276240c",
+    "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+    "bytes": 25931
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/globals.css",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f15fad39310b870c5c2a7d4bffde60f1e2367f61",
+    "sha256": "2d05859d8979e44d7f016df85ee344778bee6632765b23a67b3feb53712058be",
+    "bytes": 1895
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/layout.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "999b76b6c8c96953c58b466b03ac94f7ba92343e",
+    "sha256": "8f65b4031668646f586ffef17cf08b3b428e03268a67392c423806a04e460201",
+    "bytes": 769
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/page.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a9ae63c47056c54a1c30b55f78c7e0641d1b43b1",
+    "sha256": "bcc2527c352b9df7557278831368a77b9c3f4fc5f3fd2f777bb88aa93c32ce2c",
+    "bytes": 2568
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/app/upload-zone.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1e28f7418c536ba77abd444f3a5d5abe2af7d82d",
+    "sha256": "b4ec40824a516efcec924b39f826a5467207501bc42f780656bec7245e7e349c",
+    "bytes": 3265
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/copy-link-button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "da0baa1cc9ea377857dab01960575c7fd5c5f704",
+    "sha256": "b1f0573f20aea3547ba7b57ab89b4e06b224c4bf21d25a6cc80034febff6b470",
+    "bytes": 1123
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/file-row.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "92175b9058923e495ad80a0c4265e7c044afe927",
+    "sha256": "e5d7126d510284e683dc64c0b93c98f9d6793d4d9a3de4d6a80d1b289287a851",
+    "bytes": 2410
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/share-link-field.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a662a645d1c68e90d5bb6deae878bfc9181cbd76",
+    "sha256": "e6a8f97c7d50bc1c32ee1f6feabf38a07d6e996f3f4ab1df3e1f4d300e9e3cc6",
+    "bytes": 1261
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/ui/button-variants.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c30f468d0132a60cddc651128b5af605f7429c22",
+    "sha256": "fb383f962b573699d7354d88b1af7419fa809075c61b83dab202c4d5f582d1e3",
+    "bytes": 1308
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/ui/button.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb1dbdf75d4c8a4260b2a7b26576a86c286c85f4",
+    "sha256": "962338a72f9a492fad75fba41b2d60558a40f19c03ba09f77379ed98f94ccdfd",
+    "bytes": 542
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/components/ui/card.tsx",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ddb86da914b1495fcc10f1955be4f38e038f4944",
+    "sha256": "812b780da2f5b66b5d088153a1efbb2a918db83a6e4ed41af491930dbd6e72df",
+    "bytes": 1472
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/lib/blob.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c25108fd063f6edc55d6443ec65e6f6ed402d1ca",
+    "sha256": "eb29c081552c802d55fb0424bbdd2ffbd7d645fdbf7553a3ec84e00d48ef40ae",
+    "bytes": 618
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/lib/format.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b859517e23b404c3e01588c32f2c06a650a6d2d3",
+    "sha256": "da511e855d342325f54bfeb7b50175e527ab811a760307dde3eefd63edac618c",
+    "bytes": 419
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/lib/limits.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aa369c9f94266dd05beb58379a328872e6110338",
+    "sha256": "b7467e5bbdac5f442b38651ad782b33fc58291bb5305ab9e2ffe1cd25d55d7d3",
+    "bytes": 183
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/lib/share-url.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "799a617fc052f37292221af767009c5c11a090b2",
+    "sha256": "f5a43f4878eafa459f35b36bb226f4c9924a7183abc678e7aee515eba26647a4",
+    "bytes": 243
+  },
+  {
+    "path": "examples/vercel-blob-sharing/src/lib/utils.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a5ef193506d07d0459fec4f187af08283094d7c8",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+    "bytes": 169
+  },
+  {
+    "path": "examples/vercel-blob-sharing/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf9c65d3e0676a0169374d827f7abb97497789ef",
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+    "bytes": 670
+  },
+  {
+    "path": "package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d1a685a12d07ad82295681f246b4578bc567ebdc",
+    "sha256": "6cb993257b41dfbd79bda3ff09215ef13c945a359e78efb623515fe025d4aa29",
+    "bytes": 785
+  },
+  {
+    "path": "packages/@emulators/adapter-next/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "96d7fadc79829f925b6d960bfd08b6dedc5a81ed",
+    "sha256": "b16d4822357df0d55ac94032aca3b4aac6f388adf7c4b87acd86db58b9ee0e89",
+    "bytes": 3319
+  },
+  {
+    "path": "packages/@emulators/adapter-next/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c551b88ae8fd11b68b26a4a3f0ac1d6dab105dc6",
+    "sha256": "59b44349a625716f41c0627b7a08b8ec52d409130669847f1d40c5dbad5953fe",
+    "bytes": 959
+  },
+  {
+    "path": "packages/@emulators/adapter-next/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "771e8d0aa09f113cc2246a88d26da5b48c1b1071",
+    "sha256": "43b112de7cb6726d713494aadce4cea003af62812e0cf238ca6efc9c0dc0e7f5",
+    "bytes": 10056
+  },
+  {
+    "path": "packages/@emulators/adapter-next/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/adapter-next/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "976cd63c1dcc383529d6e409c30e944bf04aa42c",
+    "sha256": "f86c6cbce6f516ee83be79e31ca806e2bd0b0f21829e777b578ebe4359c89356",
+    "bytes": 183
+  },
+  {
+    "path": "packages/@emulators/adapter-nuxt/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "34bf48b84ea1670c0ef1da6d2cbd7595f9247cbf",
+    "sha256": "76b4e77da6731b46c1af8ff2992c9e2416d270c3e8bb061fec3c264781c8d309",
+    "bytes": 3427
+  },
+  {
+    "path": "packages/@emulators/adapter-nuxt/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8de22e98008b43443643fbd5f08fe1300be815cb",
+    "sha256": "c3ca9a3f1119fc57bad53d07a84acd526bd0129bec782458c773bb80b0cf215f",
+    "bytes": 959
+  },
+  {
+    "path": "packages/@emulators/adapter-nuxt/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2fd963d20a78d926bb322181f074bb1b2f813069",
+    "sha256": "f6b4bd540c3c750266bf23a6915086f45e1a7e2e1ea1b311d0cebe26f1c5dd89",
+    "bytes": 14445
+  },
+  {
+    "path": "packages/@emulators/adapter-nuxt/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/adapter-nuxt/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "976cd63c1dcc383529d6e409c30e944bf04aa42c",
+    "sha256": "f86c6cbce6f516ee83be79e31ca806e2bd0b0f21829e777b578ebe4359c89356",
+    "bytes": 183
+  },
+  {
+    "path": "packages/@emulators/agent-vault/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7f82e7d164193c8a6f0d03da1da7716da14150cc",
+    "sha256": "a7aa8cc6ccd5a363e2ac480f48bd63177bd82ad0e4e7905cb737ee1c8310935a",
+    "bytes": 479
+  },
+  {
+    "path": "packages/@emulators/agent-vault/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8bf3b79ea204e5207708415ca96b2cd189cfcc5b",
+    "sha256": "a68dfc7263cb9fbbe12f04af60d10d0f10318af1df098cc95fb04a40057e247c",
+    "bytes": 971
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/__tests__/agent-vault.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fbfc416cb91efedbd065c50bd1f4c64947f1c425",
+    "sha256": "19cc2a7487feec61b352455e0f1e929f80b08baeff6685f47e088aa8576d7f04",
+    "bytes": 10784
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8ca9ec9b5e83b44eae129c8b5b9f495598566fd0",
+    "sha256": "823af84ffbfdcf643b5ab95ccbc191781d164caa28f52cc04a4549597c07b458",
+    "bytes": 3982
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3769e55f923007d46fb5f0c5e0b41eec2475685a",
+    "sha256": "a93dea47cb8eedddb5efcb76bc4e6dc90ca702657170c074253c43c23e6efa4b",
+    "bytes": 13298
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fbb393cb8680e9c969da10842a98421f0f2ceabe",
+    "sha256": "22a8e7338c234c7230d929fe36dd3eb4d933627f13b6e38759d3de70b53e1b4b",
+    "bytes": 7455
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/agents.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8b5f52a2bc3509df488bd6be6ffe275bffa160c9",
+    "sha256": "43d9e73518f0b95636f96789562403124fbfdb9da52184bfed4258c16b058830",
+    "bytes": 9432
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/credentials.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a6e4c6708fa2e101672541c1db606fac6ae8a2bf",
+    "sha256": "942c0141978deb8f1ba8be40a8529114fcf84084406d408ced4177389b8923f8",
+    "bytes": 4860
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "880c06dda1a88be6495e36fbd1e12fd691d7e222",
+    "sha256": "52728656b340eae041604a89820a3e38171a59ba8bdaf5fff83c1f392c79e61e",
+    "bytes": 5030
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/logs.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0610e8f3f8584e91232fe7a74422cda6c471d1d1",
+    "sha256": "974ee04f84d643ae8e68a4c438050a74bc47dcd1eeff726b5aa12c1442f3b992",
+    "bytes": 6303
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/management.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3e5a434ba6a8b26185eedfe7e7964cef256bdd5a",
+    "sha256": "c097001c711613869d6f70bf5604d6be0414bf28ef0647ccd17ae7ab859a602b",
+    "bytes": 35230
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/services.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8f82fa3cb1cf56f444910bb29702d2d45206f249",
+    "sha256": "e2fcd314bdbd238502dd5496745ce05e4c71a1ce62493f7db34bdaa24677aa82",
+    "bytes": 7360
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/sessions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "11dead1f857cd8a93cd3cde8f4d69f0ba889d469",
+    "sha256": "1346da06bd1cd284fe3d274b2380e1cbd4b394faf06858a49a3ee6fbfa66e692",
+    "bytes": 4535
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/routes/vaults.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f9dccf49280baa4bd979a360b81b9e122bab9cd6",
+    "sha256": "792f17fb684f7bc7d105db73395b456395aedff2f2dddab07f96249b9f9bfeff",
+    "bytes": 7420
+  },
+  {
+    "path": "packages/@emulators/agent-vault/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "81096dbc57984fdd3e3173c1401e52199da78c1a",
+    "sha256": "120c1903e270e8e993bae8a36b755674a8a1594133cfc4bad579c9884113cf7a",
+    "bytes": 1989
+  },
+  {
+    "path": "packages/@emulators/agent-vault/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/agent-vault/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/agent-vault/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/apple/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9137f9f94de54d1ba45bc7affec08c6522900531",
+    "sha256": "12d2f2908e0dfc84ac0644c21cfff10a8e5a5a6152047d661416c5e73e000e0e",
+    "bytes": 1170
+  },
+  {
+    "path": "packages/@emulators/apple/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5eb6cb922681f093aea83be1d4f0713d12d47f1c",
+    "sha256": "b7d163c82cdd642961bf56e97d8711dce3c8a14ee4fba3b7c2ac6694980f0dc3",
+    "bytes": 977
+  },
+  {
+    "path": "packages/@emulators/apple/src/__tests__/apple.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0844141c8d7dc1bc47599efa8a0eafa3e30e677c",
+    "sha256": "4fb70f0bdc4603aae8b16288f4344ab4f0f3bba3318fd56017c256d75377cfd9",
+    "bytes": 11381
+  },
+  {
+    "path": "packages/@emulators/apple/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eed90e347f4ed3f16f6fda5b08d8b227bbb2d639",
+    "sha256": "8a89b47c179a1080dd50b9799d2dc948a539c52ce8bf796328d14c94447e52c5",
+    "bytes": 464
+  },
+  {
+    "path": "packages/@emulators/apple/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6ae31ea3a0f880d7a21184c05336b9030e5e1628",
+    "sha256": "dff60f3a46f4ec5498d38e70250f2fd276092a19ea6362025c071ed8153e61d1",
+    "bytes": 582
+  },
+  {
+    "path": "packages/@emulators/apple/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "58f27f3e8242a30ac219c523fb7a5fe048f3e1bd",
+    "sha256": "0105651740b3d8647cfd90177ad265b437e188420841f81440c342c3415796b8",
+    "bytes": 2793
+  },
+  {
+    "path": "packages/@emulators/apple/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1d9db6a9c5e4e259b27cd0a2448b052e4b70d97c",
+    "sha256": "474b3cddfcf53302c7fc59a1ac31e312dbe32e737d7b3872fc4ccb07e0b0a6cd",
+    "bytes": 11989
+  },
+  {
+    "path": "packages/@emulators/apple/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1cb0e2bae338b5a6477ca4c8179cbfb72122740c",
+    "sha256": "4f8da920122841fe1daa0f214f7cc90fe7851e6edf0dc77444ed6cde869c7915",
+    "bytes": 477
+  },
+  {
+    "path": "packages/@emulators/apple/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/apple/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/apple/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/auth0/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a2e6544582a1baa8f8616cc9eac6ddd8c90226c4",
+    "sha256": "fa86a65cc18bb0a673d740f078fcac230fdcc76d2bd251eebcd6ec80d439a58b",
+    "bytes": 5085
+  },
+  {
+    "path": "packages/@emulators/auth0/fixtures/test-keypair.private.jwk.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a863bff1bd2103bd6b222921422d4695d700b8d7",
+    "sha256": "7ff64a83d9696aac4704c14dde2437c3da912f684919868d408d383a69b3537c",
+    "bytes": 1717
+  },
+  {
+    "path": "packages/@emulators/auth0/fixtures/test-keypair.public.jwk.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "83642984b1aa65de69ec95905500351c3705cc04",
+    "sha256": "16df9f8d843e369d6f1951f9967bc834f00dca5b1a00742f902aeff1ceaa1a0a",
+    "bytes": 451
+  },
+  {
+    "path": "packages/@emulators/auth0/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "64149dc3a77180c9387c6579c78a7a1f14ae93aa",
+    "sha256": "735984fe0a443026d2540bfaf57c6ced76c1640b3827c7d5f1730114a0272b28",
+    "bytes": 977
+  },
+  {
+    "path": "packages/@emulators/auth0/src/__tests__/auth0.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e7e4d7ed84681afeb2c26e9f8d4b8d4cc7aa50e8",
+    "sha256": "a8400c69757c438ba7847629d1ae02b23b5964453117c53cb17c79f886ba7c03",
+    "bytes": 51752
+  },
+  {
+    "path": "packages/@emulators/auth0/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b6aed2628b877faddbee4419624828e252194ef2",
+    "sha256": "dd5ce387336e5f9138a9d8effd7d49ad3c68f72c8ccef0ebdd25c40b5c9e43bd",
+    "bytes": 835
+  },
+  {
+    "path": "packages/@emulators/auth0/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b3545733ffd3d97982405753d5a82fe1eab969c9",
+    "sha256": "fc01731118a7dde04baeb32d44804df30b8315ef3f2182c70f47f1dc4dae641b",
+    "bytes": 1850
+  },
+  {
+    "path": "packages/@emulators/auth0/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b3b3f464abfc550313f470be6584ced56784e8d5",
+    "sha256": "3e04c88e05d8cf233318faab76189e4b48f56e16d79b077666bc15304a43040f",
+    "bytes": 6497
+  },
+  {
+    "path": "packages/@emulators/auth0/src/oauth-state.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "dd7241f8f2badb867cde27944f05eeadb03f9502",
+    "sha256": "878270c4eca91bd730a79b01a969d71e2af0e28e1299e92584a0ccb655929008",
+    "bytes": 2628
+  },
+  {
+    "path": "packages/@emulators/auth0/src/route-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c9b4f9b7d16b776df8cd90b56ac43555133f13d9",
+    "sha256": "7b97627f77b5f505dc133bd243365069672b15eadc7ee25c916abfa106164057",
+    "bytes": 2990
+  },
+  {
+    "path": "packages/@emulators/auth0/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c74c40e343b2bab714f8de98ec7b933b113f88fc",
+    "sha256": "92becb9c483dc4d7e5dba1cef1fc29276b3fb39bd94e86c5e2bb085e90e67a93",
+    "bytes": 6885
+  },
+  {
+    "path": "packages/@emulators/auth0/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "66701f6c04f4c7d25f3e9778de00617488b98b27",
+    "sha256": "df2d2e9b4febd5e5f7bd79dd839645e3df2331af8a3712737eaa7e51fabd7f93",
+    "bytes": 28478
+  },
+  {
+    "path": "packages/@emulators/auth0/src/routes/tickets.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5c869c54b1ceac28e717c767cccdc50374acbc18",
+    "sha256": "1eac555625bdf47fc56192e7a60154d3be95644b67549afbb216f4a72c6945cb",
+    "bytes": 2769
+  },
+  {
+    "path": "packages/@emulators/auth0/src/routes/users.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0afa30c481c0bd6aed3abd87f26df47329b3983c",
+    "sha256": "7edbbd122277de97f01ac98b81a29d78c03c01035481a3009a76fae94e405304",
+    "bytes": 7425
+  },
+  {
+    "path": "packages/@emulators/auth0/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d60be04083cb905ff62017320de3fa1743d88973",
+    "sha256": "cf9e444b8b34253eca62ac043ed41352c3f04143f224b561af2527ce38c66744",
+    "bytes": 884
+  },
+  {
+    "path": "packages/@emulators/auth0/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/auth0/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/auth0/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/aws/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "728e31b1fcfe8ea5865f4847fa9cf8d14564891f",
+    "sha256": "a755adde2be019632ee61df8e27a5bbfbcbfae94b41100e7e3ff16d026dbd747",
+    "bytes": 2320
+  },
+  {
+    "path": "packages/@emulators/aws/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0f216b11b8c4a9d80ad7da4473339af7a2b103cb",
+    "sha256": "929ba70b59cb4104c684287f7c89610dbcddb8128f93a8107639bda5774d0d53",
+    "bytes": 1041
+  },
+  {
+    "path": "packages/@emulators/aws/src/__tests__/aws-sdk.e2e.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0803dfe0bb874f7f881e3328d5f941dfe2926128",
+    "sha256": "a6472b1e10012207a5e289ca10b66d26d0b7c45243e3949dff9b85b47042f5d9",
+    "bytes": 8202
+  },
+  {
+    "path": "packages/@emulators/aws/src/__tests__/aws.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "96d6c707390584d6617ab3fb32defb3e5c63a208",
+    "sha256": "69eac83c6d7a091ceb750ae2ce4888e8e187136069edbc10a245558823040075",
+    "bytes": 32469
+  },
+  {
+    "path": "packages/@emulators/aws/src/__tests__/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0a385b6ceb79ebde134165cf20a88679a59ead7b",
+    "sha256": "244ee3f3bb08a1a0bde5085bceecf4817b9a5592dda3a8aed87a214b157b8373",
+    "bytes": 1011
+  },
+  {
+    "path": "packages/@emulators/aws/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2cd549a29c60b43e5d78c52226eee7df5db1546",
+    "sha256": "bb3c81b7181f239d55fa5a0ac9edab1349c0d5a16f8c6174743d29ed7b23bb4d",
+    "bytes": 1549
+  },
+  {
+    "path": "packages/@emulators/aws/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8a4cf70d6a8854450e1af5bba0de2f31852275e7",
+    "sha256": "ece49b2fa2e2fa53e3d9d41e07cb7d7439fc01c27c8ab64d5f3fe2da49ae4c66",
+    "bytes": 1998
+  },
+  {
+    "path": "packages/@emulators/aws/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3c2840eb1867a9c3467c732af651010a21b5f78a",
+    "sha256": "05551f21edaf2355374d53793ecf36c9b34a656ce74fc8af44607c85b9d048e6",
+    "bytes": 5503
+  },
+  {
+    "path": "packages/@emulators/aws/src/routes/iam.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "495fc27885a0ca6b9f190f65bc5838c6daa3a4e7",
+    "sha256": "8c06bd4e3a9c70af50d04ba70d7be0473b70cff1c4476524c42f278df56d4a89",
+    "bytes": 14591
+  },
+  {
+    "path": "packages/@emulators/aws/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "150d6505139a072207b51bef40e3c6d7c2a4b02b",
+    "sha256": "fabbec8c0a57a104a54af4b1ca96ab216f82640a3432316d0e26442f0c3c322e",
+    "bytes": 4900
+  },
+  {
+    "path": "packages/@emulators/aws/src/routes/s3.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "94f6fdb2ea46a84bb8c156e13d5ee4236476d59f",
+    "sha256": "375ed94128aa81508b17660e7fa1cbc0fd1652d4c8910d022c204134344d2a64",
+    "bytes": 16818
+  },
+  {
+    "path": "packages/@emulators/aws/src/routes/sqs.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b56f8fc4fc447986fb88add413968d5eb8563785",
+    "sha256": "102204a700dd8cf54e4944830f10a3d197dc9a58a8f6f35bc9ce38cdcfca0aaf",
+    "bytes": 13473
+  },
+  {
+    "path": "packages/@emulators/aws/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "85e685b7f943cc4410e85f07e932341a996cd6ae",
+    "sha256": "b43e91301bf91dcf2b8fc05ecda4d4bb984b6b19a8c43da63248f47b0aabe673",
+    "bytes": 987
+  },
+  {
+    "path": "packages/@emulators/aws/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2f355cfeebfd39b1af2da23d13313fb7c326842c",
+    "sha256": "ade10a7718295ad69d299002daaac8ce3df585dd018d63554e05f8e953e8c545",
+    "bytes": 135
+  },
+  {
+    "path": "packages/@emulators/aws/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/aws/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/clerk/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cfdb90b362052c51765cbaa1de877d98d5e06392",
+    "sha256": "f1c86fd1d3b9c72c2cb2f58c85650e2528607f03cbc651a2ce2d3d97b5f21c46",
+    "bytes": 917
+  },
+  {
+    "path": "packages/@emulators/clerk/src/__tests__/clerk.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "38fe95cf2a16f0c500e98a91122abc575867a5e1",
+    "sha256": "941b7f45918fd15df907826481de3c095faca93730200f2f0b315d8993721983",
+    "bytes": 35190
+  },
+  {
+    "path": "packages/@emulators/clerk/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c59b124d3a9745c443790b6ec5413e8b5958a50c",
+    "sha256": "cee0310d817acf66ddc679301043acd01d123658c4480e14b5274eaf5888e162",
+    "bytes": 2692
+  },
+  {
+    "path": "packages/@emulators/clerk/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1c7a587b0ab8adabea03161f28c42ea13529a8f2",
+    "sha256": "444a6261efc94c7593c4662b5e5f0d421c46513f3680f0930b6f227053ea308e",
+    "bytes": 2330
+  },
+  {
+    "path": "packages/@emulators/clerk/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eb4b55d152c3b3c6ab1ffd0360e322cb85cf622c",
+    "sha256": "165ce186d082c596eb26dc97bb15c2f74234de6c8fea21bfd34e421688a42997",
+    "bytes": 7960
+  },
+  {
+    "path": "packages/@emulators/clerk/src/route-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f2f834dbf5c6354baa021e1d978bc03df7c24d1e",
+    "sha256": "12167409eea3400c3af4b57414344db86e23aebface40e0c8501b3741cb79d79",
+    "bytes": 7284
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/email-addresses.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4c520d0159046b8082a9b9bcfb59704666d562de",
+    "sha256": "6bf3264b7b01bac49919d7b70f9bcad6b805ddd4762c296b4d6c1d7b863978b9",
+    "bytes": 4579
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/invitations.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e67f8185922b145a29e41e7f3d1636aa27049f9a",
+    "sha256": "face67153edaafd06bb6e6faf3fd4ae321cc8586e17d161e3a3227870d4d334c",
+    "bytes": 5693
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/memberships.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4256984e81ea24d84a3bf9226722ce8dd106742d",
+    "sha256": "4564932bf360d07d29dac9dd82bbd556155463c40682c36ab1f17ec241759859",
+    "bytes": 6973
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8e8e3736c91537827887ccce28763f4b4e90f366",
+    "sha256": "33837fe57d3a81699080bca9827636693d23f4323fe0ff909f0f82ee3c787a66",
+    "bytes": 14504
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/organizations.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e1e5cdf85424e590909c4a125d2b14868cdd4ca9",
+    "sha256": "c754e9e352089f22457b735f7333ec4890de65feaa537cdbaaa33cb8eed9c36f",
+    "bytes": 6385
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/sessions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5a54ed40a02426af0ec71c687c08f29eaaafdbd4",
+    "sha256": "3e4cf07c70feb2bbad0ce1f19df52c942010056bea8cc80a2e2fd338a173d861",
+    "bytes": 5328
+  },
+  {
+    "path": "packages/@emulators/clerk/src/routes/users.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b84b973f6ad561f2e8a9d030f28f3523d250e630",
+    "sha256": "ec9b6c56951858ac2fa87ebd91d8a1c03adea62a5f4e10460f9e5b5d72004a35",
+    "bytes": 11928
+  },
+  {
+    "path": "packages/@emulators/clerk/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6b6e58494d1bcf37baae8577ae79db442f07c3d7",
+    "sha256": "47b3cfc3ed0d0afb93835901f68ed4ca6afee21d095ba8b87da813db5869ec05",
+    "bytes": 1433
+  },
+  {
+    "path": "packages/@emulators/clerk/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/clerk/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/cloudflare-os/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1fc6aaff8827a4325d57a7fccc65d160710b9721",
+    "sha256": "37db5cbabdeaf24fb18c36962a1e12b15430528e02a3149e475d56cb18477810",
+    "bytes": 1311
+  },
+  {
+    "path": "packages/@emulators/cloudflare-os/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf969b793d92803379bd966ac2ec763bbab69486",
+    "sha256": "04836bb601eb28a04fd177b9618e8bfd7550732d79b10768d4c8e2e25c222798",
+    "bytes": 925
+  },
+  {
+    "path": "packages/@emulators/cloudflare-os/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "91243f5f3cceff107fd6e49fb4ff91f37c555792",
+    "sha256": "12234f7dddc8c58ee21c184e5d23b047af558d3760bda613cfdaaf9a20baad95",
+    "bytes": 11107
+  },
+  {
+    "path": "packages/@emulators/cloudflare-os/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/cloudflare-os/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aea2c5da4cbf19353f6b9ea47d9f3829248aaaea",
+    "sha256": "76b872ac60bea3e5f58cdef52cc80180c2171947963af0271c4ea2fd36382126",
+    "bytes": 187
+  },
+  {
+    "path": "packages/@emulators/core/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fcc27b4c8f15cf7fca8d8becda1a9b243ef7e548",
+    "sha256": "98c27b1fef93744715c9dda6f9e5250b6d97a56c310ef0af0d7aea96da612010",
+    "bytes": 1532
+  },
+  {
+    "path": "packages/@emulators/core/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a9adbef9fefda84778824f3a8b76868fefebb9f1",
+    "sha256": "8dc481f31bd864adb52adc2071542bf14dda5b8e364837761efed2a0ae46a79a",
+    "bytes": 981
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/auth.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4a10cf796f13555a555c3e8f4011c28117b64e66",
+    "sha256": "7de3d3fa1ed2a5078763c89a4edef72207cce33fd5415accf86cd8b2cd6ec5b9",
+    "bytes": 6769
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/http.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "82421938ccc57a488b57891d709b5e17f4de2414",
+    "sha256": "3da1542fed7d582505c4d964b1e820ad208d0b127afcb999daf99646c8d3a309",
+    "bytes": 2597
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/pagination.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9895fa49a9394e8f423726df43993399c1a08066",
+    "sha256": "2f924ce6fcde6c8359750ee4c4da7185debedf4b1c04619ee1b739d42303045c",
+    "bytes": 4258
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/persistence.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf03c33d94b801c4e24506303f7518df7d093f89",
+    "sha256": "c5390625ec2230b1102a7c9a91f5b6328fdcf23fd6440df9d1d683513f93135b",
+    "bytes": 8442
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/store.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e98f5ef2d6b63440204b658f56eae282d5b42b2b",
+    "sha256": "325872257175772c1b51848951a898fdf53ef6aa099aee31f1d5451580f03979",
+    "bytes": 7579
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/ui.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "076e306ec0f529d7b301217e63ae50edda5203a7",
+    "sha256": "beb9cb6999ffa1e5a653714b667e3313557e89532c4587e11c7b358ae6653f33",
+    "bytes": 1608
+  },
+  {
+    "path": "packages/@emulators/core/src/__tests__/webhooks.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d58e09f3a226c0a73fd1bc044e418bd7a47cc3c1",
+    "sha256": "32bf69084ef0a3106c7206366d545f440925bded8b31c7e5df22364ad8b46d1c",
+    "bytes": 12250
+  },
+  {
+    "path": "packages/@emulators/core/src/debug.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "76e38c2f2806bb0b091a291aafdafee0c960c738",
+    "sha256": "16a0f5908f6bd8516beaa0f415532943918ed537c92fb384f12a6ce60dd1adcb",
+    "bytes": 281
+  },
+  {
+    "path": "packages/@emulators/core/src/fonts.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2075a8a80a6037c71b6d70287fb332848ab5b9e1",
+    "sha256": "6cfcd4b375056efecb789dc1917b3d13ea879cc6d0d1d12b866768ff3a5aa560",
+    "bytes": 1222
+  },
+  {
+    "path": "packages/@emulators/core/src/fonts/GeistPixel-Square.woff2",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "232cae2c11851c04f4508f9bd1ac0046d36fdd81",
+    "sha256": "04f9cf917a824370c77fecbd743c99d0b3dfd2c6c906de959996ac6f7fb343b3",
+    "bytes": 28616
+  },
+  {
+    "path": "packages/@emulators/core/src/fonts/favicon.ico",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "718d6fea4835ec2d246af9800eddb7ffb276240c",
+    "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+    "bytes": 25931
+  },
+  {
+    "path": "packages/@emulators/core/src/fonts/geist-sans.woff2",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "93552f55a136e2d2d8c6411aa8368d52af214174",
+    "sha256": "0cbbe6286a00f356e98980783cc950a9b693751e04aedfb97d9526ff6dc2b316",
+    "bytes": 28400
+  },
+  {
+    "path": "packages/@emulators/core/src/http.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b8cde14eaffae0c8a8ec6e03b056a064cf7b49d7",
+    "sha256": "d38812619a786f6b709fc50465df1115f6840a0954ba0e182380b36c3cdf9017",
+    "bytes": 17078
+  },
+  {
+    "path": "packages/@emulators/core/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "da3e0e12877b751ff096e2cfbc6f9c2d4267a877",
+    "sha256": "68400153e010ac441b8b21c237f3ec9163e7cc78b47913f0c8cc5dc78e303526",
+    "bytes": 2026
+  },
+  {
+    "path": "packages/@emulators/core/src/middleware/auth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d04fe244e946940f1173b57db4ff01de986df134",
+    "sha256": "1e729eb2f5534835691016107263743c5f89945ea00149f2599a7fc02ffc9397",
+    "bytes": 4188
+  },
+  {
+    "path": "packages/@emulators/core/src/middleware/error-handler.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "342cebecb4fc4d34a74c8234a207c68577c7d109",
+    "sha256": "bbce563b4c7697c7ca78523480fa9c40ea5d178701c38e224a09f43cf2fd70fc",
+    "bytes": 2478
+  },
+  {
+    "path": "packages/@emulators/core/src/middleware/pagination.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "45fd97cc336f64dbd5f65a89a295ad61583b042f",
+    "sha256": "87a05fc0c46c832f6929e5d964d1277e63429bfbcb2c8e61b1b00a422ae67d58",
+    "bytes": 1134
+  },
+  {
+    "path": "packages/@emulators/core/src/oauth-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e840b76690619da4e27ee7b00bfde584dfe8f332",
+    "sha256": "ef11954069890f374787818c0db3403d9715e1f5e43a60ed2d984f5cce897ac5",
+    "bytes": 1140
+  },
+  {
+    "path": "packages/@emulators/core/src/persistence.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b3a681ebdf731da7f38c3bf9f41985eeac288601",
+    "sha256": "5caee03c1f2e29fb70281b91b5ae191ae7b16350166447cf76ee66164f690310",
+    "bytes": 565
+  },
+  {
+    "path": "packages/@emulators/core/src/plugin.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fcd5258c784ad3913e2ddf4a15ef34abcf75557a",
+    "sha256": "1a81ca102404bdbd0524fc37da0b269986348175815f8f85fbcd17957d49e90f",
+    "bytes": 726
+  },
+  {
+    "path": "packages/@emulators/core/src/server.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8612ab501b2137a2f556c96d5d5ba3a94c3d3cef",
+    "sha256": "27e77d4f5d6067584059ea8f353e9a454cf46bae2d8f612ebd758bfabc5f87e2",
+    "bytes": 3030
+  },
+  {
+    "path": "packages/@emulators/core/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "49dd886f03080476dc27974544b1a3e54df71b29",
+    "sha256": "22b10f8bcf0be8783f2c1852cdc5442bd9ec07ddc1ba7bbfd7c2f79bf3f0fbad",
+    "bytes": 7866
+  },
+  {
+    "path": "packages/@emulators/core/src/ui.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cdbb6160b3e1b277e1bca4d98c0cca99d47416bb",
+    "sha256": "61271b960cb1dda2ba35b94bb14b3f241b19f1984043fc6829419c8c82c15a87",
+    "bytes": 21751
+  },
+  {
+    "path": "packages/@emulators/core/src/webhooks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b9e2b68cf475140be0b7ba9d87ace16683ec1888",
+    "sha256": "485ad9c3cf53ff7edcd100d063932ece50e1589c94dbb11138e4cbc3b4c544bf",
+    "bytes": 4893
+  },
+  {
+    "path": "packages/@emulators/core/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/core/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0e8fc17e03521cc81deea66d721df9a4042109e7",
+    "sha256": "bd3f90fbed86b69fe6d83d16c7f9420745d4b5adf1432331ae1edfd3d5f62148",
+    "bytes": 428
+  },
+  {
+    "path": "packages/@emulators/core/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/durable-streams/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2875e8dc9ae6662a4fac51cfd452de90efbd5f7c",
+    "sha256": "7faf678f36873a8c79248068b671927608d77300e70b5970069dd66f1a87d3d5",
+    "bytes": 1239
+  },
+  {
+    "path": "packages/@emulators/durable-streams/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d022d2afd5d75616afc00ef724fe73c2d35479da",
+    "sha256": "9e79e2abe1680f7838861a57be84d8fe55d2801b25c5303d5a467a8588e5b6cb",
+    "bytes": 979
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/__tests__/durable-streams.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4f03383c06b115ed5003d64f49004066c03047ec",
+    "sha256": "8764d3f9d1f0bc6492f198ec1412b3e9e1bef23811c08365dc31c86d761dc5bf",
+    "bytes": 5476
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/__tests__/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "981f759f03927194c37b64da0f2174ebfb4cdd93",
+    "sha256": "5772db6cc73a6fcf41dd383fff2f40ece4703482847ab87cc2ffce7acf5b34f2",
+    "bytes": 1152
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "786f43e718fbc01c74784a108ac706c1e60407fb",
+    "sha256": "11de62a3ae7e0c15f07b86b01e9da9adead3338c5a6d74061d2146798a111912",
+    "bytes": 829
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7bc7c904c36d3145813939eaa871bdb0bfb03b11",
+    "sha256": "f5e5c824de685e93ac9661c716d3a3aed1f33b156e6fa128135b4fed43cc28e2",
+    "bytes": 10818
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "39e83fbedf652d00ca15b76c00fe24e289d2d1bb",
+    "sha256": "11c9f679405445851c399ac6dabe29e92b05417e010fe73ea644bb3b4d68a475",
+    "bytes": 1707
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2df5dd6aaf5df391aa1a894bfc06e6ea1d461ed6",
+    "sha256": "16fc428f8ad0bde61d9ad27b3b7864f41f07c98978d08f60818e1ba078b6143a",
+    "bytes": 1589
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/routes/streams.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "08cecdd4fafb1b2374a2c9aec8e49dcf4f00dbe9",
+    "sha256": "b56183a777f25562a35d1fd487f6841c5eb9f88def4cd93f8255b07dfdd165e4",
+    "bytes": 22020
+  },
+  {
+    "path": "packages/@emulators/durable-streams/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cfadc4174b067f4e05f7ba65985b220d1a0a48d2",
+    "sha256": "b214e9ae38cbf6c391be1fa712d96bdff5a11b1fe3f044a5a068287363549df3",
+    "bytes": 751
+  },
+  {
+    "path": "packages/@emulators/durable-streams/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2f355cfeebfd39b1af2da23d13313fb7c326842c",
+    "sha256": "ade10a7718295ad69d299002daaac8ce3df585dd018d63554e05f8e953e8c545",
+    "bytes": 135
+  },
+  {
+    "path": "packages/@emulators/durable-streams/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/durable-streams/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f624398e8deca6144a8c7a3ab3ca16543215a468",
+    "sha256": "2d4ac4b984c9b3891a9eabb63b9b5c9e6164b291453e8071055a56d68d67bfda",
+    "bytes": 121
+  },
+  {
+    "path": "packages/@emulators/github/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1b58001e72b08ec42089cd932aafbbe762a018ee",
+    "sha256": "aee84dc66f7adb4291d224b70fa6e4cae8c6c0f81e1d219a63b6b8453eabb669",
+    "bytes": 8609
+  },
+  {
+    "path": "packages/@emulators/github/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "56f99c4d83f7789da1db9939f66907c1736cb36f",
+    "sha256": "08cff673b7e1d8f4cb4328144f49e08105b1b7d7a35174705c19316dfb5f2a69",
+    "bytes": 961
+  },
+  {
+    "path": "packages/@emulators/github/src/__tests__/contents-commits.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d4d63d8e30fcb81da75e189ef405fe2de4d6bfc9",
+    "sha256": "3416e38f14ec44afac125a13d0a619612d6cabce85ed57a0c73df1dd79dea2ff",
+    "bytes": 99993
+  },
+  {
+    "path": "packages/@emulators/github/src/__tests__/issues.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3044c01933a73aeb48c70f73d848ddb434cc231b",
+    "sha256": "002e260d552008f59a46e7375d12c1ac42e9c08307758335cf685377c1f8f54d",
+    "bytes": 3599
+  },
+  {
+    "path": "packages/@emulators/github/src/__tests__/repos.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c3f7edd5aaac0223be121253341c21cf79543686",
+    "sha256": "cb4ee3818ca5d647f2269bbbdff85c46c74f4fafcae20233cca8080df045f803",
+    "bytes": 3093
+  },
+  {
+    "path": "packages/@emulators/github/src/__tests__/webhook-installation.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "77665371871ded485bd562d87c333306c786292e",
+    "sha256": "b52ba7a42a1c45d2ab7e1b118e66051516b37d904e985c252751ff78f921de5a",
+    "bytes": 20857
+  },
+  {
+    "path": "packages/@emulators/github/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b149c4443cafbfa1a672217eab5f425aa2cc14f8",
+    "sha256": "5a799c22c066c35ed28a5c717e3fccf10504f4f000dadadd5b33f6d8f54ec20b",
+    "bytes": 12347
+  },
+  {
+    "path": "packages/@emulators/github/src/git-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d65a77478f81678e3e63a98fb9395eb60772db88",
+    "sha256": "c0cc3c98e892112a2fc770e8b9abfd72923f1c82f0615a77634f5188e527b828",
+    "bytes": 24503
+  },
+  {
+    "path": "packages/@emulators/github/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "52fa683f6414316be090c58ba6b8b9107243b5fb",
+    "sha256": "91ac04abd1ae73a457cfc88b6bd9513f0b915d8646c03ccc34bfa54605dc31da",
+    "bytes": 26624
+  },
+  {
+    "path": "packages/@emulators/github/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "392cd9a482953b0176f80591d39b5d77fa219838",
+    "sha256": "6b7efa5fc617c43f0a7667e4ede528a9bcb3f2129f8f486b48b403e2667844f7",
+    "bytes": 18203
+  },
+  {
+    "path": "packages/@emulators/github/src/route-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "79e0789d0f18995140462eb79264ea4a314dcc37",
+    "sha256": "81b92048628b1e088987fc241665b46d999143d3f1a64ca66d3a074f87a2275b",
+    "bytes": 13371
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/actions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1c4be214c7a02e7a38f6a8573829011553bfe6e6",
+    "sha256": "8ce911ead22b681c3dbac7595a2cbf1519e678bc3009604e5a43c9df0120c16e",
+    "bytes": 30271
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/apps.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f13ca6b9f774898ebfe5baed96832ff1ebc53eaf",
+    "sha256": "53bbe36dd93e283ec2481c0e2f4d534974b47bde7289b894483022cd87d44974",
+    "bytes": 11762
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/branches.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "df3b3a519527a9f50cbc07887c67d77773f0c696",
+    "sha256": "0d75bbe8d8f97439cc7b1dc86d6ad903e6a607e688dfdabde56bfd8fdde67c3f",
+    "bytes": 45345
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/checks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f64e5043131046dd19e45f063daa75eeb0d4f65a",
+    "sha256": "80b347a899fae5827618bdb6166804befb5310835b4cdd73297aff64e4378d1b",
+    "bytes": 27709
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/comments.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9e66fe29287a7317b93ea4771535391544d48727",
+    "sha256": "82771ec7a33312d4fe93831c6d43fe0ecf8f3a8a923c41b97351a396c85c7be3",
+    "bytes": 26949
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/commits.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "784a9870e419fd1e4e9321c3957e255beac4fcd3",
+    "sha256": "4ff384aa6eee6fc520309ab655075cf22c43973ba67e67c0c7dbd6618287488f",
+    "bytes": 9839
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/contents.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d98f606c7752b895d219142f73e69c053f4266f8",
+    "sha256": "4b84e927e5e28a48f17002ecd1ce383118d598b089375a169272ae1d96fb8030",
+    "bytes": 25727
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/issues.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "21e94f842bdf7e707bf9aa20a7d28691ce8cbf69",
+    "sha256": "ffae166e060bde215cad4989d6a81b6bd40c757760a50130e348540edd1e481c",
+    "bytes": 30097
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/labels.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "087d8b4e2b2000cc14a6b1e0a0e9acb30f8645a0",
+    "sha256": "f8f6bce3641add69367a6ddc00ecc283356d45c2a0756cc0b27b76aa6740e0f6",
+    "bytes": 28986
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/meta.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "55b9715ac09690b9b05cbe4c0882aea6a64bb4e5",
+    "sha256": "76510e0d8b65aeaacb7495f33a119f50610c31750634c4d672f1434de77b9436",
+    "bytes": 3554
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "94ccd05b78e4b05025883b6c803714672ff905de",
+    "sha256": "9bf49d1fb370de2b786b59ea6800f8bc91d6856c337b1aa33fd18503b56c0d11",
+    "bytes": 18771
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/orgs.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9d68173a3f329511ec2f1eb4613f755116d0a125",
+    "sha256": "abc41c0c863f2ef5143f45419d64ed3ec57d8f04d9e90e5d75a688e625891fc5",
+    "bytes": 24622
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/pulls.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bcf594ed6b6accd38af90807357a4249ff6303fa",
+    "sha256": "d4cbac6394191896ea7b4a5b34004cef3959d387048ad48b8560d9962786a66b",
+    "bytes": 32080
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/rate-limit.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "996b9c3149c6576e9270950b0d116217d6f57fb8",
+    "sha256": "55257845b60c302dae0a2d0ad99eeb25a4b732758730926c497b17a3438ac60f",
+    "bytes": 1231
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/releases.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "46f9de5d77f6e9f5da528eaeb9b4e795dd0f8952",
+    "sha256": "bf02e25b394894a8d8915f0393efa89376e70964bcaf224820f0f4138a1f64c4",
+    "bytes": 16734
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/repos.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8692befe6fd54432f40146730933c3acbe00ac9f",
+    "sha256": "b5a5134a8e4cb1174ac484bc77e302a4a966e332239343abdeb31372b24176ee",
+    "bytes": 31593
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/reviews.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0f9495c0af6d8bb595b02060cd04a6457924d622",
+    "sha256": "3853ba07711996a0c7e1cc11abf990187cdb8c02fc4d7e488a8b9ad00268a3a0",
+    "bytes": 14434
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/search.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d5fcb23db1f64e070a6159335bdecc80d17434a9",
+    "sha256": "13f08948cdd207ec4e311ee6e45b8a67fe5be876542df2dfef895f9e60da7359",
+    "bytes": 39223
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/users.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1da820b7e9db886d6aa0cb01128fe151f3bed05b",
+    "sha256": "91764a478228649949fce8f566b36a234e7c29edb01d10b8c402d557edaf36b8",
+    "bytes": 9568
+  },
+  {
+    "path": "packages/@emulators/github/src/routes/webhooks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "87292cb3696c0c688eb58f25afdc9795f6afb05c",
+    "sha256": "1b826bcb567e863e3b44d2f60a2945fbfbfd4aa030d92755d9581074e4107f02",
+    "bytes": 17886
+  },
+  {
+    "path": "packages/@emulators/github/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ffa1ce19047c271fc806a302e8e4b38e8e65dc3a",
+    "sha256": "127b2d86a5a6b9009c614c2983229de9f9049897c589c4fa40734d8b027e8931",
+    "bytes": 5278
+  },
+  {
+    "path": "packages/@emulators/github/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/github/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/github/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/google/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ff3573a3ee00103670a7bf159dd0525266ed46f3",
+    "sha256": "fa27879bac6e28643797293a22c49e9a27c8998e12561465bb2c2dbeb2228c33",
+    "bytes": 5067
+  },
+  {
+    "path": "packages/@emulators/google/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c156635efd824f7c3340536d1b8a5011c5b716cd",
+    "sha256": "87b09b608f20f163c3edcf3ed71f4662eb60d68e9dda4b4bd7e673d91caee8b4",
+    "bytes": 979
+  },
+  {
+    "path": "packages/@emulators/google/src/__tests__/google.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "58e2e008bf2e9054237aec0908d5458ed39f99e3",
+    "sha256": "3a4322f7d65dd1739a1c9fe1725afc97e2344c7bd75cc1e9633c09d0efa06b5e",
+    "bytes": 40381
+  },
+  {
+    "path": "packages/@emulators/google/src/calendar-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "71935fccf737ccb9818f09b516321fb600b6ee78",
+    "sha256": "8ffe2ec2a0e6421ad38d32fd8cef6dfbea8e7740267ec5dc15e4932da7a70d40",
+    "bytes": 11989
+  },
+  {
+    "path": "packages/@emulators/google/src/drive-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1be6d3bfdd73f49d141cab143f09b21adfef9189",
+    "sha256": "4b89fcaa42f53e9f8967d73dadf0f03e1fc281be2b101d994b23228c66c4378b",
+    "bytes": 7990
+  },
+  {
+    "path": "packages/@emulators/google/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f8adab714973b27a721625e69b4a1fdcd21e2960",
+    "sha256": "7cc4df68c90374dd63733f889e8aea6453c5d4deeee54386b161a1693e64c477",
+    "bytes": 3767
+  },
+  {
+    "path": "packages/@emulators/google/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bc4acf2b655d002887bdbc37bd39cf03ca2386cd",
+    "sha256": "2608e0b17decdf15ee23724abeec4839066a5599848e892eac5aa46fb5da06cb",
+    "bytes": 62335
+  },
+  {
+    "path": "packages/@emulators/google/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aee974673f97cab260d31c2168102e618bcabeb8",
+    "sha256": "dc771b4d4be83b9f7edc6939ca3b1840542a7235001a12748addf6ac2aac89ed",
+    "bytes": 15250
+  },
+  {
+    "path": "packages/@emulators/google/src/route-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8682f51a4fd314a02807692e7a1cf8b50a7f1b82",
+    "sha256": "26ce3966f0a24c13b8a6058244f933fd8719560b651b10447428a5fcf98e48ba",
+    "bytes": 6416
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/calendar.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a06d164af2b8ed217589b201f43483d2b0b587bb",
+    "sha256": "63f671c182469b259f6565e67cc4cdbaa7e9b764eeabbd0332b0b52dc75f98b9",
+    "bytes": 4458
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/drafts.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0700022727633ba97ca794decfbbcbab938d405e",
+    "sha256": "0cc2ec6e7de84df9af9fcce8e5f8b4227b1ec61bcac6933256bed42b89d14a9d",
+    "bytes": 5678
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/drive.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "de5cd4ea427e4aa6c7729774c9bbb9621f3f160a",
+    "sha256": "f77f3cb54427584452fe2610e33df184bdd8fc7a31b8ec42e757661a63d0d37c",
+    "bytes": 4164
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/history.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cb2fc06b0e9ea141d2a6364c88ddaae5899aa080",
+    "sha256": "6b0300212ca06782fc6ef467fa91d31a6c5d59bf3a6f2611d6bc7aaf89d59752",
+    "bytes": 3085
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/labels.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9fefd1d595c7d8c8783fb4537dacc1cd60abd7a6",
+    "sha256": "fa8cedb572970a420fbb468e3b5701ea5a7c658eadaebe794819659f49a97a6d",
+    "bytes": 5599
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/messages.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fe9bed8992551f617a659b20e308314aee91f4e5",
+    "sha256": "4c54e31157fedc9d8f3ebe34fb9f4fd7ffc456f1fe9467f3e4d91a2e2fbd3c0d",
+    "bytes": 9072
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e8b1c1df450d49d9e51c1c111f600f04a34d1eb5",
+    "sha256": "b59d21ca833523574ad23caba0bfc12bd03abbc4004e181330f96aa83addd592",
+    "bytes": 13612
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/settings.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c7e39edb72d7635ea16f3ebabc467c18a8cdc662",
+    "sha256": "2bf0511f64b9ec95175a30de2be7c5e8d63682a17487908b1cc21b061163f183",
+    "bytes": 3572
+  },
+  {
+    "path": "packages/@emulators/google/src/routes/threads.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cbdcc3570acc9b45e5d568c6b1c63797920afde8",
+    "sha256": "00beb64a43dc471d4df6668dd1e82c02e0eb328f62cb37f8f1bd48826124398d",
+    "bytes": 5193
+  },
+  {
+    "path": "packages/@emulators/google/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c9dd15f3664b11a355b4ed0472b9ecc2d1317f23",
+    "sha256": "133abdd6e061a6d4eb9805e97a2356cdffee3de08a8fff45f40c557e10d5eb34",
+    "bytes": 2456
+  },
+  {
+    "path": "packages/@emulators/google/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/google/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/google/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/linear/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7cd1e372dc902d35fe04199e0b2d2e253ac9ee4e",
+    "sha256": "ef061431e63b317622b3fb65c6d4e98b5c80e0002d699c5eeb9f4a1b3160f717",
+    "bytes": 1238
+  },
+  {
+    "path": "packages/@emulators/linear/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c7b1bf34a5dfe42554db47353ac4993f76407015",
+    "sha256": "e21773e52d8ba1c125a6b7e0d44382c5ce753d3157a7932b3ab9d907aedc5df9",
+    "bytes": 1017
+  },
+  {
+    "path": "packages/@emulators/linear/src/__tests__/linear.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a8a87e0de137916479c6d975754c5b512095203b",
+    "sha256": "e4e56c3e57ae0613ba7316c51985249152044f5adec9a684c0e97ab2ce97aa56",
+    "bytes": 42447
+  },
+  {
+    "path": "packages/@emulators/linear/src/auth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ca50952a562a0acf4c1f122f3304043d88544599",
+    "sha256": "94de6b94ff8661ac23781b1df47294ce8a953309dcb8026ebc4e70faf100b60e",
+    "bytes": 1818
+  },
+  {
+    "path": "packages/@emulators/linear/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c139db40d033123c82c6d06e05763e1208fd6f66",
+    "sha256": "5f1d901b6c29f87d024f3136098f6d6a9374deb83bfb1e4b6a28212e924cb7d4",
+    "bytes": 4093
+  },
+  {
+    "path": "packages/@emulators/linear/src/ids.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6009a8e201d1795febbe999d9d3ca99fb4137d0a",
+    "sha256": "622689a693ed07949df91e06b5d680d678bedbfbf6d34bc2224bf53d88fbfcc7",
+    "bytes": 379
+  },
+  {
+    "path": "packages/@emulators/linear/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a511bc78f2c0f014ac8955af92f8caf78b5cf47d",
+    "sha256": "90f0366cd33dbaa23c598954ac74a0b158ecc1a85cf894f92a52b69ee5c38970",
+    "bytes": 24196
+  },
+  {
+    "path": "packages/@emulators/linear/src/pagination.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "51c7443b4a540219302c100ae9a27a141652c9df",
+    "sha256": "3230becd88a380cd50be624784fa8af1f691bd6e064761e23c2efe7014b5ff65",
+    "bytes": 1512
+  },
+  {
+    "path": "packages/@emulators/linear/src/routes/graphql.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3fa69057876e76b8c6319157b3ebc868e83adb57",
+    "sha256": "f3def6841d7874a808791adb5468b69b923251875fbe4c617924fd6b11a60baf",
+    "bytes": 76035
+  },
+  {
+    "path": "packages/@emulators/linear/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0c798d05a27561bc7a21bfd1b7c0255328db719a",
+    "sha256": "89150e46d31519f8a8d64b57017b10ce2db842da72ea63579d019988a8c1a005",
+    "bytes": 9430
+  },
+  {
+    "path": "packages/@emulators/linear/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f72ebbb4d58e44db643966999183e450e3fa0114",
+    "sha256": "6e84fbdb57c2d6ec68b8b7152fa4bc3b1919791245b29ebf4bb5b76aa16215a5",
+    "bytes": 15170
+  },
+  {
+    "path": "packages/@emulators/linear/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b25d2bc9dd4fa4ef887ba26592ba273880b820fb",
+    "sha256": "bec578513b49c44a1ef765ef456351816aa6d2dcee4a7084a982fee40c0f5fdd",
+    "bytes": 2691
+  },
+  {
+    "path": "packages/@emulators/linear/src/webhooks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f5e93c4541e5a029cf827e287e8138e210d4e3aa",
+    "sha256": "73b48ac9e9f189f8092611a621000113b5cb81fc87476abfb43244c7361469c3",
+    "bytes": 2718
+  },
+  {
+    "path": "packages/@emulators/linear/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/linear/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/microsoft/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1521c8b7652b1eec8ed4fe50877aae880c758ee3",
+    "sha256": "e033fb6ca986e7b57245c4400933b04ccdb92e3cf78a8e6d28c760cf47d07d76",
+    "bytes": 5
+  },
+  {
+    "path": "packages/@emulators/microsoft/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3289d8bac38d2c3785e1d86ce0062abfa6c8991f",
+    "sha256": "15df173b410bf3c66f68481679bad9d96f984ec8336e14ebc45fc83e479e8dff",
+    "bytes": 1630
+  },
+  {
+    "path": "packages/@emulators/microsoft/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "49f722ca1c95e80559a4d0d6c868773a58a9ff96",
+    "sha256": "c401e9234c1aeb82cddc9ba1be54d4686c343b46cc1074059a176a0d8f37f1d7",
+    "bytes": 985
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/__tests__/microsoft.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9c1ac578ae6596dfe249d94b1b684d7f5b0bb40b",
+    "sha256": "8caa56993c3567f9ee5bf189ca6b5d25e2ff588fe95731684050ad54d8a93e9a",
+    "bytes": 24106
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d01cc061f0da7e9f6c1c471f3fb4f508b0557837",
+    "sha256": "277dc2f563f806c2e09aad99a53ae94584e24f3aaa42880965b8d253fa322bcd",
+    "bytes": 619
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cc5ee43f2ad1022021f38c47353136d4e26625e1",
+    "sha256": "34e5ab2989ec476309f803d086119f3f436759c8ba0051f33fea69adff26a181",
+    "bytes": 297
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4a42218f3abcb27d1b812e7011feff3e7a139e86",
+    "sha256": "32e3cc5d4e01533e0a76a13a02c658b3b07cbac50a2f2cc536ccc4a80b5643da",
+    "bytes": 2725
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5aeadc12ff1b9b1b542c9638045b14e4591db083",
+    "sha256": "43750cfa89204ff8df0de7d2dd7579c6eeb32eef4a456a616bcd6124a765a339",
+    "bytes": 23177
+  },
+  {
+    "path": "packages/@emulators/microsoft/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "dec03260f0a6710c620a6ef1ca33027ff79cc53a",
+    "sha256": "ecc8304eccf4513896b54bc8a8c4c9cf3f51a2ad2c569913418a3510d3a215f9",
+    "bytes": 521
+  },
+  {
+    "path": "packages/@emulators/microsoft/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/microsoft/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/microsoft/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7aba28af0f2117811dbcd228b5e50d217a1b4863",
+    "sha256": "991b8c4fd713f654d63a8fd61a44f19385d2effeefd6dd8aa4cf70937ffbb937",
+    "bytes": 2785
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2c5fc8764e80e8deff11075660e652696221c4fe",
+    "sha256": "77a1743a95a2a149059c55006a4cdb7e05dd326ab57d82d6e35e3ffb6e7174a8",
+    "bytes": 969
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/__tests__/mongoatlas.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e7c5ba3ee7d1556fe2912a2cc893141ea181e5ff",
+    "sha256": "b916019d4dd7dcfd07dedf71500ceb52b8ae60141255437d9f909a532507702d",
+    "bytes": 13487
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9f37e6a913641dfae25e8dee99705630ab79876a",
+    "sha256": "9617e8030c0529877094c549a140bfa4c606ff1cd146ffada17d8ce766210a8c",
+    "bytes": 1233
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "30b510e9441f8d88041c1e14536406ea611d4392",
+    "sha256": "a1d0193671a87248c9948f88d7aaef4a0f21570e596bea3fb7e22298d9fcb87d",
+    "bytes": 899
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3ab99a58e888904c63a34677f35c2b78502f4297",
+    "sha256": "53b04bf737425086d37352543db794967e888d5e70377a387da8b65ad0b95538",
+    "bytes": 6411
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/routes/admin.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4cd1e51383e09ef10245d12e6f946f98dd70a92d",
+    "sha256": "dc1da276acaa939d61ba8ec22dcfb28fa3dfb04b7cc73795fe00b78dcd127660",
+    "bytes": 13623
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/routes/data-api.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a41c7a3c79837a9f5cc604a52d7b0abd882371b2",
+    "sha256": "90869da9a9b7f82364c19c164b460ec12b30289391ae3fce8cdd77086a47a309",
+    "bytes": 23158
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7cefa689ee1222020012feea4cf5f2b0538b197f",
+    "sha256": "4bd187e97811cab47fe19db09b1c3fae980ae761e08aa68e6e529cc130fa2534",
+    "bytes": 1215
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "818264f7b75898f43c07fa1f75d870f4dd4c65bf",
+    "sha256": "67c1a00a4eb94d2ee0b1f4ce95e4af492ec35aa71996350b1c6008e6678604cd",
+    "bytes": 150
+  },
+  {
+    "path": "packages/@emulators/mongoatlas/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/okta/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1521c8b7652b1eec8ed4fe50877aae880c758ee3",
+    "sha256": "e033fb6ca986e7b57245c4400933b04ccdb92e3cf78a8e6d28c760cf47d07d76",
+    "bytes": 5
+  },
+  {
+    "path": "packages/@emulators/okta/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c0b2149c34c6bc6488bfefa2ec149900093f56c9",
+    "sha256": "5af08f23d304bed8c2d1e8c3ec1f016aa3351f3a6050ff955a78949cea454f1e",
+    "bytes": 3553
+  },
+  {
+    "path": "packages/@emulators/okta/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ef3d7e9afbcf2a3ff7dc51386eb6d25f8906399c",
+    "sha256": "a75b843c8ba3f55c2644ab814b705354b608b8ddd6b175fbb9ee3efc32dd69cb",
+    "bytes": 975
+  },
+  {
+    "path": "packages/@emulators/okta/src/__tests__/okta.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c56eae48a871be8ead0469f7f12bc57db11c6514",
+    "sha256": "123de3fd106db13151bb3df29075ff478d8694d1ad44876c8b13090a551c85b0",
+    "bytes": 44527
+  },
+  {
+    "path": "packages/@emulators/okta/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d0c0242c65b5c9087d48464fdbfc9cab33ce7a80",
+    "sha256": "be6fb212f10b029dd63d6ef2642997eaaf40e57469e93c6bb5ce010f4fe40892",
+    "bytes": 1791
+  },
+  {
+    "path": "packages/@emulators/okta/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3be5785305041fb0f2655e4cd8ecac6f2f7e393d",
+    "sha256": "723e3db0ee3dd56a8489c5db335de94dddab75958fc0598edfad3e8e47a550bf",
+    "bytes": 3893
+  },
+  {
+    "path": "packages/@emulators/okta/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1629f6e92e852309f625af2cc1a20632ac0d489b",
+    "sha256": "88a0273d6ad53e155ac2a22581a7a109aa2b6e7ce15e1540201e670101e48946",
+    "bytes": 9223
+  },
+  {
+    "path": "packages/@emulators/okta/src/route-helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "306e39d9d86c3bea93bcae57d4f30732fb70df88",
+    "sha256": "50411f4cd25448adc99be05deccbd655060e4cc6391352ea73fc18e272ce5be0",
+    "bytes": 5077
+  },
+  {
+    "path": "packages/@emulators/okta/src/routes/apps.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1181dc2014751c4f236ab22b1eeb781880b94fd0",
+    "sha256": "7f9133af964c49080b74ad9f6c5387e779dde65be5c79abde009ea9e9711ae77",
+    "bytes": 7713
+  },
+  {
+    "path": "packages/@emulators/okta/src/routes/auth-servers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aa50b89085bcd9cabe46c2eb2e8aa6412a8ab1f0",
+    "sha256": "e8d9c0c839f57cc86770da2e4014f2352073ec376b8dda486a94f1bc6cff812a",
+    "bytes": 5726
+  },
+  {
+    "path": "packages/@emulators/okta/src/routes/groups.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7744fd74bdd25bf89e90bd78c4545c553c880f54",
+    "sha256": "2ef00f0fead0b245710c0c82de11168567d7ee86c5ee2f44ff69a1cfad2bc6d4",
+    "bytes": 6486
+  },
+  {
+    "path": "packages/@emulators/okta/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e99fbd1c7831ec5c957a71edc0a5cbe49a7791e2",
+    "sha256": "29da44ea09c29643552a992cad8f5f1ec9aa4446bd5920f1afb1fd83fb2ca3b4",
+    "bytes": 29648
+  },
+  {
+    "path": "packages/@emulators/okta/src/routes/users.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "55439ab24ad4ba405f262efca4e7aecc86338a0d",
+    "sha256": "1e084f4a8c40b3b2c1a48e717e72f04215c14d1da0efc68d7866407f2f34c961",
+    "bytes": 11638
+  },
+  {
+    "path": "packages/@emulators/okta/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5ae415966ea3667541a56149ed1db0fd0636a70a",
+    "sha256": "d92d7aa73270706974c95e8e8792ed0a72635c60bd8321ffa847eafb87782e64",
+    "bytes": 1330
+  },
+  {
+    "path": "packages/@emulators/okta/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/okta/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/okta/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/resend/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d9a9d0184601148f06c0ba79b46cdc2f1a8f5c5e",
+    "sha256": "3167ff99b29f0b32786df078e7caa747d5559529e2ed9b98250ee8648a388201",
+    "bytes": 1584
+  },
+  {
+    "path": "packages/@emulators/resend/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "922504440c3865afeceadb7709808955afd26eb2",
+    "sha256": "3569097e984009178925ec61d877912265ddde63e04447c93ee5d19d3246748a",
+    "bytes": 961
+  },
+  {
+    "path": "packages/@emulators/resend/src/__tests__/resend.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8e33177f4951d83f6b40ade2db74ae9216e7e6d4",
+    "sha256": "1cc0c6cc9b81d4c3eef79566058995d383d4918a134f7a9e9594b0608062ab55",
+    "bytes": 14905
+  },
+  {
+    "path": "packages/@emulators/resend/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf04e3e90b8846d829d7adc41aa390fb3e1b71a4",
+    "sha256": "171ced57aa31bc43245ccf8a63b223080db60138d8d42c1c7cc0fc1634c551e0",
+    "bytes": 1153
+  },
+  {
+    "path": "packages/@emulators/resend/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eae607970add6a11222f66737e4a973b5f2f1733",
+    "sha256": "a8257899424b996255728819a054f86f74487933f6cae15e8b03032c7936f038",
+    "bytes": 1151
+  },
+  {
+    "path": "packages/@emulators/resend/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "45e380c46030c0d4d8d43668ae77afe8e2f23ec1",
+    "sha256": "abecb26419043d33b85df9aa7241a558a635e26ff21640b2afc01586772a477d",
+    "bytes": 3447
+  },
+  {
+    "path": "packages/@emulators/resend/src/routes/api-keys.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d15e1de81e87225dc06937aaa4c32ed0627105f1",
+    "sha256": "4fc003739142da0b98933572efd3c28f1848f45bd030207cc99d2d0b6d607998",
+    "bytes": 1435
+  },
+  {
+    "path": "packages/@emulators/resend/src/routes/contacts.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "191a27f1ee2d6d68b44cf46cb3d2a5f400308cff",
+    "sha256": "508c4b0b432955ac8e981ddbb0a53706fcabd7b28800080eb9278db8479cffdc",
+    "bytes": 3946
+  },
+  {
+    "path": "packages/@emulators/resend/src/routes/domains.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "62f293be3596ab69710da9d591ed2dd8c2b80ecc",
+    "sha256": "8cab752b3b87641b7509638d6e49e1dac5ddfad56f84378a29afd52918d0f862",
+    "bytes": 3323
+  },
+  {
+    "path": "packages/@emulators/resend/src/routes/emails.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1255301a6be4930de9338028588f6309374c2194",
+    "sha256": "6bdafa8c6cfc40e7c5a479acf769aff0b552b3aedfbb6fe82bc727160a821f41",
+    "bytes": 6403
+  },
+  {
+    "path": "packages/@emulators/resend/src/routes/inbox.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "33aa407b7e8e8b574035207d413cbea6faeb76e2",
+    "sha256": "08214755820430c631ec4a1adbc2d6c9a2ce31189966a1c67d4572591831490c",
+    "bytes": 3981
+  },
+  {
+    "path": "packages/@emulators/resend/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cbbd62fa371fa7f7e439b569d06f0f4b702f2946",
+    "sha256": "5273a28c6b36f58985d60524441e4f033a53c23a6adaae9fcd9d4329cd41faaf",
+    "bytes": 864
+  },
+  {
+    "path": "packages/@emulators/resend/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/resend/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/resend/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/slack/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2c70b7801310e52f7787d7b82d23210735e23471",
+    "sha256": "f9c1f9500ddbc867cb8f31a861a5da4a059c4c02eec9664c4601edc5f08ff03a",
+    "bytes": 9615
+  },
+  {
+    "path": "packages/@emulators/slack/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3aed9d017279611161617ebabd5a3084017b9412",
+    "sha256": "f6fe9806aba19e9a4dea24604e9537d40cce591d63f057b5f409dd198bbd7409",
+    "bytes": 992
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/coverage.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ae15a185ee59aae21f8c354a169cb5e7d6196189",
+    "sha256": "36e64d63960fe4d458cb3b0815693fad7d5df40b128e865533c51cd6dd4524b6",
+    "bytes": 1750
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "602d06a6e9324bef27978f9572ce9beee88803a5",
+    "sha256": "63bd591027195b211aaa75455ab5646b6043ad52f390b0562a6c13d25674d08d",
+    "bytes": 4423
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/slack-coverage.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "49e9486777f7eee41868d60caee635b2406fbc9d",
+    "sha256": "105e2a56ee52212d14ada45d2e7371aaf69ce96caa25e10385dedfccc4a2e766",
+    "bytes": 20659
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/slack-events.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "15da3083ab901d4679dbaa22e905507ead2fe022",
+    "sha256": "87acf66829afb86677eada4667072778185fb3616999e7a74d0bd80dfaf901a4",
+    "bytes": 27755
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/slack-sdk.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ffc2a7beb3e7e6193ec471ece1389bbb27d08749",
+    "sha256": "d99896a154d9970090469ba2fc6a5eb949607268272389d1e7217d5aba834ccf",
+    "bytes": 20271
+  },
+  {
+    "path": "packages/@emulators/slack/src/__tests__/slack.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b21f2b97742589a28c9c857a576f9c8d7a29b2d2",
+    "sha256": "43409fb4bb391011b5c4d8ded6ab253acfdc55f3d972124c7ef96882db4d993b",
+    "bytes": 175917
+  },
+  {
+    "path": "packages/@emulators/slack/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ada98b4969737fc53bfd795ed7f8205df3b4c5ea",
+    "sha256": "d0248a70f288df21ca2a38ae3c2dd61d1affa38e1335b11da9062d2516685480",
+    "bytes": 7589
+  },
+  {
+    "path": "packages/@emulators/slack/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f74b069ae57ee43995540949f2f6e7f8846b4abc",
+    "sha256": "6d7ec324f116ee4bad37d296346bb7ec68ff4b6afc2ff1eb204d96cd176803eb",
+    "bytes": 15433
+  },
+  {
+    "path": "packages/@emulators/slack/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "73c449272e838b8624ec26bf58b7811df537efe3",
+    "sha256": "3f2be6a2bc9b8013e45a3ddcb22af55b663d8ad2b831814fdb2e7a14d8fb2d56",
+    "bytes": 15415
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/auth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2d3a42db8717bac148e196be74c6bac61a94d616",
+    "sha256": "07099a0683c313501e44d7d8a93d09abc594f458cb135accaf1bd1a3a260ff72",
+    "bytes": 1761
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/bookmarks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d6aeee4d97ec1f4d9a8a08f6916ba18fe440a642",
+    "sha256": "6ffde97c8d38166a64a536712c931f5e4d3baf93e3d1d73626fa1fdc9ad8cbbf",
+    "bytes": 9417
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/chat.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b7c6c0f39cbdd98920bdbd8ea7999727914af49e",
+    "sha256": "bd83be06348132bcf1c7bcdb1071a3f3cf1e5b7d2b25f0e400376fe91086a517",
+    "bytes": 21498
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/conversations.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0fbff1fe410b8ca66d22fa86c1c4c52ac3d4e73d",
+    "sha256": "d3af2a07d48042dcb54f49e898d8d4861076f1e9cee653f2e7acd0282bfb5d8f",
+    "bytes": 40536
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/files.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "be2f4bc79843b12f1943ccd51a95726d61ba5003",
+    "sha256": "1d71911a28a8d0f787e43e6d66d0e083294d8a1aa35b946498fd74a695397807",
+    "bytes": 27100
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6784489d99903373a08202355d0ecb75b8b4c1bb",
+    "sha256": "d9d45bb33f9f7698cd211de7c2e69795b3030e0c8503c9acc0cc2b46c690990e",
+    "bytes": 24982
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c6357d75e5330229f2fbfb380f4914fd8b15e4f4",
+    "sha256": "7f75c8baf9f0f7d1c7f11799f15dbb228fbd38df48cd8ac00c319094dd1ec0a9",
+    "bytes": 13126
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/pins.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b4118a46afeaa79776b830b06564aee464535cc8",
+    "sha256": "bf7743f81fb8995f520407c7e03878bd879a6411b5d2d1892295736e8f323478",
+    "bytes": 7042
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/reactions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9daec4f2a6c77e45acce8f7062524c3c992602f3",
+    "sha256": "56355d301fcb536114e604ab681a5a4a326da5c03a82a8732615cb649770f20f",
+    "bytes": 5926
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/team.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "795c6685c8140cd8a2a3971dd73a08e66b7c7550",
+    "sha256": "594b991d999a94962de3e1427c33090c1d16dead40cc615ef662a96e6357e42f",
+    "bytes": 1450
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/users.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "40f5a79fe178cf79a3833b9dc767a14b477aec07",
+    "sha256": "07169444e93294cb09276aca7d1517542f6c8b3d4d2302598923caa58e684cab",
+    "bytes": 11407
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/views.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b3544d9a0e933c392828e9db1238463bdbea4dff",
+    "sha256": "e210603a790df0ba9c5c9326ee0d355b042365136b6cf09f14d565b7f73f2d90",
+    "bytes": 13115
+  },
+  {
+    "path": "packages/@emulators/slack/src/routes/webhooks.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b83d0adc10c45b90490857826b16da35c4161357",
+    "sha256": "445fddf460327945b0b26f45a39945fb60def84579534b4137bba94baea8f1b7",
+    "bytes": 3273
+  },
+  {
+    "path": "packages/@emulators/slack/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b6c0035b46570fc44f24ff799c7fd6de7a959eb8",
+    "sha256": "fc86e51dc907deaeeb2626601c061cdea916dd02255369ad38f6f4a08f42c58c",
+    "bytes": 2936
+  },
+  {
+    "path": "packages/@emulators/slack/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/slack/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/slack/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b500dbf260afaba34edf0e557b7ada0a3e66760d",
+    "sha256": "3c0a3f3259f63fe7703e7417ba479c7992fdcb3c288f95b16a20d17678f085b9",
+    "bytes": 380
+  },
+  {
+    "path": "packages/@emulators/stripe/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eb8fab111c3abf7c3089a9415983653b81026368",
+    "sha256": "ebd3498fb81325ce8fa37be4dbe8078a4a9eefa6a8c72c37ae2c4346c78a760e",
+    "bytes": 2667
+  },
+  {
+    "path": "packages/@emulators/stripe/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "10d06c2661e21725db8e35003093e16eefa368ce",
+    "sha256": "4bd9ac5161c52b7a5e3706bf78cd206dbb72d780f6440cfdb53a701663792b4c",
+    "bytes": 961
+  },
+  {
+    "path": "packages/@emulators/stripe/src/__tests__/stripe.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d4db19815277afd3ddfe266c75c52e01f6a0abe7",
+    "sha256": "f911078a78293fb25df9e424973825d1d24f04a2957c8a2bbf77bf191c0ff455",
+    "bytes": 20518
+  },
+  {
+    "path": "packages/@emulators/stripe/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b6d03bdf7abfce97070330456ba1a67fecb23505",
+    "sha256": "93c85c0f9a62d92068b27299056a269e8984922769502390b9b183b2b672dde0",
+    "bytes": 1777
+  },
+  {
+    "path": "packages/@emulators/stripe/src/formatters.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "19b66639aaa0584b5eed9b78ec3b88fd0b7d71e6",
+    "sha256": "7ffc088d7abd0d279af70e144df1fd99abf1441bec914f2bdbab9e2664b37113",
+    "bytes": 819
+  },
+  {
+    "path": "packages/@emulators/stripe/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bd40c89406f3762d5a6130031075d28eaccabee5",
+    "sha256": "2f5b59ef91b72c3c17c5002b38709890668703e8de6f908456e6bc4da1139971",
+    "bytes": 5598
+  },
+  {
+    "path": "packages/@emulators/stripe/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0ddbb2094632110ff1fca7918f86b431a4c77944",
+    "sha256": "3e49850865dac164346b4ef4ed4535b52c359e5458aff82abae261ef239ba279",
+    "bytes": 4359
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/charges.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cf21a2b6eb972071362ffaefbd7b44a11ad16864",
+    "sha256": "72a634c3baa08a33615bc53c41a9749d4a94a397b35ca648756355028799a25f",
+    "bytes": 1950
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/checkout-sessions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ee7c25284ba24deb2ddeca5f29e3e69536563e5e",
+    "sha256": "7a01133077112d65f0ef846b0b290b7f6dc8fc05eb4f5306b0d7e19966fde161",
+    "bytes": 8293
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/customer-sessions.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8a9be661a2f9cf15b0dc405918b8c6babbc5032d",
+    "sha256": "aa144e415d2e026e4b3a4881e52d76664886c3fc07aae6fba846168a68ea4eef",
+    "bytes": 1210
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/customers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b01e02a17a89e22228daca40393da407eaee3a54",
+    "sha256": "f61a7039a4b47ccabf96ed7845c9f12e4f1dd12aff73276a83e9a82034edda9b",
+    "bytes": 3706
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/payment-intents.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7320889870e6e0e5ef021a71a2e66761128877a0",
+    "sha256": "12d1549cc7546da2241d2aa447ba089c79c0649f8940ee62c2e2cb7951eccf20",
+    "bytes": 6898
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/payment-methods.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c464f400c889341439bdf8331cefc65c438a1dd7",
+    "sha256": "7789bb95eb306d605baae96791c2aea9fa8ada55265e29e8352a2a116ba4b207",
+    "bytes": 786
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/prices.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0d51085f0619f0d0cbd386ba098c5ab4faefd1f7",
+    "sha256": "349b62672848d9052c508a9c70f31c33bf55503cbabccef4622f3f98ee8fb130",
+    "bytes": 3129
+  },
+  {
+    "path": "packages/@emulators/stripe/src/routes/products.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "856aa275a5ebc4fdda434c1c5fbd1ab527396ae4",
+    "sha256": "48db2085dc9b62d7b3d16265c4c1ea98f8b2d0353b3dcc96343db7666e978382",
+    "bytes": 1999
+  },
+  {
+    "path": "packages/@emulators/stripe/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8003938cb235405cbba6b381c8ec3cb77204bd33",
+    "sha256": "28d1615077b4bccb89a592d16e8cf00244b86dcfd6156d9d5da32b8fc70caa81",
+    "bytes": 1194
+  },
+  {
+    "path": "packages/@emulators/stripe/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/stripe/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/stripe/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/@emulators/twilio/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "95fb9495aa95fdd07a9f27189d7825e187ab8fc6",
+    "sha256": "21f1a16937c6a1aec922ade709aa8c17527c1391258d918818c7228e518954f6",
+    "bytes": 1662
+  },
+  {
+    "path": "packages/@emulators/twilio/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aca95feec7fb6a170f3f4314ce7abcdaa2181f3e",
+    "sha256": "a15743a9f811eeb60c2d58574576097d3e21ab48dc157e2e8dc4b3f4408035fe",
+    "bytes": 985
+  },
+  {
+    "path": "packages/@emulators/twilio/src/__tests__/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2f5d496f5d4a75b628c8e5eea6e6a842fa663920",
+    "sha256": "8568391c637a5bc2261cd9f253d016fcaa55fae9a8f90a9c8e6fd0ebeb00403b",
+    "bytes": 3199
+  },
+  {
+    "path": "packages/@emulators/twilio/src/__tests__/twilio-sdk.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "65cb860124b765d134a130c9c4b85017386fa00d",
+    "sha256": "67641a11a2eeddd936e5381b47a03e3f7b43e49ed9279948f74b8b28e9d3d9ee",
+    "bytes": 2546
+  },
+  {
+    "path": "packages/@emulators/twilio/src/__tests__/twilio.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2d235117e7d28897c731a3b8a48a5c32181b0053",
+    "sha256": "5695c83154f054e8afe121de72a929647e10d8c19d7e82bdf8d2801b442cdf19",
+    "bytes": 18796
+  },
+  {
+    "path": "packages/@emulators/twilio/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1b2ceb39547c76ea12c58c3b77375221ce615437",
+    "sha256": "ec3585c85a3b90bcc147092baeeab12509aebd167b1b7632aa4a4cb9120453ab",
+    "bytes": 5169
+  },
+  {
+    "path": "packages/@emulators/twilio/src/formatters.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "68e9c8f9e676a701df689e5d939805ea02d74479",
+    "sha256": "078e705529d0fec169ba0ed9f565e5246531c5ba2a8ffaaa852d6822d668715f",
+    "bytes": 10293
+  },
+  {
+    "path": "packages/@emulators/twilio/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5a58239cc88ad90d7418215590ab77a6b8df1cc3",
+    "sha256": "8fe279f16b8725225e5ee9bbbf07b272036e91713244da3e87cba33b10b52012",
+    "bytes": 8292
+  },
+  {
+    "path": "packages/@emulators/twilio/src/ids.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "52534524898049ffc75d11d59ec063447b210b5a",
+    "sha256": "d272cd6bf6fe74f6e61f4486f23ea630649c480b9df3861739d5266fb9a0d16d",
+    "bytes": 247
+  },
+  {
+    "path": "packages/@emulators/twilio/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7bfc5a725414bc5b446af649de7578c486433a4b",
+    "sha256": "87e846eca09bfb1ef75446c01f807b197b1f1a7f6ad610cb1f8d0fb9c3cf337e",
+    "bytes": 9764
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/accounts.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4f976c21cedfaefae2703a9b6fa6ce98b6916e4e",
+    "sha256": "a245336129ba9e9d5ff2ee719f3ad659d6ae8844b0c339f682db021be6f35a53",
+    "bytes": 1877
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/calls.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "65624c3ba273885e35e267e33dc5eb3ba7ceb74c",
+    "sha256": "bcc3e885b818539203ec002072600642ad4ad71a3daed81872e9454274fbe0fe",
+    "bytes": 6313
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/conversations.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7846c6e037201f10d5d311194d66625f3952be6e",
+    "sha256": "cb12da62f4a6edc09e38c86603b4b965c8893162fb40c265e698449fb6682d10",
+    "bytes": 9034
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/inspector.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0f518547204028ded73cf3105cc233fae81e8fe8",
+    "sha256": "b08a01c35375e2ce8cd76a2710cb02ee68307ad36721e500c1ad7f7d7fc38487",
+    "bytes": 7960
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/messages.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "90f2199d603d7916cefa60f05a84396db7977b3a",
+    "sha256": "21ea7c23ec50bb33a9b5d2f13c5f1749fdddba4085035a7cac2b08d8de7ec212",
+    "bytes": 8192
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/messaging-services.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9a6abba672c043cfacf62b583b8ba63bdec58e5e",
+    "sha256": "86dc7921eca4aa316aee0c0f8374dc5bd1c71dd228c6bf740d9ca53c201e57cf",
+    "bytes": 5610
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/phone-numbers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "3b7fb5ad92819b1cfe582c17452a35daa1e8fcb5",
+    "sha256": "a7302da3b58f3dbb60289cb38fa803e769eeff1e6c66ccd6754e419b19b970bc",
+    "bytes": 4778
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/simulator.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "041a8e58c35ac13a4356484b02938271d820db00",
+    "sha256": "6d2cda2c50352d6bf01e5f6110a60834c248c5c323f419d1db3af44db676f2ea",
+    "bytes": 10871
+  },
+  {
+    "path": "packages/@emulators/twilio/src/routes/verify.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "31615103e44ec588aee5bb782bdf923f785b7165",
+    "sha256": "7f75b33d24c110d3d9e279f7e772f19e2543aa6ed5b843fab05cabcbd8fdd21e",
+    "bytes": 7008
+  },
+  {
+    "path": "packages/@emulators/twilio/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8919f7d5867bee9e098bb1eb104bf836a9442e58",
+    "sha256": "2dc07fd7a12d897d4c42fa23b13ee25838a75cabe72de2ced2648174331e8cdb",
+    "bytes": 3699
+  },
+  {
+    "path": "packages/@emulators/twilio/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f4f533c90c316d87a1a0884569b54d3ce37d74de",
+    "sha256": "fedf3c69c54fd0f4d6838beb54a3efc8892557429d7dfd970a8cf42e0fd098e7",
+    "bytes": 143
+  },
+  {
+    "path": "packages/@emulators/twilio/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "31a49abba9a27a0316d4dcdd7a9c4fc228f18611",
+    "sha256": "16eb5cf137a30c8a3a41bee7f9e46ff07d4790680c75d375a6ed943d8673c775",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/twilio/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c1433e6ef3830880059578e1136bed71e765842b",
+    "sha256": "4f49d01f0120eff8b5bac0c9abc9bf6263c8da9834d288ff884c1e397436209f",
+    "bytes": 156
+  },
+  {
+    "path": "packages/@emulators/vercel/README.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9ac0e5fb4464198d726e2394a6537812ec9fed57",
+    "sha256": "3924727150dbcd8844a16eadd7565d28351b50577709cd2386ed6bcc3561da39",
+    "bytes": 3333
+  },
+  {
+    "path": "packages/@emulators/vercel/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0b3a8dc0f882c91d974ea9fdc9ceae917c8334f1",
+    "sha256": "4a8feec972364b8898fb9f44cc85ae8f1bdff38d33d60a51251c4d34f1ded21d",
+    "bytes": 991
+  },
+  {
+    "path": "packages/@emulators/vercel/src/__tests__/blob.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "4de3e183e70b46e6bdc1a1cc44466e7bddaa2468",
+    "sha256": "c16f488937cfb17fb2fe05cc21d1e8a8d280e8ed80ab0288bdc3cbaa60d26f1a",
+    "bytes": 13748
+  },
+  {
+    "path": "packages/@emulators/vercel/src/__tests__/vercel.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "297f7896b7806741c38fdafe9a6f0ffcdbbd097f",
+    "sha256": "b81ca4dff21d7ec20cab88262ca4609e6ed6a5ae3c8eb92e67fae074cba6e2b9",
+    "bytes": 2765
+  },
+  {
+    "path": "packages/@emulators/vercel/src/entities.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "76a35535022d410f65a5ef15875f2bfd1e70b3f2",
+    "sha256": "cee39c493525cd352929644942e3a9f52e895b1a5766b0268819468962279a10",
+    "bytes": 6153
+  },
+  {
+    "path": "packages/@emulators/vercel/src/helpers.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "da0775689013a1ed18c3302465f49de9f9628372",
+    "sha256": "f9a239ce4a42a8747291110179370f4e6b0bee0b9f5b13c436c74d6661c5e5ad",
+    "bytes": 9061
+  },
+  {
+    "path": "packages/@emulators/vercel/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a7e1cb0c0dbd77a609de0a25be2fc7172fb9bb5f",
+    "sha256": "5bdb899f03fffdeeaf58e8e9b5bd9666c33c52e64a359b04968818b092e1afa2",
+    "bytes": 6981
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/api-keys.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "eb1d054f03bb48785143cdd87a0dec449cecb458",
+    "sha256": "f690805a25db01488d6857a1824ebcf5fcb8206747ee73d5b212211828889156",
+    "bytes": 3238
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/blob.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6d2d9e8d8fede0b7769c1e3c58bc678c434df89d",
+    "sha256": "5406dd67eca0806c989ea130dfd8acf9121387c46db83bb0f0b7d22020fe2ba7",
+    "bytes": 12358
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/deployments.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "91ed367291661454cad0a2c4d6c0115bdcd41343",
+    "sha256": "24c0a8fd7786cef0c3f5d8c8966861da75ff87e79d7b5637124c9e93531dd6fa",
+    "bytes": 19865
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/domains.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2fde5ced10fd4511e478456dcae5fd01ac62f9e3",
+    "sha256": "69ae981a254c75a2d83322abf4004f399aba3db23d6ba1e7ef9be533db05cc93",
+    "bytes": 9768
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/env.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fa2ce7debc56ac36f9a5b6410d2e5481bd15093d",
+    "sha256": "710eecfb8ae2f053e6b16604a3d118851ea565d410f42b5a2e2b637a60549fd5",
+    "bytes": 14642
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/oauth.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "14992e518f481e9512db2abe979732f0eda15a3e",
+    "sha256": "eb864a9f6ff468f476f741e1a6d2a536412247b83941fac433bb783c7d133d22",
+    "bytes": 11429
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/projects.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "b1fad05c17c462d58c784dbfa2b77261b4ac36d8",
+    "sha256": "da2ee22732938dc5ddb09399a3473bbebc84bc9e10b59c4c6c20bb951258e327",
+    "bytes": 16672
+  },
+  {
+    "path": "packages/@emulators/vercel/src/routes/user.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6e6571a94a269da24a97a526e17f37fcae08ccfe",
+    "sha256": "f7ef5e65ce9e1a32ce710f21ccac10c3adf2bf931b8bc53e3015d60e37149423",
+    "bytes": 12065
+  },
+  {
+    "path": "packages/@emulators/vercel/src/store.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "8f487eae7a757f2f03805463472eb4103328fe9d",
+    "sha256": "edc46e24a676c5ce209a3993fd31061dcc8c4d3ff4ec7d54614e2d432aa337fd",
+    "bytes": 2688
+  },
+  {
+    "path": "packages/@emulators/vercel/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c8c92cbd61fbd487306d194ff4b73a6960a37ec2",
+    "sha256": "7324ea43cd4c98dc63381639fedc9cf90f8831a67e6392ed0063db7ac1ced6b1",
+    "bytes": 144
+  },
+  {
+    "path": "packages/@emulators/vercel/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "59a7354cb3b04193092a312d00b1dc211c2fdff5",
+    "sha256": "079cc83dcdad801263cb19b829720e651118bbff178c4de811884259423660c2",
+    "bytes": 515
+  },
+  {
+    "path": "packages/@emulators/vercel/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "e2ec332940c22a3e3a177516b34ec51cab88b8cb",
+    "sha256": "8c0d83a720b89c7a5230f739693553d36a36f8659c153051b35d05b5a24ae728",
+    "bytes": 115
+  },
+  {
+    "path": "packages/emulate/.gitignore",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "df700bb58735c9a645133c3028d81440423f47a4",
+    "sha256": "8cbd5b79b7df94478a2cdb685f34bfbe0a7aa59dad209272ee3c287114daeab6",
+    "bytes": 16
+  },
+  {
+    "path": "packages/emulate/package.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a3210e60437804d8d1e39287e21dceebe44b4653",
+    "sha256": "3b4fec5502c047fcd1c3bd630a28837ff6f5c5c5c0e9ac4ba73eb2f24d369110",
+    "bytes": 2056
+  },
+  {
+    "path": "packages/emulate/src/__tests__/api.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "18048b94024f35205912b2c5a87eb930123ec1c7",
+    "sha256": "446157e331bc7687c22d1771c18527fe1ecd70b8671a17cd57607f21a7395262",
+    "bytes": 10518
+  },
+  {
+    "path": "packages/emulate/src/__tests__/generated-secrets-file-acl-unsupported.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "c02902b62dc38e86b60024b8dad1d7842b1c7fbf",
+    "sha256": "43308cb9761e54bd28233dff863ee0da1fac1e59c8b9bc7ce79b9353814e47cb",
+    "bytes": 1279
+  },
+  {
+    "path": "packages/emulate/src/__tests__/generated-secrets-file-unsupported.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "9d9db0b5c08ac7d6ffae30e3d70a8b503f0a45e0",
+    "sha256": "77253b7b24285204d6713b5bb047efe3eee480275b641bde2a2b6e65c63d6893",
+    "bytes": 1346
+  },
+  {
+    "path": "packages/emulate/src/__tests__/generated-secrets-file.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "26120b5ec4fbf4765e20542ea76e474de9a90d6e",
+    "sha256": "ca9cc08bc64c4d254c5de28611a10519d0d47c6ddcf686701c08125e3f0f7967",
+    "bytes": 8810
+  },
+  {
+    "path": "packages/emulate/src/__tests__/start-generated-secrets.test.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6f1f8bf5aad50501374de013e1f7b9599a9fae48",
+    "sha256": "924022af257349ad8846fbc94bb292a05b410a5ddf40c8b960dd87a1eba95763",
+    "bytes": 20909
+  },
+  {
+    "path": "packages/emulate/src/api.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "01875ba3be47ae07be888bd8d2f42f980b45c862",
+    "sha256": "fefb6d8ecc0e0547938151a1ef79e4faac6aeebac67c6200c61d7f4b62b35b86",
+    "bytes": 3995
+  },
+  {
+    "path": "packages/emulate/src/base-url.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "a95057c930d83ac3b02fa1ba28dfbe718f97a898",
+    "sha256": "18cf1523056b7e3b9695ad598f15d6e4a397f444edcde6052f7ac7476a72bdf5",
+    "bytes": 971
+  },
+  {
+    "path": "packages/emulate/src/commands/init.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d3dca5d88c0068f3f54de0fe7bf431dbc5abe54e",
+    "sha256": "5950094305aa5432b74349c9ea58571cd640d7242da54a169a21541da1ac323b",
+    "bytes": 1236
+  },
+  {
+    "path": "packages/emulate/src/commands/list.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "08d6be40c1ecdee672ec6d861abbe45f2396881d",
+    "sha256": "356dcbe2e3323a493d0258cdb7cce42d499916271ed97c9483376aa549a47c37",
+    "bytes": 494
+  },
+  {
+    "path": "packages/emulate/src/commands/start.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d28a198a88fb2a3cd9f398fac45e3844d7da7737",
+    "sha256": "6938f213a651c4f3774d1a865175c89f938e30895f55128dd13eb4785553f4c0",
+    "bytes": 14592
+  },
+  {
+    "path": "packages/emulate/src/generated-secrets-file.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "aaa87b39a3b3d062bd6f187c970624d3289bc43c",
+    "sha256": "d35424d1e834b7bf3dba083bb8dc4ba0c7105cfb16bf374a1b047024df498652",
+    "bytes": 9647
+  },
+  {
+    "path": "packages/emulate/src/index.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6d9cd4de2e81c8ad2e616d7c17869de737bcbd97",
+    "sha256": "460f34c0508c8574b2c32aa06757a78236be7ccc0ce56453a8543f5c7335eb2d",
+    "bytes": 3086
+  },
+  {
+    "path": "packages/emulate/src/portless.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "74e43dc8af70902c3a16d481a06bba094bc707c6",
+    "sha256": "f0cc4e1e90624496ffbb31d9f5ba8f68201b10b706532b27dd11d176e6bcda90",
+    "bytes": 3321
+  },
+  {
+    "path": "packages/emulate/src/registry.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1685a03314086b0c66f1a3bdebc0c29f6d1bfd50",
+    "sha256": "9525cd0a6ec60bc637e20655acef88da7f79f7f025dbea9059f85d3cac6f778f",
+    "bytes": 26536
+  },
+  {
+    "path": "packages/emulate/tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "90d76d7e8deff7f86637d98fa11e1d68f3423a9b",
+    "sha256": "e4ed044d99005d1d36c726849468ff721d4fd6ed12967cc420470a4d9f690004",
+    "bytes": 141
+  },
+  {
+    "path": "packages/emulate/tsup.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "db718e14e78ef46adac80ca46c71e46a64c4f666",
+    "sha256": "7f5fc8e11160b413e8fe72b1d5293acdb7cf67daae1aa807eae0cfb906ccafd6",
+    "bytes": 1255
+  },
+  {
+    "path": "packages/emulate/vitest.config.ts",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "60ec98f2da1b380fd432f1d6603d45e5829e2583",
+    "sha256": "a914df0b51490fbec7efe6204e3107ae895098f2022a20d2afd49e7951204c9d",
+    "bytes": 179
+  },
+  {
+    "path": "pnpm-lock.yaml",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "2b92d700cf15ae68646755ac3c54847a0b21020a",
+    "sha256": "163e97d9359de6d51d9bd15f1fbf4c9b121abac5327faea73929b9fb5e8fc031",
+    "bytes": 714435
+  },
+  {
+    "path": "pnpm-workspace.yaml",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "47a494387a10d1ee2720552f931c510a198aad80",
+    "sha256": "36d9295af251bd841053b6ec1ddaf1b06ffd96f71231bdc8c1625f408c4b6147",
+    "bytes": 352
+  },
+  {
+    "path": "scripts/sync-versions.mjs",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "cacdd31e425bde838cd0a47e8670f8cd67caddc1",
+    "sha256": "b770c00ed9cbfbe4a7e681076d0692b984bd52fb11f350027c662b0f6d319cc6",
+    "bytes": 1540
+  },
+  {
+    "path": "skills/agent-vault/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5d5ab86096efd15a4597069df62ce6588d391faf",
+    "sha256": "6a4f62f21206908b80ecf018bec2a62490d460b5265a6df9e9f41c363f4df54e",
+    "bytes": 2016
+  },
+  {
+    "path": "skills/apple/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "7b36e49e4936f53b9076c978a1abd3d04facbbe8",
+    "sha256": "05b8a4235b331b16e0a5d03cfe84ad64b918b27489917b894e1cbe26428103f3",
+    "bytes": 7518
+  },
+  {
+    "path": "skills/auth0/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "78442991b9a5c2b238c6d86542a1229c1b1ffacb",
+    "sha256": "72691fde73334173bae3c40284f53ff050623dd55b01aa6a7333198fd1b28690",
+    "bytes": 14192
+  },
+  {
+    "path": "skills/aws/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "bb087b54fddad495b57ea4802fc310cf5a2da301",
+    "sha256": "7ccdee6379b0a97cb4f6a59025e2db5689313f37ec007fa50c198ca95d39227e",
+    "bytes": 10672
+  },
+  {
+    "path": "skills/durable-streams/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fd23ce0af4e426699108a45ce980ddb09d5a34f9",
+    "sha256": "325fb8dc5edace9a354dcc8f57cf7ddfd10a6e362d6732a8f36b94c66ebb646e",
+    "bytes": 2487
+  },
+  {
+    "path": "skills/emulate/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "133ccda39e93579ed5468421607037c4bb833a20",
+    "sha256": "d384164595214286c529d6ef439f977b7e703096d5069c8cc67d42d4f9f413fb",
+    "bytes": 15834
+  },
+  {
+    "path": "skills/github/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6a9322a6a493dcfff669eeeb88134dd35a94b1ae",
+    "sha256": "f4a70ab4e2e5ccf624c2ec2c6580f7ef1d89bca73ad83a524de74d96dbfb91da",
+    "bytes": 19213
+  },
+  {
+    "path": "skills/google/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "be563d183bfa2581aead67558eaa0981ac1eda35",
+    "sha256": "7a163a0d628ae42c7e585e7f14e96b6aaa7069c01a8f5c07db833f3ad7a255fc",
+    "bytes": 19827
+  },
+  {
+    "path": "skills/linear/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "d4b4791cc1bc9f37204e27cca86aa0761bdad2ff",
+    "sha256": "25c4c514d7fef74b50f6cf75511c57bbeb76582a0eca9c25888accb4835987a7",
+    "bytes": 4786
+  },
+  {
+    "path": "skills/microsoft/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "1eb6d1480736c7d641c1cf43b604d6a4943e4039",
+    "sha256": "abe0b697486ad7666e72392618655ffe15325e1d1d35fc3d6813c18cf90aede8",
+    "bytes": 11315
+  },
+  {
+    "path": "skills/next/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "ce6ac745e98888a03f5c895ff554d03c2dd37b61",
+    "sha256": "05b3357f9100984a492daa45c9c86d7f4fde61e5819802a24b89d018be627609",
+    "bytes": 6509
+  },
+  {
+    "path": "skills/nuxt/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "6bea976fdb7080e65d000d0dae372a50d20518ac",
+    "sha256": "d59e52c1ab4487d3da8c6b30181c12691a2270df5245d0dcdc386f5adf14ac34",
+    "bytes": 6017
+  },
+  {
+    "path": "skills/resend/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "0c244e8b970e2f5a59844d9f2b5b349137d510b4",
+    "sha256": "26ba2aa38a7b78bb6a03d1f46e745f5ff0eeac5148f7323b114ed2863879ffd6",
+    "bytes": 8944
+  },
+  {
+    "path": "skills/slack/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "981b54b9f220cc018eddd7aae28552af27e8991a",
+    "sha256": "867c22bf089e042deb3757c4c29f061df85427a487976caf952ae9d6a02258ac",
+    "bytes": 26716
+  },
+  {
+    "path": "skills/stripe/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "932341faf205664984627ced5aebe8b5e6788fe8",
+    "sha256": "a5fd304f9b217414bb2ff248317937aee9cf4f5c1a3c9ab6c6e43a782b65ed95",
+    "bytes": 10413
+  },
+  {
+    "path": "skills/twilio/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "5392efc673e94fd54fb60e6e7c3335c25308ae75",
+    "sha256": "45b3f938ccd44c73b69b81cf2ae7f65a8ce3959ad17908401e9e652c315c7be8",
+    "bytes": 3540
+  },
+  {
+    "path": "skills/vercel/SKILL.md",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "f4724eb553888210ddbc07eab6ccb5760f9247a2",
+    "sha256": "e3d33dace1ba1f4d579dbd44aea09601bf3cd2e6e7989d8c55410dc1a95cccbe",
+    "bytes": 15462
+  },
+  {
+    "path": "tsconfig.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "fe11899903f295c44c6ed9bde4d73ac52e56d839",
+    "sha256": "b10787848ea9924fc693aabc3442e48a8fdc30f600be304e4fd53d40871bca4e",
+    "bytes": 442
+  },
+  {
+    "path": "turbo.json",
+    "mode": "100644",
+    "kind": "blob",
+    "gitBlob": "53449b0360d36d3af94679d9fc3312ab8cb4acaa",
+    "sha256": "44541e84de7f3149a7dd7954268bef3e78cdee3d6b2a83559df11330c9dd5733",
+    "bytes": 495
+  }
+]

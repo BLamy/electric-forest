@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada@e12-t10.fixture.invalid","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"GgsqnkPPHXkTipDdx171WCHjB8iEzT1J","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000002","payload":{"email":"grace@e12-t10.fixture.invalid","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"sessionId":"AHC4uYtpXAz_M7E2qMSkTjgQLkjpp1Yl","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.session.started"}

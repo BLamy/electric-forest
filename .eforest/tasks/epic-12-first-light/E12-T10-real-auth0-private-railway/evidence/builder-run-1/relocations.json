@@ -1,0 +1,1754 @@
+{
+  "recordedAt": "2026-10-16T21:12:24.524936+00:00",
+  "task": "E12-T10",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "scope": "Immutable build/deployment checkpoint and dedicated fixture evidence. Actual Auth0 login/operator restart/fresh task critic remain absent.",
+  "relocationPolicy": "Recorded artifacts are copied byte-for-byte. Original workshop paths in their captured reports resolve through this map; source target hashes resolve at their exact Git revision, rather than a later metadata-only HEAD. No generated textual patch is retained.",
+  "files": [
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/artifact-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/artifact-index.json",
+      "bytes": 39679,
+      "sha256": "018eb1150939407b1f8b71c2f66eabe9116bfa7ec12610e96287fe789ce71a7c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/audit.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/audit.py",
+      "bytes": 30278,
+      "sha256": "f7ac767e6b242f261096a1f6ec9dacb4e329709cc745efd2ce53a38e2ed13cd5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/capture-validation.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/capture-validation.json",
+      "bytes": 1173,
+      "sha256": "a084bc5ef10dcf20caf5355e4c5cbaa287a560ed47a7b41b314c42b604783993"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.files.json",
+      "bytes": 733826,
+      "sha256": "438e7445f5c41eb080a1e747a4a1df56fcf4ed344d4c0344982022459c0f814d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.semantic-source-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.semantic-source-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.files.json",
+      "bytes": 179139,
+      "sha256": "d14b2c098776ed9d363b83767b4b0a6f7f41374c38cf22596fcce03e7a3d482f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.semantic-source-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.semantic-source-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.tree.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.tree.raw",
+      "bytes": 64386,
+      "sha256": "f8b8b25dd0e85d79c62fdaa1b6e247e9d4431631f65d27f9ff57f9616cd79acd"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.tree.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/committed-root.tree.raw",
+      "bytes": 316647,
+      "sha256": "c424ad26b82b05d2f0353af0f91a39db98eb22a5020f28a83eaee9c43aeba757"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.snapshot.json",
+      "bytes": 3596,
+      "sha256": "2f13ce30dadd0782bc0665be940bb5309fe73fe16a0396d0a0ea18c81086a7d7"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/final.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/final.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/freeze-check.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/freeze-check.json",
+      "bytes": 65713,
+      "sha256": "95e3211243a3afa79c68ab96ae79e98b31ebaae2fffe9c6f02ec701c1524bd80"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.snapshot.json",
+      "bytes": 3756,
+      "sha256": "bf693f94de9ca37c0582934c02a450fd35d81216088c5910f7236f5e369cbcae"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-after.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.snapshot.json",
+      "bytes": 3764,
+      "sha256": "102d1e9c86752db028f6a53e40846fe39ebeedf23e6d61acd8904d2a2a14bf92"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint-before.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.output-events.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint.output-events.jsonl",
+      "bytes": 966,
+      "sha256": "1a95ff8ef610296b257ceb28e10ef2a05d9dcd35b618088f3418e6e1be2b0a93"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.raw.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint.raw.log",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-01-format-lint.stdout.log",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.snapshot.json",
+      "bytes": 3740,
+      "sha256": "50256ed4a7a148827ec2eca527d62bd02ceb6c595f6b612b5bbffc5767a121e9"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-after.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.snapshot.json",
+      "bytes": 3748,
+      "sha256": "32be7721f50df22e3789e984b6554057a93c8e6c41ab9da95f4d57a8427cb565"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck-before.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.output-events.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck.output-events.jsonl",
+      "bytes": 247,
+      "sha256": "f2422528dc4e4738804b9e8fe55d67ae1c6917102d5d92149a57149accd5d841"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.raw.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck.raw.log",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-02-typecheck.stdout.log",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.snapshot.json",
+      "bytes": 3700,
+      "sha256": "1f05ac593966720757b5dad48f661d532eea75218cc3718000fc8c05eb6cc936"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-after.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.snapshot.json",
+      "bytes": 3708,
+      "sha256": "6dec2d078c7eedaa8ff8b8ec786c98e8074016cbf60885ad557a6252f43476ae"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test-before.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.output-events.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test.output-events.jsonl",
+      "bytes": 51486,
+      "sha256": "27d595fbde906343eb68c3479cae5cfaab12f514f2cdbf3baad2a44a6d3e75fc"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.raw.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test.raw.log",
+      "bytes": 107373,
+      "sha256": "f137cb55325f524b4298a1570c99a1b948ad6a85eaad8fdb9786f2b9d886c47f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test.stderr.log",
+      "bytes": 35731,
+      "sha256": "e28308c2f6acc9b322a410d91566d30812ea22ccac292c4cb17a50b52c577161"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-03-test.stdout.log",
+      "bytes": 71642,
+      "sha256": "aadb7028599a8fd9c952bfb961df6fb8a395b8219d0217a5053467748445a80b"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.snapshot.json",
+      "bytes": 3708,
+      "sha256": "d1740a37f04f895a0d627b4fb2f94c13a3a42050b6dac91d1f71a587ca12ad31"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-after.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.snapshot.json",
+      "bytes": 3716,
+      "sha256": "286c2110a3ec63b747d4218c2dbfe47455af5e153c03f4fe922379a61009b6f8"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build-before.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.output-events.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build.output-events.jsonl",
+      "bytes": 47843,
+      "sha256": "2c171f0178f684ba861524f45373548a1df9f9d4b40fb6b38bd18e832aaa7a23"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.raw.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build.raw.log",
+      "bytes": 105881,
+      "sha256": "f966bca6558041f4dada0ad1c30a478d41e90a4e788e461fd917eaaad11bea8f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build.stderr.log",
+      "bytes": 35731,
+      "sha256": "bc1ef00107eda404ea7eafeeb7425e1a595ec1de9cb7b77e4915b0ebf1511425"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/gate-04-build.stdout.log",
+      "bytes": 70150,
+      "sha256": "22513e3b36f714335f91d41272bd95cab751f5ac7d2ef015751f1a31bb372be8"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.index-entries.raw",
+      "bytes": 309364,
+      "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.physical-index.raw",
+      "bytes": 368078,
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.semantic-index.json",
+      "bytes": 484115,
+      "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.snapshot.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.snapshot.json",
+      "bytes": 3612,
+      "sha256": "551ec3150072d44143f623a7302bdef83e3535e7e9e3fc428442995b433006ff"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.submodule-89c5c5d3409d.index-entries.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.submodule-89c5c5d3409d.index-entries.raw",
+      "bytes": 62382,
+      "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.submodule-89c5c5d3409d.physical-index.raw",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.submodule-89c5c5d3409d.physical-index.raw",
+      "bytes": 80044,
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.submodule-89c5c5d3409d.semantic-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.submodule-89c5c5d3409d.semantic-index.json",
+      "bytes": 110481,
+      "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.submodule-89c5c5d3409d.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.submodule-89c5c5d3409d.tracked-files.json",
+      "bytes": 126367,
+      "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.tracked-files.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/initial.tracked-files.json",
+      "bytes": 542091,
+      "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/report.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/report.json",
+      "bytes": 12990,
+      "sha256": "95690b638321853bc404b39ccfbe39e29bf86b1ddf6ff636657d0bdfbdbab28b"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/report.md",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/report.md",
+      "bytes": 2519,
+      "sha256": "d2657256e17d77cd57b480db714f75f3499f7db506b87670e428bf5ad7f0832f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/source-catalog.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/source-catalog.json",
+      "bytes": 2058,
+      "sha256": "33ffba0402959da30ee14b96622978976dd4ddf889e656e0f35045a8a4344fe2"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/state.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/audit-9a5861e8/state.json",
+      "bytes": 11976,
+      "sha256": "417c845a5915103a3862eb3189f1d25c348d440b839a89d7b7b5cdaab2b43611"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v2.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/builder-freeze-v2.json",
+      "bytes": 11077,
+      "sha256": "0783a1a803f846cf9a02e304169c4dabe110adb4ce8806e132b0c9fec122adf0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v3.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/builder-freeze-v3.json",
+      "bytes": 9055,
+      "sha256": "f60fb7c323357145671246dcd2101b20e20f3191ef4cc99910756943817f410c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v4.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/builder-freeze-v4.json",
+      "bytes": 17056,
+      "sha256": "42a8a214ba962ce73aa38fb4455a3915045e046e3bd740171d17c737a1e45f7c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/builder-freeze.json",
+      "bytes": 5643,
+      "sha256": "3fd839a2b85439e16042615f19b3d6dfe4c7e03e099563be6dad430f0d07c6e6"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis-v4/validate.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/config-diagnosis-v4/validate.mjs",
+      "bytes": 3424,
+      "sha256": "7d9383c0e9f135ac3f77366cb854d29b3e7b7ed58d482ac009de103d474eebdd"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis-v4/validation.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/config-diagnosis-v4/validation.json",
+      "bytes": 5477,
+      "sha256": "691a4c93f86aa27460bff2a2b4b0dedbff12bf54731eba06d43de55470677902"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis/railway.schema.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/config-diagnosis/railway.schema.json",
+      "bytes": 13044,
+      "sha256": "0302fd53109298d9c277dbaedae772630506d8da43636e69875268a8782dd68f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis/schema-validation.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/config-diagnosis/schema-validation.json",
+      "bytes": 6009,
+      "sha256": "43f4a48a5046443ee66197afa1b93c3404f465a862a44d26f58495143db3ff95"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis/validate.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/config-diagnosis/validate.mjs",
+      "bytes": 2822,
+      "sha256": "2f992dc90fc22b0c4edbaad57af5c5f33b04f226a49f1865f282b9bad8302031"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-475272dd/source/changeset.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-475272dd/source/changeset.json",
+      "bytes": 17891,
+      "sha256": "ce64efd095be303c247569ddf89d12a831370f353be706470d151ef0941d2787"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-6d3c801d/source/changeset.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-6d3c801d/source/changeset.json",
+      "bytes": 24749,
+      "sha256": "0ec2c9fafb2c8d35da96819ed35c9854a29962d76e72e7d44079ab916211e08d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/auth0-public/discovery.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/auth0-public/discovery.json",
+      "bytes": 2966,
+      "sha256": "a883851727df082ea3ad65668de42de13d06154ad48ccf5d29f266d2e9bbc408"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/auth0-public/jwks.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/auth0-public/jwks.json",
+      "bytes": 3100,
+      "sha256": "a57f01bbd7735adce782d670a8b22ccff33381d956c996912fdf893e00a15d47"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/auth0-public/receipt.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/auth0-public/receipt.json",
+      "bytes": 985,
+      "sha256": "e75ef6135809ce0aa12a949a810bfc7228b136a8202f47b8e9f4c10c907b830a"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser-command.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser-command.json",
+      "bytes": 1180,
+      "sha256": "310afccff384a8d4980ba4d7759e825c57751299c81ea6ae99dadcfba93b5b10"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser.stdout.log",
+      "bytes": 344,
+      "sha256": "b23d6b8431bb1404df2af7292b42f45c147c9235cf01f72672126267cac40fe5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/active-session-after-restart.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/active-session-after-restart.jsonl",
+      "bytes": 606,
+      "sha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/active-session-restarted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/active-session-restarted.jsonl",
+      "bytes": 1725,
+      "sha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-issuer.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-issuer.png",
+      "bytes": 25616,
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-login-deep-return.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-login-deep-return.jsonl",
+      "bytes": 386,
+      "sha256": "8bd710634cff4ce0aacee6c1130312f780c6e1919fd4fd6f9819187d7cb86f11"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-organization.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-organization.jsonl",
+      "bytes": 386,
+      "sha256": "8bd710634cff4ce0aacee6c1130312f780c6e1919fd4fd6f9819187d7cb86f11"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-witness-after-restart.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-witness-after-restart.mp4",
+      "bytes": 136656,
+      "sha256": "39b77ae7361af5d64326979b1a1c6ec15ef652bbdf86c4f291cae58bf60d73e9"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-witness-reconnected.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-witness-reconnected.mp4",
+      "bytes": 56378,
+      "sha256": "46299278d4c912e1cb58fca29361aa0c142899dc3adae1eebcf8f6b1eefad5c6"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada-witness.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada-witness.mp4",
+      "bytes": 53909,
+      "sha256": "eb38a1696958b903cbecb38e526605c1c0dd24a749a2e7bb93f074c3bc430570"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ada.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ada.mp4",
+      "bytes": 578763,
+      "sha256": "1975c791d6f166faca05a73661cd69296ebd95ab55c392677d7f0e6f4f5735b9"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/agents-off-human-members.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/agents-off-human-members.png",
+      "bytes": 99347,
+      "sha256": "165716904b227c7da3b9bf4ac6969ec652c7ad21b4cc90f515b68433dd9adbf0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser-grant-minted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser-grant-minted.jsonl",
+      "bytes": 1377,
+      "sha256": "de8563b2a6071d91dca0210f650037c436f8666c4e14d0192657d26029c55ff0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser-grant-revoked.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser-grant-revoked.jsonl",
+      "bytes": 1562,
+      "sha256": "23fba8a967b4d55a789d8ba1a213b8d2ad8313cc48cedfe50df38db8d381bf2c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser-identity-after-restart.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser-identity-after-restart.jsonl",
+      "bytes": 1725,
+      "sha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser-identity-before-restart.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser-identity-before-restart.jsonl",
+      "bytes": 1725,
+      "sha256": "83da12961e6f2825e0ff46c2bee115b259fb3401925e76b2d7bf0d5e035e9ba5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser-identity-final.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser-identity-final.jsonl",
+      "bytes": 1924,
+      "sha256": "788a248620fa7a4db7276df8019f4e22c5f1996fbd90fe0b5df812554aa8a70e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/browser.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/browser.json",
+      "bytes": 82914,
+      "sha256": "efe3d03ff777ba90dd0deac06fa9c4d8a0c4a2e53cb001fa0e2b83042fc44e87"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/first-private-workspace.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/first-private-workspace.png",
+      "bytes": 62557,
+      "sha256": "7c450d2f6c40bae5daa74063eb5002e1be64e2462525636c164b3491dd00e58e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/grace-issuer.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/grace-issuer.png",
+      "bytes": 25616,
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/grace-organization.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/grace-organization.jsonl",
+      "bytes": 778,
+      "sha256": "16e312c78e3a9240889a3688172f732be6d8315696618287e56c1697429348b9"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/grace.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/grace.mp4",
+      "bytes": 186474,
+      "sha256": "2648b137ce86e86bfd4a20b284cb12b96a401bc7fc9408637a3b435253b15f3e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/local-deep-link-return.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/local-deep-link-return.png",
+      "bytes": 18766,
+      "sha256": "ed2b39471133ea7ebbc6a53433cf54114d278b9491c84706565c00e5322a87fe"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ns-org-browser-ada.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ns-org-browser-ada.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ns-org-browser-grace.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ns-org-browser-grace.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/ns-root.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/ns-root.jsonl",
+      "bytes": 348,
+      "sha256": "449a3d2c4070a01e294d8ef0b12ad3bca6203228d668d0c039b2b555e614e35f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/private-live-convergence.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/private-live-convergence.png",
+      "bytes": 73638,
+      "sha256": "eb6b1da15873ae28505919e52ea23f230de12cca85e51378fd1dccdd233fde68"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/relogin-preserves-state.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/relogin-preserves-state.jsonl",
+      "bytes": 606,
+      "sha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/separate-private-workspace.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/separate-private-workspace.png",
+      "bytes": 63626,
+      "sha256": "4777e1eb074ca9e8474bafab86fcdd1040e6f418fbc62cb9d924ebe3697f7611"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/session-and-private-writes-survive-restart.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/session-and-private-writes-survive-restart.png",
+      "bytes": 85505,
+      "sha256": "2ce9a790044afa37712629b1ed7d2d900e3092086ce54e00e8e44780e800eff4"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/two-profiles-live.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/two-profiles-live.jsonl",
+      "bytes": 294,
+      "sha256": "9dc8e9c77395a4c6c8d9c8102b60e64879d15332df0d731b28e49d31f3ce4b63"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/web-cli-grant-minted-redacted.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/web-cli-grant-minted-redacted.png",
+      "bytes": 29125,
+      "sha256": "72e0fa4620269f4120bb4c3273c2fd1186fbe20e131c4fed228a003473ffe2e0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/web-cli-grant-revoked.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/web-cli-grant-revoked.png",
+      "bytes": 21303,
+      "sha256": "9b0c701b5b6b82116e5d366b4846ab686f9d6ac65d3873cda0295358a635ff6a"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/browser/witness-reconnected.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/browser/witness-reconnected.jsonl",
+      "bytes": 606,
+      "sha256": "67fb78ea3dfd81a7c7eae001e7753024ea2bf52678d91ad1ad8847544ffacab0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines-command.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/deadlines-command.json",
+      "bytes": 1188,
+      "sha256": "0ebab60c9a5e6d95b3550d04e9e53b822e523eea7e2a647a4b4498accab2d980"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/deadlines.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/deadlines.stdout.log",
+      "bytes": 65,
+      "sha256": "bc57f36b266447be578e1eb98c84800cfa3c2dde50c0229ed716feb8e1720eb5"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deadlines/deadlines.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/deadlines/deadlines.json",
+      "bytes": 6066,
+      "sha256": "cfa0f48a9414dc43e47071d373a919836f4600654add56e78bf3b0fc19510c50"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/deployment-checkpoint.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/deployment-checkpoint.json",
+      "bytes": 7771,
+      "sha256": "e3e9820dff858a70e769c1dd245935ec6008a0b69530364751936f47acbc0535"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http-command.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http-command.json",
+      "bytes": 1167,
+      "sha256": "7ebb76477e7b9efec6cedff1b73c64d0496da25730158886de2f91c87cfa98df"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http.stdout.log",
+      "bytes": 785,
+      "sha256": "353ced83ac28dc0cf89ddbe681669cd8457f016653e7b179c4893b1e740246ca"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/chat-before.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/chat-before.jsonl",
+      "bytes": 292,
+      "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/chat-final.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/chat-final.jsonl",
+      "bytes": 292,
+      "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/fs-private-ada-notebook-main-meta.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/fs-private-ada-notebook-main-meta.jsonl",
+      "bytes": 222,
+      "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/http.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/http.json",
+      "bytes": 138794,
+      "sha256": "1260773556c3157a9d334f3b04918688202e49047074445bacc0232842e3d627"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/identity-after-restart.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/identity-after-restart.jsonl",
+      "bytes": 1806,
+      "sha256": "3a0277058540bee5a93623d0cb63a93f03a06f242bee2abd6dc415d11eb02f72"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/identity-before-restart.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/identity-before-restart.jsonl",
+      "bytes": 1806,
+      "sha256": "3a0277058540bee5a93623d0cb63a93f03a06f242bee2abd6dc415d11eb02f72"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/identity-final.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/identity-final.jsonl",
+      "bytes": 2355,
+      "sha256": "8644e2c66488560e2d249fd7ef3d73383913f38a6cf2590ab27ecde8e0d520a0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/ns-org-private-ada.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/ns-org-private-ada.jsonl",
+      "bytes": 565,
+      "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/ns-org-private-grace.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/ns-org-private-grace.jsonl",
+      "bytes": 385,
+      "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/http/ns-root.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/http/ns-root.jsonl",
+      "bytes": 348,
+      "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent-command.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/independent-command.json",
+      "bytes": 1391,
+      "sha256": "382bc02df88c651a3e6b758bfe74c8a95d8d575d7ecbb58cfba331fe780709d0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent-replay.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/independent-replay.json",
+      "bytes": 14231,
+      "sha256": "be5b53259a86813f3c50823600823740414679e7e116acef3c4ce6099f03831e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/independent.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/independent.stdout.log",
+      "bytes": 213,
+      "sha256": "ad0c51bf48865d52d7ca152c9142c6a846acf21b3108f48a7b086c140f9831ae"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/journey-definition.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/journey-definition.json",
+      "bytes": 4596,
+      "sha256": "61106569d9567ba06e6ad596325deeafb4d884d2c71a026706d59d89bb2dc52c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/operator/public-landing.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/operator/public-landing.png",
+      "bytes": 67630,
+      "sha256": "01c46b9fad0a9b5ed4acab8b0b05f639aba57262971591b7f973640f4d16d441"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/public-command.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/public-command.json",
+      "bytes": 1291,
+      "sha256": "1872dff02e32c7b10be86172f66cd2e1b453262435506820319cefc3de7d7bb1"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/public.stderr.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/public.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/public.stdout.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/public.stdout.log",
+      "bytes": 223,
+      "sha256": "8f9f358a3aad6533d42896c7f192b1458cb23e30a3fcd956a8c25709c8362643"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-and-startup-final.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-and-startup-final.json",
+      "bytes": 9026,
+      "sha256": "807e1f5dde38fadcb63dab00cbbac5681674ffa152de1efbe6e3ec9599f2b94a"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-initial.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-initial.json",
+      "bytes": 55607,
+      "sha256": "0cb1a32521ed1b3d56ef6cb050aaf26ca641780f8f9365f3156f4dc574fce795"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-1.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-1.json",
+      "bytes": 59412,
+      "sha256": "c7140be1b3573f9f50533461731e3f90a4a7a401ecde51575f73c81769489753"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-2.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-2.json",
+      "bytes": 153650,
+      "sha256": "5c5b63ab17faf304146533437e4a87434571ad4590c9ca3f38c21cdfb42f44d1"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-3.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-3.json",
+      "bytes": 4533,
+      "sha256": "a455c8e4c4699399b6b745efb7e92b6ef1a15928906dbd62f6c69e5377d24708"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-4.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-4.json",
+      "bytes": 577577,
+      "sha256": "b068638868591e9bd00a1efe0c22c22fb1b1b1fff61e463d884a32678b42bbe3"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-4a.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-4a.json",
+      "bytes": 288958,
+      "sha256": "3809cd1dcdb28165af4f5a515064514fae53b3493731b736ac3a7e38554b1e4a"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-4b.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-4b.json",
+      "bytes": 314666,
+      "sha256": "3e640c45317e60675e53a12806425decf4e447a819afa35fe3d7b681fbe54896"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/build-window-4c.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/build-window-4c.json",
+      "bytes": 9815,
+      "sha256": "4725416264ab1ab177b57cd31bff615617bcc96dfdf57dc9df352dbed2f6cc56"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/deployment-success.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/deployment-success.json",
+      "bytes": 867,
+      "sha256": "42043d3c99c31e1efe78eb9852d944e85b9790c2a78ba2ffd13f3fd5f93a66bc"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/initial0.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/initial0.json",
+      "bytes": 1480,
+      "sha256": "225c3e13914473d3aa77199e7225c27fbaef949ce965fcbaa0233a66590095e4"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/initial1.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/initial1.json",
+      "bytes": 2492,
+      "sha256": "96a4a5a624339b27af69f9f85d8aaa8cc54cfc122208bd6c5ae0e241d64e414e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/pre-deploy-settings.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/pre-deploy-settings.json",
+      "bytes": 3107,
+      "sha256": "077adb1a596f84d0833614d41b050fda8a4f43f7466387228569f46700e7fc33"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/public.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/public.json",
+      "bytes": 165034,
+      "sha256": "3d24b9544badc53e0fbcca4e2ad67f309979cf886f52a927e576b0974f79eaca"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/revision-write.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/revision-write.json",
+      "bytes": 251,
+      "sha256": "f48b951bad6ae8c6963d4c73e8fdb03c3d07cb6b6abe69e8324c828e5dcf78cd"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/service-success.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/service-success.json",
+      "bytes": 2760,
+      "sha256": "afe2b483df801f596ee3f1a2cfd77137dcc45fae4c25258efc4b2b6e37244e04"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/railway/source-connect.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/railway/source-connect.json",
+      "bytes": 295,
+      "sha256": "a2a5e3a6b6ceb721e3c382c401b84f10c663f83f55f66ddeb2d0f0e27a9bd7d1"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/source/changeset.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-9a5861e8/source/changeset.json",
+      "bytes": 22521,
+      "sha256": "6cce80e90ab5a171bf94fee344cad50d5403b6152e04c7d7c1806c6437038af7"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-b19e7bce/source/changeset.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/final-b19e7bce/source/changeset.json",
+      "bytes": 21136,
+      "sha256": "3e186ad343e97fa491c335a07b220387917b610b89744fb83859ed9140c1307f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/pre-service-config-a.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/ledger/pre-service-config-a.json",
+      "bytes": 1216,
+      "sha256": "a93e907551c7587c9b654a81fb5adfe67aaf33cf2b083787869e071b3561b852"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/pre-service-config-b.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/ledger/pre-service-config-b.json",
+      "bytes": 1216,
+      "sha256": "a93e907551c7587c9b654a81fb5adfe67aaf33cf2b083787869e071b3561b852"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/source-v4-a.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/ledger/source-v4-a.json",
+      "bytes": 1260,
+      "sha256": "3ac5b2e15abdb105d982e5ddd9b8cd7136b9c9d07f1de8ec3f6a7855434af1f1"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/source-v4-b.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/ledger/source-v4-b.json",
+      "bytes": 1260,
+      "sha256": "3ac5b2e15abdb105d982e5ddd9b8cd7136b9c9d07f1de8ec3f6a7855434af1f1"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/railway/check-public.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/railway/check-public.mjs",
+      "bytes": 5018,
+      "sha256": "c2c7d474a4475e3efa0110e199a374c920557301929b57836bc9be881dc307aa"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/railway/custom-config-rejected.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/railway/custom-config-rejected.json",
+      "bytes": 626,
+      "sha256": "d57f61abf6f84329155972f334b2c88c455f00d2120dd9f01a0a947c97551f92"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/replay-availability/project.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/replay-availability/project.log",
+      "bytes": 669,
+      "sha256": "ce749ccec24435bfc1f493493c4af57dd6f7d500674fc10c1145cce7de286ebe"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/replay-availability/receipt.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/replay-availability/receipt.json",
+      "bytes": 535,
+      "sha256": "5567b44f3735208ef77f9c5d5d7491ff74bf98227336afaa1d800b60d2782c94"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-baseline.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat-baseline.log",
+      "bytes": 249,
+      "sha256": "de2e84e2aed66eac1483ed218fdba7f98428c9dcd011a3c4b346ea5e779b706e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-mutant.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat-mutant.log",
+      "bytes": 593,
+      "sha256": "4207453d6e5d3417feae7f427f856ef74aeb14abe130549b1823c8b112c82b59"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-one-byte.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat-one-byte.jsonl",
+      "bytes": 2949,
+      "sha256": "b95eb1ca06d157333cd99b65f6096eb0338acf66b6034657084315139bc24a8c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-restored.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat-restored.log",
+      "bytes": 249,
+      "sha256": "de2e84e2aed66eac1483ed218fdba7f98428c9dcd011a3c4b346ea5e779b706e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat-sensitivity.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat-sensitivity.json",
+      "bytes": 2442,
+      "sha256": "4f6b8aea5672e63e6caef95c81e15e36fda69837d08731316311b0036e547890"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/chat.py",
+      "bytes": 2309,
+      "sha256": "4823ec1b13d530382c27fd751dba2fd5a78708cbdbbee6c9114524961218e12f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-baseline.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/golden-baseline.log",
+      "bytes": 624,
+      "sha256": "cffe530af315d3259a20c488d37a18e09b78d897a20b7326648d0b8bee107552"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-mutant.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/golden-mutant.log",
+      "bytes": 1307,
+      "sha256": "1bff5025d9ec84a2c84df21657d6ff2d0ac9f3dcd54aff03749c883e462a0cb2"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-one-byte.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/golden-one-byte.jsonl",
+      "bytes": 1086,
+      "sha256": "a89c057f2d2e9bcbed9701a6fe425d8bbb34d0a0d0605929c4c9e0e03286c48e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-restored.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/golden-restored.log",
+      "bytes": 624,
+      "sha256": "cffe530af315d3259a20c488d37a18e09b78d897a20b7326648d0b8bee107552"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-sensitivity.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/golden-sensitivity.json",
+      "bytes": 606,
+      "sha256": "840f8b12a4aa4cb01bce72440168396428ebfe6cff5fab900301349dd4f30e31"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/identity.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/identity.py",
+      "bytes": 5051,
+      "sha256": "5b81c89b8e4ddcb4b32973b3a9729f45c5342397ddaed790344e0c75ee40696d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-baseline.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-baseline.log",
+      "bytes": 970,
+      "sha256": "6f2375ed99666ef10593ea640714edf2fdbd73c824c151cd71395efc4982e55c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-mutant.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-mutant.log",
+      "bytes": 628,
+      "sha256": "268d41941424469613d923a596e46212b4160f2c78c6e300541b48870cf8115d"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-one-byte/expected.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-one-byte/expected.json",
+      "bytes": 1352,
+      "sha256": "7c2127529b213ee1c2ea9cab6f51b8971a78c3ebe76733d87f462b5cf805c78e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-one-byte/ns-org-alpha.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-one-byte/ns-org-alpha.jsonl",
+      "bytes": 324,
+      "sha256": "626b1b7482e1f4c71c760b93454b4d1008ddb1c25ce0ae898ad7adad047e501f"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-one-byte/ns-org-beta.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-one-byte/ns-org-beta.jsonl",
+      "bytes": 323,
+      "sha256": "869fb5997d9117f6f4042fb32bece94e7ab04efc1f522932691484a46dc0871c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-one-byte/ns-root.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-one-byte/ns-root.jsonl",
+      "bytes": 277,
+      "sha256": "baafcc505d180ba2571f9a2dc543fc40a903b77a32e8c35b6dc64ae2447363d0"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-refusal-neutral.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-refusal-neutral.log",
+      "bytes": 683,
+      "sha256": "a34c8b2679a11c0cce557f797d4fd123825bec19f0ecf2ab73f40a136a35de0e"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-restored.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-restored.log",
+      "bytes": 970,
+      "sha256": "6f2375ed99666ef10593ea640714edf2fdbd73c824c151cd71395efc4982e55c"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace-sensitivity.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace-sensitivity.json",
+      "bytes": 447,
+      "sha256": "a11f9f9b4d5b75a87f819addebcafc325a5c8ecbeda49d7a804579002895e321"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/namespace.py",
+      "bytes": 3619,
+      "sha256": "f1615d836f7efebf0f50df2770944ed221cde6d83ed4d36c2f7c7fe75a951fc8"
+    },
+    {
+      "originalPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/replay_final.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/replay_final.py",
+      "bytes": 6380,
+      "sha256": "e59ef57a3b0b7ecda8cf263edf266965fdf59883dd14b493d869e2cbc8cba9f0"
+    }
+  ],
+  "sourceTargetsAtRevision": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "1c70ff2443cfb1dbba625daec81cc3e5367b4f9b83f18078be69ddbb33dabf74",
+      "bytes": 37021,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "7f3deac831d53d93e286347fbba4e086f0215516",
+      "contentAddress": "git-object:7f3deac831d53d93e286347fbba4e086f0215516"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/readme.md",
+      "sha256": "d14f3a09cf32cc69c82d9a0a37b93c62fbf9a35f4c09aa98303a11f674a1280c",
+      "bytes": 9794,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "ae6f9f08f5430ed19bb7c6669065d8f8c9c9a5e1",
+      "contentAddress": "git-object:ae6f9f08f5430ed19bb7c6669065d8f8c9c9a5e1"
+    },
+    {
+      "path": "package.json",
+      "sha256": "81c8452357828cd5f52481356a4184f5a4a7500a4bbd5165af80a339c2abc0f1",
+      "bytes": 1808,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "b6233de89e2b26b15915835e7b6cfeeda5f63cbf",
+      "contentAddress": "git-object:b6233de89e2b26b15915835e7b6cfeeda5f63cbf"
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "sha256": "4c1d977879ec94de8e67abc171630bd3507e40a8183b3cbb07d233f42d3c9fca",
+      "bytes": 440,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "f588590bfa14b27c5c351c9233dfef6b223ee030",
+      "contentAddress": "git-object:f588590bfa14b27c5c351c9233dfef6b223ee030"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "ffd8b299ca115cfd2d0be9c8ba2833c2de791a071e77e90616c364b7afd9c54a",
+      "bytes": 373658,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "880cd9166af1bb23e93e41b61e1b2023cb30eda2",
+      "contentAddress": "git-object:880cd9166af1bb23e93e41b61e1b2023cb30eda2"
+    },
+    {
+      "path": "docs/examples/railway-preview-config.toml",
+      "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+      "bytes": 184,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "d17607f49ada9acbc1b755955d0005013662387a",
+      "contentAddress": "git-object:d17607f49ada9acbc1b755955d0005013662387a"
+    },
+    {
+      "path": "docs/guides/railway-hosting.md",
+      "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+      "bytes": 13140,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "bd41bd88ef22652c4b45de515c2430cfaff93fb2",
+      "contentAddress": "git-object:bd41bd88ef22652c4b45de515c2430cfaff93fb2"
+    },
+    {
+      "path": "Dockerfile.production",
+      "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+      "bytes": 1596,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "14247f55baae41422b7891481c80d9bcf66ba283",
+      "contentAddress": "git-object:14247f55baae41422b7891481c80d9bcf66ba283"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+      "bytes": 45771,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "a4bfc538f974ed6edbdb9ddae010eb9089a01439",
+      "contentAddress": "git-object:a4bfc538f974ed6edbdb9ddae010eb9089a01439"
+    },
+    {
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+      "bytes": 28851,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "02356056f373f8c175c2c1a55787ce929c910b70",
+      "contentAddress": "git-object:02356056f373f8c175c2c1a55787ce929c910b70"
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+      "bytes": 704,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "396870726f80ad226a6ef69e0b9fad70a1afb51f",
+      "contentAddress": "git-object:396870726f80ad226a6ef69e0b9fad70a1afb51f"
+    },
+    {
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+      "bytes": 20049,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "a7750dc0cbf28fbfe996cfd5e4fdc3f60a2112b5",
+      "contentAddress": "git-object:a7750dc0cbf28fbfe996cfd5e4fdc3f60a2112b5"
+    },
+    {
+      "path": "apps/web/src/preview.tsx",
+      "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+      "bytes": 2367,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "4801a50fd0e16ce9369f798fab3379e039374493",
+      "contentAddress": "git-object:4801a50fd0e16ce9369f798fab3379e039374493"
+    },
+    {
+      "path": "apps/web/src/routes.tsx",
+      "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+      "bytes": 5947,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "d50689f64aeccea29f598d131321234f4a71f152",
+      "contentAddress": "git-object:d50689f64aeccea29f598d131321234f4a71f152"
+    },
+    {
+      "path": "packages/platform/src/auth/grants.ts",
+      "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+      "bytes": 9201,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "7147084a30e447ae4eea10e9972193fee95fce95",
+      "contentAddress": "git-object:7147084a30e447ae4eea10e9972193fee95fce95"
+    },
+    {
+      "path": "packages/platform/src/auth/oidc.ts",
+      "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+      "bytes": 8815,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "a3aac9e68f3ae96cf06b8be1405b273723300034",
+      "contentAddress": "git-object:a3aac9e68f3ae96cf06b8be1405b273723300034"
+    },
+    {
+      "path": "packages/platform/src/auth/routes.ts",
+      "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+      "bytes": 36841,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "bdb4e0a5b61b862de101b9f77f4fc84d7dfabf42",
+      "contentAddress": "git-object:bdb4e0a5b61b862de101b9f77f4fc84d7dfabf42"
+    },
+    {
+      "path": "packages/platform/src/auth/session.ts",
+      "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+      "bytes": 2307,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "60f4a3b0b2310d518543cfb901b0f39ea79d32cd",
+      "contentAddress": "git-object:60f4a3b0b2310d518543cfb901b0f39ea79d32cd"
+    },
+    {
+      "path": "packages/platform/src/hosted-artifact.ts",
+      "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+      "bytes": 1338,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "64e65aff310ecee571f04bd677e121fcb1268c0b",
+      "contentAddress": "git-object:64e65aff310ecee571f04bd677e121fcb1268c0b"
+    },
+    {
+      "path": "packages/platform/src/hosted-bin.ts",
+      "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+      "bytes": 1268,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "94429148b1f2849f5b8e8f66f8a1ad4803d262bd",
+      "contentAddress": "git-object:94429148b1f2849f5b8e8f66f8a1ad4803d262bd"
+    },
+    {
+      "path": "packages/platform/src/hosted-storage.ts",
+      "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+      "bytes": 6266,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "57b236a2b0e094a6b8ad0786bc9dd53a6dc5969e",
+      "contentAddress": "git-object:57b236a2b0e094a6b8ad0786bc9dd53a6dc5969e"
+    },
+    {
+      "path": "packages/platform/src/hosted.ts",
+      "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+      "bytes": 13429,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "3516b1f24c6ba5fd4b341b2c31d58cd9e164691c",
+      "contentAddress": "git-object:3516b1f24c6ba5fd4b341b2c31d58cd9e164691c"
+    },
+    {
+      "path": "packages/platform/src/production.ts",
+      "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+      "bytes": 12775,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "74ca3b24ca64d2d395a46b76b1638f3270790481",
+      "contentAddress": "git-object:74ca3b24ca64d2d395a46b76b1638f3270790481"
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+      "bytes": 9414,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "891dcea411c9c5260af79fc1bb3fb9619c433257",
+      "contentAddress": "git-object:891dcea411c9c5260af79fc1bb3fb9619c433257"
+    },
+    {
+      "path": "packages/platform/src/web/spa.ts",
+      "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+      "bytes": 5337,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "3448db100af880bab4de4aca41d474d8593fbcdf",
+      "contentAddress": "git-object:3448db100af880bab4de4aca41d474d8593fbcdf"
+    },
+    {
+      "path": "packages/platform/test/hosted.test.ts",
+      "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+      "bytes": 17156,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f",
+      "contentAddress": "git-object:a80a84a5c27b43ac0f61c2c2b21767ec5d4ddf9f"
+    },
+    {
+      "path": "tools/build_hosted_artifact.mjs",
+      "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+      "bytes": 637,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "f01840748414cb79b7e675f8f67687e58ecdbb3b",
+      "contentAddress": "git-object:f01840748414cb79b7e675f8f67687e58ecdbb3b"
+    },
+    {
+      "path": "tools/verify/cold_clone_targets.txt",
+      "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+      "bytes": 1414,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "35fd1fb591bdb9798104037ca9b08ac62791fa07",
+      "contentAddress": "git-object:35fd1fb591bdb9798104037ca9b08ac62791fa07"
+    },
+    {
+      "path": "tools/verify/e12_t10_browser.mjs",
+      "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+      "bytes": 17743,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "e12fe887daadf35bbdabddd230db21e6dddd913f",
+      "contentAddress": "git-object:e12fe887daadf35bbdabddd230db21e6dddd913f"
+    },
+    {
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+      "bytes": 8273,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "dba5f31032c55a5e0526903154c6c93d765d298f",
+      "contentAddress": "git-object:dba5f31032c55a5e0526903154c6c93d765d298f"
+    },
+    {
+      "path": "tools/verify/e12_t10_fixture.mjs",
+      "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+      "bytes": 14762,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "941154b7e9585d7b0e8b918ad411b26b7fd89ead",
+      "contentAddress": "git-object:941154b7e9585d7b0e8b918ad411b26b7fd89ead"
+    },
+    {
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+      "bytes": 24433,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "42b40620460b6eaa1825700b1705e8259000b3ce",
+      "contentAddress": "git-object:42b40620460b6eaa1825700b1705e8259000b3ce"
+    },
+    {
+      "path": "tools/verify/e12_t10_identity_reducer.mjs",
+      "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+      "bytes": 268,
+      "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+      "gitBlob": "71e8b280e8d725b1fd461c7833f9c9e2200fb4f5",
+      "contentAddress": "git-object:71e8b280e8d725b1fd461c7833f9c9e2200fb4f5"
+    }
+  ],
+  "privateStoresOrKeysCopied": false,
+  "productionIdentityDumped": false,
+  "taskStatusChanged": false
+}

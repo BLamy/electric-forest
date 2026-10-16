@@ -1,0 +1,35 @@
+{
+  "name": "independent",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "command": [
+    "python3",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/replay_final.py",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8",
+    "--out",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent-replay.json"
+  ],
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "startedAt": "2026-10-16T21:04:57.547633+00:00",
+  "endedAt": "2026-10-16T21:04:57.699530+00:00",
+  "elapsedSeconds": 0.151484,
+  "exitCode": 0,
+  "before": {
+    "head": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+    "trackedChanges": ""
+  },
+  "after": {
+    "head": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+    "trackedChanges": ""
+  },
+  "candidateUnchanged": true,
+  "stdout": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent.stdout.log",
+    "bytes": 213,
+    "sha256": "ad0c51bf48865d52d7ca152c9142c6a846acf21b3108f48a7b086c140f9831ae"
+  },
+  "stderr": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/final-9a5861e8/independent.stderr.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

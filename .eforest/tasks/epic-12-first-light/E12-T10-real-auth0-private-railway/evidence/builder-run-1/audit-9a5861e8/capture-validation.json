@@ -1,0 +1,51 @@
+{
+  "validatedAt": "2026-10-16T21:02:35.698111+00:00",
+  "method": "Read all retained logs afresh; reconstruct raw bytes from each timestamped per-stream chunk; validate offsets, coverage and SHA-256.",
+  "status": "passed",
+  "gates": [
+    {
+      "gate": 1,
+      "outputChunks": 4,
+      "bytes": {
+        "stdout": 511,
+        "stderr": 0,
+        "raw": 511
+      },
+      "fullReconstructionPassed": true,
+      "allReferencedLogHashesPassed": true
+    },
+    {
+      "gate": 2,
+      "outputChunks": 1,
+      "bytes": {
+        "stdout": 161,
+        "stderr": 0,
+        "raw": 161
+      },
+      "fullReconstructionPassed": true,
+      "allReferencedLogHashesPassed": true
+    },
+    {
+      "gate": 3,
+      "outputChunks": 206,
+      "bytes": {
+        "stdout": 71642,
+        "stderr": 35731,
+        "raw": 107373
+      },
+      "fullReconstructionPassed": true,
+      "allReferencedLogHashesPassed": true
+    },
+    {
+      "gate": 4,
+      "outputChunks": 191,
+      "bytes": {
+        "stdout": 70150,
+        "stderr": 35731,
+        "raw": 105881
+      },
+      "fullReconstructionPassed": true,
+      "allReferencedLogHashesPassed": true
+    }
+  ]
+}

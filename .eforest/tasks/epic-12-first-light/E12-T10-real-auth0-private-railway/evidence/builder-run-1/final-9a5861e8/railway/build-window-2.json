@@ -1,0 +1,2991 @@
+{
+  "query": {
+    "startDate": "2026-10-16T21:03:20.000Z",
+    "endDate": "2026-10-16T21:03:40.000Z",
+    "limit": 500
+  },
+  "result": {
+    "scope": "deployment",
+    "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+    "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+    "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "status": "BUILDING",
+    "build": [
+      {
+        "timestamp": "2026-10-16T21:03:24.093720669Z",
+        "severity": "info",
+        "message": "\n> @eforest/identity@0.0.0 build /app/packages/identity\n> tsc -b tsconfig.build.json\n\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"Cj4gQGVmb3Jlc3QvaWRlbnRpdHlAMC4wLjAgYnVpbGQgL2FwcC9wYWNrYWdlcy9pZGVudGl0eQo+IHRzYyAtYiB0c2NvbmZpZy5idWlsZC5qc29uCgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:24.093013467Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:24.608052891Z",
+        "severity": "info",
+        "message": "\n> @eforest/web@0.0.0 build /app/apps/web\n> vite build\n\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"Cj4gQGVmb3Jlc3Qvd2ViQDAuMC4wIGJ1aWxkIC9hcHAvYXBwcy93ZWIKPiB2aXRlIGJ1aWxkCgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:24.607523827Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:24.950138724Z",
+        "severity": "info",
+        "message": "vite v7.3.6 building client environment for production...\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"dml0ZSB2Ny4zLjYgYnVpbGRpbmcgY2xpZW50IGVudmlyb25tZW50IGZvciBwcm9kdWN0aW9uLi4uCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:24.949637632Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:25.020214001Z",
+        "severity": "info",
+        "message": "transforming...\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"dHJhbnNmb3JtaW5nLi4uCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:25.019754961Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.637356204Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js\" was ignored.\n../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0B0YW5zdGFjaytyZWFjdC1kZXZ0b29sc0AwLjEwLjEyX0B0eXBlcytyZWFjdC1kb21AMTkuMi4zX0B0eXBlcytyZWFjdEAxOS4yLjE3X19AdHlwZXMrcl9kNzAxM2IyNDg0NmY5N2IwM2IxMWUxOWFjMDYwYjY1OS9ub2RlX21vZHVsZXMvQHRhbnN0YWNrL3JlYWN0LWRldnRvb2xzL2Rpc3QvZXNtL2luZGV4LmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AdGFuc3RhY2srcmVhY3QtZGV2dG9vbHNAMC4xMC4xMl9AdHlwZXMrcmVhY3QtZG9tQDE5LjIuM19AdHlwZXMrcmVhY3RAMTkuMi4xN19fQHR5cGVzK3JfZDcwMTNiMjQ4NDZmOTdiMDNiMTFlMTlhYzA2MGI2NTkvbm9kZV9tb2R1bGVzL0B0YW5zdGFjay9yZWFjdC1kZXZ0b29scy9kaXN0L2VzbS9pbmRleC5qcyIgd2FzIGlnbm9yZWQuCi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AdGFuc3RhY2srcmVhY3QtZGV2dG9vbHNAMC4xMC4xMl9AdHlwZXMrcmVhY3QtZG9tQDE5LjIuM19AdHlwZXMrcmVhY3RAMTkuMi4xN19fQHR5cGVzK3JfZDcwMTNiMjQ4NDZmOTdiMDNiMTFlMTlhYzA2MGI2NTkvbm9kZV9tb2R1bGVzL0B0YW5zdGFjay9yZWFjdC1kZXZ0b29scy9kaXN0L2VzbS9pbmRleC5qcyAoMjowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHRhbnN0YWNrK3JlYWN0LWRldnRvb2xzQDAuMTAuMTJfQHR5cGVzK3JlYWN0LWRvbUAxOS4yLjNfQHR5cGVzK3JlYWN0QDE5LjIuMTdfX0B0eXBlcytyX2Q3MDEzYjI0ODQ2Zjk3YjAzYjExZTE5YWMwNjBiNjU5L25vZGVfbW9kdWxlcy9AdGFuc3RhY2svcmVhY3QtZGV2dG9vbHMvZGlzdC9lc20vaW5kZXguanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.636795682Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.814609680Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/WorkerPoolContext.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/WorkerPoolContext.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9Xb3JrZXJQb29sQ29udGV4dC5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L1dvcmtlclBvb2xDb250ZXh0LmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.814159364Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.814986225Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/EditContext.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/EditContext.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9FZGl0Q29udGV4dC5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L0VkaXRDb250ZXh0LmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.814840306Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.816065746Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/Virtualizer.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/Virtualizer.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9WaXJ0dWFsaXplci5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L1ZpcnR1YWxpemVyLmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.815847007Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.816629612Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/File.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/File.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9GaWxlLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK2RpZmZzQDEuMy42X0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9AcGllcnJlL2RpZmZzL2Rpc3QvcmVhY3QvRmlsZS5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.816493248Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.818988874Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/FileDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/FileDiff.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9GaWxlRGlmZi5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L0ZpbGVEaWZmLmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.818741984Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.819906071Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/CodeView.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/CodeView.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9Db2RlVmlldy5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L0NvZGVWaWV3LmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.819696146Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.825102543Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/PatchDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/PatchDiff.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9QYXRjaERpZmYuanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9QYXRjaERpZmYuanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.824857735Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.826735625Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/MultiFileDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/MultiFileDiff.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9NdWx0aUZpbGVEaWZmLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK2RpZmZzQDEuMy42X0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9AcGllcnJlL2RpZmZzL2Rpc3QvcmVhY3QvTXVsdGlGaWxlRGlmZi5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.826473511Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:26.828272201Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/UnresolvedFile.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/UnresolvedFile.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrZGlmZnNAMS4zLjZfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL0BwaWVycmUvZGlmZnMvZGlzdC9yZWFjdC9VbnJlc29sdmVkRmlsZS5qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHBpZXJyZStkaWZmc0AxLjMuNl9Ac2hpa2lqcyt0aGVtZXNANC40LjNfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvQHBpZXJyZS9kaWZmcy9kaXN0L3JlYWN0L1VucmVzb2x2ZWRGaWxlLmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:26.828072582Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.151681896Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/FileTree.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/FileTree.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L0ZpbGVUcmVlLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK3RyZWVzQDEuMC4wLWJldGEuNl9AcGllcnJlK3RoZW1lQDIuMC4wX0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JfNGFiYzczOTI1NTg2ODlhZDQ4OGMyNWUyZWIwMGI1YzUvbm9kZV9tb2R1bGVzL0BwaWVycmUvdHJlZXMvZGlzdC9yZWFjdC9GaWxlVHJlZS5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.151141975Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.154336451Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelector.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelector.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L3VzZUZpbGVUcmVlU2VsZWN0b3IuanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L3VzZUZpbGVUcmVlU2VsZWN0b3IuanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.153932905Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.155078556Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTree.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTree.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L3VzZUZpbGVUcmVlLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK3RyZWVzQDEuMC4wLWJldGEuNl9AcGllcnJlK3RoZW1lQDIuMC4wX0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JfNGFiYzczOTI1NTg2ODlhZDQ4OGMyNWUyZWIwMGI1YzUvbm9kZV9tb2R1bGVzL0BwaWVycmUvdHJlZXMvZGlzdC9yZWFjdC91c2VGaWxlVHJlZS5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.154834479Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.156211497Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelection.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelection.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L3VzZUZpbGVUcmVlU2VsZWN0aW9uLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK3RyZWVzQDEuMC4wLWJldGEuNl9AcGllcnJlK3RoZW1lQDIuMC4wX0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JfNGFiYzczOTI1NTg2ODlhZDQ4OGMyNWUyZWIwMGI1YzUvbm9kZV9tb2R1bGVzL0BwaWVycmUvdHJlZXMvZGlzdC9yZWFjdC91c2VGaWxlVHJlZVNlbGVjdGlvbi5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.155944676Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.156654502Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSearch.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSearch.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0BwaWVycmUrdHJlZXNAMS4wLjAtYmV0YS42X0BwaWVycmUrdGhlbWVAMi4wLjBfQHNoaWtpanMrdGhlbWVzQDQuNC4zX3JlYWN0LWRvbUAxOS4yLjhfcl80YWJjNzM5MjU1ODY4OWFkNDg4YzI1ZTJlYjAwYjVjNS9ub2RlX21vZHVsZXMvQHBpZXJyZS90cmVlcy9kaXN0L3JlYWN0L3VzZUZpbGVUcmVlU2VhcmNoLmpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9AcGllcnJlK3RyZWVzQDEuMC4wLWJldGEuNl9AcGllcnJlK3RoZW1lQDIuMC4wX0BzaGlraWpzK3RoZW1lc0A0LjQuM19yZWFjdC1kb21AMTkuMi44X3JfNGFiYzczOTI1NTg2ODlhZDQ4OGMyNWUyZWIwMGI1YzUvbm9kZV9tb2R1bGVzL0BwaWVycmUvdHJlZXMvZGlzdC9yZWFjdC91c2VGaWxlVHJlZVNlYXJjaC5qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.156488412Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.177381570Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS9Qb3BDaGlsZC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS9Qb3BDaGlsZC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.176920688Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.179046910Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LayoutGroup/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LayoutGroup/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0xheW91dEdyb3VwL2luZGV4Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2NvbXBvbmVudHMvTGF5b3V0R3JvdXAvaW5kZXgubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.178754952Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.180215434Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS9QcmVzZW5jZUNoaWxkLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2NvbXBvbmVudHMvQW5pbWF0ZVByZXNlbmNlL1ByZXNlbmNlQ2hpbGQubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.179839259Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.181757439Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/MotionConfig/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/MotionConfig/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL01vdGlvbkNvbmZpZy9pbmRleC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL01vdGlvbkNvbmZpZy9pbmRleC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.181407474Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.183134306Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LazyMotion/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LazyMotion/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0xhenlNb3Rpb24vaW5kZXgubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9MYXp5TW90aW9uL2luZGV4Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.18291681Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.187460782Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-state.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vdXRpbHMvdXNlLXZpc3VhbC1zdGF0ZS5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vdXRpbHMvdXNlLXZpc3VhbC1zdGF0ZS5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.187121823Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.191088368Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-force-update.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-force-update.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtZm9yY2UtdXBkYXRlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3VzZS1mb3JjZS11cGRhdGUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.190709329Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.191990573Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-isomorphic-effect.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-isomorphic-effect.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaXNvbW9ycGhpYy1lZmZlY3QubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdXRpbHMvdXNlLWlzb21vcnBoaWMtZWZmZWN0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.191766626Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.243089098Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-unmount-effect.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-unmount-effect.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtdW5tb3VudC1lZmZlY3QubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdXRpbHMvdXNlLXVubW91bnQtZWZmZWN0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.242617891Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.243617061Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-max.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-max.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLW1heC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLW1heC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.243321567Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.244015660Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-min.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-min.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLW1pbi5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLW1pbi5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.243790211Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.244389611Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-animation.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-animation.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLWFuaW1hdGlvbi5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL2ZlYXR1cmVzLWFuaW1hdGlvbi5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.244148759Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.244820638Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-motion-value-event.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-motion-value-event.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtbW90aW9uLXZhbHVlLWV2ZW50Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3VzZS1tb3Rpb24tdmFsdWUtZXZlbnQubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.244561048Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.245101640Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-template.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-template.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtbW90aW9uLXRlbXBsYXRlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS1tb3Rpb24tdGVtcGxhdGUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.244915791Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.245837515Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-value.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-value.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtbW90aW9uLXZhbHVlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS1tb3Rpb24tdmFsdWUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.245602992Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.246300089Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-follow-value.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-follow-value.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtZm9sbG93LXZhbHVlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS1mb2xsb3ctdmFsdWUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.24611414Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.246923325Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-spring.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-spring.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2Utc3ByaW5nLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS1zcHJpbmcubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.246729955Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.247113150Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-time.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-time.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtdGltZS5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtdGltZS5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.246977296Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.247655624Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-scroll.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-scroll.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2Utc2Nyb2xsLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS1zY3JvbGwubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.247489104Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.249011890Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-velocity.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-velocity.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtdmVsb2NpdHkubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdmFsdWUvdXNlLXZlbG9jaXR5Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.248830518Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.249482457Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-will-change/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-will-change/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2Utd2lsbC1jaGFuZ2UvaW5kZXgubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdmFsdWUvdXNlLXdpbGwtY2hhbmdlL2luZGV4Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.249325361Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.250228727Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-transform.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-transform.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtdHJhbnNmb3JtLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3ZhbHVlL3VzZS10cmFuc2Zvcm0ubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.249993695Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.250950421Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion-config.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion-config.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy9yZWR1Y2VkLW1vdGlvbi91c2UtcmVkdWNlZC1tb3Rpb24tY29uZmlnLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3JlZHVjZWQtbW90aW9uL3VzZS1yZWR1Y2VkLW1vdGlvbi1jb25maWcubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.250699143Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.254347881Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate-style.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate-style.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9hbmltYXRpb24vaG9va3MvdXNlLWFuaW1hdGUtc3R5bGUubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvYW5pbWF0aW9uL2hvb2tzL3VzZS1hbmltYXRlLXN0eWxlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.254071316Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.255360652Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animation.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animation.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9hbmltYXRpb24vaG9va3MvdXNlLWFuaW1hdGlvbi5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9hbmltYXRpb24vaG9va3MvdXNlLWFuaW1hdGlvbi5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.255205729Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.255681844Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9hbmltYXRpb24vaG9va3MvdXNlLWFuaW1hdGUubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvYW5pbWF0aW9uL2hvb2tzL3VzZS1hbmltYXRlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.25557222Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.256394494Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS91c2UtcHJlc2VuY2UubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9BbmltYXRlUHJlc2VuY2UvdXNlLXByZXNlbmNlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.256237959Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.256888976Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence-data.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence-data.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS91c2UtcHJlc2VuY2UtZGF0YS5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS91c2UtcHJlc2VuY2UtZGF0YS5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.256647865Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.257212562Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/events/use-dom-event.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/events/use-dom-event.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9ldmVudHMvdXNlLWRvbS1ldmVudC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9ldmVudHMvdXNlLWRvbS1ldmVudC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.256948225Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.259214247Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-animation-frame.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-animation-frame.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtYW5pbWF0aW9uLWZyYW1lLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3VzZS1hbmltYXRpb24tZnJhbWUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.259001448Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.259672466Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-cycle.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-cycle.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtY3ljbGUubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdXRpbHMvdXNlLWN5Y2xlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.259525575Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.260233488Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-in-view.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-in-view.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaW4tdmlldy5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaW4tdmlldy5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.260063533Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.261216183Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-instant-transition.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-instant-transition.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaW5zdGFudC10cmFuc2l0aW9uLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3VzZS1pbnN0YW50LXRyYW5zaXRpb24ubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.260974751Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.261797546Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L0xheW91dEdyb3VwQ29udGV4dC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L0xheW91dEdyb3VwQ29udGV4dC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.261642263Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.262300872Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/PresenceContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/PresenceContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L1ByZXNlbmNlQ29udGV4dC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L1ByZXNlbmNlQ29udGV4dC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.262159179Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.262561513Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionConfigContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionConfigContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L01vdGlvbkNvbmZpZ0NvbnRleHQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29udGV4dC9Nb3Rpb25Db25maWdDb250ZXh0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.262413641Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.262890978Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L01vdGlvbkNvbnRleHQvaW5kZXgubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29udGV4dC9Nb3Rpb25Db250ZXh0L2luZGV4Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.26273279Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.264330038Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/SwitchLayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/SwitchLayoutGroupContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L1N3aXRjaExheW91dEdyb3VwQ29udGV4dC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L1N3aXRjaExheW91dEdyb3VwQ29udGV4dC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.264085901Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.264814836Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/DeprecatedLayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/DeprecatedLayoutGroupContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L0RlcHJlY2F0ZWRMYXlvdXRHcm91cENvbnRleHQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29udGV4dC9EZXByZWNhdGVkTGF5b3V0R3JvdXBDb250ZXh0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.264517489Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.264953424Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animated-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animated-state.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9hbmltYXRpb24vaG9va3MvdXNlLWFuaW1hdGVkLXN0YXRlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2FuaW1hdGlvbi9ob29rcy91c2UtYW5pbWF0ZWQtc3RhdGUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.264808626Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.265974677Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimateSharedLayout.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimateSharedLayout.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVTaGFyZWRMYXlvdXQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9BbmltYXRlU2hhcmVkTGF5b3V0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.26574327Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.267447358Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-inverted-scale.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-inverted-scale.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtaW52ZXJ0ZWQtc2NhbGUubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdmFsdWUvdXNlLWludmVydGVkLXNjYWxlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.267113507Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:27.269645989Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-page-in-view.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-page-in-view.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtcGFnZS1pbi12aWV3Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3VzZS1wYWdlLWluLXZpZXcubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:27.269347211Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.032062137Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-constant.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-constant.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtY29uc3RhbnQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdXRpbHMvdXNlLWNvbnN0YW50Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.031550549Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.080539878Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LazyContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LazyContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L0xhenlDb250ZXh0Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2NvbnRleHQvTGF6eUNvbnRleHQubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.080125195Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.082850847Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-is-mounted.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-is-mounted.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaXMtbW91bnRlZC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy91c2UtaXMtbW91bnRlZC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.082511358Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.170188460Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-combine-values.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-combine-values.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtY29tYmluZS12YWx1ZXMubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdmFsdWUvdXNlLWNvbWJpbmUtdmFsdWVzLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.169641038Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.171436544Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-computed.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-computed.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy92YWx1ZS91c2UtY29tcHV0ZWQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvdmFsdWUvdXNlLWNvbXB1dGVkLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.171037485Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.178144735Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Group.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Group.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL1Jlb3JkZXIvR3JvdXAubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9SZW9yZGVyL0dyb3VwLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.177682511Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.179169023Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Item.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Item.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL1Jlb3JkZXIvSXRlbS5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL1Jlb3JkZXIvSXRlbS5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.178812678Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.760459131Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy9yZWR1Y2VkLW1vdGlvbi91c2UtcmVkdWNlZC1tb3Rpb24ubWpzICgxOjApOiBFcnJvciB3aGVuIHVzaW5nIHNvdXJjZW1hcCBmb3IgcmVwb3J0aW5nIGFuIGVycm9yOiBDYW4ndCByZXNvbHZlIG9yaWdpbmFsIGxvY2F0aW9uIG9mIGVycm9yLgouLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3V0aWxzL3JlZHVjZWQtbW90aW9uL3VzZS1yZWR1Y2VkLW1vdGlvbi5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy91dGlscy9yZWR1Y2VkLW1vdGlvbi91c2UtcmVkdWNlZC1tb3Rpb24ubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.759877858Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.775035885Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb21wb25lbnRzL0FuaW1hdGVQcmVzZW5jZS9pbmRleC5tanMgKDE6MCk6IEVycm9yIHdoZW4gdXNpbmcgc291cmNlbWFwIGZvciByZXBvcnRpbmcgYW4gZXJyb3I6IENhbid0IHJlc29sdmUgb3JpZ2luYWwgbG9jYXRpb24gb2YgZXJyb3IuCi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9BbmltYXRlUHJlc2VuY2UvaW5kZXgubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvY29tcG9uZW50cy9BbmltYXRlUHJlc2VuY2UvaW5kZXgubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.774560271Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:28.883985084Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0B0aXB0YXArcmVhY3RAMy4zMC41X0BmbG9hdGluZy11aStkb21AMS44LjBfQHRpcHRhcCtjb3JlQDMuMzAuNV9AdGlwdGFwK3BtQDMuMzAuNV9fQHRpcF9jOGYwMzRjOWQzNDY3NWQyMzQ5NWNiNmM4NDI2ZDI0Ni9ub2RlX21vZHVsZXMvQHRpcHRhcC9yZWFjdC9kaXN0L2luZGV4LmpzICgxOjApOiBFcnJvciB3aGVuIHVzaW5nIHNvdXJjZW1hcCBmb3IgcmVwb3J0aW5nIGFuIGVycm9yOiBDYW4ndCByZXNvbHZlIG9yaWdpbmFsIGxvY2F0aW9uIG9mIGVycm9yLgouLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vQHRpcHRhcCtyZWFjdEAzLjMwLjVfQGZsb2F0aW5nLXVpK2RvbUAxLjguMF9AdGlwdGFwK2NvcmVAMy4zMC41X0B0aXB0YXArcG1AMy4zMC41X19AdGlwX2M4ZjAzNGM5ZDM0Njc1ZDIzNDk1Y2I2Yzg0MjZkMjQ2L25vZGVfbW9kdWxlcy9AdGlwdGFwL3JlYWN0L2Rpc3QvaW5kZXguanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL0B0aXB0YXArcmVhY3RAMy4zMC41X0BmbG9hdGluZy11aStkb21AMS44LjBfQHRpcHRhcCtjb3JlQDMuMzAuNV9AdGlwdGFwK3BtQDMuMzAuNV9fQHRpcF9jOGYwMzRjOWQzNDY3NWQyMzQ5NWNiNmM4NDI2ZDI0Ni9ub2RlX21vZHVsZXMvQHRpcHRhcC9yZWFjdC9kaXN0L2luZGV4LmpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:28.883410351Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:29.130681757Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/context.mjs (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/context.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2x1Y2lkZS1yZWFjdEAxLjM0LjBfcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9sdWNpZGUtcmVhY3QvZGlzdC9lc20vY29udGV4dC5tanMgKDI6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2x1Y2lkZS1yZWFjdEAxLjM0LjBfcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9sdWNpZGUtcmVhY3QvZGlzdC9lc20vY29udGV4dC5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:29.130199352Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:29.146824542Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/Icon.mjs (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/Icon.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2x1Y2lkZS1yZWFjdEAxLjM0LjBfcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9sdWNpZGUtcmVhY3QvZGlzdC9lc20vSWNvbi5tanMgKDI6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2x1Y2lkZS1yZWFjdEAxLjM0LjBfcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9sdWNpZGUtcmVhY3QvZGlzdC9lc20vSWNvbi5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:29.14637647Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:29.455643642Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/features/layout/MeasureLayout.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/features/layout/MeasureLayout.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vZmVhdHVyZXMvbGF5b3V0L01lYXN1cmVMYXlvdXQubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvbW90aW9uL2ZlYXR1cmVzL2xheW91dC9NZWFzdXJlTGF5b3V0Lm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:29.455081938Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:29.456865506Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/ReorderContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/ReorderContext.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L1Jlb3JkZXJDb250ZXh0Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2NvbnRleHQvUmVvcmRlckNvbnRleHQubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:29.45656211Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.131315225Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vaW5kZXgubWpzICgxOjApOiBFcnJvciB3aGVuIHVzaW5nIHNvdXJjZW1hcCBmb3IgcmVwb3J0aW5nIGFuIGVycm9yOiBDYW4ndCByZXNvbHZlIG9yaWdpbmFsIGxvY2F0aW9uIG9mIGVycm9yLgouLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL21vdGlvbi9pbmRleC5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vaW5kZXgubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.130813482Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.149984875Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/create.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/create.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9jb250ZXh0L01vdGlvbkNvbnRleHQvY3JlYXRlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL2NvbnRleHQvTW90aW9uQ29udGV4dC9jcmVhdGUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.149613988Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.150230804Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-html-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-html-visual-state.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvaHRtbC91c2UtaHRtbC12aXN1YWwtc3RhdGUubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvcmVuZGVyL2h0bWwvdXNlLWh0bWwtdmlzdWFsLXN0YXRlLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.150073748Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.150691225Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-svg-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-svg-visual-state.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvc3ZnL3VzZS1zdmctdmlzdWFsLXN0YXRlLm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL3JlbmRlci9zdmcvdXNlLXN2Zy12aXN1YWwtc3RhdGUubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.150547269Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.151124786Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-motion-ref.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-motion-ref.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vdXRpbHMvdXNlLW1vdGlvbi1yZWYubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvbW90aW9uL3V0aWxzL3VzZS1tb3Rpb24tcmVmLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.150948171Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.151737706Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/use-render.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/use-render.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvZG9tL3VzZS1yZW5kZXIubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvcmVuZGVyL2RvbS91c2UtcmVuZGVyLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.151443424Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.152357416Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-element.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-element.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9tb3Rpb24vdXRpbHMvdXNlLXZpc3VhbC1lbGVtZW50Lm1qcyAoMTowKTogTW9kdWxlIGxldmVsIGRpcmVjdGl2ZXMgY2F1c2UgZXJyb3JzIHdoZW4gYnVuZGxlZCwgInVzZSBjbGllbnQiIGluICIuLi8uLi9ub2RlX21vZHVsZXMvLnBucG0vZnJhbWVyLW1vdGlvbkAxMy40LjZfcmVhY3QtZG9tQDE5LjIuOF9yZWFjdEAxOS4yLjhfX3JlYWN0QDE5LjIuOC9ub2RlX21vZHVsZXMvZnJhbWVyLW1vdGlvbi9kaXN0L2VzL21vdGlvbi91dGlscy91c2UtdmlzdWFsLWVsZW1lbnQubWpzIiB3YXMgaWdub3JlZC4K\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.152207121Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.267144079Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-props.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-props.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvaHRtbC91c2UtcHJvcHMubWpzICgxOjApOiBNb2R1bGUgbGV2ZWwgZGlyZWN0aXZlcyBjYXVzZSBlcnJvcnMgd2hlbiBidW5kbGVkLCAidXNlIGNsaWVudCIgaW4gIi4uLy4uL25vZGVfbW9kdWxlcy8ucG5wbS9mcmFtZXItbW90aW9uQDEzLjQuNl9yZWFjdC1kb21AMTkuMi44X3JlYWN0QDE5LjIuOF9fcmVhY3RAMTkuMi44L25vZGVfbW9kdWxlcy9mcmFtZXItbW90aW9uL2Rpc3QvZXMvcmVuZGVyL2h0bWwvdXNlLXByb3BzLm1qcyIgd2FzIGlnbm9yZWQuCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.266700493Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:33.267523369Z",
+        "severity": "info",
+        "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-props.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-props.mjs\" was ignored.\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "stream",
+            "value": "2"
+          },
+          {
+            "key": "data",
+            "value": "\"Li4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvc3ZnL3VzZS1wcm9wcy5tanMgKDE6MCk6IE1vZHVsZSBsZXZlbCBkaXJlY3RpdmVzIGNhdXNlIGVycm9ycyB3aGVuIGJ1bmRsZWQsICJ1c2UgY2xpZW50IiBpbiAiLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL2ZyYW1lci1tb3Rpb25AMTMuNC42X3JlYWN0LWRvbUAxOS4yLjhfcmVhY3RAMTkuMi44X19yZWFjdEAxOS4yLjgvbm9kZV9tb2R1bGVzL2ZyYW1lci1tb3Rpb24vZGlzdC9lcy9yZW5kZXIvc3ZnL3VzZS1wcm9wcy5tanMiIHdhcyBpZ25vcmVkLgo=\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:33.267185882Z\""
+          }
+        ]
+      }
+    ]
+  }
+}

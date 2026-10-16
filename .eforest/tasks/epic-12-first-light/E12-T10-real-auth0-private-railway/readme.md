@@ -144,3 +144,69 @@ Replay: N/A (lifecycle activation and pre-implementation threat model; no produc
 behavior changed) + mitigation: committed exact reader snapshots, immutable history
 hashes, DAG/queue checks and the fresh frozen pre-critic report. Product stream/browser
 execution evidence is explicitly absent until the builder records it.
+
+### 2026-10-16 — builder — healthy deployment checkpoint (incomplete)
+
+The failed Railway deployment was caused by default root Config as Code selecting the
+preview Dockerfile. Railway rejected custom Config as Code opt-in for this new service.
+Source `9a5861e82ec99ab2f275181a527aab5c2bfb0622` removes default config discovery,
+preserves the old preview config byte-for-byte as an example, and uses supported service
+settings for `Dockerfile.production`. Prior source versions remain full content-addressed
+Git blobs linked by the four source changeset receipts; no generated textual patch is
+stored. The complete product changeset/CAS model remains E14 work.
+
+- Deployment `2a57586c-4613-4fed-b538-09ca3adc0145` is `SUCCESS` at
+  `https://electric-forest-production.up.railway.app`. OCI image
+  `sha256:8e0d1de92341b27d8d2fb40a7048ca78a40e5c88eac4938a159eb5de3f49448d`
+  has artifact digest `b22287783bcaa4c93dd49ee1c9d43422b1e6c5ab96d0a793dc349aa67e737f15`
+  over 740 files. The private service has its own volume, one replica and zero overlap.
+  Exact IDs/config and the remaining scope are in
+  `evidence/builder-run-1/final-9a5861e8/deployment-checkpoint.json`.
+- Fresh auditor `/root/real_auth_gate_auditor_v4` ran all four ordered root gates once
+  for this source: 124 test files and 972 tests passed. Full per-stream/raw/chunk output,
+  source/index snapshots and the audit index are retained under
+  `evidence/builder-run-1/audit-9a5861e8/`. Node is 24.20.0, pnpm 10.15.0; lockfile
+  SHA-256 is `ffd8b299ca115cfd2d0be9c8ba2833c2de791a071e77e90616c364b7afd9c54a`.
+  No earlier candidate's passing audit was substituted.
+- Dedicated-fixture final evidence records 9 native HTTP phase cases, 77 HTTP checks,
+  30 browser scenes and five videos with zero console/page/request failures. Standalone
+  Python models independently replay 23 dumps and compare four byte-identical restart
+  prefixes; models and frozen-golden one-byte sensitivity outputs are retained. These
+  are fixtures, not a real Auth0 operator session. See
+  `evidence/builder-run-1/final-9a5861e8/independent-replay.json` and `stream-proof/`
+  under the same builder evidence root.
+- Public HTTPS health/readiness/build/deployment endpoints, initial entry assets,
+  canonical Auth0/S256 login redirect, cookie attributes and anonymous/raw-route refusals
+  passed in `evidence/builder-run-1/final-9a5861e8/railway/public.json`. The numeric runtime
+  limits remain 8 MiB body, 30 s admitted request deadline, 60 s readiness, 15 s drain,
+  10-minute transaction, 24-hour session and 10 s maximum long-poll, with native Node
+  header/receive bounds and separately documented established-stream cancellation.
+- Original recorded paths resolve through `evidence/builder-run-1/relocations.json`;
+  all copied bytes and source targets are hash-bound there. Root source targets resolve
+  at the audited source revision, including the earlier task readme. Earlier workshop
+  selfchecks referenced inside preserved prior freezes are history, not final gate credit.
+  The saturated Railway log excerpt is explicitly superseded by three complete bounded
+  subwindows in the deployment manifest.
+
+Auth0's production URLs were typed into an unsaved dashboard draft. Save was never
+invoked; Chrome automation detached before final draft readback/screenshot. Actual
+Auth0 login, a real operator's synthetic mutation/session-preserving restart, the cold
+clone and fresh independent task critic/judge are **absent**. No production token,
+identity dump or private project was retained or uploaded. The task stays `in-progress`,
+run 0 under ceiling 10; E12-T11 remains pending. Reconnecting Chrome is the next blocker.
+The healthy deployment alone does not satisfy the public multi-user launch gates.
+
+Replay: N/A (Replay QA authentication unavailable in this session) + mitigation:
+dedicated-fixture Playwright videos/timeline/console/network checks and independently
+replayed stream dumps. The actual hosted landing page is a separate public-only Chrome
+screenshot; it does not prove the still-pending real Auth0 login. No remote journey/test
+run or production-credential recording is claimed.
+
+Commands: pnpm format:check && pnpm lint; pnpm typecheck; pnpm test; pnpm build;
+node tools/verify/e12_t10_deadlines.mjs <work-output>;
+node tools/verify/e12_t10_hosted.mjs <work-output>;
+node tools/verify/e12_t10_browser.mjs <work-output>;
+python3 <retained-stream-proof>/replay_final.py <final-proof-root> --out <replay-receipt>;
+node <retained-check-public.mjs> 9a5861e82ec99ab2f275181a527aab5c2bfb0622 <work-output>.
+Exact original argv, UTC times, exit codes and output hashes are in the retained command
+receipts. This entry is a deployment checkpoint, not an implemented claim or verdict.

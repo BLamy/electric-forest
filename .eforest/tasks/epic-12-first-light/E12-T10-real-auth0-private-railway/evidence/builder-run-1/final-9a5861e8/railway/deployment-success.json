@@ -1,0 +1,28 @@
+{
+  "recordedAt": "2026-10-16 21:10:42 UTC",
+  "result": {
+    "deployments": [
+      {
+        "id": "2a57586c-4613-4fed-b538-09ca3adc0145",
+        "status": "SUCCESS",
+        "createdAt": "2026-10-16T21:02:53.265Z",
+        "updatedAt": "2026-10-16T21:04:57.837Z",
+        "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+        "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+        "url": null,
+        "snapshotId": "2acd0297-410e-42c2-a34e-18daf166bb36",
+        "canRollback": true,
+        "canRedeploy": true,
+        "regions": [
+          "us-west2"
+        ],
+        "meta": {
+          "reason": "deploy",
+          "commitMessage": "fix(hosting): use supported Railway service configuration",
+          "commitHash": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+          "branch": "codex/railway-hosting"
+        }
+      }
+    ]
+  }
+}

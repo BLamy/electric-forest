@@ -1,0 +1,233 @@
+{
+  "task": "E12-T10",
+  "proof": "Config-only parser and current official schema validation",
+  "parent": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555",
+  "schema": {
+    "url": "https://railway.com/railway.schema.json",
+    "sha256": "0302fd53109298d9c277dbaedae772630506d8da43636e69875268a8782dd68f",
+    "bytes": 13044
+  },
+  "sources": [
+    "https://docs.railway.com/config-as-code#using-a-custom-config-as-code-file",
+    "https://docs.railway.com/config-as-code/reference",
+    "https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code"
+  ],
+  "config": {
+    "path": "railway.production.toml",
+    "sha256": "7119a5c194ad2aad6b2d080b3a63de4f3876dd08c513645ee8484fb41b84083e",
+    "bytes": 314
+  },
+  "tomlParser": "smol-toml@1.8.0",
+  "schemaValidator": "ajv@8.20.0",
+  "valid": true,
+  "presentFieldsAllDeclaredBySchema": true,
+  "fields": [
+    {
+      "path": "build.builder",
+      "type": "string",
+      "value": "DOCKERFILE",
+      "schema": {
+        "anyOf": [
+          {
+            "description": "Set the builder for the deployment",
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "NIXPACKS",
+                "description": "Use the [Nixpacks](https://nixpacks.com) build"
+              },
+              {
+                "type": "string",
+                "const": "DOCKERFILE",
+                "description": "Force usage of a Dockerfile"
+              },
+              {
+                "type": "string",
+                "const": "RAILPACK",
+                "description": "**EXPERIMENTAL**. Use the Railpack builder"
+              },
+              {
+                "type": "string",
+                "const": "HEROKU",
+                "description": "**Deprecated**. Use the Heroku buildpacks"
+              },
+              {
+                "type": "string",
+                "const": "PAKETO",
+                "description": "**Deprecated**. Use the Paketo buildpacks"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "build.dockerfilePath",
+      "type": "string",
+      "value": "Dockerfile.production",
+      "schema": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "Location of non-standard Dockerfile"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.startCommand",
+      "type": "string",
+      "value": "node packages/platform/dist/src/hosted-bin.js",
+      "schema": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "The command to run when starting the container"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.healthcheckPath",
+      "type": "string",
+      "value": "/readyz",
+      "schema": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "Path to check after starting your deployment to ensure it is healthy"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.healthcheckTimeout",
+      "type": "number",
+      "value": 60,
+      "schema": {
+        "anyOf": [
+          {
+            "type": "number",
+            "description": "Number of seconds to wait for the healthcheck path to become healthy"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.restartPolicyType",
+      "type": "string",
+      "value": "ON_FAILURE",
+      "schema": {
+        "anyOf": [
+          {
+            "description": "How to handle the deployment crashing",
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "ON_FAILURE",
+                "description": "Restart on failure up to `restartPolicyMaxRetries`"
+              },
+              {
+                "type": "string",
+                "const": "ALWAYS",
+                "description": "Always restart on container exit"
+              },
+              {
+                "type": "string",
+                "const": "NEVER",
+                "description": "Never restart the container"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.restartPolicyMaxRetries",
+      "type": "number",
+      "value": 3,
+      "schema": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.numReplicas",
+      "type": "number",
+      "value": 1,
+      "schema": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "description": "The number of instances to run for the deployment"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.overlapSeconds",
+      "type": "number",
+      "value": 0,
+      "schema": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0,
+            "description": "Time in seconds that the previous deploy will overlap with the newest one being deployed"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "path": "deploy.drainingSeconds",
+      "type": "number",
+      "value": 15,
+      "schema": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0,
+            "description": "The time in seconds between when the previous deploy is sent a SIGTERM to the time it is sent a SIGKILL"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    }
+  ],
+  "boundary": "Read-only TOML/schema self-check; no deployment, source tests, auth emulation, or claim of live config selection."
+}

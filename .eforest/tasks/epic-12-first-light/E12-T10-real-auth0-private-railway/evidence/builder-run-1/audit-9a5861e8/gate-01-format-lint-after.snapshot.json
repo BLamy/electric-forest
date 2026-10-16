@@ -1,0 +1,76 @@
+{
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "head": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "tree": "3d7373e4a1ea699fcbd91cdfd11100dbc23f206d",
+  "trackedFiles": 2427,
+  "trackedManifest": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.tracked-files.json",
+    "sha256": "063027e2bb6b391e547fd244aa5fda501c13597d8a5b0d94be6e88afce6d0084",
+    "bytes": 542091
+  },
+  "trackedVsSourceMismatches": [],
+  "indexEntries": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.index-entries.raw",
+    "sha256": "1964ce6162b57ae793481e8476c97ba57b102cf9fbf013b32fe2a2da9ca32901",
+    "bytes": 309364
+  },
+  "semanticIndex": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.semantic-index.json",
+    "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403",
+    "bytes": 484115
+  },
+  "indexEntriesMatchSource": true,
+  "physicalIndex": {
+    "originalPath": "/Users/blamy/Documents/Codex/electric-forest/.git/index",
+    "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32",
+    "bytes": 368078,
+    "retainedCopy": {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.physical-index.raw",
+      "sha256": "2937b85cf4b60eb6afbb31e499b8b55cc51899539ef2385cad130816d7831c32",
+      "bytes": 368078
+    }
+  },
+  "trackedDiffExitCode": 0,
+  "submodules": [
+    {
+      "repository": "/Users/blamy/Documents/Codex/electric-forest/vendor/emulate",
+      "head": "2d3e21005f10071869ee6f73e9ccc821edaab971",
+      "tree": "9ae48fb37b9e5312fa555070e4c4b3dcf75dee30",
+      "trackedFiles": 668,
+      "trackedManifest": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.tracked-files.json",
+        "sha256": "a72f6ae6ec5958a9d0e167b6408940ec6eb4b2635e45132c7d9f44798192230d",
+        "bytes": 126367
+      },
+      "trackedVsSourceMismatches": [],
+      "indexEntries": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.index-entries.raw",
+        "sha256": "6fbb3b15c0609eaa7f19edb33b9147251f0a91fc285d4684e7ce695cee00c35d",
+        "bytes": 62382
+      },
+      "semanticIndex": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.semantic-index.json",
+        "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292",
+        "bytes": 110481
+      },
+      "indexEntriesMatchSource": true,
+      "physicalIndex": {
+        "originalPath": "/Users/blamy/Documents/Codex/electric-forest/.git/modules/vendor/emulate/index",
+        "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277",
+        "bytes": 80044,
+        "retainedCopy": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.submodule-89c5c5d3409d.physical-index.raw",
+          "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277",
+          "bytes": 80044
+        }
+      },
+      "trackedDiffExitCode": 0,
+      "submodules": [],
+      "integrityPassed": true
+    }
+  ],
+  "integrityPassed": true,
+  "startedAt": "2026-10-16T20:50:26.523919+00:00",
+  "endedAt": "2026-10-16T20:50:27.138349+00:00",
+  "branch": "codex/railway-hosting"
+}

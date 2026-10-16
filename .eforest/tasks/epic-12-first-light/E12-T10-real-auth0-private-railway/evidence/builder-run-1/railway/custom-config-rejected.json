@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-10-16T20:43:17Z",
+  "action": "update_service.railwayConfigFile",
+  "projectId": "e0864588-a320-4ba3-96df-95ad0a07ee81",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+  "requestedPath": "/railway.production.toml",
+  "applied": false,
+  "isError": true,
+  "error_code": "INVALID_ARGUMENT",
+  "message": "Config as Code (railway.json / railway.toml) is deprecated. Use Infrastructure as Code (.railway/railway.ts) instead. See https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code",
+  "readbackConfigFile": ""
+}

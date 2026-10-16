@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace.py", line 80, in <module>
+    main()
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/namespace.py", line 68, in main
+    assert value == item['digest'], (stream, value, item['digest'])
+AssertionError: ('ns:root', '42f08e48ecfcfc9b0ec4bd0c3eafe7913ee9cf8f4f5f096a9cb603f8c5949375', '892166733b1871aaa31a0fb9029d07da2fc666bad17f1ffd449a0e9f5d1ef9a0')
