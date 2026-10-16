@@ -113,10 +113,20 @@ mode, fixture credentials or seed. It checks `production-artifact.json` against 
 emitted runtime/web byte before opening the private store or public listener. Runtime
 configuration must use the following public values and a fresh dedicated volume:
 
-Set Railway's `RAILWAY_DOCKERFILE_PATH=Dockerfile.production` variable explicitly; the
-service's `build.dockerfilePath` field alone does not select this file reliably for the
-Git source builder. The service start command is
-`node packages/platform/dist/src/hosted-bin.js`. Both select the private runtime.
+For the dedicated `electric-forest` service, set **Railway Config File** to the absolute
+repository path `/railway.production.toml`. This config selects `Dockerfile.production`
+and `node packages/platform/dist/src/hosted-bin.js`, a single replica, `/readyz` with a
+60-second timeout, three failure restarts, zero overlap and a 15-second drain. Keep the
+root `railway.toml` and `Dockerfile` attached to the preview service. Railway's
+[repository config overrides dashboard settings](https://docs.railway.com/config-as-code#using-a-custom-config-as-code-file);
+`RAILWAY_DOCKERFILE_PATH` alone does not override the root config's explicit preview
+Dockerfile selection. Confirm the selected config and Dockerfile in deployment details
+before accepting the release.
+
+Railway [deprecates Config as Code with a 2026-12-01 cutoff](https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code)
+for existing services; new services cannot opt into it. This is the existing service's
+immediate deployment repair. Broader hosting qualification must migrate its configuration
+to Railway Infrastructure as Code before that cutoff.
 
 ```text
 EF_DEPLOYMENT_MODE=production
