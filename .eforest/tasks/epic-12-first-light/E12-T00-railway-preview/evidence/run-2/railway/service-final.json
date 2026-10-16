@@ -1,0 +1,101 @@
+{
+  "service": {
+    "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+    "name": "electric-forest-preview",
+    "state": "live"
+  },
+  "environment": {
+    "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "name": "production"
+  },
+  "staged": null,
+  "config": {
+    "source": {
+      "repo": "BLamy/electric-forest",
+      "branch": "codex/railway-hosting",
+      "commitSha": "1f9e06b87109a93c75107842d4c8aa65902f8622"
+    },
+    "networking": {
+      "serviceDomains": {
+        "electric-forest-preview-production.up.railway.app": {
+          "port": 8080
+        }
+      }
+    },
+    "build": {
+      "builder": "DOCKERFILE",
+      "buildEnvironment": "V3",
+      "dockerfilePath": "Dockerfile"
+    },
+    "deploy": {
+      "healthcheckPath": "/readyz",
+      "limitOverride": {
+        "containers": {
+          "cpu": 1,
+          "memoryBytes": 2000000000
+        }
+      },
+      "healthcheckTimeout": 60,
+      "restartPolicyMaxRetries": 3,
+      "useLegacyStacker": false,
+      "ipv6EgressEnabled": false,
+      "runtime": "V2",
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "drainingSeconds": 15,
+      "overlapSeconds": 0
+    },
+    "volumeMounts": {
+      "10d2103d-2374-45cc-ab5f-c63dd5c063f4": {
+        "mountPath": "/data"
+      }
+    }
+  },
+  "stagedChanges": [],
+  "variableNames": [
+    "EF_AGENT_RESPONDER",
+    "EF_BUILD_REVISION",
+    "EF_DEPLOYMENT_MODE",
+    "EF_PREVIEW_AUTH",
+    "EF_PREVIEW_DATA_DIR",
+    "EF_PUBLIC_ORIGIN",
+    "EF_WEB_ROOT",
+    "NODE_ENV",
+    "PORT"
+  ],
+  "volumes": [
+    {
+      "id": "10d2103d-2374-45cc-ab5f-c63dd5c063f4",
+      "name": "forest-preview-data",
+      "mountPath": "/data",
+      "sizeMB": 1000,
+      "region": "us-west2",
+      "state": "live"
+    }
+  ],
+  "domains": {
+    "serviceDomains": [
+      {
+        "id": "5885f4ba-778a-4a5b-a217-81ba9ce03b2a",
+        "domain": "electric-forest-preview-production.up.railway.app",
+        "targetPort": 8080
+      }
+    ],
+    "customDomains": []
+  },
+  "tcpProxies": [],
+  "latestDeployment": {
+    "id": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+    "status": "SUCCESS",
+    "createdAt": "2026-10-16T18:39:16.068Z",
+    "url": null
+  },
+  "tracing": {
+    "tracingEnabled": false,
+    "autoInstrumentationEnabled": false,
+    "autoInstrumentationActive": false
+  }
+}

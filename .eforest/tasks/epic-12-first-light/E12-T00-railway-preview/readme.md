@@ -3,7 +3,7 @@ id: E12-T00
 epic: 12
 title: "Deploy a clearly labeled Railway preview with disposable data and stub identity"
 priority: 520
-status: in-progress
+status: implemented
 depends_on: [E5-T14]
 estimate: L
 capstone: false
@@ -246,3 +246,102 @@ in `evidence/critic-run-1/report.json`; judge ran
 `git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8..aba2f41a5141d0c26da5be613e9766078d839d35`,
 committed-source reference-closure and SHA-256/byte checks, read the raw cited logs,
 confirmed scratch HEAD/clean tracked source, then ran `python3 tools/build_queue.py`.
+
+
+### 2026-10-16 — builder rework — dependency closure and new hosted proof
+
+Immutable code candidate and actual deployed revision:
+`1f9e06b87109a93c75107842d4c8aa65902f8622`. This submits the next ordinary
+verification, run 2 under ceiling 10; the run-1 refutation remains unchanged. The only
+source repair after that refutation is `Makefile:793`: build the union of web and CLI
+workspace dependency closures in normal topological order, including web-hooks, before
+all original assertions. No runtime, auth, Docker, lockfile or verifier was changed.
+
+- **F1/build evidence.** A new detached `git clone --no-local`, with no initial
+  node_modules/dist/tsbuildinfo and its own scrubbed frozen-lockfile installation,
+  passes exact `make -- verify-E12-T00` without a preceding root build. Sixteen selected
+  packages all have build scripts; web-hooks builds before Vite. All 18 config tests,
+  real HTTP checks, browser checks and the registered success marker execute. This is
+  builder self-validation, not the critic's required single registered cold clone.
+  Receipts: `evidence/run-2/target-selfcheck/receipt.json`, `target.log`, `check.py` and
+  `dependency-closure.json` in that directory. Frozen pre-critic: `evidence/run-2/precritic.json`.
+- **Fresh ordered root audit.** A separate read-only auditor ran once, sequentially:
+  `pnpm format:check && pnpm lint` (12.859 s), `pnpm typecheck` (8.148 s),
+  `pnpm test` (618.162 s: 123 files, 924 tests), `pnpm build` (17.827 s).
+  Full candidate OID and clean tracked source match before/after every gate. Manifest:
+  `evidence/run-2/audit/manifest.json`, SHA-256
+  `7fbd4abbf5104e62b55ae6283a9b01b7786b591214ab8a98d564f3c40d00ffb1`;
+  raw and normalized full logs are alongside it. No passing root gate was rerun as an
+  evidence step.
+- **Actual new Railway image.** Project `e0864588-a320-4ba3-96df-95ad0a07ee81`,
+  environment `c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448`, preview service
+  `160db4ed-ee0c-4d40-941c-65015a2071bf`, deployment
+  `3a846a49-8b7b-4299-b10c-ecee7d755fa8`, snapshot
+  `df29e459-16f2-4916-bf67-90980bfba6cc` serve
+  `https://electric-forest-preview-production.up.railway.app` at this pinned revision.
+  Actual cold Linux/amd64 image:
+  `sha256:c694eed5e2d59f9b48dc3d89a6d5a79562fdc81ac89c9819fcc75039b480bf47`;
+  application artifact `bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e`
+  has 734 files. Manifest, source/config/volume records, OCI descriptor, build and deploy
+  logs: `evidence/run-2/railway/manifest.json` and its cited artifacts. Health is online,
+  one running replica, zero crashes/recent failures/pending work. Other services were
+  not changed.
+- **Final HTTP/browser/stream proof after that audit.** Real HTTP evidence records
+  startup 640 ms, shutdown 501 ms, local restart 119 ms, accepted offset
+  `0000000000000000_0000000000000001`, digest
+  `a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70`,
+  separate-directory isolation, partial-bootstrap/missing-assets/config refusal and
+  ended-session refusal (`evidence/run-2/http/`). New actual-origin before/after runs
+  each contain ten scenes: notice before fixture data, frozen README, pointer/keyboard
+  gateway mutations witnessed by an isolated second profile without reload, reconnect,
+  logout/refusal and relogin. MP4s, screenshots, timeline and console/network evidence:
+  `evidence/run-2/hosted-before/` and `hosted-after/`. Both report zero console/page
+  errors and request failures; aborted long polls on navigation are separately retained.
+  Supplementary Members and integration-refusal proof is `evidence/run-2/hosted-supplement/`.
+  It retains the prior nonclaimed member-dialog focus observation; no focus fix is claimed.
+- **Restart and replay.** One controlled preview-service restart reaches a newly logged
+  ready process in 10,976 ms. All nine before-restart events remain an exact byte prefix
+  of eleven after-restart events, with one welcome seed. Final offset
+  `0000000000000000_0000000000000010`, DOM/CLI digest
+  `6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670`.
+  `evidence/run-2/final/persistence.json` and its runnable check prove prefix equality;
+  `cli-replay.json` records two separate CLI replays of all eight browser dumps and six
+  exact chat DOM comparisons. The frozen README remains SHA-256
+  `b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5`.
+- **Inventory and canary scope.** The full root artifact includes 41 pre-existing extra
+  dist outputs absent from the clean deployed image. Every one of the 734 shared files
+  matches byte-for-byte; full local/deployed inventory equality is not claimed.
+  `evidence/run-2/final/artifact-comparison.json` preserves exact path/hash inventories.
+  The actual-origin scanner checks all 555 web files (33,937,112 served bytes) against
+  their baked hashes; the HTML check removes exactly its declared mode/build metadata
+  pair. No canary/private-key finding: `canary-scan.json` and `scan.mjs` in that directory.
+  Retained evidence also has zero canary findings.
+- **Lifecycle evidence.** Fresh committed readers agree at the post-judge, resumed and
+  code-candidate boundaries (`evidence/run-2/ledger/`). Run-1 entry digest remains
+  `040be5e609a106882fe635f9a3ec54601222182d5ea98b23d101fda24507201a`;
+  ledger `9f0aa988c03a24ff519783fa7f7b578136a57fff0e01cdbdacece6577f6538cb`;
+  control `64cb3dd424a3f70c1b084f2c56db51c3ab935d1d1b3fd78e93e071e819f7e967`.
+  No checkpoint or ceiling changed. Only the forthcoming fresh critic may verify.
+
+The new source and actual deployed image demonstrate a working, persistent, isolated
+public/disposable preview and close F1 in builder self-validation. The same final run
+shows real gateway/reducer behavior and independent CLI agreement. Production auth,
+private project mirroring and full public-launch qualification remain outside this
+preview claim; the supplied Auth0 settings have not been changed.
+
+Replay: N/A (Replay QA authentication is required and unavailable for configured project
+`proj-electric-forest-ms8w0nv1`; the current exact diagnostic is
+`evidence/run-2/replay-availability.json`) + mitigation: final actual-Railway-origin
+Playwright MP4s, console/network/timeline interrogation, committed source dumps,
+independent double CLI replay and byte-exact restart comparison. No managed journey,
+tunnel, exploration or Replay recording URL is claimed.
+
+Final commands: `node tools/verify/e12_t00_preview.mjs <task-work>/run-2-http`;
+`node tools/verify/e12_t00_browser.mjs https://electric-forest-preview-production.up.railway.app <task-work>/run-2-hosted-before`
+and the same command with `run-2-hosted-after` after Railway `restart_service`;
+`node <task-work>/hosted-supplement.mjs <origin> <revision> <output>`;
+`node evidence/run-2/final/persistence-check.mjs`; all exact CLI replay commands are
+in `evidence/run-2/final/cli-replay.json`. The artifact index preserves 92 retained files,
+SHA-256 values and portable original-to-retained mappings:
+`evidence/run-2/artifacts.json`, SHA-256
+`cadf04b6254ca81f7b2e2c296115204c11194cd56498e7ef331b2267c716a833`.

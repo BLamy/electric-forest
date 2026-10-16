@@ -1,0 +1,216 @@
+{
+  "source": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "localArtifactDigest": "834320e3526d6eed9ce805109d59de0b1616bc4bdad7b006e712f4012dc3a7cf",
+  "deployedArtifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+  "sharedFileCount": 734,
+  "differentSharedFiles": [],
+  "localOnlyFiles": [
+    {
+      "path": "packages/issues/dist/src/validate.js",
+      "sha256": "906105fec0dba2a3cdd3a9a8760608178049da68a10852bd491bddc61ce407bc",
+      "size": 2489
+    },
+    {
+      "path": "packages/loop/dist/src/index.js",
+      "sha256": "59cf7306255e4e38df5d55b143670eb20c8cefa870e1509bab1809397962b71d",
+      "size": 241
+    },
+    {
+      "path": "packages/loop/dist/src/run/adapter.js",
+      "sha256": "4f31d945bfd30527b7f2dfd4e1d695e71f51da4ee66c4f6cf17164e185acf345",
+      "size": 2643
+    },
+    {
+      "path": "packages/loop/dist/src/run/capabilities.js",
+      "sha256": "1b4ff70c87ef6a10939929cc99e7b02184f5d6c6f7ab6fe28260ec654a6699c2",
+      "size": 9733
+    },
+    {
+      "path": "packages/loop/dist/src/run/events.js",
+      "sha256": "a62294f8c52a3c99c374f2b2344c5fd64d65520074a657f3786224aadd78dfb6",
+      "size": 10574
+    },
+    {
+      "path": "packages/loop/dist/src/run/lease.js",
+      "sha256": "98e2edcc3a9c7831b352c811884db5640e0d4879f8772b4b1d4b51b9011c54ac",
+      "size": 11782
+    },
+    {
+      "path": "packages/loop/dist/src/run/reducer.js",
+      "sha256": "18b8fad9e76425833ad7758645016e555a6316fe838aee38878835aa97035102",
+      "size": 6058
+    },
+    {
+      "path": "packages/loop/dist/src/run/workspace.js",
+      "sha256": "8d3765ff166ea02f0af49e4060c1a30146b4e91175f06fb1d748ec77a7af75c5",
+      "size": 5695
+    },
+    {
+      "path": "packages/platform/dist/src/agent-runs.js",
+      "sha256": "727d16616ee406327dc42e7935ad81e44f5b9e0a656f554471a52aee5c090171",
+      "size": 31765
+    },
+    {
+      "path": "packages/platform/dist/src/agents/anthropic.js",
+      "sha256": "f404dbb02cfcd556c04643462d78eb498b9c29dc750ea63e319f2a554f38c3d9",
+      "size": 3553
+    },
+    {
+      "path": "packages/platform/dist/src/loop/index.js",
+      "sha256": "7728af15a4ea5fca4b768d9898c96fd5ef5bdece25b9edae0a978f52363bbcac",
+      "size": 226
+    },
+    {
+      "path": "packages/platform/dist/src/loop/project-events.js",
+      "sha256": "7fd41ddedebc9e8cb4f5e99bdd62e4793e53a8118b79058f4bfcbfa3384a03ad",
+      "size": 10135
+    },
+    {
+      "path": "packages/platform/dist/src/loop/project-guard.js",
+      "sha256": "932be07a90bc6a35b9c42016877fe4b9f96c56d9cada907fc420e0a8ed47f6d6",
+      "size": 5172
+    },
+    {
+      "path": "packages/platform/dist/src/loop/project-projection.js",
+      "sha256": "139d1636b942c8c02e2673b5362c27700c96af876bba4699278c17e97e76d724",
+      "size": 2148
+    },
+    {
+      "path": "packages/platform/dist/src/loop/project-reducer.js",
+      "sha256": "de663ad41ef673c399a2cb7b768dd1d81c61095bfae19c86d381912f4e546eaf",
+      "size": 3188
+    },
+    {
+      "path": "packages/platform/dist/src/loop/project-transition.js",
+      "sha256": "56dadb1b160c663b809ffeb2004849e4cf3c12c3e09b7d6a5322e67df849af81",
+      "size": 11778
+    },
+    {
+      "path": "packages/tasks/dist/io/disk.js",
+      "sha256": "e7d2ca3470f98aaa2c68cc319e5dbff8db051b3a83ca9f0c319c56996596e02e",
+      "size": 3148
+    },
+    {
+      "path": "packages/tasks/dist/io/sync-node.js",
+      "sha256": "6f187d44d1a5f74ad6c62dab1613d94530119b5e7a7070aa6972d2c055418f63",
+      "size": 14889
+    },
+    {
+      "path": "packages/tasks/dist/src/events.js",
+      "sha256": "dd84790eb0e7553a2e851aae28e6ffae394ee387b2d802d9da60bf6b67702618",
+      "size": 9035
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/generate.js",
+      "sha256": "ffa81de005fd16e9844374ac22120ccb9eeec5f9bd937c1c24f9893138a38348",
+      "size": 5624
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/index.js",
+      "sha256": "bda2bd753004206174a708d82531c475ba08f3119b17a1c29c3f6a93402f2f65",
+      "size": 294
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/ingest.js",
+      "sha256": "e77cb831c9341a2446ccba9fd5b6de182c1b0d803a2742dac18bd1eb4607ed90",
+      "size": 24129
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/journal.js",
+      "sha256": "2e2aa40e865ff57a7cdc32bd0431c4c767815552e916f892f2d9af12d2daec0c",
+      "size": 10115
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/parse.js",
+      "sha256": "1da957438836a47c60870087316bcdd72639907f1559c96bcea1838db1c44a08",
+      "size": 25773
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/paths.js",
+      "sha256": "6bc368243449a6ff0ca317d8a3cbc60bfdd99b5c1f8271092f7140919960e608",
+      "size": 2392
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/project.js",
+      "sha256": "e4afeafaff98ab41bbfa96e737188f921dc7e3140bd1010821014a3ca2f86b94",
+      "size": 3939
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/render.js",
+      "sha256": "8c7497484b79e15c7f9ae0981addcbd535fc017874967f247a2569be253c3a15",
+      "size": 3852
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/schema.js",
+      "sha256": "f58f63891cff8981f5d1dcd0dcb40ab775ee64a9089b5700a5b3d87d0b911621",
+      "size": 3093
+    },
+    {
+      "path": "packages/tasks/dist/src/folder/sync.js",
+      "sha256": "e03a58e9d9f38abf3d0d107baeb79257f4a04521727853b66308dcebc95d978d",
+      "size": 21128
+    },
+    {
+      "path": "packages/tasks/dist/src/generate.js",
+      "sha256": "5315ccf40b9afc7805e5cbedbf0e26963a0bcc644cff34b03c04738c24fbcd4f",
+      "size": 5816
+    },
+    {
+      "path": "packages/tasks/dist/src/index.js",
+      "sha256": "8f312791311423f2ad195459e31c413bf8c1f412080a153d04c9314e4b325041",
+      "size": 283
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/eligibility.js",
+      "sha256": "4b6e7758bd44c01e24b03d753743e9200541bb55910e8cdb0aa297a3de8943ae",
+      "size": 15026
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/graph.js",
+      "sha256": "25473a3bf5157234532cb3f2d7bc6288b6a41a509b36bd8aae10108570b080a5",
+      "size": 9098
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/index.js",
+      "sha256": "23bd5d25dd36c5939f86d1e1442c904688ef750430bbe6972273a10af96511af",
+      "size": 193
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/projector.js",
+      "sha256": "b792b309a91b5d125ba9e1973659917895211c92648f64d8daf55f988d3d9c24",
+      "size": 7218
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/proof.js",
+      "sha256": "899e258765e91dd8be507e0daba4a6d76bdda9a86814bf1e5d523fec52c84d5d",
+      "size": 4057
+    },
+    {
+      "path": "packages/tasks/dist/src/queue/render-markdown.js",
+      "sha256": "921a08cfc6c86f061163c923fa00d104802b5c047bb6fe231fd2215f8f90846d",
+      "size": 5875
+    },
+    {
+      "path": "packages/tasks/dist/src/reducer.js",
+      "sha256": "7edd261aa73c20e4510288cb8eee3bd914c6727281a3bc76b87f9f2010b3342c",
+      "size": 11161
+    },
+    {
+      "path": "packages/tasks/dist/src/state.js",
+      "sha256": "b3664df82a349e0fce708e44d05849b7ef8789aa53ef2161d9a3284423485cfd",
+      "size": 1046
+    },
+    {
+      "path": "packages/tasks/dist/src/validation.js",
+      "sha256": "19f4133ed246127656830521ad505ca031d2e45bfaa0a40adf31984264a2ec6d",
+      "size": 3814
+    },
+    {
+      "path": "packages/tasks/dist/src/version.js",
+      "sha256": "347a95cc55b4bc9711a3e13ff7a297b67c1d97cbb17538f41f4de588f4c2fa23",
+      "size": 1378
+    }
+  ],
+  "deployedOnlyFiles": [],
+  "interpretation": "Application inventories are recorded separately. No equality of full local and deployed artifacts is claimed. The deployed cold Linux image and actual-origin browser run are authoritative for hosted behavior."
+}

@@ -1,0 +1,12 @@
+{
+  "startedAt": "2026-10-16T18:53:01.869Z",
+  "returnedAt": "2026-10-16T18:53:04.561Z",
+  "response": {
+    "deploymentId": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+    "service": {
+      "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+      "name": "electric-forest-preview"
+    },
+    "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448"
+  }
+}

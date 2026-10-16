@@ -1,0 +1,46 @@
+{
+  "updatedAt": "2026-10-16T18:39:16.290Z",
+  "variables": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Set 1 variable(s) on service **electric-forest-preview** in **production**: EF_BUILD_REVISION\nDeploys were skipped — changes apply on the next deployment."
+      }
+    ],
+    "structuredContent": {
+      "environment": {
+        "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+        "name": "production"
+      },
+      "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+      "variableNames": [
+        "EF_BUILD_REVISION"
+      ],
+      "skippedDeploys": true,
+      "staged": null
+    },
+    "isError": false
+  },
+  "source": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Connected **electric-forest-preview** to BLamy/electric-forest@codex/railway-hosting (1f9e06b87109a93c75107842d4c8aa65902f8622).\nA deployment of that commit is starting. The service is pinned to it, so pushes to codex/railway-hosting do not deploy until the source is connected again without commitSha. Watch it with list-deployments / get-logs."
+      }
+    ],
+    "structuredContent": {
+      "service": {
+        "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+        "name": "electric-forest-preview"
+      },
+      "source": {
+        "repo": "BLamy/electric-forest",
+        "branch": "codex/railway-hosting",
+        "commitSha": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "image": null
+      },
+      "staged": null
+    },
+    "isError": false
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "scope": "deployment",
+  "deploymentId": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+  "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "status": "BUILDING",
+  "deploy": [],
+  "build": [
+    {
+      "timestamp": "2026-10-16T18:41:17.666913044Z",
+      "severity": "info",
+      "message": "[preview 3/3] COPY --from=build /app /app",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:b621ceb763aebf5afa16c408194d3bc61f99ce88053d08ab13de5c8855d10b29\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\",\"sha256:a6b80e48412b76f7e0e34f472f1b950ebcc721d83c26f097e8ac8f98e6f8c9c5\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:01.934048778Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T18:41:17.666433124Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:17.777212106Z",
+      "severity": "info",
+      "message": "exporting to docker image format",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:22e68a7bdb14a03452cdd1577d672dac27ef61b931aa0d0576d5a7b6192dc6b8\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:17.776547669Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:33.024679196Z",
+      "severity": "info",
+      "message": "exporting to docker image format",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:22e68a7bdb14a03452cdd1577d672dac27ef61b931aa0d0576d5a7b6192dc6b8\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:17.776547669Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T18:41:33.024277343Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672645283Z",
+      "severity": "info",
+      "message": "containerimage.digest: sha256:c694eed5e2d59f9b48dc3d89a6d5a79562fdc81ac89c9819fcc75039b480bf47",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672649800Z",
+      "severity": "info",
+      "message": "containerimage.descriptor: eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6YzY5NGVlZDVlMmQ1OWY5YjQ4ZGMzZDg5YTZkNWE3OTU2MmZkYzgxYWM4OWM5ODE5ZmNjNzUwMzliNDgwYmY0NyIsInNpemUiOjE2MjUsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0xMC0xNlQxODo0MTozMVoifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672650982Z",
+      "severity": "info",
+      "message": "containerimage.config.digest: sha256:2ec6a536f14120dd9f93f1ba038010c41c13cc87f132fe8d93083a92b13c36ce",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    }
+  ]
+}

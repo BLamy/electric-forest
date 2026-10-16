@@ -1,0 +1,55 @@
+{
+  "source": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "startedAt": "2026-10-16T18:51:53.271879+00:00",
+  "commands": [
+    {
+      "name": "http",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_preview.mjs",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-http"
+      ],
+      "startedAt": "2026-10-16T18:51:53.376308+00:00",
+      "log": "http.log",
+      "exitCode": 0,
+      "elapsedSeconds": 3.909,
+      "sha256": "30032098df527d26a9714296e5ae3184466127f9d3aa4229a1183af0516dc7f0",
+      "endedAt": "2026-10-16T18:51:57.285762+00:00"
+    },
+    {
+      "name": "hosted-before",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_browser.mjs",
+        "https://electric-forest-preview-production.up.railway.app",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-hosted-before"
+      ],
+      "startedAt": "2026-10-16T18:51:57.286267+00:00",
+      "log": "hosted-before.log",
+      "exitCode": 0,
+      "elapsedSeconds": 17.015,
+      "sha256": "ad48d6c4f57e05169b6f0de975d2b503ab17f83f7d4d3c12e5f5b9ff12c46fc0",
+      "endedAt": "2026-10-16T18:52:14.302048+00:00"
+    },
+    {
+      "name": "hosted-supplement",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/hosted-supplement.mjs",
+        "https://electric-forest-preview-production.up.railway.app",
+        "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-hosted-supplement"
+      ],
+      "startedAt": "2026-10-16T18:52:14.302425+00:00",
+      "log": "hosted-supplement.log",
+      "exitCode": 0,
+      "elapsedSeconds": 8.548,
+      "sha256": "37ab4d6476df0fefaad944d20be32e63adcbd670c8f08c7bafedfd35bbe78a92",
+      "endedAt": "2026-10-16T18:52:22.850367+00:00"
+    }
+  ],
+  "phase": "post-audit final recorded evidence",
+  "status": "passed",
+  "endedAt": "2026-10-16T18:52:22.902991+00:00",
+  "finalSource": "1f9e06b87109a93c75107842d4c8aa65902f8622"
+}

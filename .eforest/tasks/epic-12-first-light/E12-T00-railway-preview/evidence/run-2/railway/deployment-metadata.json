@@ -1,0 +1,25 @@
+{
+  "deployments": [
+    {
+      "id": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-16T18:39:16.068Z",
+      "updatedAt": "2026-10-16T18:42:10.964Z",
+      "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+      "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+      "url": null,
+      "snapshotId": "df29e459-16f2-4916-bf67-90980bfba6cc",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "us-west2"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "Build full web and CLI dependency closures for preview verification",
+        "commitHash": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "branch": "codex/railway-hosting"
+      }
+    }
+  ]
+}
