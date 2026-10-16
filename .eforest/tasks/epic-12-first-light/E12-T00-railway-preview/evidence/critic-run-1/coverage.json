@@ -1,0 +1,542 @@
+[
+  {
+    "id": "H01",
+    "file": ".dockerignore",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 35,
+    "context": "",
+    "classification": "executed",
+    "reason": "Docker context exclusion rules ran in actual clean Railway Linux build; .git, node_modules, dist, work, evidence and credential homes are excluded, then runtime removes source/docs/tools. No ignored auth homes are in emitted runtime manifest.",
+    "citations": [
+      "railway/build.json entries 9-30",
+      "../Dockerfile:4",
+      "canary-scan.json"
+    ]
+  },
+  {
+    "id": "H02",
+    "file": "Dockerfile",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 20,
+    "context": "",
+    "classification": "executed",
+    "reason": "Actual provider log runs pinned base, pnpm frozen install, native LMDB/esbuild check, full build, revision bake, runtime removal and image copy. Container startup and restart through exact CMD produce the recorded preview-ready line; shutdown delegates the independently exercised runtime.close. Error-only logging/exit wrappers are waived as reporting.",
+    "citations": [
+      "railway/build.json entries 18,62-64,473-483",
+      "railway/runtime.json entries 4,8",
+      "deployment-review.json"
+    ]
+  },
+  {
+    "id": "H03",
+    "file": "Makefile",
+    "oldStart": 788,
+    "oldCount": 3,
+    "newStart": 788,
+    "newCount": 12,
+    "context": " verify-task-board:",
+    "classification": "needs-evidence",
+    "reason": "BLOCKED: exact target in fresh worktree lacks @eforest/web-hooks build. Platform/CLI compile then Vite cannot resolve web-hooks. Make target is not proven from cold state; required cold clone intentionally not spent after this blocker.",
+    "citations": [
+      "../work/critic-run-1/exact-target-recheck.log:18",
+      "../work/critic-run-1/exact-target-recheck.log:32",
+      "Makefile:795"
+    ]
+  },
+  {
+    "id": "H04",
+    "file": "apps/web/src/components/shell/ForestShell.tsx",
+    "oldStart": 396,
+    "oldCount": 7,
+    "newStart": 396,
+    "newCount": 7,
+    "context": " function AccountMenu(props: {",
+    "classification": "executed",
+    "reason": "Native logout form submission reaches route, ends old session (401), and allows fixture relogin; removing synchronous onClose is exercised at account menu submit.",
+    "citations": [
+      "hosted-before/browser.json timeline invalid-and-ended-session-refused",
+      "hosted-after/browser.json timeline invalid-and-ended-session-refused",
+      "hosted-before/ada.mp4 t~10.5-12.3s"
+    ]
+  },
+  {
+    "id": "H05",
+    "file": "apps/web/src/main.tsx",
+    "oldStart": 1,
+    "oldCount": 5,
+    "newStart": 1,
+    "newCount": 6,
+    "context": "",
+    "classification": "waived",
+    "reason": "Import wiring is type/build checked and consumed by the next render hunk; no standalone runtime behavior.",
+    "citations": [
+      "audit/final-aba2f41a/04-build.log"
+    ]
+  },
+  {
+    "id": "H06",
+    "file": "apps/web/src/main.tsx",
+    "oldStart": 8,
+    "oldCount": 4,
+    "newStart": 9,
+    "newCount": 11,
+    "context": " import \"./styles/app.css\";",
+    "classification": "executed",
+    "reason": "Flex root wrapper and PreviewNotice render on file/chat/members pages at the actual origin. Decorative classes are witnessed by screenshots; nonpreview null branch does not add a production claim.",
+    "citations": [
+      "hosted-before/seeded-file.png",
+      "hosted-after/live-convergence.png",
+      "hosted-supplement/human-only-members.png"
+    ]
+  },
+  {
+    "id": "H07",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 10,
+    "oldCount": 6,
+    "newStart": 10,
+    "newCount": 7,
+    "context": " import { ChatAvatar } from \"../blocks/chat/components/chat-avatar.js\";",
+    "classification": "waived",
+    "reason": "New isPreview import is compile-time wiring for H08-H13, not an independent behavior.",
+    "citations": [
+      "audit/final-aba2f41a/04-build.log"
+    ]
+  },
+  {
+    "id": "H08",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 308,
+    "oldCount": 6,
+    "newStart": 309,
+    "newCount": 7,
+    "context": " function InviteForm(props: {",
+    "classification": "executed",
+    "reason": "Preview meta detection returns true in members page; all preview-only controls and text below execute.",
+    "citations": [
+      "hosted-supplement/supplement.json memberDialogHtml",
+      "hosted-supplement/human-only-members.png"
+    ]
+  },
+  {
+    "id": "H09",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 334,
+    "oldCount": 7,
+    "newStart": 336,
+    "newCount": 7,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+    "classification": "executed",
+    "reason": "Empty fixture roster has no seed-agents control; builder browser explicitly asserts count zero on actual origin.",
+    "citations": [
+      "hosted-before/browser.json timeline agent-execution-and-integrations-off",
+      "tools/verify/e12_t00_browser.mjs:272"
+    ]
+  },
+  {
+    "id": "H10",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 352,
+    "oldCount": 6,
+    "newStart": 354,
+    "newCount": 12,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+    "classification": "executed",
+    "reason": "Preview agents/integrations-off paragraph is visible in retained actual members view and awaited by driver.",
+    "citations": [
+      "hosted-supplement/human-only-members.png",
+      "hosted-before/agents-disabled.png"
+    ]
+  },
+  {
+    "id": "H11",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 426,
+    "oldCount": 8,
+    "newStart": 434,
+    "newCount": 9,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+    "classification": "executed",
+    "reason": "Empty-roster preview text appears after roster projection loads, saying agent execution is off. Unchanged nonpreview prose is waived as pre-existing behavior outside the fixture deployment claim.",
+    "citations": [
+      "hosted-supplement/human-only-members.png"
+    ]
+  },
+  {
+    "id": "H12",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 455,
+    "oldCount": 7,
+    "newStart": 464,
+    "newCount": 7,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+    "classification": "waived",
+    "reason": "Edit-agent control under nonempty agent roster is unreachable in this dedicated fresh fixture: zero agents seed, preview blocks every agent.* dispatch and raw streams are private. The !preview conjunct is defense for an unreachable persisted-agent state, not an exercised claim about migrating existing agent data.",
+    "citations": [
+      "hosted-supplement/supplement.json agent.register 403",
+      "hosted-supplement/human-only-members.png agents 0",
+      "packages/platform/src/preview.ts:383"
+    ]
+  },
+  {
+    "id": "H13",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 478,
+    "oldCount": 10,
+    "newStart": 487,
+    "newCount": 10,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+    "classification": "executed",
+    "reason": "Add member opens Human-only segmented selector; Agent option is absent from retained DOM and screenshot. Impossible crafted onChange id is waived as UI enum defense; preview server separately rejects agent events.",
+    "citations": [
+      "hosted-supplement/supplement.json memberDialogHtml",
+      "hosted-supplement/human-only-members.png"
+    ]
+  },
+  {
+    "id": "H14",
+    "file": "apps/web/src/preview.tsx",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 25,
+    "context": "",
+    "classification": "executed",
+    "reason": "Server-stamped mode/revision generates visible warning, full data build attribute and Try live chat navigation. Pure type annotations are waived; isPreview false has no effect in this preview-only deployment.",
+    "citations": [
+      "hosted-before/seeded-file.png",
+      "hosted-after/browser.json timeline seeded-file-browsed",
+      "hosted-before/network.json"
+    ]
+  },
+  {
+    "id": "H15",
+    "file": "apps/web/src/routes.tsx",
+    "oldStart": 4,
+    "oldCount": 6,
+    "newStart": 4,
+    "newCount": 7,
+    "context": " import { ForestShell } from \"./components/shell/ForestShell.js\";",
+    "classification": "waived",
+    "reason": "Import wiring covered by the app build and H16 execution.",
+    "citations": [
+      "audit/final-aba2f41a/04-build.log"
+    ]
+  },
+  {
+    "id": "H16",
+    "file": "apps/web/src/routes.tsx",
+    "oldStart": 40,
+    "oldCount": 6,
+    "newStart": 41,
+    "newCount": 7,
+    "context": " function isProofReceipt(value: unknown): value is ProofReceiptValue {",
+    "classification": "executed",
+    "reason": "Preview short-circuits legacy proof receipt effect; retained three networks contain no /__proof/e3-t02 fetch. This prevents a legacy receipt from being shown as preview proof.",
+    "citations": [
+      "hosted-before/network.json",
+      "hosted-after/network.json",
+      "hosted-supplement/network.json"
+    ]
+  },
+  {
+    "id": "H17",
+    "file": "apps/web/src/site/site.test.ts",
+    "oldStart": 62,
+    "oldCount": 7,
+    "newStart": 62,
+    "newCount": 9,
+    "context": " describe(\"public site: task board index\", () => {",
+    "classification": "executed",
+    "reason": "Authorized roadmap board expectation freezes all sixteen actual epics rather than stale nine; root audit test log passes. This is assertion maintenance with a fixed independent list, not runtime behavior.",
+    "citations": [
+      "audit/final-aba2f41a/03-test.log",
+      "apps/web/src/site/site.test.ts:65"
+    ]
+  },
+  {
+    "id": "H18",
+    "file": "apps/web/src/site/site.test.ts",
+    "oldStart": 85,
+    "oldCount": 12,
+    "newStart": 87,
+    "newCount": 20,
+    "context": " describe(\"public site: roadmap ladder\", () => {",
+    "classification": "executed",
+    "reason": "Authorized hosting-first ladder order and terminal E11 are explicitly frozen; prior E8 mirror invariant retained by find. Root test audit passes both roadmap assertions.",
+    "citations": [
+      "audit/final-aba2f41a/03-test.log",
+      "apps/web/src/site/site.test.ts:88"
+    ]
+  },
+  {
+    "id": "H19",
+    "file": "docs/guides/railway-hosting.md",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 96,
+    "context": "",
+    "classification": "waived",
+    "reason": "Documentation/configuration examples reviewed against source, deployment manifest and dedicated data boundary; docs are not executable browser behavior. Production inputs remain separate and unclaimed.",
+    "citations": [
+      "railway/manifest.json",
+      "docs/guides/railway-hosting.md:1"
+    ]
+  },
+  {
+    "id": "H20",
+    "file": "package.json",
+    "oldStart": 16,
+    "oldCount": 6,
+    "newStart": 16,
+    "newCount": 7,
+    "context": "",
+    "classification": "waived",
+    "reason": "Package script alias only routes to the exact Docker-tested preview entrypoint, without adding behavior.",
+    "citations": [
+      "Dockerfile:20",
+      "package.json:19"
+    ]
+  },
+  {
+    "id": "H21",
+    "file": "packages/platform/fixtures/preview/README.md",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 5,
+    "context": "",
+    "classification": "executed",
+    "reason": "Frozen committed fixture README bytes equal base64-decoded write events at offset 2 and the UI file digest. It is not a golden generated at test time.",
+    "citations": [
+      "hosted-before/file.jsonl:3",
+      "hosted-after/file.jsonl:3",
+      "hosted-before/browser.json seeded-file-browsed"
+    ]
+  },
+  {
+    "id": "H22",
+    "file": "packages/platform/src/preview-artifact.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 44,
+    "context": "",
+    "classification": "executed",
+    "reason": "Artifact walk, byte hashes and aggregate digest executed by deployed /api/deployment; both independent manifest checks match 4ad742a7...9685 and local HTTP verifies actual files. Type declarations and ENOENT optional-package branch are waived as type/config plumbing.",
+    "citations": [
+      "hosted-before/deployment.json",
+      "hosted-after/deployment.json",
+      "http/artifact.json",
+      "work/critic-run-1/integrity.json"
+    ]
+  },
+  {
+    "id": "H23",
+    "file": "packages/platform/src/preview-bin.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 23,
+    "context": "",
+    "classification": "executed",
+    "reason": "Preview CLI calls runtime, binds assigned 8080 and prints explicitly public/disposable mode. Actual Railway restart and local runtime shutdown cover stop delegate; stderr-only failure reporting is waived, separately probed by invalid-config child starts.",
+    "citations": [
+      "railway/runtime.json entries 4,8",
+      "http/http.json",
+      "work/critic-run-1/config-edge-review.json"
+    ]
+  },
+  {
+    "id": "H24",
+    "file": "packages/platform/src/preview.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 430,
+    "context": "",
+    "classification": "executed",
+    "reason": "Real runtime composition, fixture seeding/auth/routes/metadata/public bind/private streams/session revocation and persistence execute in retained hosted+HTTP records and independent semantic probes. See subranges for explicit exceptions.",
+    "citations": [
+      "hosted-before/browser.json",
+      "hosted-after/browser.json",
+      "hosted-supplement/supplement.json",
+      "http/http.json",
+      "work/critic-run-1/semantic-attacks/results.json"
+    ],
+    "subranges": [
+      {
+        "lines": "1-29,101-107,186-194",
+        "classification": "waived",
+        "reason": "Imports/interface/type declarations; no runtime claim independent of typed build."
+      },
+      {
+        "lines": "31-97",
+        "classification": "executed",
+        "reason": "Own 18 forbidden integration/developer env cases, 11 malformed configs, full unit cases, local and actual deployed config exercise success/refusal paths."
+      },
+      {
+        "lines": "109-149",
+        "classification": "executed",
+        "reason": "Fresh state, same-directory ready restore, interrupted marker, missing marker/corruption edge probe and missing required stream refusal; none silently reseed."
+      },
+      {
+        "lines": "151-184",
+        "classification": "executed",
+        "reason": "Actual JSON health/readiness/denials, escaped constrained revision and safe next, fixture notice/form. Escaping branches for impossible chars are waived because revision is hex and next is strict whitelisted."
+      },
+      {
+        "lines": "196-231",
+        "classification": "executed",
+        "reason": "Docker baked revision, matching runtime, assets and own invalid mismatch/missing JS edge cases; unexpected non-ENOENT IO errors are error propagation, waived."
+      },
+      {
+        "lines": "232-330",
+        "classification": "executed",
+        "reason": "Fresh private reference server, official adapter, all fixture streams/users/orgs/repo/file/chat, then no reseed on ready restart. Bootstrap catch cleanup is exercised by missing required stream; exceptional dispatch failure text is reporting and waived."
+      },
+      {
+        "lines": "331-399",
+        "classification": "executed",
+        "reason": "Actual preview build/health/routes/login/logout/metadata injection, 14 raw route/method rejections, forged subjects/origin/redirect checks, integration/agent denial and malformed requests. Pure sanitizing type tests waived."
+      },
+      {
+        "lines": "400-430",
+        "classification": "executed",
+        "reason": "Public listener and private transport observed via true network connection, active wrapper and runtime.close through startup/shutdown/restart. Deadline/abort cleanup exercised by local and actual hosted active readers; impossible drain failure branch is error reporting and waived."
+      }
+    ]
+  },
+  {
+    "id": "H25",
+    "file": "packages/platform/src/production.ts",
+    "oldStart": 125,
+    "oldCount": 6,
+    "newStart": 125,
+    "newCount": 13,
+    "context": " function optionalAbsolutePath(value: string | undefined, name: string): string |",
+    "classification": "executed",
+    "reason": "Production refuses preview mode/auth/data flags even with complete production fields. Mandatory deletion mutation is caught by builder unit and independent compiled-code assertion, then restored.",
+    "citations": [
+      "packages/platform/test/preview.test.ts:60",
+      "work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log"
+    ]
+  },
+  {
+    "id": "H26",
+    "file": "packages/platform/test/preview.test.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 66,
+    "context": "",
+    "classification": "executed",
+    "reason": "Entire focused preview unit file passes unchanged baseline and restoration; all enumerated unsafe inputs/credential names and origins exercised. A targeted intentional guard deletion makes its claim test fail.",
+    "citations": [
+      "audit/final-aba2f41a/03-test.log",
+      "work/critic-run-1/sensitivity/baseline-config-tests.log",
+      "work/critic-run-1/sensitivity/guard-mutant-builder-tests.log"
+    ]
+  },
+  {
+    "id": "H27",
+    "file": "packages/platform/tsconfig.build.json",
+    "oldStart": 8,
+    "oldCount": 6,
+    "newStart": 8,
+    "newCount": 7,
+    "context": "",
+    "classification": "waived",
+    "reason": "TypeScript server reference is build graph configuration; clean platform build emitted and then actually loaded the private reference server.",
+    "citations": [
+      "work/critic-run-1/focus-build-1.log",
+      "railway/build.json entry 64",
+      "packages/platform/tsconfig.build.json:11"
+    ]
+  },
+  {
+    "id": "H28",
+    "file": "railway.toml",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 9,
+    "context": "",
+    "classification": "executed",
+    "reason": "Actual service configuration selects Dockerfile, readiness /readyz, 60-second timeout and retry limit 3; clean deployed build health check and retained endpoint observations succeed.",
+    "citations": [
+      "railway/manifest.json configuration.build/deploy",
+      "railway/build.json entry 492",
+      "hosted-supplement/supplement.json"
+    ]
+  },
+  {
+    "id": "H29",
+    "file": "tools/verify/cold_clone_targets.txt",
+    "oldStart": 74,
+    "oldCount": 3,
+    "newStart": 74,
+    "newCount": 4,
+    "context": " verify-E4-T12-browser",
+    "classification": "waived",
+    "reason": "Exact registry line is inspected and Make dry-run schedules its marker, but AC1 target behavior remains blocked by H03. No arbitrary/unregistered target was substituted.",
+    "citations": [
+      "tools/verify/cold_clone_targets.txt:77",
+      "work/critic-run-1/target-blocker.json"
+    ]
+  },
+  {
+    "id": "H30",
+    "file": "tools/verify/e12_t00_browser.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 369,
+    "context": "",
+    "classification": "executed",
+    "reason": "Full driver executed twice at deployed origin: ten scenes each, videos/network/projection dumps; all dump digests independently replayed. Local sensitivity baseline/restoration exercise local branch, and frozen DOM digest causes the same builder browser assertion to fail after gateway acceptance. Error artifact handling also executes in that mutation.",
+    "citations": [
+      "hosted-before/browser.json",
+      "hosted-after/browser.json",
+      "work/critic-run-1/independent-replay.json",
+      "work/critic-run-1/sensitivity/browser-digest-mutant/failure.json"
+    ]
+  },
+  {
+    "id": "H31",
+    "file": "tools/verify/e12_t00_chat_reducer.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 6,
+    "context": "",
+    "classification": "executed",
+    "reason": "CLI replay reducer module used independently twice for every cited chat dump and one-byte mutated input; exact state digests match DOM and differ on mutation.",
+    "citations": [
+      "work/critic-run-1/independent-replay.json"
+    ]
+  },
+  {
+    "id": "H32",
+    "file": "tools/verify/e12_t00_preview.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 281,
+    "context": "",
+    "classification": "executed",
+    "reason": "Full real HTTP verifier ran in original committed evidence and critic sensitivity baseline: fixture reads/writes/second user/session expiry/restart/separate dirs/partial state/assets/config guard. Public bind sabotage makes corresponding assertion fail. Independent fresh semantic script adds distinct inputs and corruption/origin/malformed attacks.",
+    "citations": [
+      "http/http.json",
+      "work/critic-run-1/sensitivity/http-baseline/http.json",
+      "work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "work/critic-run-1/semantic-attacks/results.json"
+    ]
+  }
+]

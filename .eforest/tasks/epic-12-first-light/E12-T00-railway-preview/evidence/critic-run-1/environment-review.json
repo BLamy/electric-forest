@@ -1,0 +1,21 @@
+{
+  "description": "Fresh detached49b worktree had no dist or node_modules. Offline frozen-lockfile hydration reused only the content-addressed pnpm store and created an independent scratch graph; no main node_modules symlink. Exact Make failed because web-hooks had not been built. Building that omitted package in scratch only enabled subsequent attacks; it did not repair or pass the committed recipe. Preview has no NODE_ENV semantic branch, starts only private reference streams, disables subprocesses/email/integrations, and real preview-bin children reject inherited provider/email/CODEX_HOME before startup without printing canary values. All74 committed evidence files are independently canary-free. Frozen README is a committed175-byte literal; both file dumps decode to those exact bytes. All seven chat digests were independently reconstructed in Python and replayed twice via scratch CLI; one-byte input mutation changes digest. 176 emitted backend files exactly match deployed hashes, zero mismatch; three unrelated root-build support modules were not built in focused scratch preparation. Native LMDB/esbuild execute in the actual Railway Linux build and scratch native runtime loads successfully. No hidden warm server, production credentials, root auth home, live hosted re-drive, full root gate rerun or cold clone was used.",
+  "committedEvidenceCanaryScan": {
+    "files": 74,
+    "findings": []
+  },
+  "hydrationLogSha256": "cab3535bc94c51b981f18681e47cf3c728ca47866d98931400fd107b2bfd9366",
+  "toolchain": {
+    "node": "24.20.0",
+    "pnpm": "10.15.0"
+  },
+  "backendComparison": {
+    "matched": 176,
+    "different": 0,
+    "notBuiltSupportModules": [
+      "packages/browser-verify/dist/src/index.js",
+      "packages/seed/dist/index.js",
+      "packages/sync-harness/dist/src/index.js"
+    ]
+  }
+}

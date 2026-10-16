@@ -1,0 +1,322 @@
+[
+  {
+    "name": "baseline-http",
+    "command": [
+      "node",
+      "tools/verify/e12_t00_preview.mjs",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 4.291,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-http.log",
+    "bytes": 1204,
+    "sha256": "a67772e688a6f17a608f8941fdb88b074673d4fd8605fd782027be52591bdb53"
+  },
+  {
+    "name": "baseline-config-tests",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "--maxWorkers=1",
+      "packages/platform/test/preview.test.ts"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 2.561,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-tests.log",
+    "bytes": 311,
+    "sha256": "e74249ce7b7ef12e8462cf44b07ba460fe4a61f327a50a0e282f190143e7fc13"
+  },
+  {
+    "name": "baseline-config-sensor",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "config"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 0.185,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-sensor.log",
+    "bytes": 23,
+    "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+  },
+  {
+    "name": "baseline-network-sensor",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "network"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.299,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-network-sensor.log",
+    "bytes": 250,
+    "sha256": "f779d604738b217e50f8e13118570abddfde62d696e92fc941638c81188fe22d"
+  },
+  {
+    "name": "baseline-browser",
+    "command": [
+      "node",
+      "tools/verify/e12_t00_browser.mjs",
+      "local",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 15.863,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-browser.log",
+    "bytes": 310,
+    "sha256": "2be8cb79639a0374f6846b416b34719406785c191f7d6119d7b6dfab576558cf"
+  },
+  {
+    "name": "bind-mutated-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/platform",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.672,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutated-build.log",
+    "bytes": 208,
+    "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+  },
+  {
+    "name": "bind-mutant-real-network",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "network"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 1,
+    "expected": "nonzero",
+    "seconds": 1.872,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+    "bytes": 586,
+    "sha256": "117d4d5ab7377399d64371ea9d3b299b4582bf10a9bfc304dde53d81c6f45646"
+  },
+  {
+    "name": "bind-mutant-builder-http",
+    "command": [
+      "node",
+      "tools/verify/e12_t00_preview.mjs",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-bind-mutant"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 1,
+    "expected": "nonzero",
+    "seconds": 1.608,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+    "bytes": 752,
+    "sha256": "cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392"
+  },
+  {
+    "name": "bind-restored-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/platform",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 0.772,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-build.log",
+    "bytes": 208,
+    "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+  },
+  {
+    "name": "bind-restored-real-network",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "network"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.36,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-real-network.log",
+    "bytes": 250,
+    "sha256": "54ff13fc4742eeb387a01f7a89f0405bcd5256ad840e10034e9ec62f9b8b84cb"
+  },
+  {
+    "name": "guard-mutated-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/platform",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.087,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutated-build.log",
+    "bytes": 208,
+    "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+  },
+  {
+    "name": "guard-mutant-complete-prod-fields",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "config"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 1,
+    "expected": "nonzero",
+    "seconds": 0.178,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+    "bytes": 751,
+    "sha256": "73b2020fc635ebcdca3e79dac67e402248cb7886ddaeb43327c7732a99f59e2a"
+  },
+  {
+    "name": "guard-mutant-builder-tests",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "--maxWorkers=1",
+      "packages/platform/test/preview.test.ts",
+      "-t",
+      "keeps production entrypoint closed to preview identity"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 1,
+    "expected": "nonzero",
+    "seconds": 1.773,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+    "bytes": 1410,
+    "sha256": "556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17"
+  },
+  {
+    "name": "guard-restored-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/platform",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.148,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-build.log",
+    "bytes": 208,
+    "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+  },
+  {
+    "name": "guard-restored-complete-prod-fields",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "config"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 0.133,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+    "bytes": 23,
+    "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+  },
+  {
+    "name": "digest-mutated-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/web",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 16.769,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutated-build.log",
+    "bytes": 105748,
+    "sha256": "fd762bde35d4bda580c1acf7717d93ce55cbbb1403bd9a2fc530f104bbfbe975"
+  },
+  {
+    "name": "digest-mutant-builder-browser",
+    "command": [
+      "node",
+      "tools/verify/e12_t00_browser.mjs",
+      "local",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 1,
+    "expected": "nonzero",
+    "seconds": 46.385,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+    "bytes": 688,
+    "sha256": "72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+  },
+  {
+    "name": "digest-restored-build",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/web",
+      "build"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 16.419,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-restored-build.log",
+    "bytes": 105748,
+    "sha256": "025df3b0667a6c827c79b9081fdc3428eed6376c3c26c1511f0c47b47fe2704c"
+  },
+  {
+    "name": "restored-browser",
+    "command": [
+      "node",
+      "tools/verify/e12_t00_browser.mjs",
+      "local",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 13.516,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-browser.log",
+    "bytes": 510,
+    "sha256": "54466fbada5611fb12912b8a882ddd3f86a4c99afcf40a7c8a9a8068e8318af8"
+  },
+  {
+    "name": "restored-config-tests",
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "--maxWorkers=1",
+      "packages/platform/test/preview.test.ts"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+    "exitCode": 0,
+    "expected": 0,
+    "seconds": 1.239,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-config-tests.log",
+    "bytes": 311,
+    "sha256": "8be1c402dacd68768947b3f6714c7b71ba6631e36cd633d32dadd751f22dc7b5"
+  }
+]

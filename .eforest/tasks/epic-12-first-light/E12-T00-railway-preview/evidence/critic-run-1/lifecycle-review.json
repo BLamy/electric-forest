@@ -1,0 +1,22 @@
+{
+  "sourceSnapshotExactByteMatch": true,
+  "sourceStdoutSha256": "57710493706d0bfb2c68624ccb116f59a26bd19aec0f417e2ab6c1396cadec5b",
+  "controlDigest": "64cb3dd424a3f70c1b084f2c56db51c3ab935d1d1b3fd78e93e071e819f7e967",
+  "runCount": 0,
+  "runCeiling": 10,
+  "historicalLogs": [
+    {
+      "task": "epic-5-the-meadow/E5-T15-bl-ui-2-rebuild",
+      "historicalLogBytes": 9235,
+      "sha256": "b5ffb65fd932c9b7b198372bf581fab97782c07bbfac7cc7602ea5638f4bf1e8",
+      "unchangedPrefix": true
+    },
+    {
+      "task": "epic-6-the-loop/E6-T12-live-loop-ui",
+      "historicalLogBytes": 2779,
+      "sha256": "5b8358298e4dab60acd683e38ddf6aeb1596f32ea809739b3e9102e945118fd5",
+      "unchangedPrefix": true
+    }
+  ],
+  "snapshotPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/snapshot-aba.json"
+}

@@ -1,0 +1,192 @@
+{
+  "candidate": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+  "canarySha256": "534380d078e280d288aa06313bf7c8f99800b63cb0c62aabbd9914ce3ea4b92e",
+  "records": [
+    {
+      "name": "production-entrypoint-refuses-valid-shaped-preview-configuration",
+      "observed": 3
+    },
+    {
+      "name": "unsafe-config-refused-before-disk-or-socket",
+      "observed": [
+        "EFOREST_SERVER_URL",
+        "EF_OIDC_ISSUER",
+        "EF_OIDC_CLIENT_ID",
+        "EF_SESSION_SECRET",
+        "EF_RESEND_URL",
+        "EF_RESEND_API_KEY",
+        "EF_AGENT_RESPONDER",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "CODEX_HOME",
+        "CLAUDE_CONFIG_DIR",
+        "AWS_SECRET_ACCESS_KEY",
+        "GOOGLE_APPLICATION_CREDENTIALS",
+        "SSH_AUTH_SOCK",
+        "GH_TOKEN",
+        "DURABLE_STREAM_AUTH",
+        "NODE_OPTIONS",
+        "NODE_PATH"
+      ]
+    },
+    {
+      "name": "malformed-config-refusal",
+      "observed": 11
+    },
+    {
+      "name": "missing-built-assets",
+      "observed": 2
+    },
+    {
+      "name": "all-interface-ingress-and-private-stream",
+      "observed": {
+        "listener": "0.0.0.0",
+        "externalInterfaceAddress": "192.168.68.55",
+        "status": 200,
+        "startupMs": 770
+      }
+    },
+    {
+      "name": "public-raw-endpoints-refused",
+      "observed": [
+        {
+          "path": "/streams/__identity__",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/streams/__identity__",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/streams/ns%3Aroot",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/streams/ns%3Aroot",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/streams/raw-critic",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/streams/raw-critic",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/admin",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/admin",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/__admin",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/__admin",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/.env",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/.env",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/.git/config",
+          "method": "GET",
+          "status": 404
+        },
+        {
+          "path": "/.git/config",
+          "method": "POST",
+          "status": 404
+        }
+      ]
+    },
+    {
+      "name": "fixture-selection-origin-and-redirect-boundary",
+      "observed": {
+        "wrongSubjects": 3,
+        "foreignOrigin": 403,
+        "openRedirect": "clamped",
+        "distinctSignedSessions": true
+      }
+    },
+    {
+      "name": "two-independent-HTTP-clients-canonical-convergence",
+      "observed": {
+        "beforeEvents": 1,
+        "afterEvents": 3,
+        "firstDigest": "27d0027a2a0e9844254a9346c4a9d02856d19bea77b0f89a08b370816047656c"
+      }
+    },
+    {
+      "name": "novel-malformed-dispatch-refuses-without-500",
+      "observed": [
+        400,
+        400,
+        400,
+        400,
+        403
+      ]
+    },
+    {
+      "name": "agent-and-real-integration-routes",
+      "observed": [
+        {
+          "path": "/api/cli-tokens",
+          "status": 403
+        },
+        {
+          "path": "/api/device-grants",
+          "status": 403
+        },
+        {
+          "path": "/settings/cli-tokens",
+          "status": 403
+        }
+      ]
+    },
+    {
+      "name": "same-directory-bootstrap-and-session-restart",
+      "observed": {
+        "shutdownMs": 501,
+        "restartMs": 175,
+        "offset": "0000000000000000_0000000000000002",
+        "digest": "2fbdf6cb7c21eca74783bd03555d0475765d4833485db3c77be3b1d14541f53f",
+        "events": 3,
+        "oneWelcome": true
+      }
+    },
+    {
+      "name": "distinct-directory-isolation",
+      "observed": true
+    },
+    {
+      "name": "novel-ready-marker-with-missing-stream-refuses-reseed",
+      "observed": true
+    },
+    {
+      "name": "interrupted-bootstrap-refuses-silent-reseed",
+      "observed": true
+    }
+  ]
+}

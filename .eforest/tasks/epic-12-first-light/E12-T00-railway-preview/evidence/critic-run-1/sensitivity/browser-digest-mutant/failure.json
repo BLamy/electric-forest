@@ -1,0 +1,1725 @@
+{
+  "message": "page.waitForFunction: Timeout 30000ms exceeded.",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "network": [
+    {
+      "role": "ada",
+      "ms": 463,
+      "method": "GET",
+      "path": "/preview/forest/blob/main/README.md",
+      "status": 302
+    },
+    {
+      "role": "ada",
+      "ms": 471,
+      "method": "GET",
+      "path": "/auth/login?next=%2Fpreview%2Fforest%2Fblob%2Fmain%2FREADME.md",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 648,
+      "method": "POST",
+      "path": "/auth/preview",
+      "status": 303
+    },
+    {
+      "role": "ada",
+      "ms": 656,
+      "method": "GET",
+      "path": "/preview/forest/blob/main/README.md",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 682,
+      "method": "GET",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 889,
+      "method": "GET",
+      "path": "/assets/index-DnUfvFiG.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1027,
+      "method": "GET",
+      "path": "/assets/route-pages-D68k-53T.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1040,
+      "method": "GET",
+      "path": "/assets/usePrs-xp9sjOC0.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1050,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1078,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1120,
+      "method": "GET",
+      "path": "/assets/RVI7YCPX--zCG1rd2.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1141,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1147,
+      "method": "GET",
+      "path": "/assets/pull-request-CU3EpY6v.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1179,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1255,
+      "method": "GET",
+      "path": "/assets/3GWKGGQS-C3aUoS0N.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1286,
+      "method": "GET",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1299,
+      "method": "GET",
+      "path": "/api/repos/preview/forest/main/blob/README.md?projection=1&reducer=file-content",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1331,
+      "method": "GET",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1333,
+      "method": "GET",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1342,
+      "method": "GET",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1375,
+      "method": "GET",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1375,
+      "method": "GET",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1393,
+      "method": "GET",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1401,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1417,
+      "method": "GET",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1429,
+      "method": "GET",
+      "path": "/api/repos/preview/forest/home/namespace?projection=1&reducer=repo-namespace",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 1501,
+      "method": "GET",
+      "path": "/api/repos/preview/forest/home/branches?projection=1&reducer=repo-branches",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 1690,
+      "method": "GET",
+      "path": "/chat/preview/welcome",
+      "status": 302
+    },
+    {
+      "role": "grace",
+      "ms": 1690,
+      "method": "GET",
+      "path": "/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 1934,
+      "method": "POST",
+      "path": "/auth/preview",
+      "status": 303
+    },
+    {
+      "role": "grace",
+      "ms": 1989,
+      "method": "GET",
+      "path": "/chat/preview/welcome",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2176,
+      "method": "GET",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2224,
+      "method": "GET",
+      "path": "/assets/index-DnUfvFiG.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2392,
+      "method": "GET",
+      "path": "/assets/route-pages-D68k-53T.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2398,
+      "method": "GET",
+      "path": "/assets/usePrs-xp9sjOC0.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2398,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2420,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2443,
+      "method": "GET",
+      "path": "/assets/RVI7YCPX--zCG1rd2.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2466,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2466,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2501,
+      "method": "GET",
+      "path": "/assets/ChatChannelPage-wV11Xmvo.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2518,
+      "method": "GET",
+      "path": "/assets/3GWKGGQS-C3aUoS0N.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2631,
+      "method": "GET",
+      "path": "/chat/preview/welcome",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2658,
+      "method": "GET",
+      "path": "/assets/index-DnUfvFiG.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2658,
+      "method": "GET",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2673,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2694,
+      "method": "GET",
+      "path": "/assets/route-pages-D68k-53T.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2694,
+      "method": "GET",
+      "path": "/assets/usePrs-xp9sjOC0.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2694,
+      "method": "GET",
+      "path": "/assets/RVI7YCPX--zCG1rd2.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2710,
+      "method": "GET",
+      "path": "/assets/3GWKGGQS-C3aUoS0N.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2732,
+      "method": "GET",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2732,
+      "method": "GET",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2759,
+      "method": "GET",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2759,
+      "method": "GET",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2818,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2842,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2897,
+      "method": "GET",
+      "path": "/assets/ChatChannelPage-wV11Xmvo.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 2960,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2960,
+      "method": "GET",
+      "path": "/api/orgs/preview/members",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 2974,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3054,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 3054,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 3076,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 3125,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3289,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3306,
+      "method": "GET",
+      "path": "/api/orgs/preview/members",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3306,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3318,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 3318,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3360,
+      "method": "GET",
+      "path": "/api/whoami",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3378,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3409,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 3585,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3585,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 3585,
+      "method": "POST",
+      "path": "/api/dispatch",
+      "status": 202,
+      "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbaqfgm_pp2hlj\",\"body\":\"Railway preview live acceptance 1792175019638\"},\"ts\":1792175019718}}"
+    },
+    {
+      "role": "grace",
+      "ms": 3990,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4038,
+      "method": "GET",
+      "path": "/assets/pull-request-CU3EpY6v.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4039,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4068,
+      "method": "GET",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4078,
+      "method": "GET",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4092,
+      "method": "GET",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4103,
+      "method": "GET",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4113,
+      "method": "GET",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4113,
+      "method": "GET",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4166,
+      "method": "GET",
+      "path": "/assets/pull-request-CU3EpY6v.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4168,
+      "method": "GET",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4168,
+      "method": "GET",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4168,
+      "method": "GET",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4169,
+      "method": "GET",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4169,
+      "method": "GET",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4169,
+      "method": "GET",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4573,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4666,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 4806,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 4924,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 5136,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 5149,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 5553,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 5653,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 6201,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 6331,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 6384,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 6467,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 6676,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 6695,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 7070,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 7180,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 7825,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 7854,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 7909,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 7999,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 8202,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 8233,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 8636,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 8723,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 9468,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 9474,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 9505,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 9599,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 9742,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 9838,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 10150,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 10258,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 10996,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 11019,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 11165,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 11167,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 11284,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 11383,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 11672,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 11883,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 12525,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 12564,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 12761,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 12763,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 12826,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 12923,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 13267,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 13546,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 14113,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 14161,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 14297,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 14335,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 14386,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 14446,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 14806,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 15174,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 15665,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 15796,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 15861,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 15886,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 15921,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 15969,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 16348,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 16802,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 17236,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 17439,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 17446,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 17473,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 17517,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 17566,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 17866,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 18794,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 18817,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 18988,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 18998,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 19103,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 19103,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 19106,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 19493,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 20371,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 20410,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 20532,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 20534,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 20642,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 20661,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 20687,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 21126,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 21914,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 21965,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 22118,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 22120,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 22205,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 22228,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 22265,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 22673,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 23521,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 23596,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 23657,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 23675,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 23802,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 23855,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 23913,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 24194,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 25060,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 25125,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 25181,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 25258,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 25325,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 25388,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 25442,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 25716,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 26595,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 26743,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 26817,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 26871,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 26882,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 26911,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 26980,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 27258,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 28132,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 28273,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 28337,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 28411,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 28412,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 28463,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 28508,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 28894,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 29667,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 29816,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 29874,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 29959,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 29960,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 30026,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 30075,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 30432,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 31214,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 31354,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 31408,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 31515,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 31551,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 31618,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 31625,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 31959,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 32766,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 32893,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 32939,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 33051,
+      "method": "GET",
+      "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 33128,
+      "method": "GET",
+      "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 33177,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "ada",
+      "ms": 33183,
+      "method": "GET",
+      "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200
+    },
+    {
+      "role": "grace",
+      "ms": 33488,
+      "method": "GET",
+      "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200
+    }
+  ],
+  "timeline": [
+    {
+      "name": "ada-notice-before-fixture-data",
+      "ms": 556,
+      "path": "/preview/forest/blob/main/README.md"
+    },
+    {
+      "name": "seeded-file-browsed",
+      "ms": 1679,
+      "bytesSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5",
+      "build": "49b46a180cfebe2e368b5611e668e8ed9c41fd25"
+    },
+    {
+      "name": "grace-notice-before-fixture-data",
+      "ms": 1791,
+      "path": "/chat/preview/welcome"
+    }
+  ],
+  "pages": [
+    "http://127.0.0.1:64139/chat/preview/welcome",
+    "http://127.0.0.1:64139/chat/preview/welcome"
+  ]
+}

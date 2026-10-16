@@ -1,0 +1,23 @@
+
+> @eforest/web@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 19 modules transformed.
+✗ Build failed in 654ms
+error during build:
+[commonjs--resolver] Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+    at packageEntryFailure (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:32896:32)
+    at resolvePackageEntry (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:32893:2)
+    at tryNodeResolve (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:32796:70)
+    at Object.handler (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:32635:16)
+    at Object.handler (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:33786:13)
+    at file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/rollup@4.62.3/node_modules/rollup/dist/es/shared/node-entry.js:22789:40
+    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/rollup@4.62.3/node_modules/rollup/dist/es/shared/node-entry.js:22671:28)
+    at async resolveId (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/rollup@4.62.3/node_modules/rollup/dist/es/shared/node-entry.js:21133:26)
+    at async ModuleLoader.resolveId (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/rollup@4.62.3/node_modules/rollup/dist/es/shared/node-entry.js:21577:15)
+    at async Object.resolveId (file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/node_modules/.pnpm/vite@7.3.6_@types+node@26.1.1_jiti@2.7.0_lightningcss@1.32.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:4154:21)
+/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @eforest/web@0.0.0 build: `vite build`
+Exit status 1

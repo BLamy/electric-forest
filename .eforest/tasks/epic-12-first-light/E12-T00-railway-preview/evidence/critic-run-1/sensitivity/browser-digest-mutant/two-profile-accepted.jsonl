@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"preview|ada","body":"Welcome! Try posting here from two browsers. Everything in this fixture is public and disposable.","id":"preview-welcome","v":1,"writer":{"seq":1,"sub":"preview|ada","v":1}},"ts":4,"type":"chat.message.post"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"preview|ada","body":"Railway preview live acceptance 1792175019638","id":"msg_mvbaqfgm_pp2hlj","v":1,"writer":{"seq":2,"sub":"preview|ada","v":1}},"ts":1792175019718,"type":"chat.message.post"}

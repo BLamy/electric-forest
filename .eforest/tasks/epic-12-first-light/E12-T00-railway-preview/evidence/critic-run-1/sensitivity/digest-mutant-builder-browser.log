@@ -1,0 +1,14 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: Timeout 30000ms exceeded.
+    at proveChannel (/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_browser.mjs:153:16)
+    at async file:///Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_browser.mjs:252:20 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.20.0

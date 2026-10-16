@@ -1,0 +1,1591 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "run": 1,
+  "baseCommit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+  "codeCandidate": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "sourceWorkRoot": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1",
+  "destinationEvidenceRoot": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1",
+  "resolutionRules": [
+    "Retained artifacts preserve authentic bytes, including original absolute/work citations. Resolve an absolute sourcePath or sourceRepoRelativePath using retainedArtifacts to its committedPath; preserve any citation line suffix.",
+    "A critic artifact reference relative to work/critic-run-1, ../work/critic-run-1, or a bare artifact suffix resolves under destinationEvidenceRoot by the same relative path. A bare basename resolves only if unique among retainedArtifacts.",
+    "Builder evidence references evidence/run-1/... or run-1 child folders remain under the task evidence directory and are pinned in existingCommittedEvidence; they were not duplicated.",
+    "Source references including Makefile, apps/, packages/, tools/, Dockerfile or ../Dockerfile resolve at baseCommit through sourceMappings and git show <commit>:<committedPath>. Source commit 49b has the same implementation bytes as codeCandidate.",
+    "Scratch repo node_modules and generated dist outputs are command execution inputs, not retained proof artifacts; reconstruct from the pinned source and lockfile if needed. They were deliberately not copied."
+  ],
+  "retainedArtifacts": [
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/browser-network-review.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/browser-network-review.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/browser-network-review.json",
+      "bytes": 234,
+      "sha256": "8bc0df2ca2545e3a9e22d2192484b65b5393a9808058a3ef1fd4e747f595a469"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/cheap-sweep.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/cheap-sweep.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/cheap-sweep.json",
+      "bytes": 170,
+      "sha256": "5fd4ee4bee9a39565b595ab4a1a6838d3a360a69506b4d333b146ebfe22e3eec"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-probes.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-probes.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.log",
+      "bytes": 1230,
+      "sha256": "ffb69e80d888a24b24c234e93896cd52d6737ad9894a0302309a588b10442ec7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-probes.mjs",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-probes.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.mjs",
+      "bytes": 4220,
+      "sha256": "7a2ec044ec86c7330acc1e09754d82e1f23e6393578af1cc0e9e9fdea5d217ec"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-review.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/config-edge-review.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-review.json",
+      "bytes": 1598,
+      "sha256": "0c3f2fb87fbab9a3e5392b65704c07b8ad0879aba315dc1203245fa7be7e5070"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/coverage.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/coverage.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/coverage.json",
+      "bytes": 21141,
+      "sha256": "381e31bda8b8f387fe0aab4b2ab681ba304ebc53bbcdc22e98ea571ec8f7d549"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/deployment-review.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/deployment-review.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/deployment-review.json",
+      "bytes": 5824,
+      "sha256": "39270b0ea12a084feab8eaaa8952eae1c00746b1b1379d8ace65f783c657a445"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/environment-review.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/environment-review.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/environment-review.json",
+      "bytes": 1825,
+      "sha256": "e157a529c869321bcba1cf700ba81dc4441309d8ec3c4edcb4d5e47f223a098d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/exact-target-recheck.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/exact-target-recheck.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/exact-target-recheck.log",
+      "bytes": 4012,
+      "sha256": "68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-1.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-1.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-1.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-2.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-2.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-2.log",
+      "bytes": 198,
+      "sha256": "5953e3b123752c488d4903ab3dfa9f70a2c1728466f64924b9370622ed7b4379"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-3.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-3.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-3.log",
+      "bytes": 3571,
+      "sha256": "0d87f9ed4fa8f9dcd7c0a175516547f3ee7a4eeb03fc3eb0eb500aa6168aa388"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-builds.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-builds.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-builds.json",
+      "bytes": 874,
+      "sha256": "e3c40a07c857dbdb6d37312e0f66680a3995419789ef8547b7fc456528cf1349"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hunk-inventory.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hunk-inventory.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hunk-inventory.json",
+      "bytes": 6299,
+      "sha256": "8f24916e02b396908fba27ee7e81e21bd5dd330abea2844dc7bed2caa9efc9ae"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hydrate-pid.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hydrate-pid.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate-pid.json",
+      "bytes": 135,
+      "sha256": "138a54cfa5c13a2c47a465527c4c2d375f2401437064e113a2183cf7f61ef381"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hydrate.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/hydrate.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate.log",
+      "bytes": 5372,
+      "sha256": "cab3535bc94c51b981f18681e47cf3c728ca47866d98931400fd107b2bfd9366"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/independent-replay.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/independent-replay.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/independent-replay.json",
+      "bytes": 5004,
+      "sha256": "b16e2fbe8330b18a7dd5083dee862caed1e5e46a7b8e37b0f55f2617877f5039"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/integrity.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/integrity.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/integrity.json",
+      "bytes": 26149,
+      "sha256": "80d2786250542a55b0129f4addeb0fe08057a263241f0d651c1428d8055b6ac9"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/lifecycle-review.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/lifecycle-review.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/lifecycle-review.json",
+      "bytes": 834,
+      "sha256": "17bc9607369e16f8e876c47f412fab4947ac8c8e5df70e36b21a03fc83a32850"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/one-byte-mutation.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/one-byte-mutation.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/one-byte-mutation.jsonl",
+      "bytes": 1854,
+      "sha256": "bba4c828dd1abf8284f7f5789043c306c4ba4d3d0b5c8bbbdcf98c523109dcb1"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/predictions.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/predictions.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.json",
+      "bytes": 2464,
+      "sha256": "197919c8423af7ea5efaaa928fe008534a841ec7282a2b9d61e5afe6cdca4b64"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/predictions.md",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/predictions.md",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.md",
+      "bytes": 2218,
+      "sha256": "622c1d3f9293038bf00cf0aafaf10b7efe4956981af38e7520cf725b73e0592e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/report.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/report.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.json",
+      "bytes": 88692,
+      "sha256": "75e655d51b5bf01297fcc5224acbeeb2e3ffd9eb96529179928ebe80ca0e088d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/report.md",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/report.md",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.md",
+      "bytes": 11779,
+      "sha256": "32d760105050c53fbe6801ff92976b8d166cf02ed62ed125542f43c8a143d34c"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/runtime-artifact-comparison.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/runtime-artifact-comparison.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/runtime-artifact-comparison.json",
+      "bytes": 8495,
+      "sha256": "67d455d551b50c0029305b0a30ad6ed7ce443c84197ddf4431994a88321f5b68"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sabotage-driver.py",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sabotage-driver.py",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sabotage-driver.py",
+      "bytes": 6020,
+      "sha256": "ae206d370009d1f1d06070eb53b7bb8e1c2bd07ffaa8d7284c12096b759ffd87"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-1.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-1.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-1.log",
+      "bytes": 210,
+      "sha256": "54e7fce80ce6a82460d61b80568f9f5aa713a1388ff8c7f3101f28fcce8150b6"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-2.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-2.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-2.log",
+      "bytes": 105748,
+      "sha256": "88b62dcc6ca829134448bb82ccd11d7dba6fcfd3b1affff8a3846ed01be2dccc"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation.json",
+      "bytes": 632,
+      "sha256": "9ebb286a97084e7715809750833f9828ba57f99e5210f3031cf3a7ea3d8ce4f4"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.log",
+      "bytes": 1252,
+      "sha256": "7f8bc2bce41d6c141efbc7c201b64be4dd2b1b2970fa1b0b6ea80d2f3d175741"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks.mjs",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.mjs",
+      "bytes": 12591,
+      "sha256": "4257adf27f01f6f3b3ed5b041cda38ece1df3e145106f7d684160083008ef397"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/fresh-accepted.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/fresh-accepted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/fresh-accepted.jsonl",
+      "bytes": 890,
+      "sha256": "24150b36766c1035de1fe2016253e9fdb2e36d04440ad6f2f99d264cc5a93cfa"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/html-without-js/index.html",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/html-without-js/index.html",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/html-without-js/index.html",
+      "bytes": 39,
+      "sha256": "a7fe83ec64bb23eb28090598db3d166ed98e52e39d1afbbfd74c579553f93e4e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/results.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/semantic-attacks/results.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/results.json",
+      "bytes": 4483,
+      "sha256": "b35fab16263a8c361e25793e46149b64b93ebc0413c0f367589b98c2598115f4"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-driver.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-driver.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-driver.log",
+      "bytes": 12654,
+      "sha256": "f58778157248ae82cd122e7b3a5707a2b840fc05489124f9a2f244234bae776a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-sensor.mjs",
+      "bytes": 2010,
+      "sha256": "f0612d866c64f3d120fc129c959d5369aaec8a5cb1ad5ff2b78e9cd782daa6cb"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-browser.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-browser.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-browser.log",
+      "bytes": 310,
+      "sha256": "2be8cb79639a0374f6846b416b34719406785c191f7d6119d7b6dfab576558cf"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-sensor.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-sensor.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-sensor.log",
+      "bytes": 23,
+      "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-tests.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-tests.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-tests.log",
+      "bytes": 311,
+      "sha256": "e74249ce7b7ef12e8462cf44b07ba460fe4a61f327a50a0e282f190143e7fc13"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-http.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-http.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-http.log",
+      "bytes": 1204,
+      "sha256": "a67772e688a6f17a608f8941fdb88b074673d4fd8605fd782027be52591bdb53"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-network-sensor.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-network-sensor.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-network-sensor.log",
+      "bytes": 250,
+      "sha256": "f779d604738b217e50f8e13118570abddfde62d696e92fc941638c81188fe22d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "bytes": 752,
+      "sha256": "cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "bytes": 586,
+      "sha256": "117d4d5ab7377399d64371ea9d3b299b4582bf10a9bfc304dde53d81c6f45646"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutated-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutated-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutated-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-real-network.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-real-network.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-real-network.log",
+      "bytes": 250,
+      "sha256": "54ff13fc4742eeb387a01f7a89f0405bcd5256ad840e10034e9ec62f9b8b84cb"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/ada-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/ada-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/ada.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/ada.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada.mp4",
+      "bytes": 290488,
+      "sha256": "9d8a3ba1a81ea0f3a18b70c3470a76d24a6e3c043d4446a6377d8f31a9d3bd83"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/agents-disabled.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/agents-disabled.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/agents-disabled.png",
+      "bytes": 80398,
+      "sha256": "81e83701382bc59f65dfbb6d45f5e51ffb3207bd96fd7be53ac839444c49036a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/browser.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/browser.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/browser.json",
+      "bytes": 7154,
+      "sha256": "ea94c3afcbd05fa0ad405b43cda721db5af8681802b8946c7fed3f6745c8fd3f"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/deployment.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/deployment.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/deployment.json",
+      "bytes": 135895,
+      "sha256": "de9462d5d133c394bee2b80829a4ebf41bbc92ab8dbd9cfe8deb125aa02cce71"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/file.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/file.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/file.jsonl",
+      "bytes": 781,
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-after-reconnect.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-after-reconnect.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-after-reconnect.mp4",
+      "bytes": 175767,
+      "sha256": "6798c901496ea8198dcca188b23d11ff2cb5b09b4c3a83558034df9d5ad804fe"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-before-reconnect.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-before-reconnect.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-before-reconnect.mp4",
+      "bytes": 97063,
+      "sha256": "9b2570aa8a2896aa61701b3e8bb7d66e3dd86d42adf956f516719c0712bb9b9a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/grace-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/live-convergence.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/live-convergence.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/live-convergence.png",
+      "bytes": 92789,
+      "sha256": "ece441c94fa136c7b217c1e4f9a0e481c0706dcbe3f9265a26b74dbe1873fdc7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/network.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/network.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/network.json",
+      "bytes": 26313,
+      "sha256": "c6c1288cb806a2fc0351aa50faec73275dc38482f86ed714af87c75c6ad16032"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/relogin-preserves-writes.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/relogin-preserves-writes.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin-preserves-writes.jsonl",
+      "bytes": 843,
+      "sha256": "4ae1089cf753a9a74ad0f7b5bd09a92cfa3eda6199a4ae8709f5414300f8b2d9"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/relogin.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/relogin.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin.png",
+      "bytes": 105641,
+      "sha256": "46e13dcbe15875628c06984d89e10f5b88c767bf850897f4af4fb11a911ec67d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/seeded-file.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/seeded-file.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/seeded-file.png",
+      "bytes": 97924,
+      "sha256": "549507af78b9cb504352695db40c7297e91ea534eccb4da82e8d5e11ec73d23d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/two-profile-accepted.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/two-profile-accepted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/two-profile-accepted.jsonl",
+      "bytes": 556,
+      "sha256": "0d7df57c3763bffba1dd6d3dd59c239de67d1906400b8d03269e8d18902efa80"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/witness-reconnected.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline/witness-reconnected.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/witness-reconnected.jsonl",
+      "bytes": 843,
+      "sha256": "4ae1089cf753a9a74ad0f7b5bd09a92cfa3eda6199a4ae8709f5414300f8b2d9"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/ada-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/ada-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/ada-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/deployment.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/deployment.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/deployment.json",
+      "bytes": 135895,
+      "sha256": "e75b05d5eea713145939751ef68db2452423770316e3a9f043bc1a15c6541760"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+      "bytes": 48341,
+      "sha256": "957d7e6a1046acfb83b258bd6dc953807eeb9062d869ac64e3af1950e4a69a57"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/file.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/file.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/file.jsonl",
+      "bytes": 781,
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/grace-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/grace-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/grace-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/seeded-file.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/seeded-file.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/seeded-file.png",
+      "bytes": 97923,
+      "sha256": "2dcf3224feb02f2ac7cae5e4ce6d35ca0efde4c4c73489469f6f4513b94d3f21"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/two-profile-accepted.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/two-profile-accepted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/two-profile-accepted.jsonl",
+      "bytes": 556,
+      "sha256": "db1e0ce8462775815dcaac55d00577d46d006b276e6ddf3f3f02ae89c21ea65d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/ada-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/ada-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/ada.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/ada.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada.mp4",
+      "bytes": 293108,
+      "sha256": "ec163402fe58b09ece3c5214c81b1c91c44a81f5a93893e80c59ad49ec1e3c4c"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/agents-disabled.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/agents-disabled.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/agents-disabled.png",
+      "bytes": 80398,
+      "sha256": "fe5782bcd6c8fb87e79890001007a7696cfe13f4b89dc5d4dfaac94e5918f5b7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/browser.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/browser.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/browser.json",
+      "bytes": 7367,
+      "sha256": "a0aed05c6c47561a5711d11016272c0faab8bcb5ff337228de046dc867d8d8e9"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/deployment.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/deployment.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/deployment.json",
+      "bytes": 135895,
+      "sha256": "de9462d5d133c394bee2b80829a4ebf41bbc92ab8dbd9cfe8deb125aa02cce71"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/file.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/file.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/file.jsonl",
+      "bytes": 781,
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-after-reconnect.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-after-reconnect.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-after-reconnect.mp4",
+      "bytes": 170217,
+      "sha256": "ad3d8add64728f90ade10ba70231f96a26523a098197577a0ead2578296e5bda"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-before-reconnect.mp4",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-before-reconnect.mp4",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-before-reconnect.mp4",
+      "bytes": 74066,
+      "sha256": "1ce8c84d440f564c1a00ac907fab0da5f5524688fbabc1ceb1c9ad0945ac1f71"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-notice.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/grace-notice.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-notice.png",
+      "bytes": 56402,
+      "sha256": "d562484c2345400f94188694a97fd6227f921f9919e1eb5aa4dd215bb2c6d876"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/live-convergence.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/live-convergence.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/live-convergence.png",
+      "bytes": 93094,
+      "sha256": "c123edb0efa7a11e321ff604c65d0e8a0ee9b27aaf37ae3f96e8deb4e9a9533f"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/network.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/network.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/network.json",
+      "bytes": 24806,
+      "sha256": "f53569d7e4bbb9422059a20edcabbcd1367875b559b44fdfa1e1218b9a36b158"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/relogin-preserves-writes.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/relogin-preserves-writes.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin-preserves-writes.jsonl",
+      "bytes": 843,
+      "sha256": "88561f313d38bd5064af602c3dbf40c8f93c96492704bbf87d7034b182cec5b5"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/relogin.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/relogin.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin.png",
+      "bytes": 106421,
+      "sha256": "46151ed9e6f5401df22ac18940759f1b79aded5184b19c683d494a1b89326393"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/seeded-file.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/seeded-file.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/seeded-file.png",
+      "bytes": 97923,
+      "sha256": "2dcf3224feb02f2ac7cae5e4ce6d35ca0efde4c4c73489469f6f4513b94d3f21"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/two-profile-accepted.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/two-profile-accepted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/two-profile-accepted.jsonl",
+      "bytes": 556,
+      "sha256": "ce4f7915d922780d5049b3fd370e44fc9149934c11bbd8ed79afa38f84dcdd0d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/witness-reconnected.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored/witness-reconnected.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/witness-reconnected.jsonl",
+      "bytes": 843,
+      "sha256": "88561f313d38bd5064af602c3dbf40c8f93c96492704bbf87d7034b182cec5b5"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/commands.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/commands.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/commands.json",
+      "bytes": 14096,
+      "sha256": "1ede12ac0676ed733978e52fb57c7913767f91fbb581ee324155c2953d811954"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/complete.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/complete.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/complete.json",
+      "bytes": 20520,
+      "sha256": "5eb6a8f051ee48d3aed7adbbf21db1b22009f2a85c1ee87dbc2de7f86a8d2c84"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "bytes": 688,
+      "sha256": "72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutated-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutated-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutated-build.log",
+      "bytes": 105748,
+      "sha256": "fd762bde35d4bda580c1acf7717d93ce55cbbb1403bd9a2fc530f104bbfbe975"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-restored-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-restored-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-restored-build.log",
+      "bytes": 105748,
+      "sha256": "025df3b0667a6c827c79b9081fdc3428eed6376c3c26c1511f0c47b47fe2704c"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "bytes": 1410,
+      "sha256": "556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "bytes": 751,
+      "sha256": "73b2020fc635ebcdca3e79dac67e402248cb7886ddaeb43327c7732a99f59e2a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutated-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutated-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutated-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-build.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-build.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+      "bytes": 23,
+      "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/accepted-state.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/accepted-state.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted-state.json",
+      "bytes": 513,
+      "sha256": "9cecd7e458104a71bb91dfed9ded7819ae00edcc7e5c9f4517048938328f017b"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/accepted.jsonl",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/accepted.jsonl",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted.jsonl",
+      "bytes": 556,
+      "sha256": "401042b8bb2093f4bba5dcbb15ac6eb8f0e2879885c06d47394d7f36193300b2"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/artifact.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/artifact.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/artifact.json",
+      "bytes": 135895,
+      "sha256": "de9462d5d133c394bee2b80829a4ebf41bbc92ab8dbd9cfe8deb125aa02cce71"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/http.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline/http.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/http.json",
+      "bytes": 956,
+      "sha256": "8b6f61fcb37f0f86306fc5e38e0b0adf7a9c89b97485cbede7b1df3547924904"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-browser.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-browser.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-browser.log",
+      "bytes": 510,
+      "sha256": "54466fbada5611fb12912b8a882ddd3f86a4c99afcf40a7c8a9a8068e8318af8"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-config-tests.log",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-config-tests.log",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-config-tests.log",
+      "bytes": 311,
+      "sha256": "8be1c402dacd68768947b3f6714c7b71ba6631e36cd633d32dadd751f22dc7b5"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/sabotages.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/sabotages.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/sabotages.json",
+      "bytes": 5463,
+      "sha256": "5ae62bf8619974af165ec0341bc3e92a84a642da92cd4d798b885446ea331f89"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/snapshot-aba.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/snapshot-aba.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/snapshot-aba.json",
+      "bytes": 1179,
+      "sha256": "57710493706d0bfb2c68624ccb116f59a26bd19aec0f417e2ab6c1396cadec5b"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/target-blocker.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/target-blocker.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/target-blocker.json",
+      "bytes": 654,
+      "sha256": "9e8d69c2aa394940ea5c50a0eb0c69fdecdbfec25290cdebf387ee46aea37eb7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-ada-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-ada-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-ada-sheet.png",
+      "bytes": 205688,
+      "sha256": "db69bfede587453907c752bfadfaf8286a112e54751eaf43535914b575476361"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png",
+      "bytes": 279398,
+      "sha256": "c219429b5ef990701f64def3821028e51d6aa8652c1d42b0baed53ff92006d3d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png",
+      "bytes": 108915,
+      "sha256": "9375ce807177c00a5a67bb4341d7f704395b6046e3a8118b1e7a97d5a426949e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-ada-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-ada-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-ada-sheet.png",
+      "bytes": 231889,
+      "sha256": "64730fa0127397b8b5f02cfeb44ae0957b11caf93dc7f3c2091b586977fa88d4"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png",
+      "bytes": 260696,
+      "sha256": "8da34a5891275e27a1a4e63f3edeca0d8ec43bc780b45d5a859992ef76772a52"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png",
+      "bytes": 136980,
+      "sha256": "09ed74054823f0944cdb0e7d37cff21afa753ddae40f7ca1a12482bd8c56aac7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png",
+      "bytes": 137743,
+      "sha256": "89b78efbc56ecc7bcc9287e2ff7e63496a53d4ef0a07a9d7e6b6a6911a3d101a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-probes.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-probes.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-probes.json",
+      "bytes": 3114,
+      "sha256": "2db5feab52f482fadf4feeb3cd7c42685b4ab0811970776cc2897a4ff19c32fe"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/review-artifact-index.json",
+      "sourceRepoRelativePath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/review-artifact-index.json",
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/review-artifact-index.json",
+      "bytes": 19357,
+      "sha256": "123a3799230d67e73c7807c2541d70ca95266c8a08830a2bd459b88aa2d5087c"
+    }
+  ],
+  "judgeArtifact": {
+    "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/judge-cross-examination.json",
+    "bytes": 6246,
+    "sha256": "4e627a810a9b6f3dbfcc5284db4c0cf9aaafcb91d143736abad12a284660cffd"
+  },
+  "sourceMappings": [
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/.dockerignore",
+      "committedPath": ".dockerignore",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 387,
+      "sha256": "5fce631d6072eeb00baf849617d3e173beefabe80c430aa79c60e0da48a1a9b0"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/Dockerfile",
+      "committedPath": "Dockerfile",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1734,
+      "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/Makefile",
+      "committedPath": "Makefile",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 45292,
+      "sha256": "c7f6a7ecfe6b32102ef0b8cef1ce700480274b1cbaa73efcb8c42851c1b3acdc"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/package.json",
+      "committedPath": "apps/web/package.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1667,
+      "sha256": "55dbb6c4d0fe0d8c0884e974df8baf893898b16ac7689fd63f8a6ff002a18562"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/chat/ChatChannelPage.tsx",
+      "committedPath": "apps/web/src/chat/ChatChannelPage.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 7895,
+      "sha256": "7c0845334a3a6d0b1de57bd980c71fd49d8c782b4fb4ebad0bb77a4afeccbfce"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/components/shell/ForestShell.tsx",
+      "committedPath": "apps/web/src/components/shell/ForestShell.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 28860,
+      "sha256": "b0c98b773ef90553619ec603ce2cefa8f7c47655c8edcedddf345469a0b372a8"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/main.tsx",
+      "committedPath": "apps/web/src/main.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 669,
+      "sha256": "3bf6664e858564336e92556e62642a4a4451ef9965783c435a02fd59fc451030"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/members/MembersPage.tsx",
+      "committedPath": "apps/web/src/members/MembersPage.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 19904,
+      "sha256": "56554f98653b08c4ded293e31a38b410ea4d86433c99e47f0dc2b5a590cbfc7a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/preview.tsx",
+      "committedPath": "apps/web/src/preview.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1101,
+      "sha256": "d638f4806da65c81d808e2b64548fe36c7824b4c3fe11e9d94e2c04b1d0893b7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/routes.tsx",
+      "committedPath": "apps/web/src/routes.tsx",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 5949,
+      "sha256": "ac853603a60634412d188a604653affb3db811c2e1e3f333216658abe0e69dcb"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/src/site/site.test.ts",
+      "committedPath": "apps/web/src/site/site.test.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 5503,
+      "sha256": "2443c5219411e31ff5619cf0b467e6f97210bfed2635d09ee4ee6ff3c1bc5703"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/apps/web/vite.config.ts",
+      "committedPath": "apps/web/vite.config.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 2184,
+      "sha256": "a6543a49ddd6c53d2f615e827df80c6e149e8186d3a6135469d822aefe2ec462"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/docs/guides/railway-hosting.md",
+      "committedPath": "docs/guides/railway-hosting.md",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 5897,
+      "sha256": "e5b2c8b17e7c094ab179ec44f8968fdbd720b043552a7953da45cfcbe3845c3c"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/package.json",
+      "committedPath": "package.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1808,
+      "sha256": "81c8452357828cd5f52481356a4184f5a4a7500a4bbd5165af80a339c2abc0f1"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/package.json",
+      "committedPath": "packages/cli/package.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 641,
+      "sha256": "59fabb2d71855fe1b582fba7afacd88c8d0e878bc59bef239cb4d0f50ec02a9c"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/tsconfig.build.json",
+      "committedPath": "packages/cli/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 754,
+      "sha256": "c78180e77bededc204ea50092e1723cbd2872536aafbe446dc8fb04b436169b2"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/client/tsconfig.build.json",
+      "committedPath": "packages/client/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 197,
+      "sha256": "33e05e966499be469a3a4fa9d5af0810ffd249a179290f61f92ca7e3f92311d4"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/evidence/tsconfig.build.json",
+      "committedPath": "packages/evidence/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 369,
+      "sha256": "88a9a558a8ec97901c20877d063b7561633f32e9f12f987d23e4bf17978f2c48"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/identity/tsconfig.build.json",
+      "committedPath": "packages/identity/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 315,
+      "sha256": "fdb3c032da287d45a565401da0923e43749df3dc8f5b5ae4855370737d0b4fc9"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/issues/tsconfig.build.json",
+      "committedPath": "packages/issues/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 369,
+      "sha256": "88a9a558a8ec97901c20877d063b7561633f32e9f12f987d23e4bf17978f2c48"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/meadow/tsconfig.build.json",
+      "committedPath": "packages/meadow/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 524,
+      "sha256": "4f519fc30a07671226e30dc94ba9585d23508f2ddb475f81f5d72524d42c9635"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/fixtures/preview/README.md",
+      "committedPath": "packages/platform/fixtures/preview/README.md",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 175,
+      "sha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/package.json",
+      "committedPath": "packages/platform/package.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1129,
+      "sha256": "6906af7c6d33e7c8a2ad396b49145b706385894d17a53b285c1425e22d5d0eda"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/src/preview-artifact.ts",
+      "committedPath": "packages/platform/src/preview-artifact.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1629,
+      "sha256": "2bf0bb03ce22f0bf4c80182fb2c964c7af4cd0d4732a0adfc241a536d64fbc18"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/src/preview-bin.ts",
+      "committedPath": "packages/platform/src/preview-bin.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 745,
+      "sha256": "d108c82a681bf77b602cf8ad3c37854b15a2d778cfc4dd47710bb690a7222a84"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/src/preview.ts",
+      "committedPath": "packages/platform/src/preview.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 18256,
+      "sha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/src/production.ts",
+      "committedPath": "packages/platform/src/production.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 12181,
+      "sha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/test/preview.test.ts",
+      "committedPath": "packages/platform/test/preview.test.ts",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 2780,
+      "sha256": "870478b71ed8a3b7d670cd1ed837160ca515af75161e111bcd471c176ba8f7fc"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform/tsconfig.build.json",
+      "committedPath": "packages/platform/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 700,
+      "sha256": "c62527103040cc2a7b9a6885bdfa5a4f22431b3005d9a77a5a0500ffb3607f5e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/pr/tsconfig.build.json",
+      "committedPath": "packages/pr/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 428,
+      "sha256": "ec2830547610c672d2990b18386488d813982af16ec2b9bf9e54bf5c0d028c2d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/protocol/tsconfig.build.json",
+      "committedPath": "packages/protocol/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 322,
+      "sha256": "bcf72cecf1c21efdd06d1838456a6a629a469e1e181a822677d2c6e2949276a3"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/reducers/tsconfig.build.json",
+      "committedPath": "packages/reducers/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 525,
+      "sha256": "1b317f47e2ff4f416beab2c0277bad556bcf81fdf9fd7b766a639c52e98afd6d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/server/tsconfig.build.json",
+      "committedPath": "packages/server/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 164,
+      "sha256": "234042891889ac30701172ee0a70bfb420fd5d798c9cccdf89035e274820d86d"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/streamfs/tsconfig.build.json",
+      "committedPath": "packages/streamfs/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 352,
+      "sha256": "b67fcfd6d1cd7800ca44b22f4dd22f91883993656a9194351fb66bb04d5149bc"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/web-hooks/package.json",
+      "committedPath": "packages/web-hooks/package.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 460,
+      "sha256": "1958bb98dca9fadd8ca22820bc07d7ac02ebaae16c93040db2bec40d1613d445"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/web-hooks/tsconfig.build.json",
+      "committedPath": "packages/web-hooks/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 331,
+      "sha256": "9677d619c8952ed7d7c61f0a2189dcb35a0b03271c7b42d3df0b0e1928f56884"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/workspace/tsconfig.build.json",
+      "committedPath": "packages/workspace/tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 295,
+      "sha256": "3d33b6f845c09a0c303f5fbc89be5264c80ea8ac468ad6caa32ba7340b41da81"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/pnpm-lock.yaml",
+      "committedPath": "pnpm-lock.yaml",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 373658,
+      "sha256": "ffd8b299ca115cfd2d0be9c8ba2833c2de791a071e77e90616c364b7afd9c54a"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/pnpm-workspace.yaml",
+      "committedPath": "pnpm-workspace.yaml",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 440,
+      "sha256": "4c1d977879ec94de8e67abc171630bd3507e40a8183b3cbb07d233f42d3c9fca"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/railway.toml",
+      "committedPath": "railway.toml",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 184,
+      "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/cold_clone.sh",
+      "committedPath": "tools/verify/cold_clone.sh",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 12264,
+      "sha256": "6eefe636a8b83b19175a6c965b148f44a8c3e0d60a7281b881b6d5708a561b77"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/cold_clone_targets.txt",
+      "committedPath": "tools/verify/cold_clone_targets.txt",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1399,
+      "sha256": "c8616af4659f2680e1eaa0d31497d69c9d69ea58220502d7fd52816f1b143bc8"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_browser.mjs",
+      "committedPath": "tools/verify/e12_t00_browser.mjs",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 14216,
+      "sha256": "34d61dfd995b7fd048b9dfb87e38f047eb8fa07199f945f462c3b5792c514b0e"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs",
+      "committedPath": "tools/verify/e12_t00_chat_reducer.mjs",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 206,
+      "sha256": "4d64d4b3ce688533093bf03960cf41350d40425d40a50ad97dd84b71f1ae4bb0"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_preview.mjs",
+      "committedPath": "tools/verify/e12_t00_preview.mjs",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 10674,
+      "sha256": "80f262646db6e7c2a86cd083eeacccab4aa6ca9ec20a116be13f7e664e822113"
+    },
+    {
+      "sourcePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tsconfig.build.json",
+      "committedPath": "tsconfig.build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 916,
+      "sha256": "bb5351f7bf16297bc5cdd17964395a664b65e294f2b72a80af898f451e775f13"
+    }
+  ],
+  "existingCommittedEvidence": [
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/lifecycle-authorization.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1691,
+      "sha256": "e0c376294f918f958eaa3b851bcc186b60a50f177ff950f4b8d1adf969b25edc"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/lifecycle-readback.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1839,
+      "sha256": "12456c607146cd8e943b23ac44a3f6755af7d0f0c6ff9ca98e3f7f7b32df7049"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/precritic.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 2122,
+      "sha256": "cf017465d91504b9eef30f3a4f6f956e2edb0193947af3d8e62ea40ab77113ba"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/railway-provisioning.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1233,
+      "sha256": "b27cbc3066c7e40c210a34d36f238128a96be07517421f7f8cc8cbc7fd72cc38"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/replay-availability.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1028,
+      "sha256": "e86525f6caffd99f77953d6e6b5a968fe773c37356b496f14b29f0964ddb6c21"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/artifact-index.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 11417,
+      "sha256": "a180907b603c9a75ecdb2fc73f8c68af0a6e2c772c63d88c286b00cd84d00f30"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 107139,
+      "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 107139,
+      "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 105647,
+      "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 105647,
+      "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/manifest.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 8494,
+      "sha256": "1bb29cb09962dd111f3fe59aea6c80d15d7a93a2f3d6eb04208410db8f1c4565"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/portable-index.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1890,
+      "sha256": "1725f1f29a493630e860dcb41e2870186e97ae3ca7a76ab986a48ffe5d50b7f3"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 511,
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 3566,
+      "sha256": "42ef0e3954092877563f1442d99f6462f176021472b8af3304ab5bc55ae011e7"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.raw.log",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 3566,
+      "sha256": "42ef0e3954092877563f1442d99f6462f176021472b8af3304ab5bc55ae011e7"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/audit.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 11565,
+      "sha256": "80155da1fe10a4332682a37f49d7510ffe2f3c1083124d2e8ef9ca7af24509b2"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/portable-index.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1462,
+      "sha256": "4fb51afaff5a118f169a315c5ccb7bca6ef09fd805f3b9222a072e95cf9efc29"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/canary-scan.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 465,
+      "sha256": "4b667e3b3ff13c0303cc942b4422c9189ff20400ea6dde2fb19274d3be1386ce"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada-notice.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 56351,
+      "sha256": "98952ba2c47bc80346b93f0c3036acc218aebba4860c8aa381949b76978e7c0d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 465965,
+      "sha256": "a04d683308ed6445675d0ccb3184938396f79f45da1983875316a5d0b9d4ea84"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/agents-disabled.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 69679,
+      "sha256": "155d1ec36f1ddcba045d2a1138b7d80832f0b9e6ccf8f8a540c056be61b38afb"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/browser.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 7536,
+      "sha256": "87e00aeb71ae5ed4b9f27dbd86856e1ce110ffdc8009b68a3b22835e94477371"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/deployment.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 136433,
+      "sha256": "e2453363ebd1e2eda290e65d92dd06e00bbfa6ccadf3aa042228833dfc2d6f84"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/file.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 781,
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-after-reconnect.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 183521,
+      "sha256": "3790330aa1d708220f926b17a2030555fbe9b799c5bac59788c32901669147bc"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-before-reconnect.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 72308,
+      "sha256": "d851dad964b817d1927f8ec07517e54960b1151b80c0c1f75c0bf5877a46a62e"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-notice.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 56351,
+      "sha256": "98952ba2c47bc80346b93f0c3036acc218aebba4860c8aa381949b76978e7c0d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/live-convergence.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 131244,
+      "sha256": "f12d48bdc8b47f513405a719dfc76aab20713533be8af80ce0ea46fba0f72751"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/network.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 28056,
+      "sha256": "a161511653ee5cde907ab14573ac78ce8706a23430503d2d026e55671d8d0e44"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin-preserves-writes.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1853,
+      "sha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 143962,
+      "sha256": "80488fcf56426d3c767713665293a9d4fdb48fc6cdefa038b5117ab48bfa599a"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/seeded-file.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 97696,
+      "sha256": "c983ced72b0a7036995599a8bf4ad179ea071f1f6f377ee52730fe0b1762c016"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/two-profile-accepted.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1566,
+      "sha256": "5705029bc091657b2a665b147e6e41e1719b7574d34d4e7cc46279e3e6eca35d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/witness-reconnected.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1853,
+      "sha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada-notice.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 56351,
+      "sha256": "98952ba2c47bc80346b93f0c3036acc218aebba4860c8aa381949b76978e7c0d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 383387,
+      "sha256": "d8b211647b072b4705baa3051be67ce9ba6a1746f23c27f6cdaa178f9160f319"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/agents-disabled.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 69679,
+      "sha256": "155d1ec36f1ddcba045d2a1138b7d80832f0b9e6ccf8f8a540c056be61b38afb"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/browser.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 7792,
+      "sha256": "054658cf032cf0312362da4abc632199953896c030da0a4f5d7b38873a05b6ce"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/deployment.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 136433,
+      "sha256": "e2453363ebd1e2eda290e65d92dd06e00bbfa6ccadf3aa042228833dfc2d6f84"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/file.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 781,
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-after-reconnect.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 192998,
+      "sha256": "78b28296ef93f2f2abfa43cb4115df248d51621f62f182d6eb5112b82cc0b2b9"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-before-reconnect.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 117577,
+      "sha256": "8f116eec41e82aef9a5f622e8445d4b59d59f06f369dc1ac52ff55c48d08b79d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-notice.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 56351,
+      "sha256": "98952ba2c47bc80346b93f0c3036acc218aebba4860c8aa381949b76978e7c0d"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/live-convergence.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 108308,
+      "sha256": "54dfa8ab13a0421707c99bb4c80097498cdaaaabf5e543fed0aca1463646b571"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/network.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 27425,
+      "sha256": "586394ddcecb050b1e4fb946f97b9fd367cd283e72e53fb333bc39c643b2db67"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin-preserves-writes.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1306,
+      "sha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 120972,
+      "sha256": "acc5cc30566426c7fbed2abc649b2036801f772d821850bde6095b235d9a6a85"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/seeded-file.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 97696,
+      "sha256": "c983ced72b0a7036995599a8bf4ad179ea071f1f6f377ee52730fe0b1762c016"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/two-profile-accepted.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1019,
+      "sha256": "c7c321eddd305127078662fc015acb5585df541facc59f640897050c3cc3b212"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/witness-reconnected.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1306,
+      "sha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mjs",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 7185,
+      "sha256": "8b3754830ad2231505850119c0caf130687c5c5a511d9ef084c5531ccecf9aff"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mp4",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 212738,
+      "sha256": "62d611dcd28d8bcf24295748d1fcdd2d08600d74f0d87b5723278b2f44c25d53"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/human-only-members.png",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 101921,
+      "sha256": "6cab128cd921f55f836b385308ad8a3cad1a578b93714045b6d31b215b1648ad"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/network.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 5225,
+      "sha256": "cb2bab6ea93b1ed37a101d18ddda7dd57e99d6b291fb9e68ba222c814d546b80"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/supplement.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 9488,
+      "sha256": "1041a7fafd1e27488fb1549fab4b3bef424470329e83b2dd19435e583d1ecf79"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted-state.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 513,
+      "sha256": "9cecd7e458104a71bb91dfed9ded7819ae00edcc7e5c9f4517048938328f017b"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted.jsonl",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 556,
+      "sha256": "401042b8bb2093f4bba5dcbb15ac6eb8f0e2879885c06d47394d7f36193300b2"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/artifact.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 143965,
+      "sha256": "e85db017bc5c6b087c1fd2c85f6d3aef3bc6b7e2f5d95f265d28e1d7e8fadfb7"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/http.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 956,
+      "sha256": "7a4884407a24f747c814552ee74c055bcead27ace04b7d9f92fbc1c0b550b644"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence-check.mjs",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1579,
+      "sha256": "e7ad597250aaf99767d06a0555eaaeaf1ca756d3b4bdb60e1073a86bf1d7764f"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 537,
+      "sha256": "aa44e2e89e40ebb30a64c1bef6b4ccb1655af4c87e69064b4d3dc179e51e5023"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/build.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 166603,
+      "sha256": "77a3474ece4ae7df0762d504d47dffaf9e9197efebb753bc2b89cd733d6d672e"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/manifest.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 6240,
+      "sha256": "d3239d99f8e7d41d4a0eeff5e7c1d28ae71231d0ac21729e30befcce3933841f"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/runtime.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1718,
+      "sha256": "4be72a6008200644c806830657e69b7f37de97abb6361e45665763855edba0da"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/restart-ready.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 339,
+      "sha256": "d5f65f5552fd403198877a5e4066ba47b0a931b144feb91db3e67d0b4a89c875"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readback.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1179,
+      "sha256": "57710493706d0bfb2c68624ccb116f59a26bd19aec0f417e2ab6c1396cadec5b"
+    },
+    {
+      "committedPath": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readers.json",
+      "commit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+      "bytes": 1019,
+      "sha256": "3f2643e053966ba36339cf39ca83829ac18de90a68ee43aac0dcc05019ea0a5c"
+    }
+  ],
+  "excluded": [
+    "scratch repo checkout",
+    "node_modules",
+    "generated dist trees",
+    "persistent .diff artifacts"
+  ],
+  "suiteDisposition": "No product suite promotion: run 1 is refuted; this retention makes the complete critic report and cited review artifacts durable."
+}

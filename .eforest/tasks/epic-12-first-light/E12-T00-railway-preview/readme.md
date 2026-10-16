@@ -3,7 +3,7 @@ id: E12-T00
 epic: 12
 title: "Deploy a clearly labeled Railway preview with disposable data and stub identity"
 priority: 520
-status: implemented
+status: refuted
 depends_on: [E5-T14]
 estimate: L
 capstone: false
@@ -184,3 +184,65 @@ fixture users can read and collaborate through its gateway, live DOM state match
 and accepted fixture writes survive restarting the dedicated persistent preview. The
 fresh critic must still attack this claim, execute sensitivity checks, and run the single
 registered cold clone before deciding its verdict.
+
+### 2026-10-16 — judge round 1 — VERDICT: refuted
+
+Base commit: `49b46a180cfebe2e368b5611e668e8ed9c41fd25`; audited/deployed code candidate:
+`aba2f41a5141d0c26da5be613e9766078d839d35`. This is official verification run 1 of 10.
+
+- **F1 — AC1 cold-target reproducibility — FAILED.** Predicted that the registered
+  `make verify-E12-T00` would build all required workspace output in a fresh installed
+  checkout before running its assertions. Observed platform and CLI builds succeed,
+  then Vite cannot resolve `@eforest/web-hooks`; Make exits 2 before any task assertion.
+  Permanent citation: `evidence/critic-run-1/exact-target-recheck.log:18,32`, SHA-256
+  `68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4`;
+  `Makefile:793-795` at the code candidate. Cross-examination confirms neither build's
+  recursive TypeScript references include web-hooks, its package exports require
+  `dist/src/index.js`, no install/prepare hook builds it, and the cold-clone harness
+  installs dependencies then invokes this target without warming it through a root
+  build. Makefile is byte-identical at candidate and base. Demand: build the web workspace
+  dependencies in the committed target, submit a new immutable candidate, and earn the
+  required single registered cold-clone pass.
+- **Surviving proof and completion.** The full lead report covers eight criteria,
+  32 changed hunks, all six task attacks plus a novel attack, three distinct sabotages,
+  and environment/fixture review. Seven other criteria survived; the immutable root
+  audit hashes retain 123 files / 924 passing tests. Actual hosted before/after videos,
+  timelines and network were inspected without a hosted re-drive. Seven committed chat
+  checkpoints match two CLI replays and an independent Python reducer; the post-restart
+  dump ends at offset `0000000000000000_0000000000000006`, digest
+  `f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270`.
+  The five earlier events remain a byte-identical prefix, with one welcome seed.
+  Citations: `evidence/critic-run-1/report.json` (complete, unchanged lead report,
+  SHA-256 `75e655d51b5bf01297fcc5224acbeeb2e3ffd9eb96529179928ebe80ca0e088d`),
+  `coverage.json`, `integrity.json` and `independent-replay.json` in the same directory.
+- **Sensitivity — survived.** Loopback-only binding fails the real-interface connection
+  and builder HTTP assertion; deleting the preview guard fails the complete-production-
+  shape sensor and focused builder test; freezing the DOM digest fails browser/replay
+  comparison after a gateway-accepted write. Each mutation was restored; the restored
+  browser and all 18 config tests pass. A one-byte event mutation changes the replay
+  digest to `a0329dcd0067eb85dc7e35cfc857f1b4148ac56367f3d6a7b39844128e8fca48`.
+  Citations: `evidence/critic-run-1/sensitivity/complete.json`, its retained authentic
+  baseline/mutation/restoration logs, and `evidence/critic-run-1/independent-replay.json`.
+- **Evidence retention and SUITE.** All 112 indexed lead artifacts match their recorded
+  bytes and SHA-256 values. The full JSON/Markdown report, original artifact index and
+  cited critic artifacts are retained under `evidence/critic-run-1/`; absolute/work
+  citations resolve through `portable-artifact-index.json` (SHA-256
+  `b8c8af55bba5b06558c2117d2ca03c4a3c802a3bc572c351623fc2d61a3c67ac`).
+  Judge cross-examination is `judge-cross-examination.json` (SHA-256
+  `4e627a810a9b6f3dbfcc5284db4c0cf9aaafcb91d143736abad12a284660cffd`).
+  Cold clone is `not-run-blocked`: zero harness attempts spent because F1 survives the
+  cheaper stage. No unchanged root gate was rerun. Product suite promotion is deferred
+  until correctness and coverage hold; retained review evidence does not verify the task.
+
+Replay: N/A (Replay QA authentication is unavailable; committed diagnostic is
+`evidence/replay-availability.json`) + mitigation: retained actual Railway Playwright
+MP4s, console/network/timeline interrogation, complete gateway dumps, independent replay
+and byte-exact restart comparison. The declared fallback is permitted by AC7; no managed
+journey, tunnel or recording URL is claimed for `proj-electric-forest-ms8w0nv1`.
+
+Commands: lead receipts retain `make verify-E12-T00` (exit 2), `node semantic-attacks.mjs`,
+`node config-edge-probes.mjs`, `python3 sabotage-driver.py`, and exact CLI replay commands
+in `evidence/critic-run-1/report.json`; judge ran
+`git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8..aba2f41a5141d0c26da5be613e9766078d839d35`,
+committed-source reference-closure and SHA-256/byte checks, read the raw cited logs,
+confirmed scratch HEAD/clean tracked source, then ran `python3 tools/build_queue.py`.

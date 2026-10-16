@@ -1,0 +1,19 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+{"listener":"127.0.0.1","loopback":200,"interface":"192.168.68.55","port":64073}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+[TypeError: fetch failed] {
+  [cause]: Error: connect ECONNREFUSED 192.168.68.55:64073
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2017:16) {
+    errno: -61,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '192.168.68.55',
+    port: 64073
+  }
+}
+
+Node.js v24.20.0

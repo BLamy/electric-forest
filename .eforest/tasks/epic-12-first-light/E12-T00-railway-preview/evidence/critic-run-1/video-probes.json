@@ -1,0 +1,114 @@
+[
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada.mp4",
+    "duration": 12.32,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      1.03,
+      3.08,
+      5.13,
+      7.19,
+      9.24,
+      11.29
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-ada-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-after-reconnect.mp4",
+    "duration": 4.4,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      0.37,
+      1.1,
+      1.83,
+      2.57,
+      3.3,
+      4.03
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-before-reconnect.mp4",
+    "duration": 6.68,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      0.56,
+      1.67,
+      2.78,
+      3.9,
+      5.01,
+      6.12
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada.mp4",
+    "duration": 13.84,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      1.15,
+      3.46,
+      5.77,
+      8.07,
+      10.38,
+      12.69
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-ada-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-after-reconnect.mp4",
+    "duration": 4.68,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      0.39,
+      1.17,
+      1.95,
+      2.73,
+      3.51,
+      4.29
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-before-reconnect.mp4",
+    "duration": 3.4,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      0.28,
+      0.85,
+      1.42,
+      1.98,
+      2.55,
+      3.12
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png"
+  },
+  {
+    "video": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mp4",
+    "duration": 7.48,
+    "codec": [
+      "h264"
+    ],
+    "frameTimesApprox": [
+      0.62,
+      1.87,
+      3.12,
+      4.36,
+      5.61,
+      6.86
+    ],
+    "sheet": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png"
+  }
+]

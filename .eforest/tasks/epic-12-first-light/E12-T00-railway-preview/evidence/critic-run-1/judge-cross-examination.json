@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "run": 1,
+  "role": "fresh skeptic/judge",
+  "baseCommit": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+  "codeCandidate": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "verdict": "refuted",
+  "leadReportSha256": "75e655d51b5bf01297fcc5224acbeeb2e3ffd9eb96529179928ebe80ca0e088d",
+  "completionManifest": {
+    "criteria": 8,
+    "hunks": 32,
+    "attacks": 7,
+    "sabotage": 3,
+    "environment": "present",
+    "coldClone": "not-run-blocked"
+  },
+  "crossExamination": [
+    {
+      "id": "F1",
+      "rawKind": "env-dependence",
+      "disposition": "blocking falsification survives",
+      "criterion": "AC1",
+      "prediction": "The registered verify-E12-T00 target builds all required workspace output before task assertions in a fresh installed checkout.",
+      "observed": "The exact retained make target builds platform and CLI, then exits 2 at Vite resolution of @eforest/web-hooks before any task assertion.",
+      "citation": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/exact-target-recheck.log",
+        "lines": [
+          18,
+          32
+        ],
+        "sha256": "68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4"
+      },
+      "attemptsToRefute": [
+        "The full root build could warm web-hooks, but the committed cold-clone harness only installs dependencies before invoking the registered target; AC1 expressly requires that target to pass from a cold clone.",
+        "Neither the platform nor CLI recursive TypeScript build-reference closure contains web-hooks.",
+        "The web-hooks package exports dist/src/index.js; Vite does not alias that package to source, and no workspace install or prepare lifecycle hook builds it.",
+        "Makefile is byte-identical between the audited/deployed ABA candidate and the 49b claim HEAD. Scratch HEAD is 49b and all tracked sabotage edits are restored.",
+        "Building web-hooks manually for later scratch attacks does not prove the committed target; the raw exact-target failure remains a falsification rather than a coverage-only gap."
+      ],
+      "demand": "Build required web workspace dependencies in the committed task target, submit a new immutable candidate, then earn the required single registered cold-clone pass."
+    }
+  ],
+  "buildReferenceClosures": {
+    "packages/platform/tsconfig.build.json": [
+      "packages/client/tsconfig.build.json",
+      "packages/evidence/tsconfig.build.json",
+      "packages/identity/tsconfig.build.json",
+      "packages/issues/tsconfig.build.json",
+      "packages/meadow/tsconfig.build.json",
+      "packages/platform/tsconfig.build.json",
+      "packages/pr/tsconfig.build.json",
+      "packages/protocol/tsconfig.build.json",
+      "packages/reducers/tsconfig.build.json",
+      "packages/server/tsconfig.build.json",
+      "packages/streamfs/tsconfig.build.json"
+    ],
+    "packages/cli/tsconfig.build.json": [
+      "packages/cli/tsconfig.build.json",
+      "packages/client/tsconfig.build.json",
+      "packages/evidence/tsconfig.build.json",
+      "packages/identity/tsconfig.build.json",
+      "packages/issues/tsconfig.build.json",
+      "packages/meadow/tsconfig.build.json",
+      "packages/platform/tsconfig.build.json",
+      "packages/pr/tsconfig.build.json",
+      "packages/protocol/tsconfig.build.json",
+      "packages/reducers/tsconfig.build.json",
+      "packages/server/tsconfig.build.json",
+      "packages/streamfs/tsconfig.build.json",
+      "packages/workspace/tsconfig.build.json"
+    ]
+  },
+  "workspaceInstallHooks": [],
+  "artifactIntegrity": {
+    "indexedArtifacts": 112,
+    "allBytesAndSha256Match": true,
+    "bytes": 4935572
+  },
+  "survivingEvidence": [
+    "Lead report covers eight criteria, 32 changed hunks, all six task attacks plus a novel attack, three distinct detected/restored sabotages, and environment/fixture inspection.",
+    "The retained baselines, mutation failures and restorations show real-interface bind, complete-production-shape preview guard and frozen DOM digest assertions detect their mutations; all 18 restored config tests and restored browser pass.",
+    "Independent replay receipt records seven twice-replayed CLI/Python matching checkpoints, frozen README bytes, a byte-exact hosted restart prefix, one welcome seed, and one-byte mutation changing the digest.",
+    "Exact immutable root gate audit hashes and actual hosted browser/video/network/deployment artifacts were reviewed by the lead; no unchanged root gate or hosted browser was rerun by the judge."
+  ],
+  "nonFindings": [
+    "Replay authentication unavailable is a declared task-authorized fallback, supported by Playwright console/network/video and independent stream replay, not an additional refutation.",
+    "Member dialog BODY focus is explicitly nonclaimed and pre-existing, outside the T00 acceptance criteria.",
+    "Production authentication/provider qualification and CLI mirroring remain outside the frozen preview task."
+  ],
+  "coldClone": {
+    "status": "not-run-blocked",
+    "harnessAttempts": 0,
+    "reason": "F1 survives cheap-stage cross-examination; no cold clone or root suite was launched by the judge."
+  },
+  "suite": "Deferred until correctness and coverage hold; retained critic artifacts are review evidence, not promoted product tests or a claim of verification.",
+  "scratchTrackedStatus": "clean",
+  "mainHeadBeforeWrite": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+  "commands": [
+    "git rev-parse HEAD; git status --short",
+    "git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8..aba2f41a5141d0c26da5be613e9766078d839d35",
+    "Read AGENTS.md, .claude/workflows/verify-task.js, full task claim, full lead report and raw mutation/baseline/restoration logs",
+    "Python SHA-256/byte verification of all 112 artifacts in review-artifact-index.json",
+    "Python traversal of committed platform/CLI TypeScript reference closures and workspace installation lifecycle scripts",
+    "Read tools/verify/cold_clone.sh, Makefile, package exports and Vite config; compare Makefile at candidate and claim HEAD",
+    "git -C <critic-work>/repo rev-parse HEAD; git -C <critic-work>/repo status --porcelain --untracked-files=no"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "records": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/two-profile-accepted.jsonl",
+      "sha256": "c7c321eddd305127078662fc015acb5585df541facc59f640897050c3cc3b212",
+      "eventCount": 4,
+      "offset": "0000000000000000_0000000000000003",
+      "cliDigest": "bd4d34c203722f950b8743f93ea1ce3a07079151b8ab8d27c68300f62089d67b",
+      "repeatDigest": "bd4d34c203722f950b8743f93ea1ce3a07079151b8ab8d27c68300f62089d67b",
+      "independentPythonDigest": "bd4d34c203722f950b8743f93ea1ce3a07079151b8ab8d27c68300f62089d67b"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/witness-reconnected.jsonl",
+      "sha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab",
+      "eventCount": 5,
+      "offset": "0000000000000000_0000000000000004",
+      "cliDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "repeatDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "independentPythonDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin-preserves-writes.jsonl",
+      "sha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab",
+      "eventCount": 5,
+      "offset": "0000000000000000_0000000000000004",
+      "cliDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "repeatDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "independentPythonDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/two-profile-accepted.jsonl",
+      "sha256": "5705029bc091657b2a665b147e6e41e1719b7574d34d4e7cc46279e3e6eca35d",
+      "eventCount": 6,
+      "offset": "0000000000000000_0000000000000005",
+      "cliDigest": "d805dd016f99b6473e1b6e7ebee6f8ef526a649c18945f6ca487b4d045942220",
+      "repeatDigest": "d805dd016f99b6473e1b6e7ebee6f8ef526a649c18945f6ca487b4d045942220",
+      "independentPythonDigest": "d805dd016f99b6473e1b6e7ebee6f8ef526a649c18945f6ca487b4d045942220"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/witness-reconnected.jsonl",
+      "sha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a",
+      "eventCount": 7,
+      "offset": "0000000000000000_0000000000000006",
+      "cliDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "repeatDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "independentPythonDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin-preserves-writes.jsonl",
+      "sha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a",
+      "eventCount": 7,
+      "offset": "0000000000000000_0000000000000006",
+      "cliDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "repeatDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "independentPythonDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted.jsonl",
+      "sha256": "401042b8bb2093f4bba5dcbb15ac6eb8f0e2879885c06d47394d7f36193300b2",
+      "eventCount": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "cliDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+      "repeatDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+      "independentPythonDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70"
+    }
+  ],
+  "restartPrefixByteIdentical": true,
+  "welcomeSeedCount": 1,
+  "oneByteSensitivity": {
+    "expectedOriginalDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+    "mutantDigest": "a0329dcd0067eb85dc7e35cfc857f1b4148ac56367f3d6a7b39844128e8fca48",
+    "detected": true
+  },
+  "independentFileBytes": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/file.jsonl",
+      "offset": "0000000000000000_0000000000000002",
+      "bytes": 175,
+      "frozenReadmeSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/file.jsonl",
+      "offset": "0000000000000000_0000000000000002",
+      "bytes": 175,
+      "frozenReadmeSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5"
+    }
+  ]
+}

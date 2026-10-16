@@ -1,0 +1,4 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+[info] store.append slow {"event":"store.append","path":"/streams/repo-home%3Apreview%2Fforest%3Abranches","totalMs":53.6,"writeMs":10.39,"fsyncMs":17.17,"lmdbMs":26.04,"bytes":208,"isInitial":false}
+E12_T00_BROWSER_OK {"origin":"http://127.0.0.1:65022","revision":"49b46a180cfebe2e368b5611e668e8ed9c41fd25","scenes":10,"consoleErrors":0,"pageErrors":0,"requestFailures":0}

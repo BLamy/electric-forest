@@ -1,0 +1,139 @@
+{
+  "buildMatches": {
+    "node:24.20.0": [
+      7,
+      8,
+      24,
+      26,
+      27
+    ],
+    "pnpm@10.15.0": [
+      22,
+      31,
+      38
+    ],
+    "--frozen-lockfile": [
+      19,
+      41,
+      61
+    ],
+    "preview-native-check": [
+      18,
+      62,
+      63
+    ],
+    "lmdb": [
+      18,
+      56,
+      62,
+      63
+    ],
+    "esbuild": [
+      18,
+      56,
+      62,
+      63
+    ],
+    "pnpm build": [
+      17,
+      64,
+      473
+    ],
+    "build-revision": [
+      16,
+      474,
+      475
+    ],
+    "bb550117": [
+      483
+    ],
+    "Healthcheck succeeded": [
+      492
+    ],
+    "aba2f41a": [
+      16,
+      474,
+      475
+    ]
+  },
+  "buildMatchesText": {
+    "node:24.20.0": [
+      "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+    ],
+    "preview-native-check": [
+      "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'",
+      "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'",
+      "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'"
+    ],
+    "bb550117": [
+      "containerimage.digest: sha256:bb550117d768d23f37ddcf28600e61675bfc60edb5f08c1c8b44746d36515189"
+    ],
+    "Healthcheck succeeded": [
+      "\u001b[92m[1/1] Healthcheck succeeded!\u001b[0m"
+    ]
+  },
+  "manifestSha256": "d3239d99f8e7d41d4a0eeff5e7c1d28ae71231d0ac21729e30befcce3933841f",
+  "descriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:bb550117d768d23f37ddcf28600e61675bfc60edb5f08c1c8b44746d36515189",
+    "size": 1625,
+    "annotations": {
+      "org.opencontainers.image.created": "2026-10-16T17:50:18Z"
+    },
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "sourcePinned": true,
+  "runtime": [
+    {
+      "timestamp": "2026-10-16T17:51:02.207296997Z",
+      "severity": "info",
+      "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9f5240ab-7f43-4892-a3e2-458aafcab19e/vol_a8p48m2jtp5oohy5"
+    },
+    {
+      "timestamp": "2026-10-16T17:51:03.216462549Z",
+      "severity": "info",
+      "message": "Starting Container"
+    },
+    {
+      "timestamp": "2026-10-16T17:51:03.763999322Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Starting recovery..."
+    },
+    {
+      "timestamp": "2026-10-16T17:51:03.764003352Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors"
+    },
+    {
+      "timestamp": "2026-10-16T17:51:03.764007552Z",
+      "severity": "info",
+      "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=aba2f41a5141d0c26da5be613e9766078d839d35 port=8080 agents=off integrations=off"
+    },
+    {
+      "timestamp": "2026-10-16T17:59:13.997801324Z",
+      "severity": "info",
+      "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9f5240ab-7f43-4892-a3e2-458aafcab19e/vol_a8p48m2jtp5oohy5"
+    },
+    {
+      "timestamp": "2026-10-16T17:59:16.938526419Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Starting recovery..."
+    },
+    {
+      "timestamp": "2026-10-16T17:59:16.938532978Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Recovery complete: 14 streams, 0 reconciled, 0 errors"
+    },
+    {
+      "timestamp": "2026-10-16T17:59:16.938539408Z",
+      "severity": "info",
+      "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=aba2f41a5141d0c26da5be613e9766078d839d35 port=8080 agents=off integrations=off"
+    }
+  ],
+  "artifactDigest": "4ad742a76c3104954c1d936ab2668d501fa79fc084ac9ca24ef69426f0259685"
+}
