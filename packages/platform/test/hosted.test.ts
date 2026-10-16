@@ -9,7 +9,7 @@ import { safeLocalReturn } from "../src/auth/routes.js";
 import { signedSessionCookie, clearedSessionCookie } from "../src/auth/session.js";
 import { prepareHostedStorage } from "../src/hosted-storage.js";
 import { HOSTED_LIMITS, readHostedEnvironment } from "../src/hosted.js";
-import { createPlatformServer, listenPlatformServer } from "../src/server.js";
+import { createPlatformServer, listenPlatformServer, platformTimeouts } from "../src/server.js";
 
 const workshop = resolve(
   ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/unit",
@@ -68,6 +68,12 @@ describe("explicit private Auth0 hosted profile", () => {
       transactionTtlMs: 600000,
       sessionTtlSeconds: 86400,
       maxLongPollMs: 10000,
+    });
+    expect(platformTimeouts(30000)).toEqual({
+      headersTimeout: 30000,
+      requestTimeout: 30000,
+      connectionsCheckingInterval: 1000,
+      keepAliveTimeout: 5000,
     });
   });
   it.each([
@@ -301,7 +307,9 @@ describe("explicit private Auth0 hosted profile", () => {
         "POST /api/dispatch HTTP/1.1\r\nHost: fixture\r\nContent-Length: 4\r\n\r\nx",
       ),
     ).toContain("408 Request Timeout");
-    expect(await socket(base, "GET /healthz HTTP/1.1\r\nHost: fixture")).toBe("");
+    expect(await socket(base, "GET /healthz HTTP/1.1\r\nHost: fixture")).toContain(
+      "408 Request Timeout",
+    );
     expect(calls).toBe(1);
   });
   it("bounds a stalled finite response but leaves established SSE until cancellation", async () => {
@@ -331,7 +339,7 @@ describe("explicit private Auth0 hosted profile", () => {
     );
     controller.abort();
   });
-  it("rearms the socket admission deadline for the next partial keepalive request", async () => {
+  it("bounds the next partial keepalive header through Node's parser deadline", async () => {
     let calls = 0;
     const server = createPlatformServer(
       async () => {
@@ -351,6 +359,53 @@ describe("explicit private Auth0 hosted profile", () => {
     expect(calls).toBe(1);
     expect(performance.now() - began).toBeLessThan(1000);
   });
+  it.each(["first-connection", "keepalive"])(
+    "does not charge %s idle time to an admitted request's deadline",
+    async (mode) => {
+      const server = createPlatformServer(
+        async (request) => {
+          const path = new URL(request.url).pathname;
+          if (path === "/slow") await new Promise((done) => setTimeout(done, 150));
+          return new Response(path);
+        },
+        { origin: configuration.EF_PUBLIC_ORIGIN, requestDeadlineMs: 500 },
+      );
+      servers.push(server);
+      const base = await listenPlatformServer(server);
+      const response = await new Promise<string>((done, reject) => {
+        const client = connect(Number(new URL(base).port), "127.0.0.1");
+        let data = "";
+        let nextSent = false;
+        const send = (path: string, close: boolean): void => {
+          client.write(
+            `GET ${path} HTTP/1.1\r\nHost: fixture\r\nConnection: ${close ? "close" : "keep-alive"}\r\n\r\n`,
+          );
+        };
+        client.setTimeout(3000, () => {
+          client.destroy();
+          reject(new Error("idle regression sensor timed out"));
+        });
+        client.on("connect", () => {
+          if (mode === "first-connection") setTimeout(() => send("/slow", true), 420);
+          else send("/fast", false);
+        });
+        client.on("data", (chunk: Buffer) => {
+          data += chunk.toString();
+          if (mode === "keepalive" && !nextSent && data.includes("/fast")) {
+            nextSent = true;
+            setTimeout(() => send("/slow", true), 420);
+          }
+        });
+        client.on("end", () => done(data));
+        client.on("error", reject);
+      });
+      expect([...response.matchAll(/HTTP\/1\.1 (\d+)/g)].map((match) => Number(match[1]))).toEqual(
+        mode === "first-connection" ? [200] : [200, 200],
+      );
+      expect(response).toContain("/slow");
+      expect(response).not.toContain("request-deadline");
+    },
+  );
   it("preserves local generic failure envelopes and redacts hosted exception values", async () => {
     let captured = "";
     const stderr = vi.spyOn(process.stderr, "write").mockImplementation((value) => {

@@ -157,6 +157,12 @@ try {
     assert.equal(body.agents, "off");
     assert.equal(body.integrations, "off");
     assert.equal(body.limits.maxBodyBytes, HOSTED_LIMITS.maxBodyBytes);
+    assert.deepEqual(body.limits.http, {
+      headersTimeout: 1000,
+      requestTimeout: 1000,
+      connectionsCheckingInterval: 100,
+      keepAliveTimeout: 1000,
+    });
     records.push({
       name: path,
       revision: body.revision,
@@ -619,7 +625,7 @@ try {
   );
   assert.ok(performance.now() - stalledAt < 3000);
   const headerAt = performance.now();
-  assert.equal(await raw("GET /healthz HTTP/1.1\r\nHost: fixture"), "");
+  assert.match(await raw("GET /healthz HTTP/1.1\r\nHost: fixture"), /408 Request Timeout/);
   assert.ok(performance.now() - headerAt < 3000);
   assert.deepEqual(await world.heads(authority), headsBeforeBodies);
   records.push({

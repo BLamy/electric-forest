@@ -113,6 +113,11 @@ mode, fixture credentials or seed. It checks `production-artifact.json` against 
 emitted runtime/web byte before opening the private store or public listener. Runtime
 configuration must use the following public values and a fresh dedicated volume:
 
+Set Railway's `RAILWAY_DOCKERFILE_PATH=Dockerfile.production` variable explicitly; the
+service's `build.dockerfilePath` field alone does not select this file reliably for the
+Git source builder. The service start command is
+`node packages/platform/dist/src/hosted-bin.js`. Both select the private runtime.
+
 ```text
 EF_DEPLOYMENT_MODE=production
 EF_PUBLIC_ORIGIN=https://electric-forest-production.up.railway.app
@@ -148,7 +153,8 @@ its API/native client audience is separately qualified. Token scopes must still 
 the gateway's explicit authorization; T11 qualifies branch-scoped CLI write input.
 
 The initial limits exposed by `/api/build` are: 8 MiB buffered request body, 30 seconds
-through response headers for finite requests, 10-minute browser-bound login transactions,
+from Node admitting a request through body buffering and finite response preparation,
+10-minute browser-bound login transactions,
 24-hour sessions (a shorter positive `EF_SESSION_TTL` is permitted), readiness within
 60 seconds and drain within 15 seconds. Hosted long-poll holds are at most 10 seconds;
 larger `waitMs` requests receive 400. Normal web follows use 1.5 seconds. Established
@@ -156,6 +162,17 @@ SSE responses leave the header deadline after headers and are cancelled when the
 closes; shutdown closes listeners/connections and drains accepted handlers before closing
 the private provider. Cookie mutations require the exact configured Origin. CLI bearer
 dispatch has a separate policy and cannot fall back to a privileged cookie.
+
+The HTTP phases have separate clocks. Node's parser owns the 30-second header and
+request-receive deadlines, checked every second in production (the parser can report an
+expiry on its next check). Its keepalive idle timeout is configured separately at five
+seconds, with Node's normal socket buffer. Idle time never consumes a subsequently
+admitted request's 30-second body/handler/finite-response budget. That budget includes
+body buffering and ends when finite response headers are ready; established SSE is
+cancelled by connection closure/drain instead. This does not claim a single global
+first-byte-through-application-processing clock. No HTTP parsing or pipelining semantics
+are replaced by an application header parser. Tightened fixture clocks retain the same
+phase policy and expose their actual parser checking interval.
 
 `make verify-E12-T10` builds its complete dependency closure, runs focused preserved
 local/preview contracts, then drives an isolated dedicated issuer through the real hosted

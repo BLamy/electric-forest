@@ -4,7 +4,7 @@ import type { Server } from "node:http";
 import { createDurableStreamTestServer } from "@eforest/server";
 import { createPlatformProductionRuntime } from "./production.js";
 import { OfficialStreamAdapter } from "./official.js";
-import { createPlatformServer, listenPlatformServer } from "./server.js";
+import { createPlatformServer, listenPlatformServer, platformTimeouts } from "./server.js";
 import { prepareHostedStorage } from "./hosted-storage.js";
 import { verifyHostedArtifact } from "./hosted-artifact.js";
 
@@ -238,6 +238,7 @@ export async function createHostedRuntime(
     requestDeadlineMs: options.requestDeadlineMs ?? HOSTED_LIMITS.requestDeadlineMs,
     transactionTtlMs: options.transactionTtlMs ?? HOSTED_LIMITS.transactionTtlMs,
     sessionTtlSeconds: config.sessionTtlSeconds,
+    http: platformTimeouts(options.requestDeadlineMs ?? HOSTED_LIMITS.requestDeadlineMs),
   };
   const build = {
     mode: "production",

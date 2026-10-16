@@ -1,6 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { gzipSync } from "node:zlib";
-import type { Socket } from "node:net";
 
 export type PlatformRequestHandler = (request: Request) => Promise<Response>;
 
@@ -8,7 +7,9 @@ export interface PlatformServerOptions {
   /** Pinned public origin; Host and every forwarding header are untrusted input. */
   readonly origin?: string;
   readonly maxBodyBytes?: number;
-  /** From socket request admission through finite response headers/body preparation. */
+  /** From Node request admission (complete headers), through body buffering and
+   * finite response preparation. Parser header/receive clocks are separate in
+   * platformTimeouts; socket idle time never consumes this admitted-request budget. */
   readonly requestDeadlineMs?: number;
   readonly redactErrors?: boolean;
 }
@@ -163,6 +164,22 @@ async function handleNodeRequest(
   response.end(bodyBytes);
 }
 
+/** Parser-owned receive/header clocks and an independent idle clock. Node checks
+ * expired parser clocks at this bounded interval; none is a rolling byte timeout. */
+export function platformTimeouts(deadlineMs: number): {
+  readonly headersTimeout: number;
+  readonly requestTimeout: number;
+  readonly connectionsCheckingInterval: number;
+  readonly keepAliveTimeout: number;
+} {
+  return {
+    headersTimeout: deadlineMs,
+    requestTimeout: deadlineMs,
+    connectionsCheckingInterval: Math.min(1_000, Math.max(1, Math.floor(deadlineMs / 10))),
+    keepAliveTimeout: Math.min(5_000, deadlineMs),
+  };
+}
+
 export function createPlatformServer(
   handler: PlatformRequestHandler,
   options: PlatformServerOptions = {},
@@ -171,104 +188,65 @@ export function createPlatformServer(
     if (value !== undefined && (!Number.isSafeInteger(value) || value <= 0))
       throw new TypeError("HTTP limits must be positive safe integers");
   }
-  const guards = new WeakMap<
-    Socket,
-    { timer?: ReturnType<typeof setTimeout>; pending: number; expire?: () => void }
-  >();
-  const arm = (socket: Socket): void => {
-    if (options.requestDeadlineMs === undefined || socket.destroyed) return;
-    const guard = guards.get(socket)!;
-    clearTimeout(guard.timer);
-    guard.timer = setTimeout(() => {
-      if (guard.expire !== undefined) guard.expire();
-      else socket.destroy();
-    }, options.requestDeadlineMs);
-    guard.timer.unref();
-  };
-  const server = createServer((request, response) => {
-    const controller = new AbortController();
-    const guard = guards.get(request.socket);
-    if (guard !== undefined) {
-      guard.pending += 1;
-      if (guard.timer === undefined) arm(request.socket);
-    }
-    let bodyComplete = false;
-    request.once("end", () => {
-      bodyComplete = true;
-    });
-    const refuse = (status: number, reason: string): void => {
-      if (response.headersSent || response.destroyed) {
-        response.destroy();
-        return;
-      }
-      response.statusCode = status;
-      response.setHeader("content-type", "application/json");
-      response.setHeader("connection", "close");
-      response.end(JSON.stringify({ error: { class: "http-refused", reason } }), () =>
-        request.destroy(),
-      );
-    };
-    let settled = false;
-    const expire = (): void => {
-      headersReady();
-      controller.abort();
-      refuse(bodyComplete ? 504 : 408, "request-deadline");
-    };
-    if (guard !== undefined) guard.expire = expire;
-    const timer =
-      options.requestDeadlineMs === undefined
-        ? undefined
-        : setTimeout(expire, options.requestDeadlineMs);
-    const headersReady = (): void => {
-      clearTimeout(timer);
-      if (!settled && guard !== undefined) {
-        guard.pending -= 1;
-        if (guard.pending === 0) {
-          clearTimeout(guard.timer);
-          delete guard.timer;
-          delete guard.expire;
+  const server = createServer(
+    options.requestDeadlineMs === undefined ? {} : platformTimeouts(options.requestDeadlineMs),
+    (request, response) => {
+      const controller = new AbortController();
+      let bodyComplete = false;
+      request.once("end", () => {
+        bodyComplete = true;
+      });
+      const refuse = (status: number, reason: string): void => {
+        if (response.headersSent || response.destroyed) {
+          response.destroy();
+          return;
         }
-      }
-      settled = true;
-    };
-    response.once("finish", () => {
-      if (guard?.pending === 0) arm(request.socket);
-    });
-    response.once("close", () => {
-      headersReady();
-      controller.abort();
-    });
-    void handleNodeRequest(
-      request,
-      response,
-      handler,
-      options,
-      controller.signal,
-      headersReady,
-    ).catch((error: unknown) => {
-      headersReady();
-      controller.abort();
-      if (error instanceof HttpRefusal) {
-        refuse(error.status, error.reason);
-        return;
-      }
-      if (options.redactErrors !== true)
-        process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);
-      else process.stderr.write("platform request failed\n");
-      if (options.origin === undefined && !response.headersSent && !response.destroyed) {
-        response.statusCode = 500;
+        response.statusCode = status;
         response.setHeader("content-type", "application/json");
-        response.end(JSON.stringify({ error: { class: "internal", reason: "request_failed" } }));
-      } else refuse(500, "request-failed");
-    });
-  });
-  if (options.requestDeadlineMs !== undefined) {
-    server.on("connection", (socket) => {
-      guards.set(socket, { pending: 0 });
-      arm(socket);
-      socket.once("close", () => clearTimeout(guards.get(socket)?.timer));
-    });
-  }
+        response.setHeader("connection", "close");
+        response.end(JSON.stringify({ error: { class: "http-refused", reason } }), () =>
+          request.destroy(),
+        );
+      };
+      const timer =
+        options.requestDeadlineMs === undefined
+          ? undefined
+          : setTimeout(() => {
+              controller.abort();
+              refuse(bodyComplete ? 504 : 408, "request-deadline");
+            }, options.requestDeadlineMs);
+      const headersReady = (): void => {
+        clearTimeout(timer);
+      };
+      response.once("close", () => {
+        headersReady();
+        controller.abort();
+      });
+      void handleNodeRequest(
+        request,
+        response,
+        handler,
+        options,
+        controller.signal,
+        headersReady,
+      ).catch((error: unknown) => {
+        headersReady();
+        controller.abort();
+        if (error instanceof HttpRefusal) {
+          refuse(error.status, error.reason);
+          return;
+        }
+        if (options.redactErrors !== true)
+          process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);
+        else process.stderr.write("platform request failed\n");
+        if (options.origin === undefined && !response.headersSent && !response.destroyed) {
+          response.statusCode = 500;
+          response.setHeader("content-type", "application/json");
+          response.end(JSON.stringify({ error: { class: "internal", reason: "request_failed" } }));
+        } else refuse(500, "request-failed");
+      });
+    },
+  );
   return server;
 }
 
