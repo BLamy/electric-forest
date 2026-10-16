@@ -3,7 +3,7 @@ id: E12-T00
 epic: 12
 title: "Deploy a clearly labeled Railway preview with disposable data and stub identity"
 priority: 520
-status: implemented
+status: verified
 depends_on: [E5-T14]
 estimate: L
 capstone: false
@@ -345,3 +345,88 @@ in `evidence/run-2/final/cli-replay.json`. The artifact index preserves 92 retai
 SHA-256 values and portable original-to-retained mappings:
 `evidence/run-2/artifacts.json`, SHA-256
 `cadf04b6254ca81f7b2e2c296115204c11194cd56498e7ef331b2267c716a833`.
+
+### 2026-10-16 — judge round 2 — VERDICT: verified
+
+Base commit: `a7e861d023651925a16e9103c0f50fce9c368a4e`; immutable audited and
+actually deployed code: `1f9e06b87109a93c75107842d4c8aa65902f8622`. This is official
+verification run 2 under ordinary ceiling 10. No blocking finding survives independent
+cross-examination; run 1 remains preserved, with its F1 closed by the new evidence.
+
+- **F1 / AC1 — cold target now survives.** Predicted the exact registered target would
+  build required outputs before its unchanged assertions in a fresh installed checkout.
+  The lead's single late official cold clone passes in 109.248 s: sixteen workspace
+  packages build, web-hooks finishes before Vite, all 18 config tests, real HTTP and ten
+  browser scenes execute, then `verify-E12-T00: OK` and `DEPENDENCY_INTEGRITY_OK` appear.
+  Raw transcript `evidence/critic-run-2/cold-clone.log`, SHA-256
+  `f647963c7f5e8322f4df618c22efd0f8f84c196bcb8e2c4b75b3a8a2dc991263`, and
+  `cold-clone-receipt.json` in that directory bind submission HEAD. The kept clone's
+  source is clean. No assertion, gate or ordering was weakened. Fresh ordered root audit
+  remains bound to source 1f9: all four gates pass, 123 files / 924 tests; judge checked
+  its retained manifest and hashes without rerunning the unchanged chain.
+- **AC2–AC6 — browser, stream, isolation and deployment survive.** The full lead review
+  interrogates all seven actual-origin videos, screenshots, timeline and network without
+  a hosted re-drive. Both final browser runs have zero console/page/request errors and
+  two isolated clients converge after pointer/keyboard writes, reconnect and relogin.
+  Judge independently reduces all seven chat dumps and verifies six two-profile DOM
+  checkpoints. The nine pre-restart events remain an exact byte prefix of eleven final
+  events, with one welcome seed, offset `0000000000000000_0000000000000010`, digest
+  `6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670`.
+  Decoded README bytes match frozen SHA-256
+  `b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5`.
+  Fresh config/raw-route/canary/missing-asset/marker probes survive; the novel damaged
+  ready-volume attack refuses restart without changing the marker. Actual source,
+  Railway service/deployment/HTTPS origin, OCI image and 734-file deployed artifact agree;
+  the actual new-process restart is 10,976 ms. Citations: `evidence/critic-run-2/report.json`,
+  `browser-network-review.json`, `independent-replay.json`, `semantic/results.json`,
+  `config-edges/results.json`, `judge-cross-check.json`, and `evidence/run-2/railway/manifest.json`.
+- **Required attacks, sensitivity and coverage survive.** All eight criteria, 35 source/
+  config hunks, 185 passive history/binary hunks and all six task attacks plus a novel
+  attack are accounted for. Judge matches the coverage entries exactly to the actual
+  diff. Bounded waivers cover declarations/types, non-claim exception plumbing and agent
+  edit/selection predicates unreachable under the empty-roster/no-agent-dispatch invariant.
+  Each isolated bind, complete-shaped production guard and frozen-DOM mutation makes both
+  the original builder assertion and independent sensor red, then restored green with
+  source hashes unchanged. The digest mutation accepts a real POST 202 and displays the
+  message in both clients before equality fails. A single byte W→w changes the final
+  digest to `09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3`;
+  the frozen comparison's authentic exits are `0 → 1 → 0`. Citations:
+  `evidence/critic-run-2/coverage.json`, `predictions.json`, `sensitivity/complete.json`,
+  its raw logs, `sensor-baselines.json` and the three `sensor-byte-*.log` files.
+- **AC7–AC8, retention and SUITE.** The declared Replay fallback is supported by a current
+  authentication-required diagnostic. Five existing reader pairs independently recompute
+  to identical committed snapshots and preserve the complete run-1 entry, ledger/control
+  digests and ceiling; the next continuation still requires two fresh readers of this
+  verdict commit. All 92 builder artifacts match committed bytes. All 136 indexed lead
+  artifacts (3,850,158 bytes), including the full unchanged JSON/Markdown report, are
+  permanently retained under `evidence/critic-run-2/`. Lead report SHA-256
+  `2db4ddb6f9fa95f05a36be4ed9d2f46af39111b7d2c8e006eb5ed28d52e6a2b7`;
+  original portable index SHA-256
+  `515963c3534ca1bb7d5ecc8653b54c26dff5f71cec8d683b6a3709d813a2dd1b`.
+  The judge's full cross-examination is `judge-cross-examination.json` in that directory.
+  **SUITE:** `suite-goldens.json` promotes verified restart-prefix logs, independently
+  frozen digests, the fresh accepted-write log and sensitive one-byte corpus. Existing
+  `make verify-E12-T00` and all original assertions remain permanent; no redundant unit
+  test is added.
+- **Explicit limits.** The caller supplied task-owned TMPDIR, but the unchanged cold
+  harness chose system temporary storage; the one passing kept clone was moved under
+  task work afterward without a repeat. The receipt preserves both locations. Warm root
+  has 41 pre-existing extra dist outputs; every shared deployed file matches, and full
+  inventory equality is not claimed. Pre-existing member-dialog BODY focus is outside
+  this task. This verdict verifies the public disposable preview only; real production
+  auth, CLI private mirroring and public-launch qualification remain pending.
+
+Replay: N/A (Replay QA authentication required and unavailable for configured project
+`proj-electric-forest-ms8w0nv1`; diagnostic `evidence/run-2/replay-availability.json`) +
+mitigation: actual Railway Playwright MP4s, console/network/timeline interrogation,
+complete immutable stream dumps, independent double CLI/Python replay, judge reduction
+and exact restart prefix comparison. No managed journey/tunnel/exploration or Replay
+recording URL is claimed.
+
+Commands: lead receipts retain `bash tools/verify/cold_clone.sh --keep verify-E12-T00`
+(exactly once), `node semantic-attacks.mjs`, `node config-edge-probes.mjs`,
+`python3 sabotage-driver.py` and independent replay/lifecycle scripts. Judge read
+`git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8..1f9e06b87109a93c75107842d4c8aa65902f8622`
+without persisting a patch, ran `python3 <task>/work/judge-run-2/cross-check.py`, verified
+all artifact/staged bytes and source hashes, independently reduced dumps in Python,
+inspected authentic cold/sabotage logs, then ran `python3 tools/build_queue.py`.

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "sensor-network",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+      "network"
+    ],
+    "exit": 0,
+    "seconds": 1.528
+  },
+  {
+    "name": "sensor-config",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+      "config"
+    ],
+    "exit": 0,
+    "seconds": 0.211
+  },
+  {
+    "name": "sensor-browser",
+    "command": [
+      "node",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/fresh-browser-sensor.mjs",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensor-baseline-browser"
+    ],
+    "exit": 0,
+    "seconds": 12.744
+  },
+  {
+    "name": "sensor-byte-original",
+    "command": [
+      "python3",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/frozen-digest-check.py",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl"
+    ],
+    "exit": 0,
+    "seconds": 0.589
+  },
+  {
+    "name": "sensor-byte-mutated",
+    "command": [
+      "python3",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/frozen-digest-check.py",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/one-byte-mutation.jsonl"
+    ],
+    "exit": 1,
+    "seconds": 0.381
+  },
+  {
+    "name": "sensor-byte-restored",
+    "command": [
+      "python3",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/frozen-digest-check.py",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl"
+    ],
+    "exit": 0,
+    "seconds": 0.314
+  }
+]

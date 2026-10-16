@@ -1,0 +1,13 @@
+{
+  "behaviorHunks": 35,
+  "passiveMetadataHunks": 185,
+  "waivedBehaviorHunks": [
+    "H12",
+    "H14",
+    "H22",
+    "H23",
+    "H30",
+    "H31"
+  ],
+  "uncoveredRequiredBehavior": []
+}

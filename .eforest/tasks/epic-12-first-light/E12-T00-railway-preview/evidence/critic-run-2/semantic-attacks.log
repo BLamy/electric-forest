@@ -1,0 +1,84 @@
+config-refusal {"key":"EFOREST_SERVER_URL","message":"preview forbids integration configuration: EFOREST_SERVER_URL"}
+config-refusal {"key":"EF_OIDC_ISSUER","message":"preview forbids integration configuration: EF_OIDC_ISSUER"}
+config-refusal {"key":"EF_OIDC_CLIENT_ID","message":"preview forbids integration configuration: EF_OIDC_CLIENT_ID"}
+config-refusal {"key":"EF_SESSION_SECRET","message":"preview forbids integration configuration: EF_SESSION_SECRET"}
+config-refusal {"key":"EF_RESEND_API_KEY","message":"preview forbids integration configuration: EF_RESEND_API_KEY"}
+config-refusal {"key":"EF_RESEND_URL","message":"preview forbids integration configuration: EF_RESEND_URL"}
+config-refusal {"key":"EF_RESEND_FROM","message":"preview forbids integration configuration: EF_RESEND_FROM"}
+config-refusal {"key":"EF_AGENT_CMD","message":"preview forbids integration configuration: EF_AGENT_CMD"}
+config-refusal {"key":"AUTH0_CLIENT_SECRET","message":"preview forbids inherited credentials or integrations: AUTH0_CLIENT_SECRET"}
+config-refusal {"key":"OIDC_CLIENT_SECRET","message":"preview forbids inherited credentials or integrations: OIDC_CLIENT_SECRET"}
+config-refusal {"key":"RESEND_API_KEY","message":"preview forbids inherited credentials or integrations: RESEND_API_KEY"}
+config-refusal {"key":"OPENAI_API_KEY","message":"preview forbids inherited credentials or integrations: OPENAI_API_KEY"}
+config-refusal {"key":"ANTHROPIC_API_KEY","message":"preview forbids inherited credentials or integrations: ANTHROPIC_API_KEY"}
+config-refusal {"key":"CLAUDE_CONFIG_DIR","message":"preview forbids inherited credentials or integrations: CLAUDE_CONFIG_DIR"}
+config-refusal {"key":"CODEX_HOME","message":"preview forbids inherited credentials or integrations: CODEX_HOME"}
+config-refusal {"key":"AWS_SECRET_ACCESS_KEY","message":"preview forbids inherited credentials or integrations: AWS_SECRET_ACCESS_KEY"}
+config-refusal {"key":"GH_TOKEN","message":"preview forbids inherited credentials or integrations: GH_TOKEN"}
+config-refusal {"key":"GITHUB_TOKEN","message":"preview forbids inherited credentials or integrations: GITHUB_TOKEN"}
+config-refusal {"key":"GOOGLE_APPLICATION_CREDENTIALS","message":"preview forbids inherited credentials or integrations: GOOGLE_APPLICATION_CREDENTIALS"}
+config-refusal {"key":"DURABLE_STREAMS_URL","message":"preview forbids inherited credentials or integrations: DURABLE_STREAMS_URL"}
+config-refusal {"key":"ELECTRIC_URL","message":"preview forbids inherited credentials or integrations: ELECTRIC_URL"}
+config-refusal {"key":"NODE_OPTIONS","message":"preview forbids inherited credentials or integrations: NODE_OPTIONS"}
+config-refusal {"key":"NODE_PATH","message":"preview forbids inherited credentials or integrations: NODE_PATH"}
+config-refusal {"key":"SSH_AUTH_SOCK","message":"preview forbids inherited credentials or integrations: SSH_AUTH_SOCK"}
+config-refusal {"key":"GIT_ASKPASS","message":"preview forbids inherited credentials or integrations: GIT_ASKPASS"}
+agent-config-refusal {"value":"harness"}
+agent-config-refusal {"value":"local"}
+agent-config-refusal {"value":"stub"}
+agent-config-refusal {"value":"OFF"}
+agent-config-refusal {"value":""}
+missing-script-assets {"refused":true}
+orphan-volume {"refused":true}
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+raw-private {"path":"/streams/__identity__","method":"GET","status":404}
+raw-private {"path":"/streams/__identity__","method":"POST","status":404}
+raw-private {"path":"/streams/__identity__","method":"DELETE","status":404}
+raw-private {"path":"/streams/ns%3Aroot","method":"GET","status":404}
+raw-private {"path":"/streams/ns%3Aroot","method":"POST","status":404}
+raw-private {"path":"/streams/ns%3Aroot","method":"DELETE","status":404}
+raw-private {"path":"/streams/chat%3Apreview%2Fwelcome","method":"GET","status":404}
+raw-private {"path":"/streams/chat%3Apreview%2Fwelcome","method":"POST","status":404}
+raw-private {"path":"/streams/chat%3Apreview%2Fwelcome","method":"DELETE","status":404}
+raw-private {"path":"/admin","method":"GET","status":404}
+raw-private {"path":"/admin","method":"POST","status":404}
+raw-private {"path":"/admin","method":"DELETE","status":404}
+raw-private {"path":"/__admin","method":"GET","status":404}
+raw-private {"path":"/__admin","method":"POST","status":404}
+raw-private {"path":"/__admin","method":"DELETE","status":404}
+raw-private {"path":"/.env","method":"GET","status":404}
+raw-private {"path":"/.env","method":"POST","status":404}
+raw-private {"path":"/.env","method":"DELETE","status":404}
+raw-private {"path":"/.git/config","method":"GET","status":404}
+raw-private {"path":"/.git/config","method":"POST","status":404}
+raw-private {"path":"/.git/config","method":"DELETE","status":404}
+encoded-route {"path":"/%73treams/__identity__","status":302}
+encoded-route {"path":"/streams%2f__identity__","status":302}
+encoded-route {"path":"/api/streams/__identity__","status":404}
+encoded-route {"path":"//streams/__identity__","status":302}
+encoded-route {"path":"/streams/../.env","status":404}
+external-integrations {"path":"/api/cli-tokens","status":403}
+external-integrations {"path":"/api/cli-tokens/new","status":403}
+external-integrations {"path":"/settings/cli-tokens","status":403}
+external-integrations {"path":"/api/device-grants","status":403}
+agent-dispatch {"status":403}
+invalid-fixture-subject {"subject":"root","status":400}
+invalid-fixture-subject {"subject":"__proto__","status":400}
+invalid-fixture-subject {"subject":"Ada","status":400}
+invalid-fixture-subject {"subject":"preview|ada","status":400}
+redirect-refusal {"next":"//evil.critic.invalid","location":"/preview/forest"}
+redirect-refusal {"next":"https://evil.critic.invalid","location":"/preview/forest"}
+redirect-refusal {"next":"/\\evil.critic.invalid","location":"/preview/forest"}
+redirect-refusal {"next":"/x?next=//evil.critic.invalid","location":"/preview/forest"}
+cross-origin {"status":403}
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 8 streams, 0 reconciled, 0 errors
+fresh-write-restart {"nonce":"275bac33508fe5ad","eventCount":2,"offset":"0000000000000000_0000000000000001","digest":"d0259b37be1ae65f28d896d3385bfdeb247aadc7cd3360ce4bfc550b4bc8874e","oldPort":54708,"newPort":54749}
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+separate-directory {"containsFreshWrite":false}
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 7 streams, 0 reconciled, 0 errors
+missing-required-ready-stream {"refused":true,"markerUnchanged":true}
+SEMANTIC_ATTACKS_OK

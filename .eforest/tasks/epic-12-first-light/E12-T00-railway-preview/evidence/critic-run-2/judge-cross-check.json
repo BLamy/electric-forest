@@ -1,0 +1,74 @@
+{
+  "baseCommit": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "candidate": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "leadReportHashes": {
+    "report.json": "2db4ddb6f9fa95f05a36be4ed9d2f46af39111b7d2c8e006eb5ed28d52e6a2b7",
+    "report.md": "36d52d7945c86328bedf833709412c0a754048b67829903514df2c395babd378",
+    "portable-artifact-index.json": "515963c3534ca1bb7d5ecc8653b54c26dff5f71cec8d683b6a3709d813a2dd1b"
+  },
+  "leadArtifacts": 136,
+  "leadBytes": 3850158,
+  "builderCommittedArtifacts": 92,
+  "coverage": {
+    "allGitHunksExactlyEnumerated": true,
+    "sourceConfig": 35,
+    "passiveHistoryBinary": 185
+  },
+  "sabotages": {
+    "intendedRedAndRestoredGreen": 3,
+    "originalBuilderAndIndependentSensorBothRed": true,
+    "allRestoredSourceMatchesCandidate": true
+  },
+  "coldClone": {
+    "attempts": 1,
+    "rawTranscriptSha256": "f647963c7f5e8322f4df618c22efd0f8f84c196bcb8e2c4b75b3a8a2dc991263",
+    "passedTargetAndIntegrity": true,
+    "webHooksBeforeVite": true,
+    "systemTmpLimitationRetained": true,
+    "keptCloneTrackedClean": true
+  },
+  "judgeIndependentPostReduction": [
+    {
+      "path": "hosted-after/relogin-preserves-writes.jsonl",
+      "digest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+      "eventCount": 11
+    },
+    {
+      "path": "hosted-after/two-profile-accepted.jsonl",
+      "digest": "3fad969f4f7a8166a8cdfa0f4a3c81f58edcdd9b9427cc9eeece1b868236a76a",
+      "eventCount": 10
+    },
+    {
+      "path": "hosted-after/witness-reconnected.jsonl",
+      "digest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+      "eventCount": 11
+    },
+    {
+      "path": "hosted-before/relogin-preserves-writes.jsonl",
+      "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "eventCount": 9
+    },
+    {
+      "path": "hosted-before/two-profile-accepted.jsonl",
+      "digest": "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12",
+      "eventCount": 8
+    },
+    {
+      "path": "hosted-before/witness-reconnected.jsonl",
+      "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "eventCount": 9
+    },
+    {
+      "path": "http/accepted.jsonl",
+      "digest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+      "eventCount": 2
+    }
+  ],
+  "prefix": {
+    "beforeEvents": 9,
+    "afterEvents": 11,
+    "exactBytePrefix": true
+  },
+  "oneByteChangedAndDigestDifferent": true,
+  "noExtraRootGateColdCloneOrHostedBrowserRun": true
+}

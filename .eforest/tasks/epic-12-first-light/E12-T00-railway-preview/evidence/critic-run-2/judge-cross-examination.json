@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "run": 2,
+  "role": "fresh independent skeptic/judge",
+  "baseCommit": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "codeCandidate": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "verdict": "verified",
+  "leadReportSha256": "2db4ddb6f9fa95f05a36be4ed9d2f46af39111b7d2c8e006eb5ed28d52e6a2b7",
+  "rawFindings": [],
+  "survivingBlockingFindings": [],
+  "completionManifest": {
+    "criteria": 8,
+    "sourceConfigHunks": 35,
+    "passiveHistoryOrBinaryHunks": 185,
+    "allDiffHunksExactlyMatched": 220,
+    "taskAttacksPlusNovel": 7,
+    "sabotages": 3,
+    "environment": "present",
+    "coldClone": "passed"
+  },
+  "crossExamination": [
+    {
+      "id": "prior-F1",
+      "disposition": "closed by general dependency closure",
+      "prediction": "The exact registered cold target emits every required workspace build before original config/HTTP/browser assertions.",
+      "observed": "Raw cold transcript builds 16 packages, web-hooks before Vite, then all 18 config tests, HTTP and ten-scene browser assertions, exact success marker and DEPENDENCY_INTEGRITY_OK.",
+      "citations": [
+        "cold-clone.log",
+        "cold-clone-receipt.json",
+        "environment-review.json",
+        "Makefile:793 at candidate"
+      ],
+      "attemptsToRefute": [
+        "Checked fresh no-dist installation and kept clone HEAD/clean tracked source; no warm node_modules/dist were copied.",
+        "No original assertion was removed and neither --if-present nor --parallel weakens ordering.",
+        "Metadata/evidence commits after candidate do not alter product or verifier source."
+      ]
+    },
+    {
+      "id": "AC2-AC5-replay",
+      "disposition": "survived",
+      "prediction": "Recorded DOM states and accepted counts match independent canonical replay; restart retains bytes.",
+      "observed": "Judge independently reduces all seven post-only chat dumps, verifies six two-profile DOM checkpoints, exact 9-to-11 byte prefix, final 6780c443... and a one-byte mutant with different 09f46aad... digest. README independently decodes to frozen b8092b31... bytes.",
+      "citations": [
+        "judge-cross-check.json",
+        "independent-replay.json",
+        "../run-2/hosted-before/browser.json",
+        "../run-2/hosted-after/browser.json"
+      ]
+    },
+    {
+      "id": "AC3-AC4-boundary",
+      "disposition": "survived",
+      "prediction": "Config/origin/raw-route/store/bind checks reject forbidden capability and invalid state, with actual ingress and bounded restart.",
+      "observed": "Source and fresh probes refuse provider/identity/harness/developer/outbound values before storage; raw methods cannot mutate stores; invalid markers/assets and missing required ready stream refuse. Actual readiness restart is 10976ms.",
+      "citations": [
+        "semantic/results.json",
+        "config-edges/results.json",
+        "browser-network-review.json",
+        "../run-2/railway/manifest.json"
+      ]
+    },
+    {
+      "id": "sensitivity",
+      "disposition": "survived in intended assertions",
+      "prediction": "Each isolated mutation defeats its corresponding sensor and original builder assertion, then restoration passes.",
+      "observed": "Bind mutation gets real nonloopback ECONNREFUSED and builder listener mismatch; guard mutation gets Missing expected exception with complete production control accepted; digest mutation POSTs 202 and makes messages visible while frozen DOM equality times out. All six corresponding restored checks pass. Raw one-byte checker exits 0,1,0.",
+      "citations": [
+        "sensitivity/complete.json",
+        "sensitivity/commands.json",
+        "sensitivity/bind-mutant-real-ingress.log",
+        "sensitivity/guard-mutant-complete-shape.log",
+        "sensitivity/digest-mutant-accepted-write-browser.log",
+        "sensor-baselines.json"
+      ],
+      "attemptsToRefute": [
+        "Read original independent sensor and sabotage driver, not only exit summaries.",
+        "All restored source hashes match original committed candidate; scratch tracked source is clean.",
+        "Report attack A6 prediction field inadvertently repeats the novel prediction; the earlier frozen predictions.json contains all three correct A6 predictions and authentic receipts satisfy the criterion. This serialization wording does not invalidate the predeclared attacks."
+      ]
+    },
+    {
+      "id": "coverage",
+      "disposition": "complete within frozen finite threat model",
+      "prediction": "Every actual diff hunk is exercised or explicitly waived with bounded rationale.",
+      "observed": "Judge parses actual git diff in memory and exactly matches 220 entries: 35 source/config, 185 passive history/binary. Agent edit/selection predicates cannot receive legitimate preview agents because bootstrap seeds none and gateway refuses all agent.* writes; declarations/types/exception plumbing and passive evidence have explicit non-claim waivers.",
+      "citations": [
+        "coverage.json",
+        "judge-cross-check.json",
+        "packages/platform/src/preview.ts:377 at candidate"
+      ]
+    },
+    {
+      "id": "AC1-AC6-AC7-AC8-attestations",
+      "disposition": "survived",
+      "prediction": "Current immutable audit and deployment bind exact source/image/artifact, fallback is explicit and prior ledger intact.",
+      "observed": "All 92 builder artifacts match committed base bytes; root sequential 123-file/924-test audit binds candidate 1f9. Hosted source/image/734-file artifact and actual smoke agree. Current Replay auth failure explicitly invokes task-authorized fallback. Five existing reader pairs were independently recomputed; ordinary run 1 and ceiling 10 are unchanged before this verdict.",
+      "citations": [
+        "integrity.json",
+        "lifecycle-review.json",
+        "environment-review.json",
+        "../run-2/audit/manifest.json",
+        "../run-2/railway/manifest.json",
+        "../run-2/replay-availability.json"
+      ]
+    }
+  ],
+  "artifactIntegrity": {
+    "leadArtifacts": 136,
+    "leadBytes": 3850158,
+    "allByteAndSha256Match": true,
+    "all92BuilderArtifactsMatchCommittedBase": true,
+    "originalIndexSha256": "515963c3534ca1bb7d5ecc8653b54c26dff5f71cec8d683b6a3709d813a2dd1b"
+  },
+  "limitations": [
+    "The unchanged cold harness used system mktemp despite caller supplying task-owned TMPDIR. One attempt passed; kept clone was moved under task work after completion, without another attempt or source mutation. This operational apparatus placement limitation is retained; it does not negate clean-clone or task behavior evidence.",
+    "Warm root has 41 extra pre-existing dist outputs. Every shared deployed file matches bytes; full local/deployed inventory equality is not claimed.",
+    "Replay: N/A (Replay QA authentication required and unavailable for proj-electric-forest-ms8w0nv1) + mitigation: actual-origin Playwright videos/timeline/console/network, complete immutable dumps, independent double CLI/Python replay and exact restart prefix.",
+    "Members dialog BODY-focus observation is explicitly pre-existing and outside T00. Production authentication, CLI private mirroring and public launch qualification are outside this preview verdict."
+  ],
+  "suite": "Promote golden logs/digests and sensitive byte-mutant corpus recorded in suite-goldens.json; retain existing earned Make target and all original assertions, no redundant implementation-mirroring unit test.",
+  "noRepeatedSuites": {
+    "rootAudit": true,
+    "coldClone": true,
+    "hostedBrowserDrive": true
+  },
+  "commands": [
+    "git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8 1f9e06b87109a93c75107842d4c8aa65902f8622 (read/in memory only)",
+    "python3 <task>/work/judge-run-2/cross-check.py",
+    "Read full lead JSON/Markdown, all source hunk coverage/waivers, frozen predictions, raw sabotage/byte and cold transcripts, audit/deployment/lifecycle evidence",
+    "Python verify/copy all 136 indexed artifacts without modification, then verify retained/staged hashes",
+    "python3 tools/build_queue.py"
+  ],
+  "nextPersistenceRequirement": "A separate fresh reader pair must attest this committed verdict transition using the trusted pre-write attester before subsequent implementation."
+}

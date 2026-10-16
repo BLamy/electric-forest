@@ -1,0 +1,16 @@
+{
+  "command": [
+    "pnpm",
+    "-r",
+    "--filter",
+    "@eforest/web...",
+    "--filter",
+    "@eforest/cli...",
+    "run",
+    "build"
+  ],
+  "seconds": 38.105,
+  "exit": 0,
+  "head": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "trackedStatus": ""
+}

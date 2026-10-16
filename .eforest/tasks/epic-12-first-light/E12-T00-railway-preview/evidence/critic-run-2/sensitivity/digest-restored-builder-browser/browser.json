@@ -1,0 +1,213 @@
+{
+  "mode": "preview",
+  "origin": "http://127.0.0.1:56176",
+  "revision": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "artifactDigest": "39d594f640d13bfb2e975810778a6743708ca2d4d48b3bedd5d7004c9fd853df",
+  "browser": "155.0.8059.80",
+  "evidenceLayer": "Playwright fallback; Replay QA unavailable (authentication required)",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "terminalLongPolls": [
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/repos/preview/forest/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/repos/preview/forest/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "http://127.0.0.1:56176/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "captures": [
+    {
+      "name": "ada-notice.png",
+      "sha256": "9a57c5f4e123a0ece759916498dd575893a73977acfb1b4bb7ac5dcc46eb3939"
+    },
+    {
+      "name": "seeded-file.png",
+      "sha256": "4afa993974de7e4f0ca2c7b81f8d617c442e537b2c5f41fae128070ebee346c8"
+    },
+    {
+      "name": "grace-notice.png",
+      "sha256": "9a57c5f4e123a0ece759916498dd575893a73977acfb1b4bb7ac5dcc46eb3939"
+    },
+    {
+      "name": "live-convergence.png",
+      "sha256": "640dfdd4e9d7976526bdfbe3fb886b53477807af1b7c0634ed517e74bb34bd02"
+    },
+    {
+      "name": "agents-disabled.png",
+      "sha256": "474dab0bd8538263dd7bab7e27248d451a07213fe53ef0950e39a59d3f474f55"
+    },
+    {
+      "name": "ada-notice.png",
+      "sha256": "9a57c5f4e123a0ece759916498dd575893a73977acfb1b4bb7ac5dcc46eb3939"
+    },
+    {
+      "name": "relogin.png",
+      "sha256": "5a65208a2450b25b87b60e1bae35c4d781c2b02530cd2d606b5f17e70a64a560"
+    }
+  ],
+  "videos": [
+    {
+      "name": "ada.mp4",
+      "duration": 11.92,
+      "sha256": "a323dfd949b9e8791a5533227fcb1941b0498f2b6702fa4c0b1b5d7d97a1baf9"
+    },
+    {
+      "name": "grace-before-reconnect.mp4",
+      "duration": 6.16,
+      "sha256": "24915d5d1de935c4ae83d342be59919ba3ce825e5c74a6c3d6d884973536fcf2"
+    },
+    {
+      "name": "grace-after-reconnect.mp4",
+      "duration": 4.8,
+      "sha256": "9450120b069fe85c9ec191b17ea40d210e80bec0992e7176abe19a2d5e091835"
+    }
+  ],
+  "timeline": [
+    {
+      "name": "ada-notice-before-fixture-data",
+      "ms": 520,
+      "path": "/preview/forest/blob/main/README.md"
+    },
+    {
+      "name": "seeded-file-browsed",
+      "ms": 2047,
+      "bytesSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5",
+      "build": "a7e861d023651925a16e9103c0f50fce9c368a4e"
+    },
+    {
+      "name": "grace-notice-before-fixture-data",
+      "ms": 2127,
+      "path": "/chat/preview/welcome"
+    },
+    {
+      "name": "two-profile-accepted",
+      "ms": 6517,
+      "dump": "two-profile-accepted.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "1d98042ab79c95e413517b771a9669b0097f14efe6313ebae083232660ca2f6d",
+      "eventCount": 2,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000001",
+          "digest": "1d98042ab79c95e413517b771a9669b0097f14efe6313ebae083232660ca2f6d"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000001",
+          "digest": "1d98042ab79c95e413517b771a9669b0097f14efe6313ebae083232660ca2f6d"
+        }
+      ]
+    },
+    {
+      "name": "witness-disconnected",
+      "ms": 6843,
+      "method": "closed page; isolated profile and its session retained"
+    },
+    {
+      "name": "witness-reconnected",
+      "ms": 9042,
+      "dump": "witness-reconnected.jsonl",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906",
+      "eventCount": 3,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000002",
+          "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000002",
+          "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906"
+        }
+      ]
+    },
+    {
+      "name": "agent-execution-and-integrations-off",
+      "ms": 9775
+    },
+    {
+      "name": "invalid-and-ended-session-refused",
+      "ms": 10438,
+      "invalid": 401,
+      "ended": 401
+    },
+    {
+      "name": "ada-notice-before-fixture-data",
+      "ms": 10523,
+      "path": "/chat/preview/welcome"
+    },
+    {
+      "name": "relogin-preserves-writes",
+      "ms": 12115,
+      "dump": "relogin-preserves-writes.jsonl",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906",
+      "eventCount": 3,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000002",
+          "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000002",
+          "digest": "d4349054325095f4e5edf9e5ee1b09373e9f4f86c21e9673fd346164edf9c906"
+        }
+      ]
+    }
+  ]
+}

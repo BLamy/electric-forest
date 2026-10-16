@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "run": 2,
+  "disposition": "promoted verified golden logs and frozen independent digest corpus",
+  "goldens": [
+    {
+      "path": "../run-2/hosted-before/witness-reconnected.jsonl",
+      "bytes": 2400,
+      "sha256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0",
+      "reducer": "chat-channel",
+      "events": 9,
+      "offset": "0000000000000000_0000000000000008",
+      "stateDigest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+    },
+    {
+      "path": "../run-2/hosted-after/witness-reconnected.jsonl",
+      "bytes": 2949,
+      "sha256": "42efd9c81759f43d818e5c4d5d6fe1b554677b744f44131396ed6fe4a91210ba",
+      "reducer": "chat-channel",
+      "events": 11,
+      "offset": "0000000000000000_0000000000000010",
+      "stateDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+    },
+    {
+      "path": "one-byte-mutation.jsonl",
+      "bytes": 2949,
+      "sha256": "b95eb1ca06d157333cd99b65f6096eb0338acf66b6034657084315139bc24a8c",
+      "reducer": "chat-channel",
+      "events": 11,
+      "offset": "0000000000000000_0000000000000010",
+      "stateDigest": "09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3"
+    },
+    {
+      "path": "semantic/accepted.jsonl",
+      "bytes": 546,
+      "sha256": "b83a8f1cb55203ba461b05a38de1b609296529ce6c2b0f5c7c55197d91cdceae",
+      "reducer": "chat-channel",
+      "events": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "stateDigest": "d0259b37be1ae65f28d896d3385bfdeb247aadc7cd3360ce4bfc550b4bc8874e"
+    }
+  ],
+  "invariants": [
+    "The nine-event log remains an exact byte prefix of the eleven-event log with exactly one welcome seed.",
+    "One byte W to w changes the digest and is rejected by the unchanged frozen final digest assertion.",
+    "Fresh independently seeded accepted write survives bootstrap/restart; required-stream damage refuses rather than reseeds."
+  ],
+  "replayCommand": "node packages/cli/dist/src/bin.js replay <resolved golden path> --digest --reducer chat-channel",
+  "existingPermanentTarget": "make verify-E12-T00 (newly earned registered cold pass; original 18 config/HTTP/browser assertions retained)",
+  "noAdditionalImplementationMirroringTest": "The verified immutable logs and independent expected digests are the promoted corpus; source tests and target already exercise runtime behavior."
+}

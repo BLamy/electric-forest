@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"path":"README.md","v":1},"ts":0,"type":"file.view.target"}
+{"offset":"0000000000000000_0000000000000001","payload":{"contentStreamId":"fs:preview/forest:main:file:1-964c0bc52c92a0d3","path":"README.md","v":2},"ts":3,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"base":"BASE_NONE","contentBase64":"IyBFbGVjdHJpYyBGb3Jlc3QgcHJldmlldwoKVGhpcyBpcyBhIHB1YmxpYywgZGlzcG9zYWJsZSBmaXh0dXJlIHJlcG9zaXRvcnkuCgpUcnkgdGhlICN3ZWxjb21lIGNoYW5uZWwgaW4gdHdvIGJyb3dzZXJzLiBBZ2VudCBleGVjdXRpb24gYW5kIGV4dGVybmFsIGludGVncmF0aW9ucyBhcmUgZGlzYWJsZWQuCg==","contentSha256":"b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5","path":"README.md","size":175,"v":2},"ts":3,"type":"fs.file.write"}

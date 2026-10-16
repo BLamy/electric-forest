@@ -1,0 +1,177 @@
+[
+  {
+    "id": "H01",
+    "file": ".dockerignore",
+    "range": "-0,0 +1,35"
+  },
+  {
+    "id": "H02",
+    "file": "Dockerfile",
+    "range": "-0,0 +1,20"
+  },
+  {
+    "id": "H03",
+    "file": "Makefile",
+    "range": "-790,0 +791,7"
+  },
+  {
+    "id": "H04",
+    "file": "apps/web/src/components/shell/ForestShell.tsx",
+    "range": "-399 +399"
+  },
+  {
+    "id": "H05",
+    "file": "apps/web/src/main.tsx",
+    "range": "-2,0 +3"
+  },
+  {
+    "id": "H06",
+    "file": "apps/web/src/main.tsx",
+    "range": "-11 +12,8"
+  },
+  {
+    "id": "H07",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-12,0 +13"
+  },
+  {
+    "id": "H08",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-310,0 +312"
+  },
+  {
+    "id": "H09",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-337 +339"
+  },
+  {
+    "id": "H10",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-354,0 +357,6"
+  },
+  {
+    "id": "H11",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-429,2 +437,3"
+  },
+  {
+    "id": "H12",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-458 +467"
+  },
+  {
+    "id": "H13",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-481 +490"
+  },
+  {
+    "id": "H14",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "range": "-484 +493"
+  },
+  {
+    "id": "H15",
+    "file": "apps/web/src/preview.tsx",
+    "range": "-0,0 +1,25"
+  },
+  {
+    "id": "H16",
+    "file": "apps/web/src/routes.tsx",
+    "range": "-6,0 +7"
+  },
+  {
+    "id": "H17",
+    "file": "apps/web/src/routes.tsx",
+    "range": "-42,0 +44"
+  },
+  {
+    "id": "H18",
+    "file": "apps/web/src/site/site.test.ts",
+    "range": "-65 +65,3"
+  },
+  {
+    "id": "H19",
+    "file": "apps/web/src/site/site.test.ts",
+    "range": "-87,0 +90,4"
+  },
+  {
+    "id": "H20",
+    "file": "apps/web/src/site/site.test.ts",
+    "range": "-90,0 +97,3"
+  },
+  {
+    "id": "H21",
+    "file": "apps/web/src/site/site.test.ts",
+    "range": "-93 +102,2"
+  },
+  {
+    "id": "H22",
+    "file": "docs/guides/railway-hosting.md",
+    "range": "-0,0 +1,96"
+  },
+  {
+    "id": "H23",
+    "file": "package.json",
+    "range": "-18,0 +19"
+  },
+  {
+    "id": "H24",
+    "file": "packages/platform/fixtures/preview/README.md",
+    "range": "-0,0 +1,5"
+  },
+  {
+    "id": "H25",
+    "file": "packages/platform/src/preview-artifact.ts",
+    "range": "-0,0 +1,44"
+  },
+  {
+    "id": "H26",
+    "file": "packages/platform/src/preview-bin.ts",
+    "range": "-0,0 +1,23"
+  },
+  {
+    "id": "H27",
+    "file": "packages/platform/src/preview.ts",
+    "range": "-0,0 +1,430"
+  },
+  {
+    "id": "H28",
+    "file": "packages/platform/src/production.ts",
+    "range": "-127,0 +128,7"
+  },
+  {
+    "id": "H29",
+    "file": "packages/platform/test/preview.test.ts",
+    "range": "-0,0 +1,66"
+  },
+  {
+    "id": "H30",
+    "file": "packages/platform/tsconfig.build.json",
+    "range": "-10,0 +11"
+  },
+  {
+    "id": "H31",
+    "file": "railway.toml",
+    "range": "-0,0 +1,9"
+  },
+  {
+    "id": "H32",
+    "file": "tools/verify/cold_clone_targets.txt",
+    "range": "-76,0 +77"
+  },
+  {
+    "id": "H33",
+    "file": "tools/verify/e12_t00_browser.mjs",
+    "range": "-0,0 +1,369"
+  },
+  {
+    "id": "H34",
+    "file": "tools/verify/e12_t00_chat_reducer.mjs",
+    "range": "-0,0 +1,6"
+  },
+  {
+    "id": "H35",
+    "file": "tools/verify/e12_t00_preview.mjs",
+    "range": "-0,0 +1,281"
+  }
+]

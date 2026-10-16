@@ -1,0 +1,1812 @@
+{
+  "diffCommand": "git diff --unified=0 59aefbe244e57ce096ea05b94ad462d97d8831a8 1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "behaviorHunks": [
+    {
+      "id": "H01",
+      "file": ".dockerignore",
+      "range": "-0,0 +1,35",
+      "classification": "executed",
+      "reason": "Docker build excludes development trees, workshops/auth/evidence and packages/tests; source recipe checked against actual cold Linux build and retained variable inventory. No forbidden input is required by scratch install.",
+      "citation": "../../evidence/run-2/railway/logs-early.json; environment-review.json"
+    },
+    {
+      "id": "H02",
+      "file": "Dockerfile",
+      "range": "-0,0 +1,20",
+      "classification": "executed",
+      "reason": "Actual Linux amd64 deployment build executes pinned Node/pnpm/frozen lockfile/native LMDB+esbuild checks and pnpm build; runtime entrypoint starts at full 1f9 revision and actual-origin smoke passes. ARG/full OID validation is configuration, fixed by manifest.",
+      "citation": "../../evidence/run-2/railway/logs-early.json; ../../evidence/run-2/railway/logs-export-and-startup.json; ../../evidence/run-2/railway/manifest.json"
+    },
+    {
+      "id": "H03",
+      "file": "Makefile",
+      "range": "-790,0 +791,7",
+      "classification": "executed",
+      "reason": "Full web+CLI dependency closure builds 16 packages including web-hooks. Exact unchanged config, HTTP, browser checks and registered marker are exercised by the single official cold clone.",
+      "citation": "cold-clone.log; cold-clone-receipt.json; environment-review.json"
+    },
+    {
+      "id": "H04",
+      "file": "apps/web/src/components/shell/ForestShell.tsx",
+      "range": "-399 +399",
+      "classification": "executed",
+      "reason": "Removing early onSubmit-close allows actual hosted account-menu form logout and old-session refusal, then fresh relogin with preserved state.",
+      "citation": "../../evidence/run-2/hosted-before/browser.json#invalid-and-ended-session-refused; ../../evidence/run-2/hosted-after/browser.json; baseline-browser.log"
+    },
+    {
+      "id": "H05",
+      "file": "apps/web/src/main.tsx",
+      "range": "-2,0 +3",
+      "classification": "executed",
+      "reason": "PreviewNotice import is bundled and rendered in the actual hosted preview shell.",
+      "citation": "../../evidence/run-2/hosted-after/seeded-file.png"
+    },
+    {
+      "id": "H06",
+      "file": "apps/web/src/main.tsx",
+      "range": "-11 +12,8",
+      "classification": "executed",
+      "reason": "Preview banner wrapper renders above repository/file/chat/Members; actual screenshots and both ten-scene runs exercise those routes.",
+      "citation": "../../evidence/run-2/hosted-before/browser.json; ../../evidence/run-2/hosted-supplement/human-only-members.png"
+    },
+    {
+      "id": "H07",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-12,0 +13",
+      "classification": "executed",
+      "reason": "Members isPreview import called by visible disabled-feature flow.",
+      "citation": "../../evidence/run-2/hosted-supplement/supplement.json"
+    },
+    {
+      "id": "H08",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-310,0 +312",
+      "classification": "executed",
+      "reason": "Members preview state derives from stamped metadata and renders preview restrictions.",
+      "citation": "../../evidence/run-2/hosted-supplement/supplement.json"
+    },
+    {
+      "id": "H09",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-337 +339",
+      "classification": "executed",
+      "reason": "With live empty agent roster, seed button is absent in recorded run and its source assertion; real agent.register gateway probe returns 403.",
+      "citation": "../../evidence/run-2/hosted-before/agents-disabled.png; ../../evidence/run-2/hosted-supplement/supplement.json"
+    },
+    {
+      "id": "H10",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-354,0 +357,6",
+      "classification": "executed",
+      "reason": "Disabled-agent/external-integration notice is visible in actual Members screenshot.",
+      "citation": "../../evidence/run-2/hosted-supplement/human-only-members.png"
+    },
+    {
+      "id": "H11",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-429,2 +437,3",
+      "classification": "executed",
+      "reason": "Empty agent roster displays preview-specific execution-off copy. Preserved nonpreview alternative is pre-existing text, covered by unchanged root gates.",
+      "citation": "../../evidence/run-2/hosted-supplement/human-only-members.png"
+    },
+    {
+      "id": "H12",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-458 +467",
+      "classification": "waived",
+      "reason": "Defensive edit-agent suppression under canManage && !preview cannot be reached with a nonempty legitimate preview roster: fixture bootstrap creates none and all agent.* dispatches are refused. Source predicate only removes this already-disabled action; no seeded-agent edit claim is made.",
+      "citation": "packages/platform/src/preview.ts:377; ../../evidence/run-2/hosted-supplement/supplement.json#/api/dispatch"
+    },
+    {
+      "id": "H13",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-481 +490",
+      "classification": "executed",
+      "reason": "Add member dialog contains exactly one Human radio and no Agent option/form in actual hosted supplement.",
+      "citation": "../../evidence/run-2/hosted-supplement/supplement.json#memberDialogHtml; ../../evidence/run-2/hosted-supplement/human-only-members.png"
+    },
+    {
+      "id": "H14",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "range": "-484 +493",
+      "classification": "waived",
+      "reason": "Defensive selection callback cannot receive agent from the preview radio group because the Agent option is absent. The human dialog is exercised; callback retains prior normal behavior outside preview.",
+      "citation": "../../evidence/run-2/hosted-supplement/supplement.json#memberDialogHtml"
+    },
+    {
+      "id": "H15",
+      "file": "apps/web/src/preview.tsx",
+      "range": "-0,0 +1,25",
+      "classification": "executed",
+      "reason": "isPreview metadata and banner copy/build/live-chat link execute in actual origin; Try live chat navigates from seeded file to chat. Nonpreview null is a preservation guard, not new product behavior.",
+      "citation": "../../evidence/run-2/hosted-before/browser.json#seeded-file-browsed; ../../evidence/run-2/hosted-before/seeded-file.png"
+    },
+    {
+      "id": "H16",
+      "file": "apps/web/src/routes.tsx",
+      "range": "-6,0 +7",
+      "classification": "executed",
+      "reason": "Routes import used by ProofReceipt preview guard, loaded by recorded web routes.",
+      "citation": "browser-network-review.json#proofPollingRequests"
+    },
+    {
+      "id": "H17",
+      "file": "apps/web/src/routes.tsx",
+      "range": "-42,0 +44",
+      "classification": "executed",
+      "reason": "ProofReceipt returns for preview and produces no /proof network request in both hosted final runs.",
+      "citation": "browser-network-review.json"
+    },
+    {
+      "id": "H18",
+      "file": "apps/web/src/site/site.test.ts",
+      "range": "-65 +65,3",
+      "classification": "executed",
+      "reason": "Ordered immutable root audit executes fixed task-board-index assertion for all 16 authorized epics. No expectation is removed.",
+      "citation": "../../evidence/run-2/audit/03-test.log:45; ../../evidence/run-2/audit/manifest.json"
+    },
+    {
+      "id": "H19",
+      "file": "apps/web/src/site/site.test.ts",
+      "range": "-87,0 +90,4",
+      "classification": "executed",
+      "reason": "Ordered immutable root audit executes exact hosting-first roadmap-ladder assertion including new epic order.",
+      "citation": "../../evidence/run-2/audit/03-test.log:45"
+    },
+    {
+      "id": "H20",
+      "file": "apps/web/src/site/site.test.ts",
+      "range": "-90,0 +97,3",
+      "classification": "executed",
+      "reason": "Exact roadmap ladder now includes E9/E10/E11 rather than omitting authorized later epics; root test gate is green.",
+      "citation": "../../evidence/run-2/audit/03-test.log:45"
+    },
+    {
+      "id": "H21",
+      "file": "apps/web/src/site/site.test.ts",
+      "range": "-93 +102,2",
+      "classification": "executed",
+      "reason": "Test now still asserts E8 mirror by identity and final E11 wildwood; immutable test gate executes assertion.",
+      "citation": "../../evidence/run-2/audit/03-test.log:45"
+    },
+    {
+      "id": "H22",
+      "file": "docs/guides/railway-hosting.md",
+      "range": "-0,0 +1,96",
+      "classification": "waived",
+      "reason": "Operator documentation has no executable runtime behavior. Its pinned build, preview notice, configuration, binding and later production prerequisites were checked against actual manifests/source; it explicitly avoids production qualification.",
+      "citation": "../../evidence/run-2/railway/manifest.json; docs/guides/railway-hosting.md"
+    },
+    {
+      "id": "H23",
+      "file": "package.json",
+      "range": "-18,0 +19",
+      "classification": "waived",
+      "reason": "Package script is a declarative alias to preview-bin.js, whose exact entrypoint ran in the actual deployment. It introduces no independent branch.",
+      "citation": "../../evidence/run-2/railway/logs-export-and-startup.json"
+    },
+    {
+      "id": "H24",
+      "file": "packages/platform/fixtures/preview/README.md",
+      "range": "-0,0 +1,5",
+      "classification": "executed",
+      "reason": "Frozen README bytes equal decoded committed file-write dump and visible repository/file; exact SHA b8092b31\u2026 is independently verified.",
+      "citation": "independent-replay.json"
+    },
+    {
+      "id": "H25",
+      "file": "packages/platform/src/preview-artifact.ts",
+      "range": "-0,0 +1,44",
+      "classification": "executed",
+      "reason": "Artifact manifest enumerates built runtime and web bytes; both hosted inventories rehash independently to bb7762d2\u2026 with 734 unique paths, and actual 555 web responses match baked hashes. Missing absent package dist ENOENT also exercised by closure-only clone. Type declarations and unexpected filesystem-error propagation are waived environmental plumbing.",
+      "citation": "integrity.json; browser-network-review.json; baseline-http/artifact.json"
+    },
+    {
+      "id": "H26",
+      "file": "packages/platform/src/preview-bin.ts",
+      "range": "-0,0 +1,23",
+      "classification": "executed",
+      "reason": "Actual container runs preview-bin, logs PUBLIC DISPOSABLE and pinned revision; restart yields a distinct logged ready process. Signal/shutdown registration delegates to runtime.close exercised by HTTP/browser lifecycle; catastrophic shutdown failure logging is waived non-claim error reporting.",
+      "citation": "../../evidence/run-2/railway/logs-export-and-startup.json; ../../evidence/run-2/railway/logs-restart.json; baseline-http/http.json"
+    },
+    {
+      "id": "H27",
+      "file": "packages/platform/src/preview.ts",
+      "range": "-0,0 +1,430",
+      "classification": "executed",
+      "reason": "Config/fixture/bootstrap/gateway/private-store/session/origin/agent/integration/build/stamp/shutdown behavior is exercised by actual hosted runs, focused HTTP and independent semantic probes. Types/comments and unreachable defensive cleanup/exception propagation are explicitly waived by region below, not claimed as source-line instrumentation.",
+      "citation": "semantic/results.json; config-edges/results.json; baseline-http/http.json; ../../evidence/run-2/hosted-before/browser.json; sensitivity/complete.json"
+    },
+    {
+      "id": "H28",
+      "file": "packages/platform/src/production.ts",
+      "range": "-127,0 +128,7",
+      "classification": "executed",
+      "reason": "Complete ordinary production config passes without preview flags and fails for each preview flag. Removing the new guard makes both sensor and original focused tests red; restoration green.",
+      "citation": "sensor-config.log; sensitivity/guard-mutant-complete-shape.log; sensitivity/guard-restored-complete-shape.log"
+    },
+    {
+      "id": "H29",
+      "file": "packages/platform/test/preview.test.ts",
+      "range": "-0,0 +1,66",
+      "classification": "executed",
+      "reason": "All 18 focused preview config tests execute green at baseline/restored/cold clone, including unsafe origin and forbidden key table; guard mutant fails its exact refusal assertion.",
+      "citation": "baseline-config.log; sensitivity/guard-mutant-builder-config.log; cold-clone.log"
+    },
+    {
+      "id": "H30",
+      "file": "packages/platform/tsconfig.build.json",
+      "range": "-10,0 +11",
+      "classification": "waived",
+      "reason": "TypeScript project reference is configuration. Platform build in fresh installed output-free clone resolves and emits the server dependency.",
+      "citation": "focus-build.log; cold-clone.log"
+    },
+    {
+      "id": "H31",
+      "file": "railway.toml",
+      "range": "-0,0 +1,9",
+      "classification": "waived",
+      "reason": "Railway build/deploy declarations are configuration applied to actual dedicated preview service. Actual build, readyz health, restart and one running replica retained.",
+      "citation": "../../evidence/run-2/railway/manifest.json"
+    },
+    {
+      "id": "H32",
+      "file": "tools/verify/cold_clone_targets.txt",
+      "range": "-76,0 +77",
+      "classification": "executed",
+      "reason": "Registered target is selected/validated by the one official cold-clone harness and exact success marker.",
+      "citation": "cold-clone.log"
+    },
+    {
+      "id": "H33",
+      "file": "tools/verify/e12_t00_browser.mjs",
+      "range": "-0,0 +1,369",
+      "classification": "executed",
+      "reason": "Original complete browser verifier ran green locally from fresh installed clone, in actual hosted before/after evidence, and restored after authentic frozen-DOM mutant red; dumped event/DOM comparisons independently checked. Instrumentation/failure serialization is evidence machinery; no source-coverage upload is claimed.",
+      "citation": "baseline-browser.log; sensitivity/digest-mutant-builder-browser.log; sensitivity/digest-restored-builder-browser.log; independent-replay.json"
+    },
+    {
+      "id": "H34",
+      "file": "tools/verify/e12_t00_chat_reducer.mjs",
+      "range": "-0,0 +1,6",
+      "classification": "executed",
+      "reason": "Reducer adapter imports real compiled reducer in original builder replay proof; independent scratch CLI built-in chat-channel plus Python reduction agrees.",
+      "citation": "../../evidence/run-2/hosted-before/browser.json; independent-replay.json"
+    },
+    {
+      "id": "H35",
+      "file": "tools/verify/e12_t00_preview.mjs",
+      "range": "-0,0 +1,281",
+      "classification": "executed",
+      "reason": "Original HTTP verifier runs in fresh scratch baseline/restoration/cold clone, exercises real gateway/private store/artifact/config/bootstrap/restart/session isolation and refuses bind mutant at assertion.",
+      "citation": "baseline-http.log; sensitivity/bind-mutant-builder-http.log; sensitivity/bind-restored-builder-http.log; cold-clone.log"
+    }
+  ],
+  "regions": [
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "13-20,30-89,98-137",
+      "classification": "executed",
+      "reason": "Frozen fixture values, all config decisions, new/repeated/corrupt/incomplete marker behavior",
+      "citation": "semantic/results.json; config-edges/results.json"
+    },
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "22-28,91-96,175-184",
+      "classification": "waived",
+      "reason": "Type-only interfaces have no runtime behavior"
+    },
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "139-173,186-305",
+      "classification": "executed",
+      "reason": "Response/login/assets/baked revision checks; real reference server and production composition; seed all namespaces/repo/channel/file and ready-state no-reseed",
+      "citation": "baseline-http/http.json; semantic/results.json; config-edges/results.json; ../../evidence/run-2/hosted-supplement/supplement.json"
+    },
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "307-315",
+      "classification": "executed-and-waived",
+      "reason": "Missing required ready-stream invokes early stream-stop path. Cleanup after arbitrary internal production-runtime bootstrap failure is defensive delegation and is waived: no synthetic internal-fault-recovery claim belongs to this finite preview task. Errors are propagated, not accepted."
+    },
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "317-405",
+      "classification": "executed",
+      "reason": "Build/health/private-route/method/origin/session/login/blocked integration/agent/HTML stamp behavior. Safe input escaping is exercised with validated ASCII; forbidden metacharacter paths never enter interpolated strings. Type guards and error response helpers are not separate product claims.",
+      "citation": "semantic/results.json; ../../evidence/run-2/hosted-supplement/supplement.json; baseline-http/http.json"
+    },
+    {
+      "file": "packages/platform/src/preview.ts",
+      "lines": "406-430",
+      "classification": "executed-and-waived",
+      "reason": "All-interface listen and repeated close/draining/long-poll stop exercise HTTP and browser termination/restart. Impossible new health request after closed listener, timeout-only catastrophic cleanup exception and close-error logging are waived non-claim defensive plumbing.",
+      "citation": "baseline-http/http.json; sensitivity/complete.json"
+    }
+  ],
+  "passiveMetadataAndArchiveHunks": [
+    {
+      "id": "M001",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/browser-network-review.json",
+      "range": "-0,0 +1,14",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M002",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/cheap-sweep.json",
+      "range": "-0,0 +1,6",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M003",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.log",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M004",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.mjs",
+      "range": "-0,0 +1,37",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M005",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-review.json",
+      "range": "-0,0 +1,60",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M006",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/coverage.json",
+      "range": "-0,0 +1,542",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M007",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/deployment-review.json",
+      "range": "-0,0 +1,139",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M008",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/environment-review.json",
+      "range": "-0,0 +1,21",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M009",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/exact-target-recheck.log",
+      "range": "-0,0 +1,32",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M010",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-1.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M011",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-2.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M012",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-3.log",
+      "range": "-0,0 +1,23",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M013",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-builds.json",
+      "range": "-0,0 +1,35",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M014",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hunk-inventory.json",
+      "range": "-0,0 +1,290",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M015",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate-pid.json",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M016",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate.log",
+      "range": "-0,0 +1,56",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M017",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/independent-replay.json",
+      "range": "-0,0 +1,88",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M018",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/integrity.json",
+      "range": "-0,0 +1,460",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M019",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/judge-cross-examination.json",
+      "range": "-0,0 +1,108",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M020",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/lifecycle-review.json",
+      "range": "-0,0 +1,22",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M021",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/one-byte-mutation.jsonl",
+      "range": "-0,0 +1,7",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M022",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/portable-artifact-index.json",
+      "range": "-0,0 +1,1591",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M023",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.json",
+      "range": "-0,0 +1,34",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M024",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.md",
+      "range": "-0,0 +1,19",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M025",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.json",
+      "range": "-0,0 +1,1326",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M026",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.md",
+      "range": "-0,0 +1,59",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M027",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/review-artifact-index.json",
+      "range": "-0,0 +1,566",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M028",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/runtime-artifact-comparison.json",
+      "range": "-0,0 +1,186",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M029",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sabotage-driver.py",
+      "range": "-0,0 +1,71",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M030",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-1.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M031",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-2.log",
+      "range": "-0,0 +1,720",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M032",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation.json",
+      "range": "-0,0 +1,24",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M033",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.log",
+      "range": "-0,0 +1,9",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M034",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.mjs",
+      "range": "-0,0 +1,70",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M035",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/fresh-accepted.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M036",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/html-without-js/index.html",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M037",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/results.json",
+      "range": "-0,0 +1,192",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M038",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-driver.log",
+      "range": "-0,0 +1,21",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M039",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-sensor.mjs",
+      "range": "-0,0 +1,23",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M040",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-browser.log",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M041",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-sensor.log",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M042",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-tests.log",
+      "range": "-0,0 +1,9",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M043",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-http.log",
+      "range": "-0,0 +1,7",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M044",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-network-sensor.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M045",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "range": "-0,0 +1,23",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M046",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "range": "-0,0 +1,19",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M047",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutated-build.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M048",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-build.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M049",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-real-network.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M050",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/browser.json",
+      "range": "-0,0 +1,208",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M051",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/deployment.json",
+      "range": "-0,0 +1,3669",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M052",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/file.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M053",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/network.json",
+      "range": "-0,0 +1,1292",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M054",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin-preserves-writes.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M055",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/two-profile-accepted.jsonl",
+      "range": "-0,0 +1,2",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M056",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/witness-reconnected.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M057",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/deployment.json",
+      "range": "-0,0 +1,3669",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M058",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+      "range": "-0,0 +1,1725",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M059",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/file.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M060",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/two-profile-accepted.jsonl",
+      "range": "-0,0 +1,2",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M061",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/browser.json",
+      "range": "-0,0 +1,213",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M062",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/deployment.json",
+      "range": "-0,0 +1,3669",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M063",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/file.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M064",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/network.json",
+      "range": "-0,0 +1,1243",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M065",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin-preserves-writes.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M066",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/two-profile-accepted.jsonl",
+      "range": "-0,0 +1,2",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M067",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/witness-reconnected.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M068",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/commands.json",
+      "range": "-0,0 +1,322",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M069",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/complete.json",
+      "range": "-0,0 +1,436",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M070",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "range": "-0,0 +1,14",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M071",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutated-build.log",
+      "range": "-0,0 +1,720",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M072",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-restored-build.log",
+      "range": "-0,0 +1,720",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M073",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "range": "-0,0 +1,30",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M074",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "range": "-0,0 +1,18",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M075",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutated-build.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M076",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-build.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M077",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M078",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted-state.json",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M079",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted.jsonl",
+      "range": "-0,0 +1,2",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M080",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/artifact.json",
+      "range": "-0,0 +1,3669",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M081",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/http.json",
+      "range": "-0,0 +1,36",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M082",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-browser.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M083",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-config-tests.log",
+      "range": "-0,0 +1,9",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M084",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/sabotages.json",
+      "range": "-0,0 +1,110",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M085",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/snapshot-aba.json",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M086",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/target-blocker.json",
+      "range": "-0,0 +1,10",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M087",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-probes.json",
+      "range": "-0,0 +1,114",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M088",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/artifact-index.json",
+      "range": "-0,0 +1,345",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M089",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.log",
+      "range": "-0,0 +1,10",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M090",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.raw.log",
+      "range": "-0,0 +1,10",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M091",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M092",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.raw.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M093",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.log",
+      "range": "-0,0 +1,777",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M094",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.raw.log",
+      "range": "-0,0 +1,777",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M095",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.log",
+      "range": "-0,0 +1,728",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M096",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.raw.log",
+      "range": "-0,0 +1,728",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M097",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/manifest.json",
+      "range": "-0,0 +1,225",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M098",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/portable-index.json",
+      "range": "-0,0 +1,62",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M099",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.log",
+      "range": "-0,0 +1,10",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M100",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.raw.log",
+      "range": "-0,0 +1,10",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M101",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M102",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.raw.log",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M103",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.log",
+      "range": "-0,0 +1,121",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M104",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.raw.log",
+      "range": "-0,0 +1,121",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M105",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/audit.json",
+      "range": "-0,0 +1,250",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M106",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/portable-index.json",
+      "range": "-0,0 +1,48",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M107",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/canary-scan.json",
+      "range": "-0,0 +1,12",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M108",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/browser.json",
+      "range": "-0,0 +1,208",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M109",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/deployment.json",
+      "range": "-0,0 +1,3684",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M110",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/file.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M111",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/network.json",
+      "range": "-0,0 +1,1348",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M112",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin-preserves-writes.jsonl",
+      "range": "-0,0 +1,7",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M113",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/two-profile-accepted.jsonl",
+      "range": "-0,0 +1,6",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M114",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/witness-reconnected.jsonl",
+      "range": "-0,0 +1,7",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M115",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/browser.json",
+      "range": "-0,0 +1,213",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M116",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/deployment.json",
+      "range": "-0,0 +1,3684",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M117",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/file.jsonl",
+      "range": "-0,0 +1,3",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M118",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/network.json",
+      "range": "-0,0 +1,1327",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M119",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin-preserves-writes.jsonl",
+      "range": "-0,0 +1,5",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M120",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/two-profile-accepted.jsonl",
+      "range": "-0,0 +1,4",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M121",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/witness-reconnected.jsonl",
+      "range": "-0,0 +1,5",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M122",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mjs",
+      "range": "-0,0 +1,95",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M123",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/network.json",
+      "range": "-0,0 +1,162",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M124",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/supplement.json",
+      "range": "-0,0 +1,123",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M125",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted-state.json",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M126",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted.jsonl",
+      "range": "-0,0 +1,2",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M127",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/artifact.json",
+      "range": "-0,0 +1,3889",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M128",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/http.json",
+      "range": "-0,0 +1,36",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M129",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence-check.mjs",
+      "range": "-0,0 +1,29",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M130",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence.json",
+      "range": "-0,0 +1,16",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M131",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/build.json",
+      "range": "-0,0 +1,2467",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M132",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/manifest.json",
+      "range": "-0,0 +1,191",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M133",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/runtime.json",
+      "range": "-0,0 +1,47",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M134",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/restart-ready.json",
+      "range": "-0,0 +1,13",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M135",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readback.json",
+      "range": "-0,0 +1",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M136",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readers.json",
+      "range": "-0,0 +1,18",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M137",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md",
+      "range": "-109,0 +110,139",
+      "classification": "waived",
+      "reason": "Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed.",
+      "citation": "integrity.json; lifecycle-review.json"
+    },
+    {
+      "id": "M138",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M139",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M140",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/agents-disabled.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M141",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-after-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M142",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-before-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M143",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M144",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/live-convergence.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M145",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M146",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/seeded-file.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M147",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/ada-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M148",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/grace-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M149",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/seeded-file.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M150",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M151",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M152",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/agents-disabled.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M153",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-after-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M154",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-before-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M155",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M156",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/live-convergence.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M157",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M158",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/seeded-file.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M159",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-ada-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M160",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M161",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M162",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-ada-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M163",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M164",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M165",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M166",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M167",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M168",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/agents-disabled.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M169",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-after-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M170",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-before-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M171",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M172",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/live-convergence.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M173",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M174",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/seeded-file.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M175",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M176",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M177",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/agents-disabled.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M178",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-after-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M179",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-before-reconnect.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M180",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-notice.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M181",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/live-convergence.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M182",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M183",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/seeded-file.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M184",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mp4",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    },
+    {
+      "id": "M185",
+      "file": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/human-only-members.png",
+      "range": "binary artifact",
+      "classification": "waived",
+      "reason": "Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged.",
+      "citation": "lifecycle-review.json"
+    }
+  ],
+  "uncoveredRequiredBehavior": [],
+  "deadRequiredBehavior": [],
+  "sourceExecutionInstrumentation": "Not claimed. This is source-to-recorded-behavior coverage with explicit waivers for types/config, preserved branches, unreachable defensive UI and non-claim exception handling."
+}

@@ -1,0 +1,137 @@
+{
+  "records": [
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "http://public.critic.invalid",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "https://user:pass@critic.invalid",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "https://critic.invalid/a",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "https://critic.invalid?x=1",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "https://critic.invalid#x",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "ftp://critic.invalid",
+      "refused": true
+    },
+    {
+      "key": "EF_PUBLIC_ORIGIN",
+      "case": "not a URL",
+      "refused": true
+    },
+    {
+      "key": "EF_BUILD_REVISION",
+      "case": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "refused": true
+    },
+    {
+      "key": "EF_BUILD_REVISION",
+      "case": "gggggggggggggggggggggggggggggggggggggggg",
+      "refused": true
+    },
+    {
+      "key": "EF_BUILD_REVISION",
+      "case": "",
+      "refused": true
+    },
+    {
+      "key": "EF_BUILD_REVISION",
+      "case": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "refused": true
+    },
+    {
+      "key": "PORT",
+      "case": "-1",
+      "refused": true
+    },
+    {
+      "key": "PORT",
+      "case": "65536",
+      "refused": true
+    },
+    {
+      "key": "PORT",
+      "case": "1.0",
+      "refused": true
+    },
+    {
+      "key": "PORT",
+      "case": "NaN",
+      "refused": true
+    },
+    {
+      "key": "PORT",
+      "case": "",
+      "refused": true
+    },
+    {
+      "key": "EF_PREVIEW_DATA_DIR",
+      "case": "relative",
+      "refused": true
+    },
+    {
+      "key": "EF_WEB_ROOT",
+      "case": "relative",
+      "refused": true
+    },
+    {
+      "key": "EF_DEPLOYMENT_MODE",
+      "case": "missing",
+      "refused": true
+    },
+    {
+      "key": "EF_PREVIEW_AUTH",
+      "case": "missing",
+      "refused": true
+    },
+    {
+      "key": "RAILWAY_PUBLIC_DOMAIN",
+      "acceptedCanonicalOrigin": true
+    },
+    {
+      "key": "volume-marker",
+      "refused": true,
+      "unchanged": true
+    },
+    {
+      "key": "volume-marker",
+      "refused": true,
+      "unchanged": true
+    },
+    {
+      "key": "volume-marker",
+      "refused": true,
+      "unchanged": true
+    },
+    {
+      "key": "volume-marker",
+      "refused": true,
+      "unchanged": true
+    },
+    {
+      "key": "volume-marker",
+      "refused": true,
+      "unchanged": true
+    },
+    {
+      "key": "baked-revision-mismatch",
+      "refused": true
+    }
+  ]
+}

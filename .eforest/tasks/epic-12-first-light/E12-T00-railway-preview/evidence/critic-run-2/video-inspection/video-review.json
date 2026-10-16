@@ -1,0 +1,100 @@
+[
+  {
+    "video": "hosted-after/ada.mp4",
+    "duration": 12.28,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-after-ada-sheet.png",
+    "sha256": "8e1deb834d5331d94881ff99649ff218f389a5bd50e4b16ecbd25c266aa810ed",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-after/grace-after-reconnect.mp4",
+    "duration": 3.72,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-after-grace-after-reconnect-sheet.png",
+    "sha256": "5a6313aa13c5258ef67dabb5a3faba9ec21ea134e907636a710988bd0232187f",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-after/grace-before-reconnect.mp4",
+    "duration": 7.64,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-after-grace-before-reconnect-sheet.png",
+    "sha256": "13e36e7aa613ee5b03307dd446964175e723f17bbeca55d5ac1599bbbab55b83",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-before/ada.mp4",
+    "duration": 14.08,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-before-ada-sheet.png",
+    "sha256": "3e158293bbd5791a71792ff9c67cb5fd1cb3bfdf2bc726430eb9e8f607330a9a",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-before/grace-after-reconnect.mp4",
+    "duration": 3.6,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-before-grace-after-reconnect-sheet.png",
+    "sha256": "8605a8050411b1a03b6ab3a430546e41ef84c01eedbcbd9e62dd47828d2c0034",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-before/grace-before-reconnect.mp4",
+    "duration": 8.88,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-before-grace-before-reconnect-sheet.png",
+    "sha256": "bb2688e0b5c6232e05a67a3f5a90e6051d26bb7a086004a96d064ff297169b46",
+    "samplingSeconds": 2
+  },
+  {
+    "video": "hosted-supplement/hosted-supplement.mp4",
+    "duration": 6.44,
+    "streams": [
+      {
+        "codec": "h264",
+        "width": 1440,
+        "height": 1000
+      }
+    ],
+    "sheet": "hosted-supplement-hosted-supplement-sheet.png",
+    "sha256": "7e283c3490c29b30375350fdd9c52a967fe02bce5ca2b0d81c554c3514292e07",
+    "samplingSeconds": 2
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "head": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "initialOutputOrDependencies": [],
+  "removedEnvironmentNames": [
+    "RUST_LOG"
+  ],
+  "noWarmLinks": true,
+  "installCommand": [
+    "pnpm",
+    "install",
+    "--frozen-lockfile"
+  ],
+  "installExit": 0,
+  "trackedStatus": "",
+  "node": "v24.20.0",
+  "pnpm": "10.15.0"
+}
