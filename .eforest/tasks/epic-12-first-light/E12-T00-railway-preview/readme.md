@@ -3,7 +3,7 @@ id: E12-T00
 epic: 12
 title: "Deploy a clearly labeled Railway preview with disposable data and stub identity"
 priority: 520
-status: refuted
+status: in-progress
 depends_on: [E5-T14]
 estimate: L
 capstone: false

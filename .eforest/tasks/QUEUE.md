@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E12-T00** — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(builder rework required)*
+1. **E12-T00** — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -114,7 +114,7 @@ No new task may start until **E12-T00** clears the current gate.
 
 ## Epic 12 — `epic-12-first-light`
 
-- [!] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
+- [~] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
 - [ ] `521` [E12-T01](epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md) — Qualify the production stream provider and freeze the public launch profile *(deps: E5-T14, E12-T00)*
 - [ ] `522` [E12-T02](epic-12-first-light/E12-T02-reproducible-railway-runtime/readme.md) — Build a reproducible Railway runtime with readiness and bounded shutdown *(deps: E12-T01)*
 - [ ] `523` [E12-T03](epic-12-first-light/E12-T03-public-https-authentication/readme.md) — Make public HTTPS authentication and sessions production-correct *(deps: E12-T02)*
