@@ -77,18 +77,28 @@ recorded in the task's `evidence/replay-availability.json`. The explicit fallbac
 Playwright with console/network inspection and independently replayed stream evidence.
 It does not claim that a managed QA journey ran.
 
-## Inputs needed for production
+## Next usable deployment: real login, then local CLI
 
-E12-T01 onward qualify the production stream provider, runtime, authentication, public
-traffic and recovery before this can become the public multi-user release. Required
-provider inputs are:
+E12-T10 deploys a separate authenticated service with a fresh private volume, followed
+by E12-T11 for local CLI setup and selected private-project mirroring. The human selected
+our pinned patched Durable Streams provider, privately co-located on Railway; a managed
+stream account is not required. T01-T09 retain full public qualification, load and
+recovery acceptance. Public configuration already supplied:
 
-- An Auth0/OIDC issuer URL and public application client ID, with the final HTTPS
-  `/auth/callback` and logout/origin allowlists configured in the provider.
-- A qualified production Durable Streams endpoint and its server-side credential
-  configuration. The starter's Postgres URL or Electric Shape endpoint is a different
-  API and cannot be substituted.
-- A production session-signing secret, stored in Railway variables rather than source.
+- Auth0 issuer `https://dev-8qqftel4x1s5wed3.us.auth0.com/` and public SPA client ID
+  `H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk`. Register the exact new HTTPS `/auth/callback`,
+  logout and origin values only when the candidate origin is known. No client secret
+  is needed for public authorization-code/S256 PKCE.
+- A dedicated private persistent provider volume; the starter's Postgres/Shape URL is
+  a different API. Do not copy public preview state into it.
+- A stable private session-signing secret generated/stored securely by the new runtime,
+  never committed or shown in logs. The implemented task will document its exact binding.
+
+First CLI setup uses the existing revocable web-minted token with secure local input,
+an origin-bound profile and a reproducible local launcher. Do not paste a token into
+chat or shell arguments. Gateway-only initial import and one-way updates must pass
+dedicated fixture proof before the human selects the first real project. The complete
+content-addressed changeset model remains E14; this first hosted path uses full files.
 
 The ordinary production runtime rejects preview flags. Switching to it also requires
 the remaining E12 implementation and proof; adding API keys to this fixture entrypoint

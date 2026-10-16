@@ -2,7 +2,7 @@
 id: E12-T03
 epic: 12
 title: Make public HTTPS authentication and sessions production-correct
-priority: 523
+priority: 525
 status: pending
 depends_on: [E12-T02]
 estimate: M
@@ -18,10 +18,15 @@ T04 completes the real-provider browser round-trip at the actual Railway origin.
 
 ## Context
 
-The Node adapter currently reconstructs `http://Host` and auth routes derive callbacks
-and invite links from that value. Session and return-path cookies lack `Secure`.
-Pending OIDC transactions and per-run capabilities are process-local, while established
-session validity is derived from the identity stream. T01's single mutation-serving
+T10 introduces the first real Auth0 HTTPS login and secure-session implementation.
+This task retains the complete public-launch authentication qualification below, using
+T01's frozen profile and the final runtime. Earlier proof can be reused only where its
+exact source/runtime boundary still applies; no acceptance box is pre-verified.
+
+The first hosted auth path addresses canonical origin, browser transaction binding
+and Secure cookies. Pending OIDC transactions and per-run capabilities are process-local,
+while established session validity is derived from the identity stream. Qualify all
+required restart, rotation and refusal paths below for the final public candidate. T01's single mutation-serving
 replica and no-overlap deployment boundary remains mandatory; this task must specify
 safe interrupted-login behavior rather than pretending in-memory transactions survive.
 

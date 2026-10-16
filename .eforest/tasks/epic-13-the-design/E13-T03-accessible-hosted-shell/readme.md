@@ -2,7 +2,7 @@
 id: E13-T03
 epic: 13
 title: "Capstone: a legible, accessible shell over the real hosted workflows"
-priority: 533
+priority: 535
 status: pending
 depends_on: [E13-T02]
 estimate: L

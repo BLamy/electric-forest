@@ -1,0 +1,920 @@
+{
+  "E13-T01": {
+    "path": ".eforest/tasks/epic-13-the-design/E13-T01-hosted-journey-audit/readme.md",
+    "status": "pending",
+    "sha256": "83262ae5a71e627ebaa6731a5823227ddb054f0a1373acf3ad59f9a318dc86f6",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E13-T02": {
+    "path": ".eforest/tasks/epic-13-the-design/E13-T02-navigation-and-source-model-design/readme.md",
+    "status": "pending",
+    "sha256": "de3dbedf45c86925ef1a6d6aeb2ee5ab76dbaa276ccd6298932d5f15b34e7941",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E13-T03": {
+    "path": ".eforest/tasks/epic-13-the-design/E13-T03-accessible-hosted-shell/readme.md",
+    "status": "pending",
+    "sha256": "b4498932548495d72d13b69d4923ca98fc0a1db67d422acd3099fbb9d312d294",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E0-T01": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T01-pnpm-workspace-and-gates/readme.md",
+    "status": "verified",
+    "sha256": "a7c028adae090ae65867fac719827f0cf9ea40260c54719b2541711a415625d0",
+    "verificationLogSha256": "12fd37fe7b7dbd0b5a8604d5a98a9746339194d3fe290a54e2fee07d956ddd8b"
+  },
+  "E0-T05": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T05-stream-server-core/readme.md",
+    "status": "verified",
+    "sha256": "eabf637e4594c7d33c32769260ae1be3af89e8d0e764b67a15652588603c8e5e",
+    "verificationLogSha256": "645ea5bfa9ebcd22748f3ad4c37e066fe00b0e6ca946b885aa5c905fcb91af10"
+  },
+  "E0-T02": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T02-verify-spine/readme.md",
+    "status": "verified",
+    "sha256": "44bce79b8bec0100a0e4fa1c208081ff76fa6dad1020e1d79db6fa78cc402f19",
+    "verificationLogSha256": "a4c65d90af0f856805045e2c405fef6ecae01ccc87c5e027c1eed3719097d073"
+  },
+  "E0-T07": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T07-file-backed-store/readme.md",
+    "status": "verified",
+    "sha256": "634f90b259545a605037577d22a38f2e99db571aeb574e92b76974c8345f97c8",
+    "verificationLogSha256": "6dd5b91211dab155ebc1085833743318455a749245e5f10a19e7b7bc028dff92"
+  },
+  "E0-T03": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T03-protocol-envelope-and-digests/readme.md",
+    "status": "verified",
+    "sha256": "c8b5aefbbc3d80134b30cacc5c479b8987fac5e81d704b3c2e176e5330f53386",
+    "verificationLogSha256": "699a5b669c530a50974977470b3ce503b5caabb79cc067d4df50263e542cbdc2"
+  },
+  "E0-T12": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T12-ef-bisect/readme.md",
+    "status": "verified",
+    "sha256": "d026a9729bf39b7810d79e6228a2da48eb4470d3bb84f11908dc981b9856b31b",
+    "verificationLogSha256": "2ca95f5964a151b1dc6b39116ec235c65661f93f66d5da99361e93c292d8f83e"
+  },
+  "E0-T11": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T11-validated-dispatch/readme.md",
+    "status": "verified",
+    "sha256": "ee7e2a3662e5b2cc774fef672ae4435ff1441e2ac4c3419caf945e13ffbe5ba5",
+    "verificationLogSha256": "52975661597cb34cc4ba3552ad64d0e49765a68794d19ddb2a6ae15fa424cfaf"
+  },
+  "E0-T08": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T08-client-and-writer/readme.md",
+    "status": "verified",
+    "sha256": "75c8c701383a22302fc603d7b107080e079f1642f9ccd33966181cdeb96f37be",
+    "verificationLogSha256": "4c139cb4d77f3792435d52052a0a5e7e86914d50d5eb4063f2ed270892b5aa29"
+  },
+  "E0-T06": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T06-live-tail-longpoll-sse/readme.md",
+    "status": "verified",
+    "sha256": "defdcea22761b2b219be6b4df1c1feaeaa4645a50b418d11d77316193e5dba5d",
+    "verificationLogSha256": "53855a13eb9c3cd02a7844c3b9fd3af3d91e53e5a057c6b48fab27090719600a"
+  },
+  "E0-T09": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T09-protocol-conformance-freeze/readme.md",
+    "status": "verified",
+    "sha256": "b291d9039df655760bab832445e19883f4efa1c6010509f5318f3e2fc9b1a799",
+    "verificationLogSha256": "594ba3b597bfc656dda9f2a19dffb96067d87d92c1d41f65219b3f01830ac14d"
+  },
+  "E0-T04": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/readme.md",
+    "status": "verified",
+    "sha256": "3097e94ea3aefa75aae98471cd23998b4f59121f9b12e6807c4c006aae861efd",
+    "verificationLogSha256": "6df1db3b0c132fbd73e58cff9e176fe0b9248b0ea9b49d98df9391ce36397c8a"
+  },
+  "E0-T10": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T10-redux-state-and-events/readme.md",
+    "status": "verified",
+    "sha256": "fb477c5d698e5236d91bb961a5b39b7e435680b1a5be508b7c44e984c611b50f",
+    "verificationLogSha256": "9fee254882af2825f5f6972224f31822e9d20c9d29369338fea788adc5f85363"
+  },
+  "E0-T13": {
+    "path": ".eforest/tasks/epic-0-the-seed/E0-T13-two-terminals-one-log/readme.md",
+    "status": "verified",
+    "sha256": "1f2b413740161c69bf71662c09b8737964ae7dc1ebbc92a018504a19715f0a82",
+    "verificationLogSha256": "8455a78800a2fe93383ace05e2d46a1ea5097f0cfcb09883c73f050ecfcc552b"
+  },
+  "E8-T02": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T02-authenticated-git-import/readme.md",
+    "status": "pending",
+    "sha256": "47b2dde7d795c8feec94718af600ee7a698066800a5b0d6edbe7e5557190fac2",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T03": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T03-source-cutover-and-git-retirement/readme.md",
+    "status": "pending",
+    "sha256": "2b7ddc1381ff9679c4deef4163125d8c9af22c1e0c0114e5c5e76cc14fb29d67",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T05": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T05-disposable-self-host-rehearsal/readme.md",
+    "status": "pending",
+    "sha256": "b8e65d4fbf7f87348f16402381e802f5ba92be6fd469e1ade8a3a9270ff0b6b5",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T04": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T04-gitless-loop-workspaces/readme.md",
+    "status": "pending",
+    "sha256": "0230add8f4c8d0f2079357a48ceaed50b3039e2108a97ab59d315622e70684a4",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T07": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T07-the-forest-builds-the-forest/readme.md",
+    "status": "pending",
+    "sha256": "4eaea1f3bdf10cba3fd65875752dbee162ccc8d96b950f24678d91884f0370c7",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T06": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T06-production-self-host-bootstrap/readme.md",
+    "status": "pending",
+    "sha256": "bdf33b09c0cefbabe5e72df833bfd23dbc54c9d5cdc9028c3b3f9ab50772218d",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E8-T01": {
+    "path": ".eforest/tasks/epic-8-the-mirror/E8-T01-git-import-plan/readme.md",
+    "status": "pending",
+    "sha256": "3d07488f7576ca2c05b31e9cd1488948de1c510e495be9e7a9a1bbcfa5b81af5",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E11-T03": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T03-fork-run-build-comparison/readme.md",
+    "status": "pending",
+    "sha256": "ac2a409955771aeedeffbedab1a17aa7647c8b053b5231ebcf531b4e38d9e914",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E11-T08": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T08-verified-repair-candidate/readme.md",
+    "status": "pending",
+    "sha256": "aee7f2d79a809b68e5127846b45ef21e19dff35adf490264b1ed008f9fa8e7c9",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E11-T01": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T01-cold-fork-restore/readme.md",
+    "status": "pending",
+    "sha256": "3a097fbd2f1efbd14bcc4621f431746c96d5c28c7034e6ad8b969f9c8218fd13",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E11-T02": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T02-sibling-fork-isolation/readme.md",
+    "status": "pending",
+    "sha256": "7bc9acc9943202aeb1280a5363b7fd23079cac5865bfd4c511be635ba4b322a3",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E11-T09": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T09-incident-to-replay/readme.md",
+    "status": "pending",
+    "sha256": "a004a2e1c59194f9d0e3053762d6cf89c639d55ad202e3439a1e6a90b877262c",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E11-T05": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T05-verified-build-deployment-provenance/readme.md",
+    "status": "pending",
+    "sha256": "3faa924f435cc6a2631e56f80ea8bce10086dd9b07a767ed6752d412b9698080",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E11-T04": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T04-verification-evidence-freshness/readme.md",
+    "status": "pending",
+    "sha256": "775ea969eb2da399310cca09043d73d64d8736c498b8e68218940e1d4c5112ce",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E11-T07": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T07-incident-fork-replay/readme.md",
+    "status": "pending",
+    "sha256": "b2b435229c7788625e54d2914febf0b6f6fe97336f625a28079b1016c2bf1bae",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E11-T06": {
+    "path": ".eforest/tasks/epic-11-the-wildwood/E11-T06-production-incident-task-intake/readme.md",
+    "status": "pending",
+    "sha256": "e87541fba7c5a2f8609060c42bb2ba465788ba83bf19c2f7d52da3fd88b0ec73",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E5-T10": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T10-evidence-attachment-model/readme.md",
+    "status": "verified",
+    "sha256": "ad12d78d64d5c0d0232fc9eb49991e4166b91553bbc5290d343d4bd27a43757e",
+    "verificationLogSha256": "801366326e939fdce8ff37a794c365fd609aeee2356485fb203104c1e39792c3"
+  },
+  "E5-T12": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T12-negotiation-replay-harness/readme.md",
+    "status": "verified",
+    "sha256": "5802dae3af0d02b0990ed0fc97a62f0447b30ab2e8119a8b31dd5a29de0b0b04",
+    "verificationLogSha256": "c4000085382918cb6212d2e6f677f13b33cd31b93b4928e38809d94ecaee44ca"
+  },
+  "E5-T14": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md",
+    "status": "verified",
+    "sha256": "7daa7f683baedb49f0ca21ccdfa9e04c72e298866a6d12ae184df7e56134bd19",
+    "verificationLogSha256": "2e051530c101e52af766ccfe65e09ec92bc763f4181ac478f9c0fb0f6c3f18c6"
+  },
+  "E5-T03": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/readme.md",
+    "status": "verified",
+    "sha256": "30cfa43b7970c0ae6a57a47ae2f402d3bb5bcdf16c332dbf4a2842b84f64c936",
+    "verificationLogSha256": "35191e6a43ed44120ee062e532bfd8db5dd1f289c7135daddc2c16532ebf8907"
+  },
+  "E5-T05": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T05-issues-ui-live/readme.md",
+    "status": "verified",
+    "sha256": "f94f6164ccc3b2e182d8b144c3dc1fa99f9574e66ad0a07c1ae895ea9f87ef6e",
+    "verificationLogSha256": "84e46fb7f5ee2beb0ba6ac346599e68357eb5933c579a77cb5c29cc4e43e962a"
+  },
+  "E5-T11": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T11-evidence-ui/readme.md",
+    "status": "verified",
+    "sha256": "c0d8a6d719befad6b8ead7d055fab4b010462abc4dba8b1bf6560f0b5e101ba8",
+    "verificationLogSha256": "e18527ec180408ff7b309666694ed74a318edb7396f271b9b502805c6cc895bc"
+  },
+  "E5-T13": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T13-issue-to-merge/readme.md",
+    "status": "verified",
+    "sha256": "f49224fd1b68e1fcbe2cee1711486317825e04182a279fd2342b2df2c2527bc7",
+    "verificationLogSha256": "39a807d13c0a2d6a0e54784ea183d5a02913f44838ef9f10af479c7f6bbff87c"
+  },
+  "E5-T01": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/readme.md",
+    "status": "verified",
+    "sha256": "9de9739421826c0cc644684231a3bf98c2880dc9f10f7da790d46ecd50502a0a",
+    "verificationLogSha256": "810440aac870af4cc524ae73ff28f171821cef6d9c7924904ac7d1a5e4d0698e"
+  },
+  "E5-T02": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/readme.md",
+    "status": "verified",
+    "sha256": "ef1878a9947e32f5fe53a7e29b47fcf117c3e894336911b91a1d3719643cc1d6",
+    "verificationLogSha256": "5539ad5ba66f8d39222a19296cae30310412f9aa2fbc2c8c4f6a97988e26e676"
+  },
+  "E5-T15": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md",
+    "status": "pending",
+    "sha256": "49c2e4b3740e3670a233dbcb7aa23926eb7e0775695741fe62397b0ee9e97f49",
+    "verificationLogSha256": "adf5734e5e76b6dc39ae5b4fa41acaafefa4524cf9f09bb2cedbc5452bf6587a"
+  },
+  "E5-T07": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T07-cross-entity-linking/readme.md",
+    "status": "verified",
+    "sha256": "dfb1601e5fd65efb9c48b090110bf7e75687a29cd9033ee87130b42de00a115b",
+    "verificationLogSha256": "da6cbe9ad08093eaa3b5dd67a2d4d6e9bda73e8952c2bef21d1e3b56b1316751"
+  },
+  "E5-T08": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T08-wiki-branch-live/readme.md",
+    "status": "verified",
+    "sha256": "40231ea7ede6f996cdffaa0f8675245e75e4df9383527108891d2ea9da739513",
+    "verificationLogSha256": "18ab46a26584d72af7a4930c2d18927043a9f4b2dd3d7fbc79141e7aeac784a1"
+  },
+  "E5-T06": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T06-pr-merge-execution/readme.md",
+    "status": "verified",
+    "sha256": "c8958bf464921b8ee18bdd4037e9d132c721565457045d6e76f5b0362b44a710",
+    "verificationLogSha256": "e97cabb3185e4ef61919698797d56251136fd994bf12cc98cdc57b7a3f7b5e0a"
+  },
+  "E5-T04": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T04-browser-dispatch-hook/readme.md",
+    "status": "verified",
+    "sha256": "50261ed62d9d5bfc71b1905ab45b0814198bdc44311bd576189f4c03a9b0d176",
+    "verificationLogSha256": "b0a427a6e4f15b53d639b80e97b7daf839847f1bdbfc3218a91ad8beec5a9db7"
+  },
+  "E5-T09": {
+    "path": ".eforest/tasks/epic-5-the-meadow/E5-T09-pr-ui-live/readme.md",
+    "status": "verified",
+    "sha256": "a77fdeeb4092bc89ccee08bf5fecfe1d1665d1159650b8723735fd291e3bcc95",
+    "verificationLogSha256": "2c931197cb7a7370edbd50ce7afb30ce4988a41da535505769546c22edd1bc5b"
+  },
+  "E10-T05": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T05-ticket-to-fork-acceptance-runner/readme.md",
+    "status": "pending",
+    "sha256": "29e1dd1d75860120b9a14e18d7d6ef279934693428bb313e5861e3a67a4941bf",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T06": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T06-independent-fork-run-verdict/readme.md",
+    "status": "pending",
+    "sha256": "f5de11821a656b9a2193508222ec18c616fe97f2486e4ea89586826f0e9c1df4",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T04": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T04-paired-browser-and-stream-evidence/readme.md",
+    "status": "pending",
+    "sha256": "59e4be63afde7dc5d22bbbd5f3ce4bb170e6751337f832cea75093601575818c",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T08": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T08-ticket-to-verified-app/readme.md",
+    "status": "pending",
+    "sha256": "1887c82807b56df8c798c63900f20057b4a1b5d82ca1e5f6cacea2a03fd01242",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T03": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T03-controlled-side-effect-adapters/readme.md",
+    "status": "pending",
+    "sha256": "ba3ec1859ba1c83f8cb93bb4afa8cb9a9168438e51cb6607ccbfcdc2b4a9a795",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T01": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T01-ticket-bound-fork-manifest/readme.md",
+    "status": "pending",
+    "sha256": "666fd6788c80dd4f4485b720fceca72a161b2aba04ca3a3e087c540ccc1e4d86",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T02": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T02-isolated-application-fork-lifecycle/readme.md",
+    "status": "pending",
+    "sha256": "ca2bbf51ea3798e5f07796d815a395736b94d4e397b1c435630c6c21216bd8d7",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E10-T07": {
+    "path": ".eforest/tasks/epic-10-the-time-machine/E10-T07-evidence-backed-pr-check/readme.md",
+    "status": "pending",
+    "sha256": "12b5d8cffd83f3e03b9f286e68a34e58b1a279ca34ac825288eab13bdc322dac",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E4-T03": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T03-ef-clone/readme.md",
+    "status": "verified",
+    "sha256": "1169d7034eb887777fe67d5b2a743275d64cf0184a51380267d919e1ad05ba86",
+    "verificationLogSha256": "8f2ff767ddda1f3ae331968fec1364911629ac7bf4569379be99c66b34f6ace7"
+  },
+  "E4-T11": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T11-conflict-surfacing/readme.md",
+    "status": "verified",
+    "sha256": "f63619f4ee7470058364c58ee428a073c2b0de5b4eedc15e491f8faee4d652db",
+    "verificationLogSha256": "933280b445edbde930745bc51d1874a0378bd7715f55557c2e2c5fd9e2ac5b4d"
+  },
+  "E4-T08": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T08-ef-watch-duplex-daemon/readme.md",
+    "status": "verified",
+    "sha256": "2102c4eedd0f33611bed13a064829db016d14ab60cef10d4bd493cc5c297c31b",
+    "verificationLogSha256": "ca9ab13a69fb1b00a7a12fe3819f1a0d072932157330e5082f0c2f71a222957a"
+  },
+  "E4-T02": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T02-ef-init-adopt/readme.md",
+    "status": "verified",
+    "sha256": "4fab3226d5498ee673e7e8e0bcd0df32a9577b40749fe49edf2e8b0a38096499",
+    "verificationLogSha256": "31af3a572f86a3c5e617cff1375d678003d4ba82b32e99f02e148d88beea9af8"
+  },
+  "E4-T10": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/readme.md",
+    "status": "verified",
+    "sha256": "b1d28dfe70ca9d7568c92fd3a802b9f1db59359cfbc0c77c29ffd41bc514a7a8",
+    "verificationLogSha256": "a099b6398bc3fd176bd7ad66e6f645ede944a4d8d6ad4dbfbbe00ada42fe1c13"
+  },
+  "E4-T09": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/readme.md",
+    "status": "verified",
+    "sha256": "12a726bea6af73fb771ce7e83fd86287a8e7929459116abe51e8166302a0b9fe",
+    "verificationLogSha256": "a5a4d9b5097f11050f6a016f4b8f229e197578538eb3c084c984755c1384f398"
+  },
+  "E4-T07": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T07-downlink-stream-to-tree/readme.md",
+    "status": "verified",
+    "sha256": "7538bf534718082bbf19ed23c17975449e2a1116910d8cc044fa36d77534849f",
+    "verificationLogSha256": "5d9630d897ea1c73b7af56301ed43c1b02f94b3bac0d50de808019ca2a4bb2b7"
+  },
+  "E4-T12": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T12-two-machines-one-branch/readme.md",
+    "status": "verified",
+    "sha256": "78a67f103b0f06098213a1bcc1acf63c882b3045a836aeff6cc279a3c46908bb",
+    "verificationLogSha256": "0a10b99c1219750a0b3f75c8ea6586ec6502d3024da82bafa29b5df27e670d1a"
+  },
+  "E4-T06": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/readme.md",
+    "status": "verified",
+    "sha256": "ff2287d3af84a1aabd274ba016266fa68e01f6fa5f17222a72254cda83335d3a",
+    "verificationLogSha256": "b5aa23c01171ac96b1e98b1da8d8d1a40e10aeb7588f8f5ef2801019c1cae59a"
+  },
+  "E4-T05": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T05-ef-branch-checkout/readme.md",
+    "status": "verified",
+    "sha256": "7f86a90372f2ede8211f6fdd5438b8afd4d5a2116b609b634052f951a9d18bf4",
+    "verificationLogSha256": "a0bba8fac097a6d17a1864b61131f52703b4f234ff41d50151490bb746cb3689"
+  },
+  "E4-T01": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/readme.md",
+    "status": "verified",
+    "sha256": "ec4c6a3599e9d18e4c170b12e6ed0502b063cd4990dd9d9a5c0ba10eb2be98e7",
+    "verificationLogSha256": "96464468944801f4dbf124282e57b833c2075e254e01faedd7de0f485d3ada8a"
+  },
+  "E4-T04": {
+    "path": ".eforest/tasks/epic-4-the-roots/E4-T04-ef-status/readme.md",
+    "status": "verified",
+    "sha256": "3662e23c1a9c2749d498442a19ee99499ebe6984ac86fa4d69d7e16b1e22c10d",
+    "verificationLogSha256": "c8545925357b5ad0b4dcd19be5136e18fa9e152fe14d3723086972c0b6bb6572"
+  },
+  "E1-T03": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T03-text-patches/readme.md",
+    "status": "verified",
+    "sha256": "74715b62314a6818ad238e652045844358c722489310b86230722f16486dbf2e",
+    "verificationLogSha256": "c1a129a6a7b42056ae79aa2fe47f87e8036f25d35e93b8dc967360aef0342088"
+  },
+  "E1-T05": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T05-watch-chokidar/readme.md",
+    "status": "verified",
+    "sha256": "808a49f90af0f42115f3f1c0424d20e3c7933e4f3111be7ec5cf48d75133c5db",
+    "verificationLogSha256": "5ec39eed5267841d1d31a3102826fb31150e57c0cd06dd77888a55ae6a3b97a3"
+  },
+  "E1-T01": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/readme.md",
+    "status": "verified",
+    "sha256": "10d960d98d7d756e35577f4c33ff8a0de5526641f1b46fafc28a8eb4f851b315",
+    "verificationLogSha256": "548bdb0a9c40d65a1cea6627c519435400c728e6f32a2f676c0f75ae9ebd61ee"
+  },
+  "E1-T06": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T06-convergence-harness/readme.md",
+    "status": "verified",
+    "sha256": "bca57f1ae7d875183d1c327bea1557bb5aa657b85e24dafa28f2492812848470",
+    "verificationLogSha256": "1c9be3e210471e048bc058b7c69dbdb5462e89b61ff94cca1d998d595bddaaf4"
+  },
+  "E1-T11": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/readme.md",
+    "status": "verified",
+    "sha256": "9c762e610a114f3a5f33270748ddd50e30d072ca11a5f6d4911dfbc694a1b129",
+    "verificationLogSha256": "928bc4d4b4a80546f5ade34bb093d105c622bacc5dc928a256caab467dd8c84b"
+  },
+  "E1-T09": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md",
+    "status": "verified",
+    "sha256": "7bba2956565c659a485e7d74ea45b2e581dce08d1e9fe940a832d0cab0cad175",
+    "verificationLogSha256": "c703cd287211e426826863b073c510e15acff34cd9c4ce583fbbdc837c0b6e22"
+  },
+  "E1-T07": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md",
+    "status": "verified",
+    "sha256": "3ebb9693f957ee6730175979aa127c3c041eddb73388e77892d9f9b85776343c",
+    "verificationLogSha256": "8da765e8903a00cc3fbb2b9af7b91d13b3e0341e85877008c996d84f2bd42081"
+  },
+  "E1-T08": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md",
+    "status": "verified",
+    "sha256": "f8dff1803bf3d33c1b097b520aa690415478d4679dc8c17f041016c15ccff879",
+    "verificationLogSha256": "4883c85d22242ee423662c89a396cb0b77ee31ea9c751fb5445b6a5128c15002"
+  },
+  "E1-T04": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T04-stale-write-fencing/readme.md",
+    "status": "verified",
+    "sha256": "2c7009f1097a14a2d07034f5395807835886ed3d6d190208eb5f2fb7d6a173d7",
+    "verificationLogSha256": "cbefab81c96eff4fb5f09dd748446b64f735897576aadbce3fcf0329ae75d70b"
+  },
+  "E1-T02": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T02-directory-ops/readme.md",
+    "status": "verified",
+    "sha256": "b0c22ffb1aeaa4dc8e3f687b20e4a7aa0c5a99358bdbc701f05615984d03e518",
+    "verificationLogSha256": "bf53c42cace877a48466ee7ec250f39941b2ab9217425f9c52ac2ad16b2d3980"
+  },
+  "E1-T10": {
+    "path": ".eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md",
+    "status": "verified",
+    "sha256": "696cccbe5b3a421e421582e99fba1637bc53ae7905b48317a08ace40f4fb506c",
+    "verificationLogSha256": "96f5e7a6ff9fd24f2496e2ecf2b87bcf8f0b3e2b7d3b554df9564b6d460c9258"
+  },
+  "E7-T07": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T07-time-travel-scrubber/readme.md",
+    "status": "pending",
+    "sha256": "8fd27559aa305f789f2197f22d5311272e330ecc7200569715084b7d45fa8729",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T06": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T06-time-travel-projector/readme.md",
+    "status": "pending",
+    "sha256": "08f529d313d72f25a7d4799168a1568b19d87d4cde9c3f44b0579e0b26b16f2c",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T09": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T09-watch-the-ai-build/readme.md",
+    "status": "pending",
+    "sha256": "f071a9573f92ef25c46a1d48762d9030996ce669d9122680f6cad60b971bb20c",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T01": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T01-agent-session-event-contract/readme.md",
+    "status": "pending",
+    "sha256": "ef3dbd05f487962b953c68ce78a195ec2e57e5f2e6ba3c7cd9495e0033642c70",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T03": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T03-branch-activity-timeline/readme.md",
+    "status": "pending",
+    "sha256": "34bd2ade20b941bb7a9acfddeb46d06f1c66ffb2a9da8adde6e5a4a3aa3378da",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T04": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T04-live-session-feed/readme.md",
+    "status": "pending",
+    "sha256": "576c5f75d6cbd7e75354ec1a3256db6887448342871cbbb181545c8d37f0f7b7",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T08": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T08-firefly-convergence-harness/readme.md",
+    "status": "pending",
+    "sha256": "ad396e38da2d1e34b75d57ea145e9b78f943aec1a42f8291185e32f0b8b9a492",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T05": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T05-live-file-patch-view/readme.md",
+    "status": "pending",
+    "sha256": "b68e48ee9f3ba7794e028830cc0fbb60aa9743eb6d05c4bdbd7075fac42b8c3b",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E7-T02": {
+    "path": ".eforest/tasks/epic-7-the-fireflies/E7-T02-agent-recorder-fine-grained-edits/readme.md",
+    "status": "pending",
+    "sha256": "d2de2ed022f9d3846cda3f34b050b7cde5f8f5fb252136b5dce262fb3f0b2495",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E2-T11": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md",
+    "status": "verified",
+    "sha256": "993c093dd82ce89e21010f1f2c41863820305c368d958c33fa63763bededab4a",
+    "verificationLogSha256": "d76b9d905d85f3684c48de36cf759f88e17887c3fa5bdfebbb8bc9a72e9d4da3"
+  },
+  "E2-T10": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md",
+    "status": "verified",
+    "sha256": "7179698d6978ccf88f5b80b8520aff81b84f77ff5a37f6feacc71b0f08c2463f",
+    "verificationLogSha256": "ad838e60253e6e4294be3fee4bf83690b987136967a16b33e532a7e237209004"
+  },
+  "E2-T04": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md",
+    "status": "verified",
+    "sha256": "b51bcfd27e6e03e5c76ab3ea19d35b69eb4deff24763743a708cd0e9d646e3b1",
+    "verificationLogSha256": "bf78d00137cb4b68d2e233455938e5e883db40732ad4d3095b7e0578717aa56f"
+  },
+  "E2-T09": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md",
+    "status": "verified",
+    "sha256": "f22bd886f0c3e6b65204e58d132390bd0ccbdaf29505251d63e1cbcf7729f510",
+    "verificationLogSha256": "0774c6be0fdcc7a54e83986cd91063702745630d0d5d7777c9f88f0baf74807c"
+  },
+  "E2-T12": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T12-the-locked-gate/readme.md",
+    "status": "verified",
+    "sha256": "6bc316097968a0062bcfd8bb540b0c8850f9b49239bd7477285795466abfbcc1",
+    "verificationLogSha256": "85ad8427510098eddaf2b3a7b25f2e9661c75a8cc459c66708199a5e244525d7"
+  },
+  "E2-T03": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T03-bearer-token-verification/readme.md",
+    "status": "verified",
+    "sha256": "57389d64ab1b47a8a835b94a059e9d6a159abb3d79d35b58dbe0a65e67080294",
+    "verificationLogSha256": "ab6dd0693ea96fe1af1d0ba5299741077aa29c3d8c31c92db135890644c6aaac"
+  },
+  "E2-T08": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md",
+    "status": "verified",
+    "sha256": "2cfb0a3f4abd76b678a7b4562f1f56c2ece4fe8574c045621173f0260f5d8661",
+    "verificationLogSha256": "13bf9d12c6615817f3989fee53f03e4f5efbd103d57e4e8a2af4e1188c9d7dc5"
+  },
+  "E2-T06": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md",
+    "status": "verified",
+    "sha256": "1aa73758a8987ae6257abdd82ff9eaa757351a861e6d059c958be4fc0bddbe58",
+    "verificationLogSha256": "531d83ff54179b60ac876955603bd8f40c8df9c5e752a10070095124f712289e"
+  },
+  "E2-T05": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md",
+    "status": "verified",
+    "sha256": "7515df5660ebda0fc51368d289819e6d2280304970034cc436ef445e70df8d0e",
+    "verificationLogSha256": "62adde400e8321af92e59645cb7e3c0cf6668f670335a9d7a0be60203c799ae7"
+  },
+  "E2-T01": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md",
+    "status": "verified",
+    "sha256": "925c213788e256423edc66246ec0a6d19a6286ad84e9e3cfcce200a2b43c89d4",
+    "verificationLogSha256": "165688b6a36e35e0c6885a65496d622837143ca2a71cf19c8158950113f6af2e"
+  },
+  "E2-T02": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/readme.md",
+    "status": "verified",
+    "sha256": "4dc3d5aafa31ec5aff15d4ade1847418ba7e1afcf7a5ae5b106be35a38cb6f6b",
+    "verificationLogSha256": "d7fc7981fd4cf43dddb4bbf5587ca9cb94f155d191e1621a5e976168c4b64f2c"
+  },
+  "E2-T07": {
+    "path": ".eforest/tasks/epic-2-the-gates/E2-T07-per-stream-authorization/readme.md",
+    "status": "verified",
+    "sha256": "661843ba7ad0cbe11fcb36aaf5e267d0cccff3524c7266ade686d0362ec73d6d",
+    "verificationLogSha256": "bcb2c6b075979d1a34289a440b6734ef5e11a7a588a434742a512e7e5613d147"
+  },
+  "E14-T02": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T02-immutable-official-stream-content-objects/readme.md",
+    "status": "pending",
+    "sha256": "a464f3acd2068386a31339f972f2a97124c5ba621bb6b73adfe8fcda0e54adbe",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E14-T06": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T06-legacy-to-changesets-capstone/readme.md",
+    "status": "pending",
+    "sha256": "1cf0569630d68a867e59780004a930190f8f10ab79f0688297b63a097b9b51e1",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E14-T03": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T03-fenced-changeset-publication/readme.md",
+    "status": "pending",
+    "sha256": "a74cbfde8ff11c68cdca40bbbb71fb69f7f8dcc8ed4f346ca0e59e8ca0b74041",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E14-T04": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T04-streamfs-workspace-and-merge-adapters/readme.md",
+    "status": "pending",
+    "sha256": "4eb19340e533bd1fd039f6d633ad0833b9d0c2e218a623a168c5e941a0637c6f",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E14-T05": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T05-changeset-review-and-evidence-ui/readme.md",
+    "status": "pending",
+    "sha256": "36a45143192003bb969e3f0fecbfab6c745e2e9c12e678d5f3a25a74b922c573",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E14-T01": {
+    "path": ".eforest/tasks/epic-14-the-changesets/E14-T01-changeset-and-content-contract/readme.md",
+    "status": "pending",
+    "sha256": "21711e3122322a61553625d36968edcf3d82d9cff267a31ba7e901b5c035118a",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E3-T05": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md",
+    "status": "verified",
+    "sha256": "29ef726d7d303b8b9c2c7a1fd7ad8c313265bd6cdc68b1272fe8a92f4e80c2b7",
+    "verificationLogSha256": "bc61e45c27801dfae81ea34226e6ec8481f82c5315e70eddf1f27ac773b04522"
+  },
+  "E3-T02a": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T02a-app-shell-contract/readme.md",
+    "status": "verified",
+    "sha256": "d893d760686b90cfe30a79779dd48b1f43da26efbe0fd147a53de4d40500ab26",
+    "verificationLogSha256": "5825168d0ad4d1857ce9881bd128e770147d13bbde14332d49fae9b5b923bfdf"
+  },
+  "E3-T03": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md",
+    "status": "verified",
+    "sha256": "d0730b59168ae3a04baa506b0617dd1efadfe062a225dc76dcfec81904345e8f",
+    "verificationLogSha256": "c90626fa07e28667869260dba0b3d289cb551c623dce2e4b13d3990f1923768f"
+  },
+  "E3-T02": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md",
+    "status": "cancelled",
+    "sha256": "60b13e95918a40a0b7d07bd666ae6b33d179bcaae0a9dee3bb145887e064361d",
+    "verificationLogSha256": "0138fc3f71fe8d456175bab20a1efada5d756338f3ecd574e65f28233d63f6b0"
+  },
+  "E3-T07": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md",
+    "status": "verified",
+    "sha256": "906b450d578801b376d547684623e6c41b9d9f9cb68c7bf1fa3334c367d88907",
+    "verificationLogSha256": "de63054bbcb0fa93d45723869ccee92a72f6312e34805639d94e46f7146c7ff6"
+  },
+  "E3-T08": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T08-branch-switcher/readme.md",
+    "status": "verified",
+    "sha256": "dbcaff7d6fc7248d4d33e6cf0c7f224c6675b7b3649385f00691ecdd62c684e2",
+    "verificationLogSha256": "9f45967e36054ad3f542fa9a2b243225eba29054e5afc17bf292641e077d91cf"
+  },
+  "E3-T09": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T09-history-event-log/readme.md",
+    "status": "verified",
+    "sha256": "895ac2dd16c9f957cb77baa94c53130c92150240f0583d14f9d28f0f83c270bd",
+    "verificationLogSha256": "b707fb75d6ce7ec7f37ed4746faf9bd5d93d2268695923199ee0ba1968883cf3"
+  },
+  "E3-T06": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T06-file-tree-live/readme.md",
+    "status": "verified",
+    "sha256": "9f94e19aedd052c419405c37f630980ef088170c8604e32d29e63023f6976cdb",
+    "verificationLogSha256": "cea310054425311d6c2efd34ea4879d5dfa242ba24ffa01a50337aa2eb5779d6"
+  },
+  "E3-T10": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T10-the-reading-room/readme.md",
+    "status": "verified",
+    "sha256": "d13e8e3c92f8a35847addfb3a907d9d55d5965b0a353cccf5c32eef5d6804d04",
+    "verificationLogSha256": "d4974228dd38a68238ed6a70b838eb54d3b64ec4ee88fc2b0d8cc51ad4874c76"
+  },
+  "E3-T04": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T04-repo-list-live/readme.md",
+    "status": "verified",
+    "sha256": "c870547d3b34c0f19eec3e5d6beca03fcd1747fe14e1c534ed2f54c3634afe67",
+    "verificationLogSha256": "a5c7e36b76650c2a11ca04cc8fd6848626539a5503f6cfa73db867d60e8560e1"
+  },
+  "E3-T02b": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md",
+    "status": "verified",
+    "sha256": "069cef495a02496ed1f4b8602ff60ebd26fbb95b755515c19a05fca41bac9656",
+    "verificationLogSha256": "ae22554d8a3a7b8fa7f69f6c5bef3f4f7fb06134247d1120d2c8a1158310de6a"
+  },
+  "E3-T01": {
+    "path": ".eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md",
+    "status": "verified",
+    "sha256": "21fbafa71741b324d447a468844dc7815adcd36d5d82cf2d7d5bcdfca354e4b3",
+    "verificationLogSha256": "c85a19a7c1514b934194162ae8549bfbf6248dec34102a6d73f5984b38e9a7ed"
+  },
+  "E12-T03": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T03-public-https-authentication/readme.md",
+    "status": "pending",
+    "sha256": "690250ae47f725f96bc5bd3b2ffd710f5b8d4351508b7f3340b2ac931e9a3077",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T07": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T07-hosted-backup-and-recovery/readme.md",
+    "status": "pending",
+    "sha256": "62a54231084c32cb6c25dd125af5f9d6e1f405c2c91824bee0b50b8fc938cc34",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T04": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T04-first-working-railway-deployment/readme.md",
+    "status": "pending",
+    "sha256": "c536d6cbcc8ebb9b4a2bbef31ba82b644308508bb1b179567fc2dbceb38c2ca5",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T05": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T05-public-onboarding-and-tenant-boundaries/readme.md",
+    "status": "pending",
+    "sha256": "ed0c369f1779a1b64974512d7096e47c34c111c01025f33e7326047b711fb4d7",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T09": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T09-public-multi-user-launch/readme.md",
+    "status": "pending",
+    "sha256": "6f30377c3f6f302706e4154bb01b8c13d3826d90503cb81120f60a001a419c0f",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T00": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md",
+    "status": "verified",
+    "sha256": "75d767cfcf060bba098e0fee1ca87c8bea2e19920585ec630855007349fbe693",
+    "verificationLogSha256": "06bfc4e22b714051789529c533729ef10d52e0e823d87a43960c55143eab038a"
+  },
+  "E12-T02": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T02-reproducible-railway-runtime/readme.md",
+    "status": "pending",
+    "sha256": "ef748f6553693856d99aa5ba990d44271d43de0e1bbbee5974ef4e9956c746e7",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T08": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T08-hosted-runtime-health/readme.md",
+    "status": "pending",
+    "sha256": "e2220e1b1da1f5dd3adfe7d7cbecbec7de1fde186ccb5bbdba93a1172e05b163",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E12-T01": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md",
+    "status": "pending",
+    "sha256": "aaea5d281c09b07837a1f4a6d27a5de7353847654e0a7fbe6409f0ecea651ade",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E12-T06": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T06-bounded-public-traffic-and-writers/readme.md",
+    "status": "pending",
+    "sha256": "11c0460a7e003740e4c0e2adcab1ecf3337bea5ffeab3edc6c46c4c5ad376c39",
+    "verificationLogSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+  },
+  "E15-T03": {
+    "path": ".eforest/tasks/epic-15-durable-agents/E15-T03-independent-provider-decision/readme.md",
+    "status": "pending",
+    "sha256": "06fa3af7960a63dd3799a31827ce80ebc86878f97f4b12502fc31475be939f41",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E15-T01": {
+    "path": ".eforest/tasks/epic-15-durable-agents/E15-T01-upstream-contracts-and-authority-decision/readme.md",
+    "status": "pending",
+    "sha256": "6d45028ad3ec3acefa159953aa3cf6d55a8e41eab681ee9f908baa86db9b1e62",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E15-T02": {
+    "path": ".eforest/tasks/epic-15-durable-agents/E15-T02-isolated-sync-and-agent-recovery-pilot/readme.md",
+    "status": "pending",
+    "sha256": "f3b9bfb45835ddcce8ca536c8ce61dc4411f40d5ab104ff498ba7bab8dd7133a",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T01": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/readme.md",
+    "status": "pending",
+    "sha256": "f1889b4f366bf0f02ea66a3327265eb471236a55a52e4da1d5bdc35e38c0f5ba",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T08": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T08-builder-agent/readme.md",
+    "status": "pending",
+    "sha256": "0edf45779f361f32b9f5cbfd7a1f3ba861eb4a257eb92878d7b49947a30faf7c",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T10": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T10-retry-and-thrash-guard/readme.md",
+    "status": "pending",
+    "sha256": "ee7c7033ccf4f80ae96a4f71aef1e610abf54a8cbba08bdccec3308b875b1e87",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T02": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T02-task-folder-contract/readme.md",
+    "status": "pending",
+    "sha256": "e9d5acfa564807b16cfae33c06c350b5e179c8aa8b44aefebaca3eaa460a9e8b",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T12": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T12-live-loop-ui/readme.md",
+    "status": "pending",
+    "sha256": "1ec2486dc203de7b3f147c9122090aa1618f1aac0bf8b18cfa408b9b5e7e5f24",
+    "verificationLogSha256": "e27e3dff7740e93dd10950f66a274e39151fee3b51b339a567c281480548376a"
+  },
+  "E6-T03": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T03-project-state-machine/readme.md",
+    "status": "pending",
+    "sha256": "328a5028b15bd1fdbf3dcb3cd9406b8a6c39dbad05bd7b5d0a98c5174beca9df",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T13": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T13-loop-replay-harness/readme.md",
+    "status": "pending",
+    "sha256": "f883bb6ce2d49fc10d0e01c6a8d1d9b72995715fb2b6b9cd11fb3548d15485e5",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T07": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T07-agent-run-protocol/readme.md",
+    "status": "pending",
+    "sha256": "3d00d670f99f3d62456c567eb1acfef2bbfcadb33c6b6a76cc09189b08709176",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T05": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/readme.md",
+    "status": "pending",
+    "sha256": "cfba3c0f4eec52ae42a5728e3a818d13a6ceecded9cc0202952c276e5081dcae",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T11": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T11-loop-orchestrator/readme.md",
+    "status": "pending",
+    "sha256": "fce73f18516dfabd2d5f6af9e76fabbf2d83642c83c0ddfbd7abf05cfacef8c5",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T04": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/readme.md",
+    "status": "pending",
+    "sha256": "ef66f2638d4b8e4c8c6631b128f68714437d62bb22a3c81eb9492b2d8e53caea",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T06": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T06-live-task-board/readme.md",
+    "status": "pending",
+    "sha256": "997a786054fcd6d3a6601b358d9a7fd9c1c3c48c53a191416b68fefd0a6e6736",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T09": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T09-critic-agent/readme.md",
+    "status": "pending",
+    "sha256": "3f8078c0113b63c9bf2cb410f776b304fa9de982c4f5951c8b50e070012d41e1",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E6-T14": {
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T14-the-loop-runs/readme.md",
+    "status": "pending",
+    "sha256": "5a1c11263b6708f7445acd92c4205165a94658f00c7c75e02b318fc4bc3ed458",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T02": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T02-ui-package-consumer-conformance/readme.md",
+    "status": "pending",
+    "sha256": "c1c48b12be9f679e33c25bb496b7adf73834631888bc3e3f4e6c478833586237",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T01": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T01-versioned-app-manifest-package-contract/readme.md",
+    "status": "pending",
+    "sha256": "1f158ef62d6654935e800b0d81a9d54d6583152e12dc8cde2585974c752839b5",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T04": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T04-durable-state-streamdb-qualification/readme.md",
+    "status": "pending",
+    "sha256": "b6e3d50f0fe7d277252e6830214909165859f0d5ab2b20ca43c2d4af3d5c518b",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T07": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T07-browser-electron-almostnode-runtime-profiles/readme.md",
+    "status": "pending",
+    "sha256": "a1ec35332a3329942afa996865176aef9307c290855f74f88cef8f9ac5b354db",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T06": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T06-electric-ax-streams-qualification/readme.md",
+    "status": "pending",
+    "sha256": "ae64d7d5a9237ddd73af6387da144557b34b8353da0a12ac731fbd3ed2437aba",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T08": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T08-opt-in-integration-capability-matrix/readme.md",
+    "status": "pending",
+    "sha256": "274ba573a5d2534b881a984dce75e3d293ec55754e6766d874113253f9834438",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T09": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T09-first-platform-app/readme.md",
+    "status": "pending",
+    "sha256": "f5bd5d6818b69e5c21265595110d023b6a5936f54f15d0b8823510c3286264fe",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T05": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T05-electricsql-provider-qualification/readme.md",
+    "status": "pending",
+    "sha256": "b0508d7efb0ae0483b20ea8f2242aed9916042d7bec2f900ac43a4a034577fa2",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "E9-T03": {
+    "path": ".eforest/tasks/epic-9-the-toolbox/E9-T03-tanstack-db-collections-over-eforest-reducers/readme.md",
+    "status": "pending",
+    "sha256": "9f0bc92dba9897af4969c59cf5396353a90b1012e02d80b8110bf7942bf73709",
+    "verificationLogSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  }
+}

@@ -2,7 +2,7 @@
 id: E13-T01
 epic: 13
 title: "Audit the public hosted journeys before changing the product shell"
-priority: 531
+priority: 533
 status: pending
 depends_on: [E12]
 estimate: M

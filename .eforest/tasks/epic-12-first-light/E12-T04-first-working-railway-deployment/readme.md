@@ -2,7 +2,7 @@
 id: E12-T04
 epic: 12
 title: Deploy the first working Forest candidate into the existing Railway project
-priority: 524
+priority: 526
 status: pending
 depends_on: [E12-T01, E12-T02, E12-T03]
 estimate: M
@@ -19,9 +19,15 @@ multi-user release remains gated by T05-T09.
 
 ## Context
 
+T00 provides the disposable preview, while T10/T11 provide real owner login and local
+CLI mirroring on a separate private service. This task qualifies the integrated
+multi-account deployment against T01-T03 before public launch; it does not create a
+second source of truth or treat the earlier operator milestone as full launch proof.
+
 Target project `e0864588-a320-4ba3-96df-95ad0a07ee81`, environment
-`c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448`, currently contains the user's ElectricSQL starter.
-Add the Forest app with configuration references and the qualified provider connection;
+`c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448` contains the preserved ElectricSQL starter plus
+separate Forest preview/authenticated services. Qualify the Forest app's configuration
+references and provider connection;
 do not migrate the app's source of truth to Postgres or destructively repurpose existing
 services. T01-T03 supply the provider contract, immutable runtime and HTTPS auth handling.
 

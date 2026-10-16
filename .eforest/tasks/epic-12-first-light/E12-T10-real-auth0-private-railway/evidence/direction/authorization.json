@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-10-16",
+  "type": "human-directed-backlog-and-architecture-amendment",
+  "baseCommit": "b8ec0961aed4aa1882491c678530a387e95d3b3c",
+  "humanDirection": [
+    "Public multi-user launch remains the requested release.",
+    "Authorized lifecycle changes, implementation and Railway reconfiguration in the existing project.",
+    "Run our custom/patched Durable Streams server on Railway first; no managed account is required.",
+    "Real production Auth0 login, local CLI setup and selected private-project mirroring are the next usable milestones."
+  ],
+  "auth0Public": {
+    "issuer": "https://dev-8qqftel4x1s5wed3.us.auth0.com/",
+    "clientId": "H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk",
+    "clientType": "SPA",
+    "clientSecretReadOrRequired": false,
+    "registrationChanged": false
+  },
+  "order": [
+    "E12-T10",
+    "E12-T11",
+    "E12-T01 through E12-T09",
+    "E13",
+    "E15",
+    "E14"
+  ],
+  "preserved": [
+    "all prior verification-log bytes",
+    "all verified task readmes",
+    "verification ceilings and stops",
+    "all remaining public-launch criteria",
+    "preview and starter service data",
+    "no-second-transport and stream-authority boundaries"
+  ],
+  "currentMilestonesArePending": true,
+  "noProductImplementationInThisCommit": true,
+  "Replay": "Replay: N/A (backlog and architecture direction; no product behavior changed) + mitigation: committed history hashes, DAG/queue validation and independent committed lifecycle readback."
+}

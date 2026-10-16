@@ -2,7 +2,7 @@
 id: E12-T07
 epic: 12
 title: Recover hosted state after restart and backup restoration
-priority: 527
+priority: 529
 status: pending
 depends_on: [E12-T04]
 estimate: M

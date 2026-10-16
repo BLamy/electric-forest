@@ -2,7 +2,7 @@
 id: E12-T02
 epic: 12
 title: Build a reproducible Railway runtime with readiness and bounded shutdown
-priority: 522
+priority: 524
 status: pending
 depends_on: [E12-T01]
 estimate: M
@@ -18,11 +18,15 @@ reviewed and later deployed.
 
 ## Context
 
-The platform currently reads `PORT` but uses the server's loopback bind default, while
-`EF_WEB_ROOT` is optional and deployment packaging is absent. The upstream test-server
-launcher is not the production runtime. T01 supplies the qualified provider, exact
-topology and numeric budgets; this task creates a runnable artifact without changing
-repository, issue, PR or file semantics or deploying to the user's project.
+T00 and T10 introduce the initial preview and real-auth deployment recipes. This task
+qualifies the final runtime against T01's complete frozen launch profile; those earlier
+working deployments do not satisfy its readiness, failure and drain criteria. Reuse
+existing implementation where appropriate and record proof for the exact candidate.
+
+The initial hosted composition already packages built assets and accepts Railway's
+port. T01 supplies the fully qualified provider, exact topology and numeric budgets;
+this task qualifies that runtime without changing repository, issue, PR or file
+semantics or treating an initial successful deployment as the complete proof.
 
 ## Deliverables
 

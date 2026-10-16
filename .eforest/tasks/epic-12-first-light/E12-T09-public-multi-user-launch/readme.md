@@ -2,9 +2,9 @@
 id: E12-T09
 epic: 12
 title: "Capstone: launch and recover public multi-user Forest on Railway"
-priority: 529
+priority: 531
 status: pending
-depends_on: [E12-T05, E12-T06, E12-T07, E12-T08]
+depends_on: [E12-T05, E12-T06, E12-T07, E12-T08, E12-T10, E12-T11]
 estimate: L
 capstone: true
 ---

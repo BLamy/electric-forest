@@ -2,7 +2,7 @@
 id: E12-T05
 epic: 12
 title: Complete public onboarding and tenant boundaries
-priority: 525
+priority: 527
 status: pending
 depends_on: [E12-T04]
 estimate: L

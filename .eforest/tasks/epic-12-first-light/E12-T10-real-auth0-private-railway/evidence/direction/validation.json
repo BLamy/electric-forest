@@ -1,0 +1,19 @@
+{
+  "baseCommit": "b8ec0961aed4aa1882491c678530a387e95d3b3c",
+  "taskCount": 155,
+  "verifiedCount": 74,
+  "allPriorTaskHistoriesByteIdentical": true,
+  "allVerifiedReadmesByteIdentical": true,
+  "dagValidIncludingEpicCapstones": true,
+  "nextEligible": "E12-T10",
+  "newTaskIdsUnique": true,
+  "projectState": "building",
+  "controlFilesChanged": false,
+  "previewReadbackPairSha256": "ddf1c295545e937808cc1e58f978b04a337fc8a80f04b1480623ed4e1d71ab4c",
+  "commands": [
+    "python3 <task>/work/replan-auth-first.py (strict exact replacements, immutable history hashes, DAG validation)",
+    "python3 tools/build_queue.py",
+    "node tools/audit_task_architecture.mjs"
+  ],
+  "queueSha256": "d85f18ffe87b3e0fd7b19be7396325d32d29a1647f3a9288fdc655d437802b19"
+}

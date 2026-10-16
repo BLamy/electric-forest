@@ -7,10 +7,10 @@ Durable Streams server.
 
 | Concern                                                                                   | Owner used by electric-forest                                                                              |
 | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Durable Streams HTTP protocol, persistence, live reads, writer coordination, native forks | Published `@durable-streams/client` and `@durable-streams/server`; Electric Cloud in deployed environments |
+| Durable Streams HTTP protocol, persistence, live reads, writer coordination, native forks | Published `@durable-streams/client` and `@durable-streams/server`; initial Railway deployment self-hosts the pinned provider patch |
 | Local Durable Streams process                                                             | `@durable-streams/server@0.3.8` with the checked-in pnpm patch for snapshot retention (`pnpm server:serve`) |
 | Files, directories, patches, snapshots, branch metadata, merges, digests                  | `@eforest/streamfs`, as application events stored in official JSON streams                                 |
-| Reducer validation and the authenticated mutation door                                    | electric-forest platform service; it appends accepted application events to Electric Cloud                 |
+| Reducer validation and the authenticated mutation door                                    | electric-forest platform service; it appends accepted application events to the private Durable Streams provider                 |
 | Auth0/OIDC emulation                                                                      | pinned `blamy/emulate` submodule and `@emulators/auth0`                                                    |
 
 `@eforest/server` is still only a launcher and re-export. The checked-in provider patch
@@ -33,7 +33,7 @@ application replay deterministic without interpreting or forging Electric's curs
 Native head forks preserve the parent prefix and therefore preserve application offset
 space across branches. The branch's own fork marker and later events continue after the
 inherited prefix. Historic forks need an explicit application-offset to transport-offset
-map; until that map lands, the cloud transport refuses a historic fork instead of
+map; until that map lands, the official adapter refuses a historic fork instead of
 silently creating the wrong branch.
 
 ## Emulator rule
@@ -58,6 +58,21 @@ New work follows these constraints:
 3. Prove every transport-facing change with `_v-official-streamfs` against the published
    reference server.
 4. Never add a second Durable Streams transport to this repository.
+
+## Initial hosted provider decision
+
+The human selected our pinned, patched `@durable-streams/server@0.3.8` for the first
+authenticated Railway deployment. Co-locate it on container loopback with the gateway,
+persist it on a dedicated private volume, run one mutation-serving replica and admit no
+overlapping revisions. Auth0 authenticates users; only the platform exposes public
+application access. Preserve the starter Postgres/Electric/cache and the separate
+disposable preview. No managed stream account is required by this direction.
+
+E12-T10/T11 prove the first real-login and local-mirroring path. T01-T09 still qualify
+all reachable stream operations, numeric capacity, multi-user boundaries and recovery
+before public launch. The selected implementation is not evidence that those criteria
+have passed; unsupported required behavior remains a blocker. Keep the provider patch
+minimal and upstream-owned; this decision introduces no second transport.
 
 ## Planned deployment and source-model work
 

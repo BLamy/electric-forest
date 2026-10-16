@@ -2,9 +2,9 @@
 id: E12-T01
 epic: 12
 title: Qualify the production stream provider and freeze the public launch profile
-priority: 521
+priority: 523
 status: pending
-depends_on: [E5-T14, E12-T00]
+depends_on: [E5-T14, E12-T00, E12-T11]
 estimate: M
 capstone: false
 ---
@@ -19,12 +19,15 @@ deployment is represented as ready.
 
 ## Context
 
-The human requested hosting before further platform development. Priorities 521-529 are
-an explicit human reorder; E12 identity remains stable. The target is Railway project
+The human requested hosting before further platform development, then prioritized real
+Auth0 login and local CLI mirroring on the custom self-hosted server. T10/T11 provide
+that first usable path; priorities 523-531 retain this full public qualification next.
+E12 task identities remain stable. The target is Railway project
 `e0864588-a320-4ba3-96df-95ad0a07ee81`, environment
 `c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448`. Planning inventory found Postgres, electric and cache
-starter services, but no Forest service or Durable Streams service. The ElectricSQL
-starter does not establish a Durable Streams endpoint. Re-inventory at implementation;
+starter services. T00 subsequently added a separate disposable preview, and T10 adds a
+separate authenticated service with private persistent streams. The ElectricSQL starter
+does not establish a Durable Streams endpoint. Re-inventory at implementation;
 never infer running service health from a successful deployment record.
 
 The human's 2026-10-16 implementation authorization reconciled the old two-active
@@ -33,11 +36,12 @@ run history. This production qualification follows the separately verified E12-T
 preview and the established E5-T14 platform, while E5-T15 resumes after E12. E12's own
 independent proof cannot mark either deferred task verified or reset its ledger.
 
-`ARCHITECTURE.md` currently selects Electric Cloud in deployed environments. The local
-`@durable-streams/server@0.3.8` launcher is a test server with a task-scoped retention
-patch, not a production provider selected by changing an environment variable. Preserve
-that ownership boundary and existing verified product behavior. ElectricSQL/Postgres
-and durable agent-runtime adoption are later decisions, not hidden hosting prerequisites.
+The human explicitly selected the pinned, patched `@durable-streams/server@0.3.8` for
+the initial Railway deployment. This task qualifies that actual self-hosted provider
+against every reachable existing contract; it does not require a managed account.
+T10's working authenticated deployment is not this full conformance, capacity or recovery
+qualification. Preserve the upstream ownership boundary and verified product behavior.
+ElectricSQL/Postgres and agent-runtime adoption remain later explicit decisions.
 
 ## Deliverables
 
@@ -62,13 +66,16 @@ and durable agent-runtime adoption are later decisions, not hidden hosting prere
       historic forks, live follow/reconnect, snapshots, and the retention/dump/410 behavior
       required by the existing reachable app paths. Every row cites an exact request,
       response, event offset and expected outcome; there are no untested or assumed rows.
-      Unsupported required behavior blocks provider selection rather than weakening a
-      previously verified contract or substituting the local test server.
-- [ ] Production credential wiring is specified for every transport caller, including
-      `OfficialStreamAdapter`, `IdentityStore` and direct `StreamFsRepo` calls. A dedicated
-      provider fixture accepts authorized server calls, rejects missing/wrong credentials,
-      and exposes no raw mutation/admin capability through the planned public origin.
-      Redacted results are in `evidence/e12-t01-auth-boundary.json`.
+      Unsupported required behavior blocks public-launch qualification rather than
+      weakening a verified contract or silently substituting a memory-only provider.
+- [ ] The actual private transport boundary is specified for every caller, including
+      `OfficialStreamAdapter`, `IdentityStore` and direct `StreamFsRepo` calls. For the
+      chosen co-located provider, a dedicated fixture proves that only container-loopback
+      server calls reach raw/admin transport; external/public calls cannot. If a separate
+      credentialed provider is used, every caller must present authorized server
+      credentials and missing/wrong credentials must fail. Neither topology exposes raw
+      mutation/admin through the public origin. Redacted exact topology/call results are
+      in `evidence/e12-t01-auth-boundary.json`; no caller is silently exempted.
 - [ ] The launch profile contains concrete numeric budgets with explicit units, positive
       capacity/time limits and nonnegative error/loss tolerances,
       at least two simultaneous authenticated users and two isolated tenants, and a
@@ -98,9 +105,10 @@ and durable agent-runtime adoption are later decisions, not hidden hosting prere
 2. Race independent writers, retry an append after an unknown response, fork at both
    head and an earlier application offset, and resume across retention. Lost/duplicated
    accepted events, a wrong fork prefix or an invented transport cursor refutes parity.
-3. Remove credentials from one transport call site, use the wrong provider account, and
-   attempt raw append/compaction from the public side. A bypass or secret in committed
-   evidence refutes the boundary.
+3. Probe the selected topology from outside container loopback and attempt raw
+   append/compaction from the public side. For a separate credentialed provider, also
+   remove credentials at each caller and use a wrong account. A reachable raw/admin
+   bypass, unqualified call site or secret in evidence refutes the boundary.
 4. Delete a numeric budget, use `Infinity`, or lower a frozen threshold after a failing
    run. A green profile/verifier result refutes the measuring apparatus.
 5. Mutate one byte of the conformance event fixture and sabotage one provider-contract

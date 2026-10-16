@@ -11,13 +11,20 @@ public traffic, and demonstrated recovery. A private demo does not satisfy this 
 | Order | Epic / priority | Outcome |
 | --- | --- | --- |
 | 0 | E12-T00 / 520 | Deploy a labeled disposable preview with fixture sign-in before production API keys |
-| 1 | E12 — first-light / 521–529 | Run and launch the current web app and gateway on Railway with a qualified production stream provider |
-| 2 | E13 — the-design / 531–533 | Audit the hosted journeys, decide navigation and terminology, and improve the core shell |
-| 3 | E15 — durable-agents / 541–543 | Test Electric Sync and Electric Agents in isolation; independently decide adopt, decline, or conditional |
-| 4 | E14 — the-changesets / 551–556 | Publish immutable full file versions through changesets; derive review diffs on demand |
-| 5 | E6 → E7 | Build the durable builder/critic loop and live agent feed over the chosen contracts |
-| 6 | E8 | Move this project's source and build process onto the hosted product |
-| 7 | E9 → E10 → E11 | Expand into app tooling, isolated app history, and incident recovery |
+| 1 | E12-T10/T11 / 521–522 | Real Auth0 login, local CLI setup and selected private-project mirroring on our self-hosted streams |
+| 2 | E12-T01–T09 / 523–531 | Qualify and launch the public multi-user app, including load, isolation and recovery |
+| 3 | E13 — the-design / 533–535 | Audit the hosted journeys, decide navigation and terminology, and improve the core shell |
+| 4 | E15 — durable-agents / 541–543 | Test Electric Sync and Electric Agents in isolation; independently decide adopt, decline, or conditional |
+| 5 | E14 — the-changesets / 551–556 | Publish immutable full file versions through changesets; derive review diffs on demand |
+| 6 | E6 → E7 | Build the durable builder/critic loop and live agent feed over the chosen contracts |
+| 7 | E8 | Move this project's source and build process onto the hosted product |
+| 8 | E9 → E10 → E11 | Expand into app tooling, isolated app history, and incident recovery |
+
+The next usable milestone is real Auth0 login, followed by configuring the local CLI
+and mirroring only a human-selected private project. The chosen initial provider is our
+pinned patched Durable Streams server on Railway, privately co-located with the gateway.
+T10/T11 precede the complete public-launch qualification; capacity, conformance and
+backup/recovery remain required. The preview's public fixture data is never promoted.
 
 Epic IDs are stable identities, not execution order. Explicit integer priorities and
 dependencies encode this human-authorized reorder. The existing E9–E11 proposal remains
@@ -58,8 +65,8 @@ is a process, not an archive.
 ## Upstream foundations and doctrine donors
 
 - **ElectricSQL durable-streams** — the runtime substrate, consumed through the
-  published `@durable-streams/client` and `@durable-streams/server` packages and Electric
-  Cloud. Electric owns PUT/POST/GET semantics, opaque transport offsets, `Stream-Seq`,
+  published `@durable-streams/client` and pinned patched `@durable-streams/server`
+  packages. The initial Railway provider is self-hosted, selected by the human; Electric owns PUT/POST/GET semantics, opaque transport offsets, `Stream-Seq`,
   resumable live reads, persistence, and native forks. electric-forest does not fork or
   reimplement that transport. See `ARCHITECTURE.md`.
 - **StreamFS design** — metadata streams plus per-file content streams,
@@ -78,7 +85,7 @@ is a process, not an archive.
 
 1. **One mutation door.** The only way to change platform state is submitting an event
    through electric-forest's authenticated dispatch service; accepted events are
-   appended to Electric Cloud through the official client. Trusted library tests may
+   appended to our private Durable Streams provider through the official client. Trusted library tests may
    append directly, but no product authorization decision lives in the transport.
    State is `replay(events)` from offset `-1`, always. This makes
    every session a trace, every bug a replayable offset, and time travel a product
@@ -237,7 +244,8 @@ criterion.
 
 The pnpm workspace, verification spine, deterministic application-event envelope,
 reducer/digest tools, and official Durable Streams adapters. Local and CI runs use
-Electric's published reference server; deployments use Electric Cloud. `ef replay` and
+Electric's published reference server; the initial Railway deployment privately hosts
+our pinned retention patch of that provider. `ef replay` and
 `ef bisect` remain product-owned because they operate on electric-forest application
 events and canonical state digests, not on the transport protocol.
 
@@ -333,9 +341,10 @@ zero.
 ### Epic 12 — first-light (public multi-user Railway launch)
 
 Deploy the existing web app and authenticated gateway into the existing Railway
-project. Qualify the production Durable Streams provider, package an immutable release,
-fix canonical HTTPS origins and secure sessions, and put a working candidate online
-early. Complete public onboarding, tenant isolation, bounded concurrent traffic,
+project. T10 first deploys real Auth0 login with fresh private persistent state on our
+self-hosted patched provider; T11 connects the local CLI and mirrors selected private
+projects through the authenticated gateway. Then qualify the complete production
+provider/profile, immutable runtime, HTTPS sessions and integrated multi-account release. Complete public onboarding, tenant isolation, bounded concurrent traffic,
 backup/restore, runtime health and release identity before launch. The starter's
 Postgres/shape services remain separate from Forest's authority.
 

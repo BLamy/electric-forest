@@ -2,7 +2,7 @@
 id: E12-T06
 epic: 12
 title: Bound public traffic and concurrent writers against the frozen launch profile
-priority: 526
+priority: 528
 status: pending
 depends_on: [E12-T04]
 estimate: M

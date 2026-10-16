@@ -15,8 +15,10 @@ provider, real-auth or public-release acceptance by itself.
 The connected Railway inventory on 2026-10-16 returned project
 `e0864588-a320-4ba3-96df-95ad0a07ee81`, environment
 `c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448` (`production`), in `us-west2`.
-No changes were staged. The latest deployments of all three services were `SUCCESS`;
-that describes deployment state, not an independently tested runtime-health result.
+The initial inventory's three starter services were retained. E12-T00 subsequently
+deployed the separate `electric-forest-preview` service with a dedicated public-fixture
+volume. Its pinned evidence is in the task; Railway `SUCCESS` alone remains insufficient
+runtime proof.
 
 | Existing service | Observed source and storage | Role in this plan |
 | --- | --- | --- |
@@ -24,8 +26,10 @@ that describes deployment state, not an independently tested runtime-health resu
 | electric (`31498f69-9c1a-464c-82cb-da89fa757382`) | `electricsql/electric:latest`, 5 GB at `/data`; no public domain | Postgres Sync service; not yet a qualified Forest stream provider |
 | cache (`536dadfb-152a-43d0-a798-1e2b734a4b37`) | Same starter repository; public Railway domain; port 8080 | Starter shape cache; no assumption that it safely proxies Forest sessions or private data |
 
-There is no Forest web/gateway service, no separately identified Durable Streams
-service, and no object bucket in this inventory. The starter's
+At the initial inventory there was no Forest web/gateway or separately identified
+Durable Streams service. The preview now privately co-locates that provider, while the
+real-auth milestone uses a new service and fresh private volume. No object bucket has
+been qualified. The starter's
 [README](https://github.com/gridalpha/electricsql-railway) describes a Postgres logical
 replication setup, an Electric shape service, and an nginx cache. Reusing this Railway
 project does not require reusing its database as Forest's source of truth.
@@ -39,9 +43,9 @@ public browsers + ef CLI
         v
 Railway: Forest web assets + platform gateway (one mutation-serving replica)
         |
-        | server-only transport credentials; validated dispatch
+        | validated dispatch; container-loopback private transport
         v
-qualified production Durable Streams provider
+pinned patched self-hosted Durable Streams provider + persistent private volume
         |
         +-- authoritative application events, identity and grants
         +-- branch/file history and evidence
@@ -50,31 +54,40 @@ existing Postgres -> Electric Sync -> starter cache
         (preserved; separate from Forest's initial authority)
 ```
 
-Use Electric Cloud/managed Electric Streams as the first candidate, matching the
-standing architecture. A production upstream self-hosted provider on Railway is an
-alternative to qualify explicitly, not a substitute to assume. Official
-[Durable Streams deployment guidance](https://durablestreams.com/deployment)
-distinguishes the Node development/reference server, production Caddy plugin, and
-managed hosting. The pinned local Node server plus retention patch must not silently
-become the public production datastore. Native forks, historical-fork refusal/behavior,
-snapshot bootstrap, compaction boundaries, authentication, backups, and provider offsets
-all need conformance evidence before selecting a provider. An unsupported reachable
-operation is a blocker; a disabled feature needs an explicit scope decision.
+The human explicitly selected our patched self-hosted Durable Streams server on Railway.
+No managed account is a prerequisite. Keep the published provider and checked-in
+retention patch, one mutation-serving platform replica, no overlapping deployment and a
+private loopback transport in the same container. This initial deployment selection
+does not establish the full public-launch conformance, capacity or recovery profile.
 
-The public gateway can be on Railway while its managed stream provider is external.
-A requirement to put every service on Railway would change the provider-selection
-decision, not the application event model. Keep transport/admin endpoints private or
-credential-protected, and route user reads and writes through Forest authorization.
-Do not expose transport credentials in the browser or use the starter cache for private
-Forest responses without a tenant-safe cache contract.
+T01 qualifies native/historical forks, application versus transport offsets, live reads,
+snapshot bootstrap, compaction/retained-history/410, writer coordination, isolation and
+the exact persistence boundary. Unsupported reachable required behavior blocks public
+launch. T07 qualifies backups/restores. The patch remains minimal upstream code rather
+than a second transport. ElectricSQL/Postgres migration remains deferred to E15.
+
+Only the authenticated Forest gateway is public. Co-located transport/admin is bound
+to loopback; a future separate provider requires authenticated credential wiring through
+every official-client caller. Do not use the starter cache for private Forest responses
+without a tenant-safe cache contract. Preserve all starter data and keep the preview's
+public fixture state separate from private owner data.
 
 ## Hosting work and first observable deployment
 
-E12-T01 freezes the provider, production profile, finite capacity budgets, backup
-objectives, environment-variable names, and conformance matrix. E12-T02 packages one
-reproducible web/gateway artifact. E12-T03 fixes production HTTPS/OIDC/session behavior.
-E12-T04 then puts a working candidate in this exact Railway environment. This creates
-an early hosted milestone while E12-T05–T09 earn the public launch boundary.
+E12-T00 supplies the disposable hosted preview. The next two tasks are the human's
+first usable path: E12-T10 deploys the existing Auth0 SPA through public authorization
+code/S256 PKCE, secure browser-bound sessions and fresh private persistent state;
+E12-T11 configures a reproducible local CLI and mirrors an explicitly selected private
+project through authenticated gateway dispatch/projections. Existing revocable web-minted
+tokens avoid requiring a new Auth0 Native client/API audience for the first CLI setup.
+Do not put a token in chat, source or shell arguments, expose raw streams, or upload an
+unrelated directory. Prove disposable fixtures first and use full-file hosted writes;
+E14's complete content-addressed changeset model remains pending.
+
+T01 then freezes and qualifies the full production provider/profile, finite capacity
+budgets, backup objectives and conformance matrix. T02/T03 qualify the runtime and HTTPS
+auth against that profile; T04 qualifies the integrated multi-account deployment.
+T05–T09 earn the complete public launch. Earlier milestones do not pre-verify them.
 
 Current code identifies concrete work rather than an infrastructure-only exercise:
 
@@ -88,15 +101,15 @@ Current code identifies concrete work rather than an infrastructure-only exercis
   Pending OIDC transactions and rate counters are process-local today. Keep one
   mutation-serving replica and qualify restart/in-flight-login behavior; overlapping
   deployments need proven fencing or explicit non-overlap.
-- `production.ts` must pass a consistent authenticated provider configuration through
-  all official-client paths, including identity and StreamFS operations. A base URL
-  alone is not a provider credential configuration.
+- All official-client paths, including identity and StreamFS, must stay within the
+  declared private provider boundary. The initial co-located provider is loopback-only;
+  a future separate credentialed provider must wire authorization through every caller.
 - Add liveness/readiness, request/body bounds, shutdown/draining, redacted logs,
   build identity, and an outage/recovery indication the app can display.
 
 Known runtime inputs include `PORT`, `EF_WEB_ROOT`, `EFOREST_SERVER_URL`,
 `EF_OIDC_ISSUER`, `EF_OIDC_CLIENT_ID`, `EF_SESSION_SECRET`, and `EF_SESSION_TTL`.
-Provider authorization, public origin, bind-host, and any monitoring configuration are
+The private provider boundary, public origin, bind-host, and monitoring configuration are
 prospective additions to qualify, not existing environment switches. Pin Node, pnpm,
 lockfile, submodule state and required build inputs; resolve any package-registry
 authentication through build secrets without copying developer logins into images.
@@ -212,7 +225,7 @@ performance or reliability result.
 
 | Component | Fit to evaluate | Recommendation now |
 | --- | --- | --- |
-| Durable Streams / managed Electric Streams | Current append/replay/follow boundary | Keep; qualify the actual production provider in E12 |
+| Patched self-hosted Durable Streams | Current append/replay/follow boundary | Host privately on Railway first; qualify the full public-launch profile in E12 |
 | Electric Sync (ElectricSQL) | Postgres-to-client read projections | Evaluate after launch; do not migrate Forest writes just to use the existing template |
 | TanStack DB / StreamDB | Client collections or compatible entity projections | Prefer thin adapters where they preserve Forest reducer and authorization contracts |
 | Electric Agents runtime | Durable entity runs, tools, wakeups and observation | Strong candidate for a bounded E15 adapter/recovery pilot |
@@ -255,8 +268,12 @@ resuming its independent verification. Commit `2b22ae7da26fead21004d6f9f45d353ef
 activates E12-T00 alone; two fresh readers agreed using the pre-write committed
 attester. This lifecycle change neither grants verification nor resets run accounting.
 
-The production/design/source-model tasks remain pending; E12-T00 is in progress. Existing future tasks retain their identities and scope,
-with changed source-model contracts and explicit dependencies. The E9–E11 working-tree
+E12-T00 has earned its independent preview verdict. The human then prioritized real
+Auth0 login and CLI mirroring in new T10/T11 ahead of T01-T09, with the self-hosted
+provider selection recorded explicitly. Existing pending tasks retain their complete
+criteria and historical logs; the public capstone requires both new milestones.
+Design/source-model work remains later. Existing future tasks retain their identities,
+with explicit source-model contracts and dependencies. The E9–E11 working-tree
 proposal is retained as later platform work. Queue generation and graph/history checks
 prove this planning edit's consistency, not product behavior.
 

@@ -2,7 +2,7 @@
 id: E13-T02
 epic: 13
 title: "Design navigation, changeset terminology and complete interface states"
-priority: 532
+priority: 534
 status: pending
 depends_on: [E13-T01]
 estimate: M

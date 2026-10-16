@@ -2,7 +2,7 @@
 id: E12-T08
 epic: 12
 title: Surface runtime health and deployed build identity
-priority: 528
+priority: 530
 status: pending
 depends_on: [E12-T04]
 estimate: M
