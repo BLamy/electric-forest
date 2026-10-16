@@ -3,8 +3,10 @@ id: E5-T15
 epic: 5
 title: "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks"
 priority: 515
-status: implemented
-depends_on: [E5-T14]
+status: pending
+deferred_from: implemented
+human_deferred_on: 2026-10-16
+depends_on: [E5-T14, E12-T00]
 estimate: L
 capstone: false
 ---
@@ -303,3 +305,12 @@ two-tab convergence, chat liveness, and the removal and refusal paths all go thr
 layer is only local Replay Chromium, though. The required Replay QA journeys and the epic-closing
 exploration could not run because the configured project is out of budget, and they must run
 before Epic 5 closes.
+
+### 2026-10-16 — human-directed hosting reprioritization
+
+The human explicitly authorized updating the lifecycle to begin Railway hosting and
+stubbed first deployments. Administratively defer this task to pending; its existing
+implementation, claims, findings, evidence and verification-run history remain intact.
+This is not a verification verdict, a finding closure, or a reset of any run/checkpoint.
+E12-T00 executes the separate disposable preview scope first. All unearned acceptance
+criteria still require their original independent proof before this task can verify.

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-16",
+  "authorization": "Human explicitly authorized lifecycle update, implementing hosting-first direction, Railway reconfiguration and stubbed first deploys in this chat.",
+  "baseCommit": "806936c25570d81bbf60020c99bd58b92faa6779",
+  "activatedTask": "E12-T00",
+  "priorTaskTransitions": [
+    {
+      "task": "E5-T15",
+      "path": ".eforest/tasks/epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md",
+      "from": "implemented",
+      "to": "pending",
+      "priorReadmeSha256": "6a076b87dd4a3e452674878a746b6d6fe9970b1fd8a142ec7c5072a5db79247a",
+      "priorVerificationLogSha256": "80e74bdf508ab0b4288408a3b97791d4a0e997d6579e636c6c169ffdebc9f2eb",
+      "priorBytesPreservedExceptFrontmatter": true
+    },
+    {
+      "task": "E6-T12",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T12-live-loop-ui/readme.md",
+      "from": "in-progress",
+      "to": "pending",
+      "priorReadmeSha256": "ee1e806577fb0ad6a9c18d401e6a369e163079a39b229ad7495898a11526c82c",
+      "priorVerificationLogSha256": "4c194fea9d88e7259d846c88bde351e4774f6434a6ce1e6360ff96ef3cb440ab",
+      "priorBytesPreservedExceptFrontmatter": true
+    }
+  ],
+  "historyReset": false,
+  "productVerificationGranted": false,
+  "controlFilesChanged": false,
+  "allowedTransitionPaths": [
+    ".eforest/project.json",
+    ".eforest/tasks/QUEUE.md",
+    ".eforest/tasks/epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md",
+    ".eforest/tasks/epic-6-the-loop/E6-T12-live-loop-ui/readme.md",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/lifecycle-authorization.json"
+  ]
+}

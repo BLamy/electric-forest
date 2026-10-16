@@ -11,6 +11,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E3-T06 recovery on 2026-08-01 after run 8: control-plane transition and verification runs 9-9 only",
-  "updatedAt": "2026-08-01"
+  "statusReason": "Human authorized hosting-first lifecycle on 2026-10-16: defer E5-T15 and E6-T12 without resetting history; implement E12-T00 disposable Railway preview before production qualification",
+  "updatedAt": "2026-10-16"
 }

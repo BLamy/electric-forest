@@ -8,15 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E5-T15** — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(awaiting independent critic)*
+1. **E12-T00** — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E12-T00** — "Deploy a clearly labeled Railway preview with disposable data and stub identity"
+No new task may start until **E12-T00** clears the current gate.
 
-## Unlocks when E5-T15 verifies
+## Unlocks when E12-T00 verifies
 
-1. **E12-T01** — Qualify the production stream provider and freeze the public launch profile
+1. **E5-T15** — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -110,11 +110,11 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `512` [E5-T12](epic-5-the-meadow/E5-T12-negotiation-replay-harness/readme.md) — "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation" *(deps: E5-T07, E5-T10)*
 - [x] `513` [E5-T13](epic-5-the-meadow/E5-T13-issue-to-merge/readme.md) — "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases" *(deps: E5-T08, E5-T11, E5-T12)*
 - [x] `514` [E5-T14](epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md) — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" **[CAPSTONE]** *(deps: E5-T13)*
-- [?] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14)*
+- [ ] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14, E12-T00)*
 
 ## Epic 12 — `epic-12-first-light`
 
-- [ ] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
+- [~] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
 - [ ] `521` [E12-T01](epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md) — Qualify the production stream provider and freeze the public launch profile *(deps: E5-T15)*
 - [ ] `522` [E12-T02](epic-12-first-light/E12-T02-reproducible-railway-runtime/readme.md) — Build a reproducible Railway runtime with readiness and bounded shutdown *(deps: E12-T01)*
 - [ ] `523` [E12-T03](epic-12-first-light/E12-T03-public-https-authentication/readme.md) — Make public HTTPS authentication and sessions production-correct *(deps: E12-T02)*
@@ -159,7 +159,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [ ] `609` [E6-T09](epic-6-the-loop/E6-T09-critic-agent/readme.md) — "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts" *(deps: E6-T08)*
 - [ ] `610` [E6-T10](epic-6-the-loop/E6-T10-retry-and-thrash-guard/readme.md) — "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop" *(deps: E6-T03, E6-T09)*
 - [ ] `611` [E6-T11](epic-6-the-loop/E6-T11-loop-orchestrator/readme.md) — "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state" *(deps: E6-T08, E6-T09, E6-T10)*
-- [~] `612` [E6-T12](epic-6-the-loop/E6-T12-live-loop-ui/readme.md) — "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence" *(deps: E6-T06, E6-T11)*
+- [ ] `612` [E6-T12](epic-6-the-loop/E6-T12-live-loop-ui/readme.md) — "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence" *(deps: E6-T06, E6-T11)*
 - [ ] `613` [E6-T13](epic-6-the-loop/E6-T13-loop-replay-harness/readme.md) — "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest" *(deps: E6-T11)*
 - [ ] `614` [E6-T14](epic-6-the-loop/E6-T14-the-loop-runs/readme.md) — "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live" **[CAPSTONE]** *(deps: E6-T12, E6-T13)*
 

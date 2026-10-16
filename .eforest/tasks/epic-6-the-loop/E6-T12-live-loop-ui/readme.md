@@ -3,7 +3,9 @@ id: E6-T12
 epic: 6
 title: "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
 priority: 612
-status: in-progress
+status: pending
+deferred_from: in-progress
+human_deferred_on: 2026-10-16
 depends_on: [E6-T06, E6-T11]
 estimate: L
 capstone: false
@@ -120,3 +122,12 @@ the rework starts.
   It never mutates a runtime projection or runs the browser oracle against a frozen
   digest, so it cannot validate the required measuring-apparatus sensitivity. Add a
   runtime negative test with a one-byte digest mutation that must fail.
+
+### 2026-10-16 — human-directed hosting reprioritization
+
+The human explicitly authorized updating the lifecycle to begin Railway hosting and
+stubbed first deployments. Administratively defer this task to pending; its existing
+implementation, claims, findings, evidence and verification-run history remain intact.
+This is not a verification verdict, a finding closure, or a reset of any run/checkpoint.
+E12-T00 executes the separate disposable preview scope first. All unearned acceptance
+criteria still require their original independent proof before this task can verify.

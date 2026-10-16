@@ -3,7 +3,7 @@ id: E12-T00
 epic: 12
 title: "Deploy a clearly labeled Railway preview with disposable data and stub identity"
 priority: 520
-status: pending
+status: in-progress
 depends_on: [E5-T14]
 estimate: L
 capstone: false
@@ -99,3 +99,11 @@ if configured with preview identity. Preview acceptance cannot mark another task
    the corresponding real-network/browser/config assertion must fail in each case.
 
 ## Verification log
+
+### 2026-10-16 — human-directed activation
+
+The human authorized immediate implementation and deployment into the existing Railway
+project, including fixture-only stub identity on the first deployments. E5-T15 and
+E6-T12 are deferred with their complete history preserved. This task alone is active.
+Production qualification/authentication remain E12-T01 onward. Verification starts at
+run 1 under the unchanged ordinary ceiling; no additional recovery window is granted.
