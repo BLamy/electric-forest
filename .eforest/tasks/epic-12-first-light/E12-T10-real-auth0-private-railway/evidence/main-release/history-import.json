@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Publication/integration history receipt; not an implemented claim, critic verdict, progress grant or task-ledger migration.",
+  "frozenHosting": "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+  "frozenMain": "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+  "integrationCommit": "06e18df04f9db6112a425f050587c6d61588347c",
+  "integrationParents": [
+    "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+    "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3"
+  ],
+  "integrationIsOrdinaryLifecycleTransition": false,
+  "ordinaryReadback": "The subsequent single-parent CI/documentation/evidence candidate can be read using the unchanged trusted attester; the two-parent integration commit is never relabeled a valid direct-parent lifecycle write.",
+  "currentTask": {
+    "id": "E12-T10",
+    "status": "in-progress",
+    "strictRunCount": 0,
+    "runCeiling": 10,
+    "changedByIntegration": false
+  },
+  "projectStatus": "building",
+  "soleActiveGate": "E12-T10",
+  "imports": [
+    {
+      "taskId": "E6-T01",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/readme.md",
+      "frozenMain": {
+        "gitBlob": "d229b04851b32a24cf002d9c84f120ae3c83663d",
+        "fileBytes": 18179,
+        "fileSha256": "ed0112b94044849fef45456189234013484e8bc505583819354bb30e6a16e08a",
+        "status": "verified",
+        "verificationLogByteStart": 4792,
+        "verificationLogBytes": 13387,
+        "verificationLogSha256": "027664ea604fb41677c6882bcf6884df490a908eababa42872cbfb218387f2c0",
+        "observedLiteralLegacyHeadings": [
+          "### 2026-08-30 \u2014 critic \u2014 VERDICT: verified"
+        ]
+      },
+      "importedStatus": "verified",
+      "originalMainVerificationLogPreservedExactly": true
+    },
+    {
+      "taskId": "E6-T02",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T02-task-folder-contract/readme.md",
+      "frozenMain": {
+        "gitBlob": "cca5525f7b2239e0b73b74d695ee1acba8aaca57",
+        "fileBytes": 32377,
+        "fileSha256": "f5d932aa9a0e2dd855847731bf49b07960df17a40d58c0e3900fbb97061e967e",
+        "status": "verified",
+        "verificationLogByteStart": 4289,
+        "verificationLogBytes": 28088,
+        "verificationLogSha256": "f4e937e9351ab961bc409fd134057066797e5f674ccd835a39912afef68e6383",
+        "observedLiteralLegacyHeadings": [
+          "### 2026-08-30 \u2014 critic \u2014 VERDICT: refuted",
+          "### 2026-08-30 \u2014 critic run 2 \u2014 VERDICT: verified"
+        ]
+      },
+      "importedStatus": "verified",
+      "originalMainVerificationLogPreservedExactly": true
+    },
+    {
+      "taskId": "E6-T03",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T03-project-state-machine/readme.md",
+      "frozenMain": {
+        "gitBlob": "e7e22eefe9f0e03f3d26c221dc438658c21fbd65",
+        "fileBytes": 46176,
+        "fileSha256": "04cfde29487829d3e633c88022740493571a827513ae6fa18a414411ae3fd160",
+        "status": "verified",
+        "verificationLogByteStart": 4261,
+        "verificationLogBytes": 41915,
+        "verificationLogSha256": "024103eb6d55fbb2e47afb8fe7e13766a28ecc40d6d720e8b5e7b441599a8a5e",
+        "observedLiteralLegacyHeadings": [
+          "### 2026-08-30 \u2014 critic \u2014 VERDICT: refuted",
+          "### 2026-08-30 \u2014 critic run 2 \u2014 VERDICT: refuted",
+          "### 2026-08-30 \u2014 critic run 3 \u2014 VERDICT: verified"
+        ]
+      },
+      "importedStatus": "verified",
+      "originalMainVerificationLogPreservedExactly": true
+    },
+    {
+      "taskId": "E6-T04",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/readme.md",
+      "frozenMain": {
+        "gitBlob": "73e670b44b8e0f8228cfbec9a26cdf2f27f1fd3d",
+        "fileBytes": 35791,
+        "fileSha256": "0eebe6d965343b8886837aa06292bfa135484c6165d06ad517dbbcc9159efd96",
+        "status": "verified",
+        "verificationLogByteStart": 4182,
+        "verificationLogBytes": 31609,
+        "verificationLogSha256": "025954091b53acdb1d92e8580408dda3422941fedded0344386fe0d87562464d",
+        "observedLiteralLegacyHeadings": [
+          "### 2026-08-30 \u2014 critic \u2014 VERDICT: refuted",
+          "### 2026-08-30 \u2014 critic run 2 \u2014 VERDICT: verified"
+        ]
+      },
+      "importedStatus": "verified",
+      "originalMainVerificationLogPreservedExactly": true
+    },
+    {
+      "taskId": "E6-T05",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/readme.md",
+      "frozenMain": {
+        "gitBlob": "1b4e6f5829d54ef67500b234b9e3266269aaa9d5",
+        "fileBytes": 83159,
+        "fileSha256": "aea1a870f5083620263505958f4fb3b59b03e08c3b29e9baa4e276dee06daa09",
+        "status": "implemented",
+        "verificationLogByteStart": 4963,
+        "verificationLogBytes": 78196,
+        "verificationLogSha256": "5dcce7b806c337b037fd218a23d574c6398ed0a2df76ddadd01eb341b0adfaa6",
+        "observedLiteralLegacyHeadings": [
+          "### 2026-08-31 \u2014 critic \u2014 VERDICT: refuted",
+          "### 2026-08-31 \u2014 critic run 2 \u2014 VERDICT: refuted",
+          "### 2026-08-31 \u2014 critic run 3 \u2014 VERDICT: refuted",
+          "### 2026-08-31 \u2014 progress critic \u2014 runs 1-3 \u2014 ASSESSMENT: progressing"
+        ]
+      },
+      "importedStatus": "pending",
+      "originalMainVerificationLogPreservedExactly": true,
+      "deferredFrom": "implemented",
+      "humanDeferredOn": "2026-10-16",
+      "authority": "Human-requested merge-to-main and automatic Railway deployment priority under E12-T10; prose within Context records the administrative deferral without changing the frozen product frontmatter schema."
+    },
+    {
+      "taskId": "E6-T06",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T06-live-task-board/readme.md",
+      "frozenMain": {
+        "gitBlob": "b4db4080ae097b341facf25189275423e0635d71",
+        "fileBytes": 4521,
+        "fileSha256": "9d78265ee8021b07e07a56aeef848feeae1c9d3f810d5ed2196a0d3c5960db76",
+        "status": "pending",
+        "verificationLogByteStart": 4501,
+        "verificationLogBytes": 20,
+        "verificationLogSha256": "a8d8e6bf8c97c9b963c129837ec421ff8ca589897f4b23f691b8879365ec4453",
+        "observedLiteralLegacyHeadings": []
+      },
+      "importedStatus": "pending",
+      "originalMainVerificationLogPreservedExactly": true
+    },
+    {
+      "taskId": "E6-T07",
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T07-agent-run-protocol/readme.md",
+      "frozenMain": {
+        "gitBlob": "cefc269487f8c0ef08bd1afa8ed0f6b51c75e370",
+        "fileBytes": 7946,
+        "fileSha256": "0c24213fef8eced80d8767c7d9734b5ed73e91da7b5986c7c1ed7615d4ef5577",
+        "status": "implemented",
+        "verificationLogByteStart": 4471,
+        "verificationLogBytes": 3475,
+        "verificationLogSha256": "6a0b1cf8a453bd7a41d2f91591e723198c8993c675b677df6b2625f4363f6fb4",
+        "observedLiteralLegacyHeadings": []
+      },
+      "importedStatus": "pending",
+      "originalMainVerificationLogPreservedExactly": true,
+      "deferredFrom": "implemented",
+      "humanDeferredOn": "2026-10-16",
+      "authority": "Human-requested merge-to-main and automatic Railway deployment priority under E12-T10; prose within Context records the administrative deferral without changing the frozen product frontmatter schema."
+    }
+  ],
+  "legacyLedgerCompatibilityBlocker": {
+    "trustedParserSource": "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+    "path": "packages/identity/scripts/work-queue-snapshot-lib.mjs",
+    "mainSource": "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+    "probe": "Imported exact trusted library bytes via data URL; parseVerificationLedger(exact main task readme,{taskId,auditStart:3}). No mutations.",
+    "observed": [
+      {
+        "taskId": "E6-T01",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 1
+      },
+      {
+        "taskId": "E6-T02",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 2
+      },
+      {
+        "taskId": "E6-T03",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 3
+      },
+      {
+        "taskId": "E6-T04",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 2
+      },
+      {
+        "taskId": "E6-T05",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 3,
+        "rawHistoricalProgressAssessments": 1
+      },
+      {
+        "taskId": "E6-T07",
+        "parserRunCount": 0,
+        "parserAuditCount": 0,
+        "rawHistoricalVerdicts": 0,
+        "builderClaimExists": true
+      }
+    ],
+    "interpretation": "Strict parser does not recognize main E6 critic/progress syntax. Zero parser counts are not zero historical runs. Do not activate these imported legacy ledgers or claim migration complete until an explicitly authorized exact-digest migration exists. Historical import/deferral is separately byte-attested; T10 target ledger remains within current trusted syntax.",
+    "allowedChanges": "No broad legacy acceptance, heading rewrite, control/parser changes, new progress grant or reset is authorized by this release extension."
+  },
+  "unchangedControlRoot": [
+    {
+      "path": "AGENTS.md",
+      "gitBlob": "7f3deac831d53d93e286347fbba4e086f0215516",
+      "sha256": "1c70ff2443cfb1dbba625daec81cc3e5367b4f9b83f18078be69ddbb33dabf74"
+    },
+    {
+      "path": ".eforest/loop.md",
+      "gitBlob": "a30ff61e5d49ff7760234089124b9697c06115dc",
+      "sha256": "24254b5a433626f53d787d33bfe3334b1bcfa717ef311acaba8820844370fcef"
+    },
+    {
+      "path": ".claude/workflows/decompose-task.js",
+      "gitBlob": "ec58bba93d6ab9cc945ded3515eb2f84f969b5e4",
+      "sha256": "44f05405477bc571dbf39e0a9c0d273bd86fba8dac33f1e5dcee36628cb33f8f"
+    },
+    {
+      "path": ".claude/workflows/implement-task.js",
+      "gitBlob": "b024e3ea619cd7c96ef2e13020b1a7237fc85fed",
+      "sha256": "bbcaa5b6c86ccf9b13ddc49c93c33f8675466537280c87eed9e72a5fc335fb4f"
+    },
+    {
+      "path": ".claude/workflows/work-queue.js",
+      "gitBlob": "1ca83dfaeb7deb950ea33472f76120323816f7d3",
+      "sha256": "8f887c783150e4854e1a93857bda24b52e9c3ac5e8435395127e9a9af55b8717"
+    },
+    {
+      "path": ".claude/workflows/verify-task.js",
+      "gitBlob": "e38e936b23ac5e24bce9248834f219ab46034e1f",
+      "sha256": "0826e342991824e53bd35a518c1d4731cd03b8c2058cbeec495cae30652c1d42"
+    },
+    {
+      "path": "tools/build_queue.py",
+      "gitBlob": "cd20093a8b0ecbca5dd551db32a78e49c47246f3",
+      "sha256": "e6fcfc8ee27cce685ab4b079d1137bf552d0873ea869235132921d201dee7742"
+    },
+    {
+      "path": "packages/identity/scripts/work-queue-snapshot.mjs",
+      "gitBlob": "1c8ea6eb292125d6dfe2ea4c6c6f24f13cf12778",
+      "sha256": "324750ac4701fb67c568f37da3caa57e1e8306cd4749f74974f634f9da8f75b0"
+    },
+    {
+      "path": "packages/identity/scripts/work-queue-snapshot-lib.mjs",
+      "gitBlob": "11348447778ddcc35599a2d4257617f8ce57f41d",
+      "sha256": "3480b174177a2f107e03e245957cee671f28b31f64e60354e56b7c0ad69604df"
+    },
+    {
+      "path": "packages/identity/scripts/verify-work-queue-policy.mjs",
+      "gitBlob": "a3812fbfd39afc26c6f4c345dcd9c643c0150eb3",
+      "sha256": "eb244046dc285e1b8f9aecca9afe7731db1909d3d29d04250fe243591473ec3f"
+    }
+  ],
+  "originalEvidenceConservation": {
+    "hosting": {
+      "sourceCommit": "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+      "verificationLogCount": 155,
+      "evidenceFileCount": 1659
+    },
+    "main": {
+      "sourceCommit": "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+      "verificationLogCount": 104,
+      "evidenceFileCount": 1137
+    }
+  },
+  "conservationManifest": {
+    "path": "history-conservation.json",
+    "bytes": 999248,
+    "sha256": "e1fd6f15d34e1cebc4960cf037b5d6a194b6b16cf85d66e6eb32950f9883fe45"
+  },
+  "precritic": [
+    {
+      "path": "precritic.md",
+      "bytes": 12153,
+      "sha256": "777f6b36d4e8d5073013d9ebe2f88e3b563220a450b293952a3c25602a60168b"
+    },
+    {
+      "path": "precritic.json",
+      "bytes": 21300,
+      "sha256": "8e176e05ab945314dd6e44d76986990e644ea2c51bb61b4b538188e1a856550e"
+    }
+  ],
+  "limits": "Original E12-T10 persistence, real-provider, immutable-root/cold-clone and fresh-critic acceptance remain. Historical9a evidence is not new merged-source proof. Railway native auto deployment is desired configuration until observed by the operator release receipt.",
+  "replay": "Replay: N/A (integration/CI/history receipt; no final browser execution is claimed here) + mitigation: exact Git parents, byte-attested historical logs/evidence and upcoming fresh immutable-source audit/browser/stream proof.",
+  "whitespaceCheck": "git diff --cached --check reports original main E6-T02 malformed CRLF/trailing-space/extra-newline fixtures and frozen sabotage transcript. Their bytes are deliberately preserved, not reformatted."
+}

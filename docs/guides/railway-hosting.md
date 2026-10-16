@@ -107,8 +107,13 @@ than promoting publicly writable fixture identities and content into production 
 
 ## Authenticated private runtime
 
-Build `Dockerfile.production` with the exact full source revision as
-`EF_BUILD_REVISION`. This separate image starts `hosted-bin.js`; it inherits no preview
+Build `Dockerfile.production` with the exact full source revision. A local Docker build
+must supply `--build-arg EF_BUILD_REVISION="$(git rev-parse HEAD)"`; native Railway builds
+use `RAILWAY_GIT_COMMIT_SHA` as the Docker argument's default. Leave the service variable
+`EF_BUILD_REVISION` unset so every automatic build identifies its own source commit.
+The runtime reads the baked artifact revision when that variable is absent; an explicit
+invalid or mismatched revision still refuses startup. This separate image starts
+`hosted-bin.js`; it inherits no preview
 mode, fixture credentials or seed. It checks `production-artifact.json` against every
 emitted runtime/web byte before opening the private store or public listener. Runtime
 configuration must use the following public values and a fresh dedicated volume:
@@ -140,6 +145,39 @@ and previously forced the preview recipe on production. Railway rejects Config a
 opt-in for new services; its [deprecation notice](https://docs.railway.com/infrastructure-as-code#migrating-from-config-as-code)
 also gives existing legacy configurations a 2026-12-01 cutoff. This service uses supported
 service settings rather than a custom Config as Code file.
+
+### Deployment after merging to main
+
+Use Railway's native GitHub source integration as the deployment path. In the dedicated
+private service's **Source** settings, connect `BLamy/electric-forest`, select `main`,
+enable automatic deployments and **Wait for CI**, and remove any fixed source-commit pin.
+Confirm that Railway can load the repository's branches and that its GitHub connection
+can observe successful checks; a saved branch value alone does not prove a working trigger.
+Leave watch-path filters empty so any merge into main can produce a deployment.
+
+`.github/workflows/ci.yml` runs on pull requests targeting `main`, pushes to `main`, and
+manual dispatch. Its one Ubuntu 24.04 job checks out the pinned public emulator submodule,
+uses Node 24.20.0 and pnpm 10.15.0, installs the frozen lockfile, then runs formatting/lint,
+typecheck, tests and build sequentially. Actions are pinned to full commit IDs and the
+workflow has only `contents: read` permission. GitHub CI supplies checks; Railway waits
+for them and builds the new main commit. No Railway deploy token, GitHub deployment secret
+or separate deployment workflow is required.
+
+Preserve `Dockerfile.production`, `hosted-bin.js`, the same private volume mounted at
+`/data`, `EF_DATA_DIR=/data/forest-private`, one replica, zero deployment overlap,
+`/readyz` with a 60-second timeout and a 15-second drain. Keep the preview and starter
+services separate. Delete any stale service-level `EF_BUILD_REVISION` override, including
+the former `9a5861e82ec99ab2f275181a527aab5c2bfb0622` value, before the first automatic build.
+
+For each release, compare the actual merged GitHub commit and successful CI run with
+Railway's native deployment trigger/source commit, image/artifact identity, `/healthz`,
+`/api/build`, `/api/deployment` and the app's visible build indicator. Probe readiness,
+assets, the canonical Auth0 login redirect and anonymous private-data refusal. Retain a
+minimal redacted session/synthetic-write persistence receipt for the rollout. An automatic
+deployment being configured is distinct from observing one succeed at that new revision.
+
+Main currently has no branch protection. CI and Railway's wait setting do not establish
+a protected merge gate; only claim that protection after configuring and observing it.
 
 ```text
 EF_DEPLOYMENT_MODE=production
@@ -180,7 +218,8 @@ from Node admitting a request through body buffering and finite response prepara
 10-minute browser-bound login transactions,
 24-hour sessions (a shorter positive `EF_SESSION_TTL` is permitted), readiness within
 60 seconds and drain within 15 seconds. Hosted long-poll holds are at most 10 seconds;
-larger `waitMs` requests receive 400. Normal web follows use 1.5 seconds. Established
+larger `waitMs` requests receive 400. Normal web follows use 1.5 seconds; the single shared
+registry tail uses 10 seconds to keep idle navigation quiet. Established
 SSE responses leave the header deadline after headers and are cancelled when their socket
 closes; shutdown closes listeners/connections and drains accepted handlers before closing
 the private provider. Cookie mutations require the exact configured Origin. CLI bearer
