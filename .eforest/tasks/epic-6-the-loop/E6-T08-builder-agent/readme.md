@@ -23,8 +23,9 @@ The builder protocol in AGENTS.md becomes platform behavior here. E6-T07 provide
 lease, workspace, capabilities, and run log; E6-T05 provides task folders and evidence
 sync. The agent implementation is an `AgentAdapter` prompt/tool contract plus a
 deterministic fixture adapter used to prove orchestration. No git operation is part of
-the hosted path: the task branch is an E1 branch stream and the diff is its replayed
-since-fork event range.
+the hosted path: the task branch is an E1 branch stream carrying E14 changeset publications. The durable
+change manifest lists changesets and complete file-version references since the fork;
+textual hunk comparisons are computed in memory from those endpoints.
 
 The ordered gate contract is project-configured but defaults to format/lint, typecheck,
 test, build. Evidence is a complete stream dump/digest for every run and browser Replay
@@ -35,7 +36,7 @@ when the task diff reaches a web surface. Absence must be an explicit typed
 
 - `packages/loop/src/builder/agent.ts`, `prompt.ts`, `tools.ts`, `gates.ts`,
   `claim.ts`, and `evidence.ts`.
-- Branch naming/fork metadata, since-fork diff manifest, ordered gate result schema, and
+- Branch naming/fork metadata, since-fork changeset/version manifest, ordered gate result schema, and
   recorded-final-run manifest with content-addressed attachments.
 - Hosted sample fixtures for a successful non-browser task, a browser task, gate failure,
   crash/resume, and stale-lease claim.
@@ -47,7 +48,7 @@ when the task diff reaches a web surface. Absence must be an explicit typed
       builder run, task, task-branch, and evidence streams to the committed composite
       digest.
 - [ ] From one eligibility proof the builder creates exactly one branch fork at the cited
-      main offset, changes only that branch, and submits a claim whose diff manifest
+      main offset, changes only that branch, and submits a claim whose changeset/version manifest
       exactly enumerates the since-fork events and final branch head/digest.
 - [ ] The four default gates execute in order; any nonzero, missing, weakened, or
       `SKIPPED:` result aborts before `task/claimed`, leaves task status in-progress, and
@@ -69,7 +70,7 @@ when the task diff reaches a web surface. Absence must be an explicit typed
 1. Supply adapters that exit 0 without emitting one gate, print `SKIPPED:`, weaken a
    command with `|| true`, and report green after a failing child. Any resulting claim
    refutes gate enforcement.
-2. Recompute the branch diff from fork to claimed head and compare every event/hash to
+2. Recompute the branch change membership and transient comparison from fork to claimed head and compare every event/hash to
    the claim manifest. One omitted changed event or claimed unexecuted head refutes
    sufficiency.
 3. Crash at every boundary from fork through attachment and claim append, then resume.
@@ -78,5 +79,25 @@ when the task diff reaches a web surface. Absence must be an explicit typed
    Replay with a console error in the cited recording, refutes evidence policy.
 5. Sabotage gate-order enforcement in a scratch worktree. The verify target must fail on
    an out-of-order fixture; green refutes sensitivity.
+
+## Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

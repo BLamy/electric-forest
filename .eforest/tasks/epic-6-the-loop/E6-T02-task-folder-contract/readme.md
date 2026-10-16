@@ -4,7 +4,7 @@ epic: 6
 title: "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
 priority: 602
 status: pending
-depends_on: [E5]
+depends_on: [E5, E14]
 estimate: M
 capstone: false
 ---
@@ -75,5 +75,25 @@ anchors, and non-flat values other than inline `depends_on` are refused.
    digest; the second must. Either inverse result refutes the boundary.
 5. Sabotage duplicate-key rejection in a scratch worktree. The verify target must go red
    on a committed ambiguous fixture; green refutes sensitivity.
+
+## Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

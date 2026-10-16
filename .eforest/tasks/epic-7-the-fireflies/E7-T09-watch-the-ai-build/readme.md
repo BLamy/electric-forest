@@ -13,7 +13,7 @@ capstone: true
 
 From a pristine clone and fresh platform state, a hosted AI session edits a real sample
 repo through the Epic 6 runner while two independent authenticated browsers watch the
-same branch. Both feeds and open file views show every fine-grained edit, tool call, and
+same branch. Both feeds and open file views show every saved file version, tool call, and
 task transition live; each event appears in both browsers within one second of each
 other. Each browser then scrubs to named past activity offsets and shows the exact whole
 repo state at those offsets—tree, file, issue/PR/task/project status, and session
@@ -30,32 +30,32 @@ T08 depends on the feed, file view, and scrubber and those pull in the recorder,
 activity timeline, projector, and session contract.
 
 The final evidence run must use fresh server data, a real hosted agent adapter, two
-fresh browser profiles, and Replay Chromium. Because watching and scrubbing are the
+fresh browser profiles, and the configured Replay QA managed-tunnel project. Because watching and scrubbing are the
 headline product, `Replay: N/A` is not acceptable for verification of this capstone;
 failed Replay preflight blocks the run rather than weakening it.
 
 ## Deliverables
 
-- `packages/webapp/test/capstone-e7.spec.ts` composing the E7-T08 harness into the named
+- `apps/web/test/capstone-e7.spec.ts` composing the E7-T08 harness into the named
   demo with two isolated authenticated contexts and the full live/scrub/return flow.
 - `tools/verify/capstone_e7.sh` and `make verify-E7-capstone`, running from cold-clone
   state, replaying all source/activity dumps, comparing every claimed digest, enforcing
   latency/event-set/console/network assertions, and re-running `verify-E7-fireflies`.
 - A promoted `watch-the-ai-build` corpus containing the activity/session/task/issue/PR/
-  tree/content dumps, expected high-watermark vectors, per-prefix and final composite
+  tree/changeset dumps and complete content objects, expected high-watermark vectors, per-prefix and final composite
   digests, and exact recorder input manifest.
 - `evidence/e7-t09-timeline.json`, `e7-t09-digests.txt`, source dumps with SHA-256
   siblings, DOM captures, cold-start transcript, no-mutation scrub audit, and sabotage
   transcript.
-- One uploaded Replay recording named `e7-t09-final`, URL and point links for live
-  editing, historical scrub, and return-to-live cited in the Verification log.
+- Named Replay QA journey/test runs and the epic-closing full exploration, with
+  attached recording URLs/point links for live editing, scrub and return-to-live.
 
 ## Acceptance criteria
 
 - [ ] `make verify-E7-capstone` exits 0 via `tools/verify/cold_clone.sh` with scrubbed
       environment, fresh server data and browser profiles, zero skips, successful Replay
-      preflight/upload, and every workspace gate green.
-- [ ] The real hosted agent performs at least 20 incremental text edits across two files,
+      QA preflight/journey completion, and every workspace gate green.
+- [ ] The real hosted agent performs at least 20 saved complete text versions across two files,
       one rename or delete, two tool calls including one error path, and at least two task
       transitions; source dumps prove every mutation used dispatch and carries contiguous
       session provenance.
@@ -75,7 +75,7 @@ failed Replay preflight blocks the run rather than weakening it.
 - [ ] The promoted corpus replays twice to byte-identical per-prefix and final digests;
       flipping one byte in each stream class turns verification red naming the source and
       first divergent offset.
-- [ ] The single cited Replay recording contains both contexts and every headline scene,
+- [ ] The cited Replay QA runs and attached recordings cover both contexts and every headline scene,
       has zero console errors and no watched-surface navigation/reload, and its DOM
       offset/digest tuples match committed evidence at cited point links.
 - [ ] `make verify-E7-fireflies` and every E7-T01–T08 verify target re-run unmodified and
@@ -112,5 +112,24 @@ failed Replay preflight blocks the run rather than weakening it.
    source execution, and DOM at live-edit, error, scrub, and return points. A missing
    scene, console exception, hidden reload/state refetch, or point inconsistent with the
    committed timeline refutes.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

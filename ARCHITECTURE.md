@@ -58,3 +58,22 @@ New work follows these constraints:
 3. Prove every transport-facing change with `_v-official-streamfs` against the published
    reference server.
 4. Never add a second Durable Streams transport to this repository.
+
+## Planned deployment and source-model work
+
+The [2026-10-16 hosting-first plan](docs/plans/hosting-and-changesets.md) schedules a
+public multi-user Railway deployment of this architecture before any storage/runtime
+migration. The existing Railway Postgres/Electric/cache starter is separate from the
+platform's authoritative stream state. E12 must qualify the actual production provider,
+including the local retention patch's compatibility boundary; deployment success alone
+is not conformance proof.
+
+E15 evaluates Electric Sync and Electric Agents with pinned isolated fixtures. Adopting
+a Postgres-backed control plane requires an explicit architecture amendment; a pilot or
+an independent evaluation verdict does not change the current no-database core rule.
+
+E14 then introduces changesets referencing complete immutable content-addressed file
+versions, through the existing dispatch door. New textual comparisons are derived in
+memory; patch text may persist only in redacted agent logs after the new-format boundary.
+Legacy verified patch streams and evidence remain unchanged and readable. These are
+pending contracts, not already implemented behavior.

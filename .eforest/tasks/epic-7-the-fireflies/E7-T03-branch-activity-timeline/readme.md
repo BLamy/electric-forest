@@ -41,7 +41,7 @@ an otherwise private stream.
   `rebuild.ts` for validation, exactly-once projection, and deterministic rebuild.
 - `GET /api/repos/:org/:repo/branches/:branch/activity` using the normal offset/live
   protocol and authorization filtering without changing stored order.
-- Golden multi-stream fixtures covering file patches, tools, issue/PR/task events,
+- Golden multi-stream fixtures covering file-version changes, tools, issue/PR/task events,
   concurrent sessions, tombstones, and denied entities.
 - `make verify-E7-T03` plus rebuild-destruction, reference-integrity, reconnect, and
   mutation-sensitivity tests and committed evidence.
@@ -81,5 +81,24 @@ an otherwise private stream.
    payload/ref visibility refutes authorization.
 6. Sabotage deduplication and source digest checking in scratch worktrees. The verify
    target must fail each mutation before printing its expected-fail marker.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

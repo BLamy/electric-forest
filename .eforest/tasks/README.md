@@ -1,9 +1,9 @@
 # electric-forest Task System
 
 All work on electric-forest is decomposed into task **folders** in this directory,
-organized into epic folders (`epic-0-the-seed/` … `epic-8-the-mirror/`) that ladder toward
-named, runnable milestones — see `../../ROADMAP.md` for the capability stack, the
-targets→epic map, and what each epic gets you. `../loop.md` defines the builder/critic
+organized into epic folders, from `epic-0-the-seed/` through `epic-15-durable-agents/`, that
+ladder toward named, runnable milestones — see `../../ROADMAP.md` for the capability
+stack, the targets→epic map, and what each epic gets you. `../loop.md` defines the builder/critic
 loop that burns this queue down and the project states (`building` / `complete` /
 `paused` / `invalid_loop`).
 
@@ -34,8 +34,11 @@ python3 tools/build_queue.py
 
 Rules:
 
-- **Priority** is a global integer: `epic × 100 + task number` (`E2-T07` → `207`).
-  The queue is sorted ascending. Lower number = sooner. Fractional priorities are allowed
+- **Priority** is an explicit global integer. The default is `epic × 100 + task number`
+  (`E2-T07` → `207`), but epic IDs remain stable when a human reorders the roadmap.
+  The 2026-10-16 hosting-first decision assigns E12 priorities 521–529, E13 531–533,
+  E15 541–543 and E14 551–556 before E6. The queue is sorted ascending.
+  Lower number = sooner. Fractional priorities are allowed
   only for queue-jumping bug/regression tasks, with the reason stated in a frontmatter
   comment.
 - Work is done **one task at a time**, taking the highest-priority task whose
@@ -46,6 +49,30 @@ Rules:
 - Active task contracts may not name retired custom Durable Streams packages, routes,
   or hooks. `pnpm task-board:check` enforces the official-substrate boundary for every
   pending, in-progress, implemented, or refuted ticket.
+
+The current human-authorized order is public multi-user hosting → hosted design →
+Electric Sync/Agents evaluation → changesets/content addressing → E6–E11. See
+`../../docs/plans/hosting-and-changesets.md`. Existing E9–E11 proposals remain later work.
+The existing E5-T15 and E6-T12 active records require lifecycle reconciliation before
+any new builder invocation; planning does not reset their status, findings or run ledger.
+All other tasks stay subject to the one-task gate even when their dependencies are met.
+
+## Prospective source-model contract
+
+E14 introduces complete immutable content-addressed file versions linked to changesets.
+After its migration boundary, new source/review/evidence artifacts store version/parent
+manifests and hashes rather than textual patch bodies. Comparisons are computed in memory;
+only redacted agent tool logs may retain patch text. Existing verified patch logs and
+evidence remain byte-exact and readable. Changeset IDs, tested source heads and content
+hashes bind later task/run/fork/deployment evidence to the source under review.
+The rule concerns generated diff artifacts, not literal patch text inside complete
+source files. Comparison recordings must mask generated comparison text/payloads before
+persistence while retaining endpoint IDs, comparison digests and visible UI states;
+prove masks with a canary before uploading. See the plan for the evidence boundary.
+
+E15's isolated Electric evaluation does not authorize a database migration. The core
+remains stream-authoritative unless an explicit architecture amendment says otherwise.
+An adopt verdict identifies integration work; decline/conditional are valid outcomes.
 
 Verification logs on completed tickets remain append-only evidence of what happened at
 the time. They are not an API contract. E1-T09 is the migration gate that re-establishes

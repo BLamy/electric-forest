@@ -73,4 +73,23 @@ accelerate replay, but the answer must equal a full fold from `-1` exactly.
 6. Sabotage the projector to use current heads for one entity. The every-prefix suite
    must fail before its expected-fail marker.
 
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
+
 ## Verification log

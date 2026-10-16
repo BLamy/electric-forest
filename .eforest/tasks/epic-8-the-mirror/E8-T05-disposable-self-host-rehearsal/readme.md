@@ -106,4 +106,23 @@ The capstone remains the only task allowed to claim a real production task.
    and network errors, and final digest. A screenshot-only or partial recording is
    insufficient evidence.
 
+## Roadmap alignment — 2026-10-16
+
+Public deployment is delivered earlier by E12; this epic concerns source and build-loop
+self-hosting. Import plans and new source writes publish complete immutable content objects
+linked to baseline or successor changesets. Retain source/changeset/content manifests and
+endpoint hashes as durable evidence; compute comparisons in memory and retain textual patches
+only in redacted agent tool logs. Legacy verified evidence remains append-only and the
+one-time Git retirement contract is unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
+
 ## Verification log

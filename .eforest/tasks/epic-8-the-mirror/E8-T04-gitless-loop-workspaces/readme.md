@@ -15,8 +15,8 @@ The hosted E6 builder/critic loop can execute this repository with no Git binary
 `.git` directory, and no Git protocol traffic anywhere in the task path. A loop workspace
 is materialized from a branch stream at a pinned offset into an ordinary directory with
 an `.ef/` checkpoint; builder file changes publish through the E4 watcher/api/dispatch door;
-critic diff coverage is computed as an exact stream event range from task-branch fork to
-head; successful verdict merge uses E1/E5 branch/PR merge events. `packages/loop`
+critic coverage uses the exact changeset/version membership from task-branch fork to
+head, computing text comparisons only in memory; successful verdict merge uses E1/E5 branch/PR merge events. `packages/loop`
 records a `WorkspaceProvenanceV1` for every role invocation containing project, branch,
 fork/head offsets, input/output tree digests, task id, role, and command exit statuses.
 For a project with `mergeRequired: true`, queue advancement and `project/complete` are
@@ -82,7 +82,7 @@ hosted loop; weakening the capstone to permit Git is not an option.
       source as critic is refused by role policy and leaves branch/project heads and
       digests unchanged.
 - [ ] Restarting a builder after its publish response is lost reconciles from `.ef/` plus
-      branch head, emits no duplicate patch, and records one output tree digest.
+      branch head, emits no duplicate changeset publication, and records one output tree digest.
 - [ ] Under `mergeRequired: true`, the exact lifecycle is critic `verified` -> PR
       `merged` citing that verified head -> queue advance/project completion. Killing or
       racing at each boundary produces one merge; a verified but unmerged or differently
@@ -114,5 +114,24 @@ hosted loop; weakening the capstone to permit Git is not an option.
    sensitivity legs must turn red; a green sabotage refutes the proof apparatus.
 7. Forge a merge that cites an earlier builder head and attempt project completion after
    verdict but before merge. Either acceptance refutes the integration fence.
+
+## Roadmap alignment — 2026-10-16
+
+Public deployment is delivered earlier by E12; this epic concerns source and build-loop
+self-hosting. Import plans and new source writes publish complete immutable content objects
+linked to baseline or successor changesets. Retain source/changeset/content manifests and
+endpoint hashes as durable evidence; compute comparisons in memory and retain textual patches
+only in redacted agent tool logs. Legacy verified evidence remains append-only and the
+one-time Git retirement contract is unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

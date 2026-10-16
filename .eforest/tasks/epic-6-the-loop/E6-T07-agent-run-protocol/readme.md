@@ -4,7 +4,7 @@ epic: 6
 title: "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
 priority: 607
 status: pending
-depends_on: [E6-T03, E6-T04]
+depends_on: [E6-T03, E6-T04, E15-T03]
 estimate: L
 capstone: false
 ---
@@ -52,7 +52,7 @@ E6-T04 source heads and E6-T03 project state in the same fenced operation.
       stream and validated verdict/evidence endpoints. All refused stream heads remain
       unchanged.
 - [ ] A critic workspace/process is fresh and receives only the committed task spec,
-      diff manifest, claim, and evidence manifest; a planted builder-only secret and
+      changeset/version manifest, claim, and evidence manifest; a planted builder-only secret and
       transcript are absent, proved by a scripted critic probe.
 - [ ] Pausing or invalidating the project, revoking capability, or advancing the lease
       fence aborts the run before its next mutation, appends one terminal run event, and
@@ -79,5 +79,25 @@ E6-T04 source heads and E6-T03 project state in the same fenced operation.
    One post-revocation mutation refutes fencing.
 5. Disable capability-scope checking in a scratch worktree. The verify target must go red
    on a critic branch write; green refutes sensitivity.
+
+## Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log
