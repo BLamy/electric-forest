@@ -1,0 +1,18 @@
+{
+  "chat": {
+    "digest": "92c15bbb5188c74bbabf285c6e6227251e7fd8f2c8289a810941c31c241c7b2b",
+    "offset": "0000000000000000_0000000000000000"
+  },
+  "hostedBanner": "Auth0 sign-in · Private dataAgents and external integrations are off.CLI tokensBuild 9a5861e82ec9",
+  "identity": {
+    "digest": "16164de54b82b4fdf6b885f2dd49d3bae02130b4a205ad4da03c7d8b28e10dbd",
+    "transportCursor": "0000000000000000_0000000000000408"
+  },
+  "location": {
+    "origin": "https://electric-forest-production.up.railway.app",
+    "path": "/chat/railway-acceptance-t10/persistence-check"
+  },
+  "observedAt": "2026-10-16T22:51:22.115Z",
+  "syntheticMessageCount": 1,
+  "syntheticMessagePresent": true
+}

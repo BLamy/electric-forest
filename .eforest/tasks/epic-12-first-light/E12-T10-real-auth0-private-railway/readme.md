@@ -210,3 +210,54 @@ python3 <retained-stream-proof>/replay_final.py <final-proof-root> --out <replay
 node <retained-check-public.mjs> 9a5861e82ec99ab2f275181a527aab5c2bfb0622 <work-output>.
 Exact original argv, UTC times, exit codes and output hashes are in the retained command
 receipts. This entry is a deployment checkpoint, not an implemented claim or verdict.
+
+### 2026-10-16 — builder — actual Auth0 callback checkpoint (restart pending)
+
+The human confirmed fixing production after the concrete Auth0 Save request. The
+prepared callback, logout and web-origin allowlists were saved once, then the settings
+were reloaded and their exact persisted values read back. The callback is
+`https://electric-forest-production.up.railway.app/auth/callback`, logout is the same
+origin with `/`, and web origin is the same origin without a path or trailing slash.
+No wildcard, secret, grant-type or other tenant setting was changed.
+
+A fresh application `/auth/login` reached Universal Login without the mismatch.
+The existing operator Google sign-in completed the real Auth0 callback and returned to
+the authenticated production app. The operator then created synthetic workspace
+`railway-acceptance-t10`, channel `persistence-check`, and one synthetic acceptance
+message. Its DOM checkpoint is `0000000000000000_0000000000000000`, digest
+`92c15bbb5188c74bbabf285c6e6227251e7fd8f2c8289a810941c31c241c7b2b`.
+An anonymous request to that private channel was refused with HTTP 404. Health,
+readiness, visible build and the public artifact manifest still name audited source
+`9a5861e82ec99ab2f275181a527aab5c2bfb0622`; the Railway deployment/image/config and
+dedicated volume remain the previously recorded ones, with no staged changes.
+
+`evidence/actual-auth0-20261016/manifest.json` binds every new receipt and screenshot
+to its capture bytes, published bytes and Git blob. JSON formatting preserves parsed
+values; screenshots are byte-identical native captures. `actual-auth0-receipt.json`
+records the public registration and minimal actual-login outcome;
+`production-before-restart.json` records only DOM digests/cursors/build and synthetic
+message presence. Screenshots omit operator contact details and the message author
+subject. No production identity event log, cookie, provider token, code/state/nonce,
+password, client secret or private project is retained.
+
+Two fresh committed readers agreed byte-for-byte on the parent checkpoint: 36,751
+bytes, SHA-256 `f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111`.
+This evidence-only append changes no runtime source, task status, queue, prior ledger
+or control. The ordered root-gate audit already recorded for the exact deployed source
+is unchanged and was not rerun for metadata.
+
+The single controlled restart is explicitly awaiting the human's answer because the
+Railway restart tool requires approval for an attached-volume service. Established
+actual-login/session and synthetic-write persistence across that restart, the cold clone
+and the fresh task critic/judge remain absent. This is an incomplete checkpoint;
+T10 stays `in-progress`, run 0/10, and T11 stays pending.
+
+Replay: N/A (actual operator authentication is excluded from external QA recording;
+Replay QA authentication is unavailable in this session) + mitigation: local Chrome
+public settings/login screenshots and minimal redacted DOM/build receipts, together
+with the separately retained dedicated-fixture Playwright and independent stream proof.
+
+Commands/actions: Auth0 Save, settings reload/readback, fresh production `/auth/login`,
+normal Google sign-in, app workspace/channel/message actions; read-only Railway
+describe-service; public HTTPS health/readiness/build/deployment and anonymous private
+channel checks. No restart, production identity dump or credential extraction occurred.

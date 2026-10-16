@@ -1,0 +1,128 @@
+{
+  "schema": "eforest.actual-auth0-evidence.v1",
+  "task": "E12-T10",
+  "recordedAt": "2026-10-16T22:54:58.945497+00:00",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "checkpointParent": "176f79b23605ec86fe6ccadbbad18b98391ce1dc",
+  "preWriteReaderPair": {
+    "bytes": 36751,
+    "sha256": "f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111"
+  },
+  "evidenceOnly": true,
+  "taskStatus": "in-progress",
+  "verificationRunCount": 0,
+  "controlledRestartPerformed": false,
+  "entries": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/actual-auth0-receipt.json",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/actual-auth0-receipt.json",
+      "sourceBytes": 2970,
+      "sourceSha256": "a5cadbda53f044445cfb4bfd490fdb9b7e5e2ff0af80222f89da7e48e2a5d363",
+      "bytes": 2934,
+      "sha256": "87fdc9fa4bffbce39bf36c8b5aefe8c5cc21a69e011aa5188c148a661d8e6957",
+      "gitBlobOid": "66b1598296afa621b6215785643709b4748b6fc9",
+      "representation": "prettier JSON formatting only; parsed values identical"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/production-before-restart.json",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/production-before-restart.json",
+      "sourceBytes": 692,
+      "sourceSha256": "849acfd25ece7fca6010db4ff1a6273f3f0b2ea8e34faec65a1303eeaa068dc0",
+      "bytes": 692,
+      "sha256": "849acfd25ece7fca6010db4ff1a6273f3f0b2ea8e34faec65a1303eeaa068dc0",
+      "gitBlobOid": "c800ad22d77298817201620f6e24542b3bbea14c",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/auth0-urls-persisted.png",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/auth0-urls-persisted.png",
+      "sourceBytes": 99044,
+      "sourceSha256": "11a03463f2e4ae762e563ac72aecb810b765356616a83c7144ec61d085dd30a7",
+      "bytes": 99044,
+      "sha256": "11a03463f2e4ae762e563ac72aecb810b765356616a83c7144ec61d085dd30a7",
+      "gitBlobOid": "3d345f24bc51983c8dac30e05d21e600065ba893",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/production-auth0-login-fixed.png",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/production-auth0-login-fixed.png",
+      "sourceBytes": 29791,
+      "sourceSha256": "6306b9906c5202835692f0f2567ef34b3a2c3f2e8207c5f20499a7e4a7e037c9",
+      "bytes": 29791,
+      "sha256": "6306b9906c5202835692f0f2567ef34b3a2c3f2e8207c5f20499a7e4a7e037c9",
+      "gitBlobOid": "8d84efe366b72b46b607d6acec0ac3668d897fe4",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/production-signed-in.png",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/production-signed-in.png",
+      "sourceBytes": 38921,
+      "sourceSha256": "ab258f57bfffa5a63b59a2f44eaad5b71382f939f8fae2ca336653c71ce1b183",
+      "bytes": 38921,
+      "sha256": "ab258f57bfffa5a63b59a2f44eaad5b71382f939f8fae2ca336653c71ce1b183",
+      "gitBlobOid": "658a63c3de150469665298c015de92f3d15d18dd",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/production-before-restart-banner.png",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/production-before-restart-banner.png",
+      "sourceBytes": 30898,
+      "sourceSha256": "b4208930f3c9467edd0bfefd9238a9a573872795d480fe352c9e125ab7a821dd",
+      "bytes": 30898,
+      "sha256": "b4208930f3c9467edd0bfefd9238a9a573872795d480fe352c9e125ab7a821dd",
+      "gitBlobOid": "c32cac1bb3366380aadfe89718f30b5771aac42b",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/production-before-restart-message.png",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/production-before-restart-message.png",
+      "sourceBytes": 7833,
+      "sourceSha256": "06ed730df651f4ff45220279fe518613a399ab98e6d88ce59a2c776b7b4aa8d9",
+      "bytes": 7833,
+      "sha256": "06ed730df651f4ff45220279fe518613a399ab98e6d88ce59a2c776b7b4aa8d9",
+      "gitBlobOid": "63e5cce05bd835362ad0d1763628b9147a64aadb",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/railway-service-at-real-login.json",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/railway-service-at-real-login.json",
+      "sourceBytes": 2598,
+      "sourceSha256": "bf9b363698d7634e8af52895c3055291f77656faf3b8b5de33acb9c8efc396c2",
+      "bytes": 2598,
+      "sha256": "bf9b363698d7634e8af52895c3055291f77656faf3b8b5de33acb9c8efc396c2",
+      "gitBlobOid": "628c12943e7030889e4ba288c4e08cdf14c36ed2",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/public-after-auth0-login.json",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/auth0-callback-fix-20261016T2136/public-after-auth0-login.json",
+      "sourceBytes": 163520,
+      "sourceSha256": "517aa7a7e1b4d25ea2f500288b9d2a014b45a895312ebb57f8125801a8fcc25a",
+      "bytes": 163520,
+      "sha256": "517aa7a7e1b4d25ea2f500288b9d2a014b45a895312ebb57f8125801a8fcc25a",
+      "gitBlobOid": "a414cca17d4f430b705d75b7ce49ca983cf747d3",
+      "representation": "byte-identical capture"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/parent-reader-a.txt",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/pre-real-auth0-checkpoint-a.json",
+      "sourceBytes": 36751,
+      "sourceSha256": "f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111",
+      "bytes": 36751,
+      "sha256": "f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111",
+      "gitBlobOid": "7fe60893b21b15f00f0b8211e41c9f4b01d0a192",
+      "representation": "byte-identical deterministic committed-snapshot stdout"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/actual-auth0-20261016/parent-reader-b.txt",
+      "sourcePath": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/pre-real-auth0-checkpoint-b.json",
+      "sourceBytes": 36751,
+      "sourceSha256": "f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111",
+      "bytes": 36751,
+      "sha256": "f1e8393fd3359c99ee35f0c0be1f34782a506d911da5b2525e1671b6f4be0111",
+      "gitBlobOid": "7fe60893b21b15f00f0b8211e41c9f4b01d0a192",
+      "representation": "byte-identical deterministic committed-snapshot stdout"
+    }
+  ],
+  "privacy": "Only public provider/service/source values and minimal redacted UI/DOM acceptance receipts. No production identity dump, email, provider subject, cookie, token, password, login code/state/nonce/verifier or client secret. PNGs were individually reviewed; native clips omit contact details and the author subject."
+}

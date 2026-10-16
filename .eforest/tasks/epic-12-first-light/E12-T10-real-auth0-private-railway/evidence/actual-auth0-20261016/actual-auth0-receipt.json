@@ -1,0 +1,54 @@
+{
+  "schema": "eforest.actual-auth0-callback-fix.v1",
+  "task": "E12-T10",
+  "recordedAt": "2026-10-16T22:52:12.953Z",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "metadataRevision": "176f79b23605ec86fe6ccadbbad18b98391ce1dc",
+  "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+  "imageDigest": "sha256:8e0d1de92341b27d8d2fb40a7048ca78a40e5c88eac4938a159eb5de3f49448d",
+  "auth0": {
+    "issuer": "https://dev-8qqftel4x1s5wed3.us.auth0.com/",
+    "clientId": "H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk",
+    "callbackURLs": ["https://electric-forest-production.up.railway.app/auth/callback"],
+    "logoutURLs": ["https://electric-forest-production.up.railway.app/"],
+    "webOrigins": ["https://electric-forest-production.up.railway.app"],
+    "userConfirmedSave": true,
+    "saved": true,
+    "readBackAfterReload": true,
+    "unsavedChangesAfterReload": false,
+    "wildcardsAdded": false,
+    "clientSecretRead": false
+  },
+  "login": {
+    "freshAppAuthLogin": true,
+    "callbackMismatch": false,
+    "universalLoginFormReached": true,
+    "existingGoogleAccountFlowCompleted": true,
+    "returnedOrigin": "https://electric-forest-production.up.railway.app",
+    "returnedPath": "/",
+    "authenticatedAccountMenu": true,
+    "providerCredentialsRetained": false,
+    "sessionCookieRead": false,
+    "operatorEmailRetained": false,
+    "operatorSubjectRetained": false,
+    "productionIdentityDumped": false
+  },
+  "acceptance": {
+    "workspace": "railway-acceptance-t10",
+    "channel": "persistence-check",
+    "message": "E12-T10 production acceptance: real Auth0 login and private Durable Streams persistence, 2026-10-16.",
+    "privateDOMReceipt": "production-before-restart.json",
+    "controlledRestartPerformed": false,
+    "controlledRestartApproval": "pending",
+    "setupNote": "The workspace form requires a slug. A friendly name with spaces kept Create disabled; the synthetic slug was then accepted."
+  },
+  "screenshots": [
+    "auth0-urls-persisted.png",
+    "production-auth0-login-fixed.png",
+    "production-signed-in.png",
+    "production-before-restart-banner.png",
+    "production-before-restart-message.png"
+  ],
+  "evidenceBoundary": "Actual operator login and minimal DOM/build receipt only. No production identity event log, provider token, code, state, nonce, verifier, cookie, password, email or subject retained. Screenshots use native browser clips to omit account contact details and the message author subject. Separate committed dedicated-fixture evidence supplies independent stream replay and browser acceptance coverage.",
+  "replay": "Replay: N/A (actual operator authentication is excluded from external QA recording; Replay QA authentication is unavailable in this session) + mitigation: local Chrome public login/settings screenshots and minimal redacted DOM/build receipt, plus the separately retained dedicated-fixture Playwright and independent stream evidence."
+}
