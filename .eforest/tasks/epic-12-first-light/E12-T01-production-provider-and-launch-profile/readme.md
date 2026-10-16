@@ -4,7 +4,7 @@ epic: 12
 title: Qualify the production stream provider and freeze the public launch profile
 priority: 521
 status: pending
-depends_on: [E5-T15]
+depends_on: [E5-T14, E12-T00]
 estimate: M
 capstone: false
 ---
@@ -27,10 +27,11 @@ starter services, but no Forest service or Durable Streams service. The Electric
 starter does not establish a Durable Streams endpoint. Re-inventory at implementation;
 never infer running service health from a successful deployment record.
 
-E5-T15 is implemented awaiting its independent critic; E6-T12 also has an inherited
-in-flight state. The existing lifecycle must reconcile that two-active inconsistency
-before any E12 builder starts. This task does not reset, requeue, cancel, renumber or
-verify either task and does not bypass either task's ledger or the one-task rule.
+The human's 2026-10-16 implementation authorization reconciled the old two-active
+inconsistency by explicitly deferring E5-T15 and E6-T12, preserving all findings and
+run history. This production qualification follows the separately verified E12-T00
+preview and the established E5-T14 platform, while E5-T15 resumes after E12. E12's own
+independent proof cannot mark either deferred task verified or reset its ledger.
 
 `ARCHITECTURE.md` currently selects Electric Cloud in deployed environments. The local
 `@durable-streams/server@0.3.8` launcher is a test server with a task-scoped retention

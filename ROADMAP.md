@@ -10,7 +10,7 @@ public traffic, and demonstrated recovery. A private demo does not satisfy this 
 
 | Order | Epic / priority | Outcome |
 | --- | --- | --- |
-| Existing checkpoint | E5-T15 and inherited E6-T12 | Reconcile the existing verification/lifecycle gates without rewriting their history |
+| 0 | E12-T00 / 520 | Deploy a labeled disposable preview with fixture sign-in before production API keys |
 | 1 | E12 — first-light / 521–529 | Run and launch the current web app and gateway on Railway with a qualified production stream provider |
 | 2 | E13 — the-design / 531–533 | Audit the hosted journeys, decide navigation and terminology, and improve the core shell |
 | 3 | E15 — durable-agents / 541–543 | Test Electric Sync and Electric Agents in isolation; independently decide adopt, decline, or conditional |
@@ -24,12 +24,13 @@ dependencies encode this human-authorized reorder. The existing E9–E11 proposa
 in the backlog; its general application platform is later work. E11's future deployment
 provenance feature is distinct from deploying Electric Forest now in E12.
 
-The 2026-10-16 inventory found E5-T15 `implemented` and E6-T12 `in-progress`, although
-E6-T12's prerequisites remain pending. That violates the one-task-at-a-time invariant.
-This planning edit preserves both records, their findings, run counters, and all
-verified/cancelled task bytes. Before any builder runs, the existing lifecycle must
-reconcile those gates and obtain the required independent committed readbacks. This
-plan grants no new verification runs and does not resolve either task by declaration.
+The 2026-10-16 inventory found conflicting active E5-T15/E6-T12 records. The human
+then explicitly authorized lifecycle reprioritization and stubbed first deployments.
+Commit `2b22ae7da26fead21004d6f9f45d353efebcbe2d` defers both to pending without
+resetting findings, evidence, run history or ceilings, and activates only E12-T00.
+Two independent pre-write/post-write snapshots agreed. E5-T15 resumes after the
+public hosting epic; E12-T01 onward still earn the real production provider/auth/public-launch
+criteria. No historical task was marked verified by this direction change.
 
 Detailed topology, architectural recommendations, migration rules, and source references:
 [hosting and changesets plan](docs/plans/hosting-and-changesets.md). The generated

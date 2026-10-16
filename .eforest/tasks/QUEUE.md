@@ -16,7 +16,7 @@ No new task may start until **E12-T00** clears the current gate.
 
 ## Unlocks when E12-T00 verifies
 
-1. **E5-T15** — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks"
+1. **E12-T01** — Qualify the production stream provider and freeze the public launch profile
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -110,12 +110,12 @@ No new task may start until **E12-T00** clears the current gate.
 - [x] `512` [E5-T12](epic-5-the-meadow/E5-T12-negotiation-replay-harness/readme.md) — "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation" *(deps: E5-T07, E5-T10)*
 - [x] `513` [E5-T13](epic-5-the-meadow/E5-T13-issue-to-merge/readme.md) — "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases" *(deps: E5-T08, E5-T11, E5-T12)*
 - [x] `514` [E5-T14](epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md) — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" **[CAPSTONE]** *(deps: E5-T13)*
-- [ ] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14, E12-T00)*
+- [ ] `515` [E5-T15](epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md) — "Rebuild the web UI on @brett_lamy/ui 2.0.0: Tailwind v4, owned github-clone and discord-clone registry blocks wired to live stream hooks" *(deps: E5-T14, E12)*
 
 ## Epic 12 — `epic-12-first-light`
 
 - [~] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
-- [ ] `521` [E12-T01](epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md) — Qualify the production stream provider and freeze the public launch profile *(deps: E5-T15)*
+- [ ] `521` [E12-T01](epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md) — Qualify the production stream provider and freeze the public launch profile *(deps: E5-T14, E12-T00)*
 - [ ] `522` [E12-T02](epic-12-first-light/E12-T02-reproducible-railway-runtime/readme.md) — Build a reproducible Railway runtime with readiness and bounded shutdown *(deps: E12-T01)*
 - [ ] `523` [E12-T03](epic-12-first-light/E12-T03-public-https-authentication/readme.md) — Make public HTTPS authentication and sessions production-correct *(deps: E12-T02)*
 - [ ] `524` [E12-T04](epic-12-first-light/E12-T04-first-working-railway-deployment/readme.md) — Deploy the first working Forest candidate into the existing Railway project *(deps: E12-T01, E12-T02, E12-T03)*

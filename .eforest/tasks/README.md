@@ -53,9 +53,12 @@ Rules:
 The current human-authorized order is public multi-user hosting → hosted design →
 Electric Sync/Agents evaluation → changesets/content addressing → E6–E11. See
 `../../docs/plans/hosting-and-changesets.md`. Existing E9–E11 proposals remain later work.
-The existing E5-T15 and E6-T12 active records require lifecycle reconciliation before
-any new builder invocation; planning does not reset their status, findings or run ledger.
-All other tasks stay subject to the one-task gate even when their dependencies are met.
+The human's subsequent implementation authorization adds E12-T00 (priority 520), a
+labeled disposable Railway preview with fixture sign-in. Lifecycle commit
+`2b22ae7da26fead21004d6f9f45d353efebcbe2d` defers E5-T15/E6-T12 to pending while
+preserving their findings/evidence/run history and activates only E12-T00; independent
+committed snapshots agree. All other tasks remain subject to the one-task gate.
+Real production credentials and provider qualification remain E12-T01 onward.
 
 ## Prospective source-model contract
 

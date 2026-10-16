@@ -77,3 +77,10 @@ versions, through the existing dispatch door. New textual comparisons are derive
 memory; patch text may persist only in redacted agent logs after the new-format boundary.
 Legacy verified patch streams and evidence remain unchanged and readable. These are
 pending contracts, not already implemented behavior.
+
+The human-authorized E12-T00 first deployment is explicitly a disposable preview. It
+may compose the pinned official reference server privately with fixture-only identity
+and persistent sample data. Its public UI and health/build metadata must label preview
+mode, disable developer-authenticated agents and real external integrations, and keep
+production provider/auth configuration rejected. This scoped preview is not production
+provider qualification and does not change the deployed-core target above.

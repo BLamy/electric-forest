@@ -4,6 +4,12 @@ Planning decision recorded 2026-10-16. These are recommendations and pending bac
 contracts, not claims that a deployment, migration, design review, or verification has
 already passed. The requested first release is **public and multi-user**.
 
+The human subsequently authorized implementation and Railway reconfiguration, with
+stub integrations on initial deployments. E12-T00 now delivers a separately labeled,
+public/disposable preview before production API keys. It uses the real platform and a
+private reference server with fixture sign-in; it cannot satisfy E12's production
+provider, real-auth or public-release acceptance by itself.
+
 ## Railway: what exists and what to add
 
 The connected Railway inventory on 2026-10-16 returned project
@@ -242,13 +248,14 @@ than repeating discovery. E6 implements only the chosen minimal `AgentAdapter` b
 
 ## Backlog and history accounting
 
-No verified task is reopened, no cancelled task is revived, no ledger is renumbered,
-and no current in-flight task is silently reset. E5-T15 needs its existing independent
-verification. E6-T12 has an inherited `in-progress` record and a needs-evidence report
-with unmet prerequisites. Their lifecycle reconciliation is a pre-builder checkpoint;
-the planning session does not consume a verification run or bypass that checkpoint.
+No verified task is reopened, no cancelled task is revived and no ledger is renumbered.
+The human explicitly authorized deferring E5-T15/E6-T12 to pending to begin hosting.
+Their complete prior claims/findings remain, and E5-T15 depends on E12 before
+resuming its independent verification. Commit `2b22ae7da26fead21004d6f9f45d353efebcbe2d`
+activates E12-T00 alone; two fresh readers agreed using the pre-write committed
+attester. This lifecycle change neither grants verification nor resets run accounting.
 
-The new tasks are pending. Existing future tasks retain their identities and scope,
+The production/design/source-model tasks remain pending; E12-T00 is in progress. Existing future tasks retain their identities and scope,
 with changed source-model contracts and explicit dependencies. The E9–E11 working-tree
 proposal is retained as later platform work. Queue generation and graph/history checks
 prove this planning edit's consistency, not product behavior.

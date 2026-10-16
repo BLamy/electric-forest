@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-16T17:21:51.480624+00:00",
+  "stage": "provisioned-awaiting-tested-source",
+  "projectId": "e0864588-a320-4ba3-96df-95ad0a07ee81",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "service": {
+    "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+    "name": "electric-forest-preview"
+  },
+  "volume": {
+    "id": "10d2103d-2374-45cc-ab5f-c63dd5c063f4",
+    "name": "forest-preview-data",
+    "mountPath": "/data",
+    "sizeMB": 1000
+  },
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "targetPort": 8080,
+  "region": "us-west2",
+  "replicas": 1,
+  "memoryGB": 2,
+  "vCPUs": 1,
+  "healthcheck": {
+    "path": "/readyz",
+    "timeoutSeconds": 60
+  },
+  "overlapSeconds": 0,
+  "drainingSeconds": 15,
+  "variableNames": [
+    "NODE_ENV",
+    "PORT",
+    "EF_DEPLOYMENT_MODE",
+    "EF_PREVIEW_AUTH",
+    "EF_PUBLIC_ORIGIN",
+    "EF_PREVIEW_DATA_DIR",
+    "EF_WEB_ROOT",
+    "EF_AGENT_RESPONDER"
+  ],
+  "sourceConnected": false,
+  "deploymentVerified": false,
+  "existingStarterServicesModified": false,
+  "authority": "Human authorized Railway configuration/deployment in this chat. Dedicated preview only; production qualification remains pending."
+}

@@ -6,7 +6,7 @@ priority: 515
 status: pending
 deferred_from: implemented
 human_deferred_on: 2026-10-16
-depends_on: [E5-T14, E12-T00]
+depends_on: [E5-T14, E12]
 estimate: L
 capstone: false
 ---
@@ -314,3 +314,10 @@ implementation, claims, findings, evidence and verification-run history remain i
 This is not a verification verdict, a finding closure, or a reset of any run/checkpoint.
 E12-T00 executes the separate disposable preview scope first. All unearned acceptance
 criteria still require their original independent proof before this task can verify.
+
+### 2026-10-16 — hosting-first dependency clarification
+
+The same human authorization prioritizes the complete public hosting epic before this
+deferred UI verification. Resume after E12, retaining every original acceptance criterion
+and all findings/run history. E12 has its own independent deployment/runtime verification;
+its success cannot grant this UI task verified status. No gate or evidence rule is waived.
