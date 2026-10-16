@@ -3,7 +3,7 @@ id: E12-T10
 epic: 12
 title: Deploy real Auth0 login with private persistent data on Railway
 priority: 521
-status: pending
+status: in-progress
 depends_on: [E12-T00]
 estimate: L
 capstone: false
@@ -116,3 +116,31 @@ qualifications as complete. Existing local emulator/test contracts remain availa
    evidence; do not represent emulator login as the real Auth0 round-trip.
 
 ## Verification log
+
+### 2026-10-16 — human-directed activation
+
+The human prioritized actual Auth0 login on Railway, then local CLI setup and selected
+private-project mirroring on our patched self-hosted Durable Streams server. E12-T00
+is independently verified at `b8ec0961aed4aa1882491c678530a387e95d3b3c`; its preview
+service/data and all starter services remain separate. The planning commit is
+`75faffee26b9f8e791fea38cf30ef41120df457e`. This task alone becomes in progress.
+
+Two independent trusted-pre-write committed snapshots are byte-identical:
+`evidence/lifecycle/planned-a.json` and `planned-b.json`, SHA-256
+`e2296180e93da6d99432cc6aa7508d34964c4b1fc57f3b9c64da858c231e146e`. They show
+project building, T10 pending/eligible, run 0 under ordinary ceiling 10, empty ledger,
+and unchanged controls. All 153 prior verification logs and all 74 verified task
+readmes remain byte-identical. This activation grants no verification or extra run.
+
+Fresh read-only pre-critic `/root/real_auth_precritic` froze the finite threat model in
+`evidence/precritic/report.md` and `report.json`, bound to the committed specification
+SHA-256 `4e269bb9d4a94072a777bc3ef739736888578b9c99d83697911b1a3604ac4dc9`.
+The initial profile is 8 MiB maximum body, 30 s to response headers with explicit
+established-stream cancellation/drain policy, <=60 s readiness, <=15 s shutdown,
+10-minute login transactions and default 24-hour sessions. These bounds do not satisfy
+T01's full launch profile or T06/T07 capacity/recovery qualification.
+
+Replay: N/A (lifecycle activation and pre-implementation threat model; no product
+behavior changed) + mitigation: committed exact reader snapshots, immutable history
+hashes, DAG/queue checks and the fresh frozen pre-critic report. Product stream/browser
+execution evidence is explicitly absent until the builder records it.

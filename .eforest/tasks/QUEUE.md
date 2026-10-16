@@ -8,11 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E12-T10** — Deploy real Auth0 login with private persistent data on Railway *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E12-T10** — Deploy real Auth0 login with private persistent data on Railway
+No new task may start until **E12-T10** clears the current gate.
+
+## Unlocks when E12-T10 verifies
+
+1. **E12-T11** — Connect the local CLI and mirror private projects through the hosted gateway
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -111,7 +115,7 @@ No task is currently in progress, awaiting verification, or refuted.
 ## Epic 12 — `epic-12-first-light`
 
 - [x] `520` [E12-T00](epic-12-first-light/E12-T00-railway-preview/readme.md) — "Deploy a clearly labeled Railway preview with disposable data and stub identity" *(deps: E5-T14)*
-- [ ] `521` [E12-T10](epic-12-first-light/E12-T10-real-auth0-private-railway/readme.md) — Deploy real Auth0 login with private persistent data on Railway *(deps: E12-T00)*
+- [~] `521` [E12-T10](epic-12-first-light/E12-T10-real-auth0-private-railway/readme.md) — Deploy real Auth0 login with private persistent data on Railway *(deps: E12-T00)*
 - [ ] `522` [E12-T11](epic-12-first-light/E12-T11-hosted-cli-private-mirroring/readme.md) — Connect the local CLI and mirror private projects through the hosted gateway *(deps: E12-T10)*
 - [ ] `523` [E12-T01](epic-12-first-light/E12-T01-production-provider-and-launch-profile/readme.md) — Qualify the production stream provider and freeze the public launch profile *(deps: E5-T14, E12-T00, E12-T11)*
 - [ ] `524` [E12-T02](epic-12-first-light/E12-T02-reproducible-railway-runtime/readme.md) — Build a reproducible Railway runtime with readiness and bounded shutdown *(deps: E12-T01)*

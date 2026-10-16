@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T10",
+  "role": "fresh-read-only-pre-critic",
+  "agent": "/root/real_auth_precritic",
+  "status": "frozen-before-product-implementation",
+  "planningCommit": "75faffee26b9f8e791fea38cf30ef41120df457e",
+  "planningParent": "b8ec0961aed4aa1882491c678530a387e95d3b3c",
+  "spec": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/readme.md",
+    "sha256": "4e269bb9d4a94072a777bc3ef739736888578b9c99d83697911b1a3604ac4dc9",
+    "bytes": 7959
+  },
+  "sourceBaseline": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "sourceUnchangedSinceBaseline": true,
+  "sourceManifest": [
+    {
+      "path": "packages/platform/src/production.ts",
+      "sha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e"
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "sha256": "cdb038b9791867ba8770f4e474bd7580721f3d9c42feeeaf39505a20dc256a13"
+    },
+    {
+      "path": "packages/platform/src/auth.ts",
+      "sha256": "0a7b7542f95656456cd2912bb04d22d1f4115b95af3c18923dacc565d42297e3"
+    },
+    {
+      "path": "packages/platform/src/auth/oidc.ts",
+      "sha256": "53e8a4b83fc95de80b7a1f22439f5f9dd97060c9d1c157703fec3e6471b09ebd"
+    },
+    {
+      "path": "packages/platform/src/auth/session.ts",
+      "sha256": "5b2b16276add7120449dc61c6446a1bd5edd5fc5f34e3f5cd2e940f7d034a6c9"
+    },
+    {
+      "path": "packages/platform/src/auth/routes.ts",
+      "sha256": "66046baacee7973b3bd2d6e17180eb1260444fa0861f633eac432de80177370d"
+    },
+    {
+      "path": "packages/platform/src/auth/grants.ts",
+      "sha256": "a5f1df4ae2626a6a58760f3415b2a4af1176135bbaba548ff16945332ac79f53"
+    },
+    {
+      "path": "packages/platform/src/auth/provision.ts",
+      "sha256": "2b9db08a5faedb9a98c958ff5388c27dcbb4d5f4dd4909dca8a4872b40d0e618"
+    },
+    {
+      "path": "packages/platform/src/api/whoami.ts",
+      "sha256": "17e0c1ff4622b59ea3d5a375c09d13708d6cc49b40f2aa6c3352c82a818ea365"
+    },
+    {
+      "path": "packages/platform/src/web/spa.ts",
+      "sha256": "7ae4a4bd0bfec0d578eae5d7182c4a0d4fd0df21ee08736a1a9b8b72ffb6388b"
+    },
+    {
+      "path": "packages/platform/src/route-topology.ts",
+      "sha256": "66b52d4b43a2380d0c641652059a3ca78bc9d6f2034f9250d9e24ade65db0ffd"
+    },
+    {
+      "path": "packages/platform/src/preview.ts",
+      "sha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125"
+    },
+    {
+      "path": "packages/platform/src/preview-artifact.ts",
+      "sha256": "2bf0bb03ce22f0bf4c80182fb2c964c7af4cd0d4732a0adfc241a536d64fbc18"
+    },
+    {
+      "path": "packages/platform/src/bin.ts",
+      "sha256": "aada28d60ddc1f257ca5afb8b5c0dcb8792a240ff1c2fc33a4a705f3245460a3"
+    },
+    {
+      "path": "packages/platform/src/official.ts",
+      "sha256": "31ef2f8c18c29b9823a64247cef001a833ca26dbd02fcea62e7d609167ffec6f"
+    },
+    {
+      "path": "packages/platform/src/gateway.ts",
+      "sha256": "ec2de6da793814a721b0a52ce6686babee5f2220206e2bc3c33b5bdb139ab2c6"
+    },
+    {
+      "path": "packages/server/src/upstream.ts",
+      "sha256": "4402bab10e50e101b36319cfefd5f492f987d07beff66a8ed24f8bc74041d07c"
+    },
+    {
+      "path": "packages/server/package.json",
+      "sha256": "725e8b962246fb4210db121d9fd70ace65d9f0538b41f515aaed0721e013b0b4"
+    },
+    {
+      "path": "apps/web/src/routes.tsx",
+      "sha256": "ac853603a60634412d188a604653affb3db811c2e1e3f333216658abe0e69dcb"
+    },
+    {
+      "path": "apps/web/src/preview.tsx",
+      "sha256": "d638f4806da65c81d808e2b64548fe36c7824b4c3fe11e9d94e2c04b1d0893b7"
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "3bf6664e858564336e92556e62642a4a4451ef9965783c435a02fd59fc451030"
+    },
+    {
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "sha256": "56554f98653b08c4ded293e31a38b410ea4d86433c99e47f0dc2b5a590cbfc7a"
+    },
+    {
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "sha256": "b0c98b773ef90553619ec603ce2cefa8f7c47655c8edcedddf345469a0b372a8"
+    },
+    {
+      "path": "packages/platform/test/auth.test.ts",
+      "sha256": "00c8afed943e0224ff0c6cafc02c8ca2e30e21923369b24eed2aee94d6c16c7c"
+    },
+    {
+      "path": "packages/platform/test/cli-tokens.test.ts",
+      "sha256": "82e0496384e1bc170f34d50ad42149d2f6dc6c70d612b12a305d0c3c6c34cfe4"
+    },
+    {
+      "path": "packages/platform/test/spa.test.ts",
+      "sha256": "d6c639a7d0a41bdecfcf02f81217715b135bab7e6eb3e5c4add87569648b1236"
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09"
+    },
+    {
+      "path": ".dockerignore",
+      "sha256": "5fce631d6072eeb00baf849617d3e173beefabe80c430aa79c60e0da48a1a9b0"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "028ff3b190541aa232d5335a24592b89dee9eb0c64bf768c3c868981903ee03b"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "ffd8b299ca115cfd2d0be9c8ba2833c2de791a071e77e90616c364b7afd9c54a"
+    }
+  ],
+  "priorVerifiedContractManifest": [
+    {
+      "path": ".eforest/tasks/epic-2-the-gates/E2-T03-bearer-token-verification/readme.md",
+      "sha256": "57389d64ab1b47a8a835b94a059e9d6a159abb3d79d35b58dbe0a65e67080294"
+    },
+    {
+      "path": ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md",
+      "sha256": "b51bcfd27e6e03e5c76ab3ea19d35b69eb4deff24763743a708cd0e9d646e3b1"
+    },
+    {
+      "path": ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md",
+      "sha256": "7515df5660ebda0fc51368d289819e6d2280304970034cc436ef445e70df8d0e"
+    },
+    {
+      "path": ".eforest/tasks/epic-2-the-gates/E2-T12-the-locked-gate/readme.md",
+      "sha256": "6bc316097968a0062bcfd8bb540b0c8850f9b49239bd7477285795466abfbcc1"
+    },
+    {
+      "path": ".eforest/tasks/epic-3-the-canopy/E3-T02a-app-shell-contract/readme.md",
+      "sha256": "d893d760686b90cfe30a79779dd48b1f43da26efbe0fd147a53de4d40500ab26"
+    },
+    {
+      "path": ".eforest/tasks/epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md",
+      "sha256": "069cef495a02496ed1f4b8602ff60ebd26fbb95b755515c19a05fca41bac9656"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md",
+      "sha256": "75d767cfcf060bba098e0fee1ca87c8bea2e19920585ec630855007349fbe693"
+    }
+  ],
+  "controlReadManifest": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "1c70ff2443cfb1dbba625daec81cc3e5367b4f9b83f18078be69ddbb33dabf74"
+    },
+    {
+      "path": ".eforest/loop.md",
+      "sha256": "24254b5a433626f53d787d33bfe3334b1bcfa717ef311acaba8820844370fcef"
+    }
+  ],
+  "skillManifest": [
+    {
+      "path": "/Users/blamy/.codex/plugins/cache/openai-curated-remote/auth0/2.1.1/skills/auth0/SKILL.md",
+      "sha256": "032231af83c3d829d05eb615d38c6e201e0d59a72e3a324b3acfa71faa7487e1"
+    },
+    {
+      "path": "/Users/blamy/.codex/plugins/cache/openai-curated-remote/auth0/2.1.1/skills/auth0/references/pattern-security/index.md",
+      "sha256": "eb87697482da783910361395255edb72dfee063da1081ed97c430a5345e4e665"
+    },
+    {
+      "path": "/Users/blamy/.codex/plugins/cache/openai-curated-remote/auth0/2.1.1/skills/auth0/references/pattern-token-handling/index.md",
+      "sha256": "99b77bdd1173ad3754f94872085275add51e9ecaa9ca4495161c4d5b2edb22fe"
+    }
+  ],
+  "skillIntent": "guidance",
+  "skillIntroducesApprovalRequirement": false,
+  "numericProfile": {
+    "maxBufferedBodyBytes": 8388608,
+    "requestToResponseHeadersDeadlineMs": 30000,
+    "establishedStreamingPolicyMustBeExplicit": true,
+    "readinessUpperBoundMs": 60000,
+    "shutdownUpperBoundMs": 15000,
+    "oidcTransactionTtlMs": 600000,
+    "defaultSessionTtlSeconds": 86400,
+    "platformReplicas": 1,
+    "overlappingMutationServingRevisions": 0,
+    "providerBind": "container-loopback",
+    "measured": false,
+    "kind": "frozen-initial-defaults-and-contract-bounds"
+  },
+  "predictions": [
+    {
+      "id": "P1-config-build-bounds",
+      "prediction": "Only validated non-preview config and intact matching source/assets reach public listen; effective body/deadline/readiness/drain bounds are enforced.",
+      "cheapProbes": [
+        "scrubbed-config-table",
+        "ready-volume-secret-and-marker-corruption",
+        "missing-or-mismatched-assets-and-revision",
+        "assigned-port-real-socket",
+        "declared-and-chunked-oversize",
+        "stalled-body-and-response-headers"
+      ],
+      "evidence": [
+        "source-bound-config-http-transcript",
+        "numeric-time-receipts",
+        "fresh-ordered-audit",
+        "late-pristine-exact-task-target"
+      ]
+    },
+    {
+      "id": "P2-wire-origin-cookies",
+      "prediction": "Canonical configured origin controls every callback/invite/return; each protected cookie is separately emitted with flags; hostile or missing cookie mutation Origin never appends.",
+      "cheapProbes": [
+        "host-forwarded-xforwarded-target-table",
+        "encoded-and-external-next-table",
+        "raw-node-set-cookie-array",
+        "dispatch-invite-mint-revoke-logout-origin-table",
+        "opaque-bearer-separate-policy"
+      ],
+      "evidence": [
+        "wire-header-receipt-with-secret-values-omitted",
+        "before-after-fixture-head-triples",
+        "actual-browser-cookie-flag-and-return-journey"
+      ]
+    },
+    {
+      "id": "P3-browser-auth-state",
+      "prediction": "Accepted browser-bound S256 login provisions once and starts a session; wrong binding/state/nonce/verifier/signature/issuer/audience/expiry/email verification and replayed callbacks append nothing.",
+      "cheapProbes": [
+        "two-profile-callback-transplant",
+        "wrong-or-missing-cookie-state",
+        "transaction-ttl-boundary",
+        "id-token-crypto-claims-table",
+        "missing-or-false-email-verified",
+        "reused-callback"
+      ],
+      "evidence": [
+        "fixture-issuer-token-exchange-observation-without-token-bytes",
+        "identity-dumps",
+        "independent-reduction-and-cli-digest",
+        "browser-deep-link-roundtrip"
+      ]
+    },
+    {
+      "id": "P4-restart-authority",
+      "prediction": "Stable volume signing secret and stream authority preserve active sessions/accepted writes across restart; ended sessions/revoked grants stay refused, unknown in-flight transactions safely refuse.",
+      "cheapProbes": [
+        "accepted-write-login-stop-restart",
+        "logout-and-grant-revoke-restart",
+        "pending-transaction-restart",
+        "stable-secret-equality-without-bytes"
+      ],
+      "evidence": [
+        "raw-fixture-before-log-prefix",
+        "independent-replay",
+        "same-session-browser-restart-receipt",
+        "redacted-actual-operator-synthetic-ui-receipt"
+      ]
+    },
+    {
+      "id": "P5-private-capability-boundary",
+      "prediction": "Fresh users have no seeded preview data, can each create an org, and cannot read/write/follow each other privately; raw/admin/fixture/agent/outbound doors cannot have an effect.",
+      "cheapProbes": [
+        "two-tenant-and-anonymous-read-write-follow",
+        "raw-admin-fixture-exact-and-encoded-routes",
+        "agent-event-admission",
+        "outbound-fixture-counter",
+        "fresh-store-event-inventory",
+        "visible-capabilities-and-cli-route"
+      ],
+      "evidence": [
+        "denial-transcript-and-event-neutrality",
+        "two-profile-browser-fixture-journey",
+        "no-subprocess-or-outbound-observation"
+      ]
+    },
+    {
+      "id": "P6-hosted-opaque-bearer",
+      "prediction": "Hosted API accepts validated ef_cli_ opaque grants and refuses web-client-audience ID/access JWTs; device registration is unavailable and mixed credentials cannot fall back to privileged cookie.",
+      "cheapProbes": [
+        "valid-web-id-jwt-as-api-bearer",
+        "valid-opaque-grant-accept-then-revoke",
+        "hosted-device-grants-refusal",
+        "valid-cookie-invalid-or-other-user-bearer",
+        "legacy-local-device-regression"
+      ],
+      "evidence": [
+        "no-event-bearer-refusal-transcript",
+        "fixture-grant-hash-event-dump",
+        "preserved-local-focused-regressions"
+      ]
+    },
+    {
+      "id": "P7-actual-railway-binding",
+      "prediction": "A new single-replica nonoverlapping service/volume runs exactly the tested source/image and serves HTTPS health/assets/auth redirect; operator synthetic mutation/login survives controlled restart.",
+      "cheapProbes": [
+        "actual-origin-health-assets-build",
+        "railway-source-image-volume-config-metadata",
+        "actual-origin-auth-login-redirect",
+        "before-after-restart-redacted-operator-ui"
+      ],
+      "evidence": [
+        "railway-deployment-manifest",
+        "actual-http-asset-hashes",
+        "minimal-redacted-operator-ui-build-digest-receipt"
+      ]
+    },
+    {
+      "id": "P8-actual-auth0-operator",
+      "prediction": "Public registration exactly matches real issuer/client/origin; actual Auth0 callback reaches the signed-in app at the tested revision with no production credentials or identity dump retained.",
+      "cheapProbes": [
+        "public-discovery-and-jwks",
+        "registered-exact-callback-logout-origin-readback",
+        "actual-operator-login-observation"
+      ],
+      "evidence": [
+        "public-provider-config-receipt",
+        "minimal-redacted-auth-state-build-receipt"
+      ]
+    },
+    {
+      "id": "P9-browser-evidence-completeness",
+      "prediction": "Every changed browser path is present in the submitted focused journey with zero console/page errors and DOM triples equal independently replayed fixture state.",
+      "cheapProbes": [
+        "coverage-hunk-to-journey-map",
+        "recording-console-network-interrogation",
+        "dom-triple-versus-truncated-replay",
+        "current-replayqa-availability"
+      ],
+      "evidence": [
+        "configured-journey-run-identifiers-or-explicit-current-fallback",
+        "complete-fixture-browser-timeline-video",
+        "fixture-dump-offset-digest-bindings"
+      ]
+    },
+    {
+      "id": "P10-lifecycle-integrity",
+      "prediction": "Two independent trusted pre-write snapshot readers agree on every lifecycle source/status/ledger/queue/control transition; only the fresh critic sets verified.",
+      "cheapProbes": [
+        "exact-committed-snapshot-byte-compare",
+        "prior-ledger-control-digest-preservation",
+        "role-identity-separation"
+      ],
+      "evidence": [
+        "both-reader-raw-outputs-hashes-and-full-oids",
+        "committed-task-verification-log",
+        "separate-auditor-lead-judge-reports"
+      ]
+    }
+  ],
+  "sensitivityPredictions": [
+    {
+      "id": "S1-https-and-secure",
+      "prediction": "Scratch HTTP-origin restoration and separately stripped Secure cookie each make the matching wire/browser sensor red, with green controls after restoration."
+    },
+    {
+      "id": "S2-browser-binding-or-auth-refusal",
+      "prediction": "Scratch removal of browser binding or a required auth refusal makes the genuine cross-profile/refusal sensor red and restoration green."
+    },
+    {
+      "id": "S3-one-byte-evidence",
+      "prediction": "Changing one retained artifact byte without changing its declared digest fails the artifact/replay sensor; restoring bytes passes."
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC1",
+      "text": "Ordered immutable root gates and cold-clone `make verify-E12-T10` pass. Evidence names the full source revision, lockfile/runtime versions, image digest and numeric limits: startup/readiness <=60 s, shutdown <=15 s, positive bounded body size and request deadline. Invalid/missing config/assets and preview or inherited harness credentials fail before public listen; successful startup accepts assigned PORT.",
+      "textSha256": "7e174c4742c5a4739594e45303943624fffdb1553c37fbbf1fc9a51ec8c242f9",
+      "predictionRefs": [
+        "P1-config-build-bounds",
+        "P2-wire-origin-cookies"
+      ]
+    },
+    {
+      "id": "AC2",
+      "text": "The public origin always determines callback, redirect and invite origins. Host, Forwarded and X-Forwarded-* injection, external/encoded return paths and wrong origins cannot replace it. Cookies are separately emitted, Secure/HttpOnly and SameSite/path scoped; they contain no provider token, password, signing secret or PKCE verifier. Cookie mutations/logout require the configured Origin; bearer CLI requests have their explicit separate policy.",
+      "textSha256": "485e8018a39b88364e6ab9db247681de893aad8c74d79486ad83c4ef0f06770f",
+      "predictionRefs": [
+        "P2-wire-origin-cookies",
+        "P3-browser-auth-state"
+      ]
+    },
+    {
+      "id": "AC3",
+      "text": "Dedicated fixture users complete real gateway-backed PKCE login and local deep-link return in browser evidence. Browser transaction binding, state, nonce, verifier, signature, audience, expiry and verified-email failures append no identity event. A stolen/other-browser transaction cannot log the victim into the attacker's account. Reused callbacks fail; established sessions survive restart with the stable private signing secret; an interrupted in-flight login safely restarts. Logout/revocation survives restart. Public cookies and logs never contain provider tokens or secrets.",
+      "textSha256": "4a312703981a373360d9ca99ab1f20ab300b054dae90d9ef31930b66993eb1d3",
+      "predictionRefs": [
+        "P3-browser-auth-state",
+        "P4-restart-authority"
+      ]
+    },
+    {
+      "id": "AC4",
+      "text": "Two dedicated fixture identities create separate organizations. Private reads, writes and follow are refused across them and to an anonymous visitor. The hosted runtime exposes no raw stream/admin or fixture-login routes, starts without preview users/repos, and rejects agent execution/outbound integrations before their effect. The app surfaces Auth0/build state, disabled agents and reachable CLI-token settings; a newly signed-in user can create their own organization without seeded data.",
+      "textSha256": "3c9ac124a97d21bf957002f00c36a4bed96254179a51bc79117caf95ec21f438",
+      "predictionRefs": [
+        "P5-private-capability-boundary",
+        "P6-hosted-opaque-bearer"
+      ]
+    },
+    {
+      "id": "AC5",
+      "text": "The actual Railway service has a dedicated fresh private volume, one replica and zero overlapping mutation-serving revisions. `/healthz`, `/readyz`, asset loading, visible source identity and `/auth/login` work at its HTTPS origin. The manifest binds exact source/image/config/service/deployment. A controlled restart preserves a real operator's synthetic acceptance mutation and established login, documented by a minimal redacted UI/build/digest receipt; production identity is not dumped. The same immutable runtime's isolated dedicated-fixture restart proof independently replays byte-identical event prefixes/state. No public-fixture data or credentials were copied into this volume; no fixture-login seam is exposed to earn live proof.",
+      "textSha256": "093678dbfe76a2db67c0e276d65ebab9a2a420026c0becf1a7a3f60194af45c0",
+      "predictionRefs": [
+        "P4-restart-authority",
+        "P7-actual-railway-binding"
+      ]
+    },
+    {
+      "id": "AC6",
+      "text": "Public provider evidence records actual issuer discovery/JWKS, web client ID and exact registered callback/logout/origin. The real operator can complete the deployed Auth0 login; capture a minimal redacted outcome bound to this revision, without a production token, password, private project, email or identity dump in evidence. Missing registration or a failed real callback remains an explicit blocker.",
+      "textSha256": "a5088f4436e81703671cbde34fd3b78c03dcc0328c47683599d34de3e980a730",
+      "predictionRefs": [
+        "P8-actual-auth0-operator"
+      ]
+    },
+    {
+      "id": "AC7",
+      "text": "Named journey `E12-T10 Auth0 login and private workspace` in configured project `proj-electric-forest-ms8w0nv1` covers changed browser paths with dedicated fixtures, zero console/page errors and DOM digests matching independently replayed dumps. Use the existing explicit `Replay: N/A (<reason>) + mitigation` fallback when unavailable. Real production credentials never enter an external QA recording.",
+      "textSha256": "e5e92661ec8e84ff81abe2bf2ca0e8b25ab3fe3259d885910403453fc4a3e613",
+      "predictionRefs": [
+        "P9-browser-evidence-completeness"
+      ]
+    },
+    {
+      "id": "AC8",
+      "text": "Two fresh committed readers agree before builder and after lifecycle writes; a fresh pre-critic freezes the finite threat model and a separate fresh critic alone verifies. Prior task ledgers, ceilings, controls and project stops are preserved.",
+      "textSha256": "9c246934af440f3d2127e17a3b53bd63957047054045c4532237d66080d07831",
+      "predictionRefs": [
+        "P10-lifecycle-integrity"
+      ]
+    }
+  ],
+  "attacks": [
+    {
+      "id": "A1",
+      "text": "Inject hostile origin/proxy/return values and cross-site POST/logout requests; verify exact refusal and unchanged stream heads. Restore HTTP or strip Secure in scratch: its corresponding sensor must go red.",
+      "textSha256": "cd148ed3796d5b6e0c14a1e87b11f56dd8dd2f2b0c4a7ea3dff96f0e682e00f8",
+      "predictionRefs": [
+        "P2-wire-origin-cookies",
+        "S1-https-and-secure"
+      ]
+    },
+    {
+      "id": "A2",
+      "text": "Attempt login-CSRF with another browser's valid transaction, wrong cookie/state, expired/reused code, nonce/audience/signature mismatch and unverified email. Unknown transactions after restart fail closed, while established sessions remain valid.",
+      "textSha256": "32cef3774bee1c2948c43f09e67ba6a6c4f39fc0cfebf20d14f8999e335483d0",
+      "predictionRefs": [
+        "P3-browser-auth-state",
+        "P4-restart-authority",
+        "S2-browser-binding-or-auth-refusal"
+      ]
+    },
+    {
+      "id": "A3",
+      "text": "Start with a preview marker, missing/incomplete volume, wrong revision/assets or inherited developer keys; no public readiness or silently seeded user may appear.",
+      "textSha256": "d193ccb31698bf8ab5e8ac49cf6dfcaf0df3dd2d716cc6325529b18d41b67e73",
+      "predictionRefs": [
+        "P1-config-build-bounds",
+        "P4-restart-authority"
+      ]
+    },
+    {
+      "id": "A4",
+      "text": "Probe raw/admin/fixture routes and agent/integration admission from the public side; a bypass, secret or cross-tenant private response refutes the boundary.",
+      "textSha256": "bd00d21de63f7fc457e4d3cab36850c29295fa060b7434e36a0dff7ec091fd4c",
+      "predictionRefs": [
+        "P5-private-capability-boundary",
+        "P6-hosted-opaque-bearer"
+      ]
+    },
+    {
+      "id": "A5",
+      "text": "Kill/restart after an accepted fixture write and login; independently replay before and after, compare exact event prefix/digests and check one stable secret boundary.",
+      "textSha256": "1c4e74dba295fd23cd524c82fead2b2733f03cf734e48cc1f6c3ce23ae491e1d",
+      "predictionRefs": [
+        "P4-restart-authority",
+        "P7-actual-railway-binding"
+      ]
+    },
+    {
+      "id": "A6",
+      "text": "Alter one evidence byte and separately sabotage cookie state binding or auth refusal; each measuring apparatus must detect its mutation. Interrogate recorded browser evidence; do not represent emulator login as the real Auth0 round-trip.",
+      "textSha256": "411233a04ceb198c6ec332605b4d95e465def8ceaac1f3bac34800d584890ae4",
+      "predictionRefs": [
+        "S1-https-and-secure",
+        "S2-browser-binding-or-auth-refusal",
+        "S3-one-byte-evidence"
+      ]
+    }
+  ],
+  "additionalAttack": "mixed-valid-cookie-and-invalid-or-other-user-bearer-explicit-precedence",
+  "realAuthProofPolicy": {
+    "actualOperatorRequired": true,
+    "emulatorIsNotActualAuth0": true,
+    "productionIdentityDumpPermitted": false,
+    "publicFixtureLoginPermitted": false,
+    "productionCredentialsInRemoteQaPermitted": false,
+    "minimalRedactedOperatorBuildAuthStateSyntheticMutationDigestReceipt": true
+  },
+  "hostedBearerPolicy": {
+    "accepted": "validated-existing-ef_cli_-opaque-web-mint-grants",
+    "webClientAudienceJwtAcceptedAsApiBearer": false,
+    "deviceGrantRegistrationQualified": false,
+    "legacyLocalContractsPreserved": true
+  },
+  "browserEvidence": {
+    "project": "proj-electric-forest-ms8w0nv1",
+    "journey": "E12-T10 Auth0 login and private workspace",
+    "epicExplorationRequiredForThisTask": false,
+    "fallbackMustBeCurrentExplicitReplayNAWithMitigation": true
+  },
+  "report": {
+    "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/precritic/report.md",
+    "sha256": "14253dee7eb1a6106b76c51bccaeb1e2d158fa09a2bd7e297f175ebb4c2cb1ad",
+    "bytes": 25935
+  },
+  "productOrExternalActionsPerformed": false,
+  "authority": "pre-critic-only-no-verdict-no-lifecycle-grant"
+}
