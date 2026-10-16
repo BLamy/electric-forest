@@ -1,0 +1,250 @@
+{
+  "artifacts_checked_after_completion": true,
+  "candidate_unchanged_at_all_boundaries": true,
+  "commands": [
+    "pnpm format:check && pnpm lint",
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm build"
+  ],
+  "ended_at": {
+    "local": "2026-10-16T13:43:47.134946-04:00",
+    "utc": "2026-10-16T17:43:47.134946+00:00"
+  },
+  "execution_policy": "Strict sequential order; stop at first nonzero exit or source mismatch; no retries.",
+  "expected_commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+  "failure_findings": [
+    {
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/03-test.log",
+      "log_line": 50,
+      "observed": "Received epic numbers 0 through 15.",
+      "prediction": "Epic numbers match the frozen list 0 through 8.",
+      "source": "apps/web/src/site/site.test.ts:65"
+    },
+    {
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/03-test.log",
+      "log_line": 81,
+      "observed": "Received additional E12, E13, E15, E14, E9, E10, E11 entries.",
+      "prediction": "The roadmap milestone ladder contains the frozen E0 through E8 list.",
+      "source": "apps/web/src/site/site.test.ts:81"
+    }
+  ],
+  "final_source": {
+    "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+    "observed_at": {
+      "local": "2026-10-16T13:43:47.208775-04:00",
+      "utc": "2026-10-16T17:43:47.208775+00:00"
+    },
+    "tracked_source_clean": true,
+    "tracked_status_porcelain": "",
+    "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+  },
+  "gates": [
+    {
+      "bounded_diagnostics": "\n> electric-forest@0.0.0 format:check /Users/blamy/Documents/Codex/electric-forest\n> prettier --check \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"apps/**/*.{ts,tsx,json,md,html,css}\" \"packages/**/*.{ts,tsx,json,md,yml,yaml}\" \"packages/identity/**/*.mjs\" \"tools/**/*.mjs\"\n\nChecking formatting...\nAll matched files use Prettier code style!\n\n> electric-forest@0.0.0 lint /Users/blamy/Documents/Codex/electric-forest\n> eslint \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"tools/**/*.mjs\" \"vitest.config.ts\"\n",
+      "command": "pnpm format:check && pnpm lint",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 8.808,
+      "ended_at": {
+        "local": "2026-10-16T13:33:40.172506-04:00",
+        "utc": "2026-10-16T17:33:40.172506+00:00"
+      },
+      "exit_code": 0,
+      "name": "01-format-lint",
+      "normalized_log": {
+        "bytes": 511,
+        "lines": 10,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/01-format-lint.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "raw_log": {
+        "bytes": 511,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/01-format-lint.raw.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "shell_argv": [
+        "/bin/zsh",
+        "-lc",
+        "pnpm format:check && pnpm lint"
+      ],
+      "source_after": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:33:40.193560-04:00",
+          "utc": "2026-10-16T17:33:40.193560+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "source_before": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:33:31.342000-04:00",
+          "utc": "2026-10-16T17:33:31.342000+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:33:31.364168-04:00",
+        "utc": "2026-10-16T17:33:31.364168+00:00"
+      },
+      "status": "PASS"
+    },
+    {
+      "bounded_diagnostics": "\n> electric-forest@0.0.0 typecheck /Users/blamy/Documents/Codex/electric-forest\n> tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit\n",
+      "command": "pnpm typecheck",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 6.088,
+      "ended_at": {
+        "local": "2026-10-16T13:33:46.337376-04:00",
+        "utc": "2026-10-16T17:33:46.337376+00:00"
+      },
+      "exit_code": 0,
+      "name": "02-typecheck",
+      "normalized_log": {
+        "bytes": 161,
+        "lines": 4,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/02-typecheck.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "raw_log": {
+        "bytes": 161,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/02-typecheck.raw.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "shell_argv": [
+        "/bin/zsh",
+        "-lc",
+        "pnpm typecheck"
+      ],
+      "source_after": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:33:46.367479-04:00",
+          "utc": "2026-10-16T17:33:46.367479+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "source_before": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:33:40.229995-04:00",
+          "utc": "2026-10-16T17:33:40.229995+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:33:40.248996-04:00",
+        "utc": "2026-10-16T17:33:40.248996+00:00"
+      },
+      "status": "PASS"
+    },
+    {
+      "bounded_diagnostics": "AssertionError: expected [ 'E0', 'E1', 'E2', 'E3', 'E4', \u2026(11) ] to deeply equal [ 'E0', 'E1', 'E2', 'E3', 'E4', \u2026(4) ]\n\n- Expected\n+ Received\n\n@@ -3,9 +3,16 @@\n    \"E1\",\n    \"E2\",\n    \"E3\",\n    \"E4\",\n    \"E5\",\n+   \"E12\",\n+   \"E13\",\n+   \"E15\",\n+   \"E14\",\n    \"E6\",\n    \"E7\",\n    \"E8\",\n+   \"E9\",\n+   \"E10\",\n+   \"E11\",\n  ]\n\n \u276f apps/web/src/site/site.test.ts:81:43\n     79|   it(\"reads the milestone ladder from ROADMAP.md\", async () => {\n     80|     const ladder = milestoneLadder(await readFile(resolve(root, \"ROADM\u2026\n     81|     expect(ladder.map((row) => row.epic)).toEqual([\n       |                                           ^\n     82|       \"E0\",\n     83|       \"E1\",\n\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[2/2]\u23af\n\n\n Test Files  1 failed | 122 passed (123)\n      Tests  2 failed | 922 passed (924)\n   Start at  13:33:49\n   Duration  597.48s (transform 2.35s, setup 0ms, import 16.54s, tests 567.55s, environment 7ms)\n\n\u2009ELIFECYCLE\u2009 Test failed. See above for more details.",
+      "command": "pnpm test",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 600.446,
+      "ended_at": {
+        "local": "2026-10-16T13:43:46.956787-04:00",
+        "utc": "2026-10-16T17:43:46.956787+00:00"
+      },
+      "exit_code": 1,
+      "name": "03-test",
+      "normalized_log": {
+        "bytes": 3566,
+        "lines": 121,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/03-test.log",
+        "sha256": "42ef0e3954092877563f1442d99f6462f176021472b8af3304ab5bc55ae011e7"
+      },
+      "raw_log": {
+        "bytes": 3566,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit/03-test.raw.log",
+        "sha256": "42ef0e3954092877563f1442d99f6462f176021472b8af3304ab5bc55ae011e7"
+      },
+      "shell_argv": [
+        "/bin/zsh",
+        "-lc",
+        "pnpm test"
+      ],
+      "source_after": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:43:47.082098-04:00",
+          "utc": "2026-10-16T17:43:47.082098+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "source_before": {
+        "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+        "observed_at": {
+          "local": "2026-10-16T13:33:46.426796-04:00",
+          "utc": "2026-10-16T17:33:46.426796+00:00"
+        },
+        "tracked_source_clean": true,
+        "tracked_status_porcelain": "",
+        "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:33:46.455126-04:00",
+        "utc": "2026-10-16T17:33:46.455126+00:00"
+      },
+      "status": "FAIL"
+    }
+  ],
+  "initial_source": {
+    "commit_oid": "11931416c47ed7d7f4e9891b1bd754e70302149e",
+    "observed_at": {
+      "local": "2026-10-16T13:33:31.284620-04:00",
+      "utc": "2026-10-16T17:33:31.284620+00:00"
+    },
+    "tracked_source_clean": true,
+    "tracked_status_porcelain": "",
+    "tracked_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tree_oid": "5546ab7baae8c38338bd3a73d65d9d19afdb4b26"
+  },
+  "log_normalization": "Combined stdout/stderr; UTF-8 decode with replacement; remove ANSI CSI/OSC; CRLF and CR become LF. Raw byte logs retained.",
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "role": "fresh-read-only-gate-auditor",
+  "schema": "eforest.fresh_gate_audit.v1",
+  "started_at": {
+    "local": "2026-10-16T13:33:31.304358-04:00",
+    "utc": "2026-10-16T17:33:31.304358+00:00"
+  },
+  "status": "FAIL",
+  "task": "E12-T00",
+  "test_summary": {
+    "files_failed": 1,
+    "files_passed": 122,
+    "tests_failed": 2,
+    "tests_passed": 922
+  },
+  "unrun_gates": [
+    {
+      "command": "pnpm build",
+      "reason": "Stopped at first failure: pnpm test exited 1.",
+      "status": "NOT_RUN"
+    }
+  ],
+  "untracked_after": [
+    "critic-work/e7-t06-skeptic.test.ts"
+  ],
+  "untracked_before": [
+    "critic-work/e7-t06-skeptic.test.ts"
+  ]
+}

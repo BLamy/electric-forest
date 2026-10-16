@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "mode": "public-disposable-preview",
+  "productionQualified": false,
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "candidateSourceRevision": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "projectId": "e0864588-a320-4ba3-96df-95ad0a07ee81",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "service": {
+    "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+    "name": "electric-forest-preview",
+    "state": "live"
+  },
+  "source": {
+    "repo": "BLamy/electric-forest",
+    "branch": "codex/railway-hosting",
+    "commitSha": "aba2f41a5141d0c26da5be613e9766078d839d35",
+    "image": null
+  },
+  "deployment": {
+    "id": "4e413bd5-4413-461a-8afa-0b6d10589afb",
+    "snapshotId": "675728b3-7d22-4f5a-9878-6feefdde8e2a",
+    "createdAt": "2026-10-16T17:46:27.196Z",
+    "sourceMetadata": {
+      "reason": "deploy",
+      "commitMessage": "test(E12-T00): freeze the hosting-first roadmap order",
+      "commitHash": "aba2f41a5141d0c26da5be613e9766078d839d35",
+      "branch": "codex/railway-hosting"
+    }
+  },
+  "image": {
+    "deploymentId": "4e413bd5-4413-461a-8afa-0b6d10589afb",
+    "sourceRevision": "aba2f41a5141d0c26da5be613e9766078d839d35",
+    "imageDigest": "sha256:bb550117d768d23f37ddcf28600e61675bfc60edb5f08c1c8b44746d36515189",
+    "configDigest": "sha256:e94592333aa8e346672be8419b94625a96964b34d41b302029c008d359460040",
+    "descriptorBase64": "eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6YmI1NTAxMTdkNzY4ZDIzZjM3ZGRjZjI4NjAwZTYxNjc1YmZjNjBlZGI1ZjA4YzFjOGI0NDc0NmQzNjUxNTE4OSIsInNpemUiOjE2MjUsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0xMC0xNlQxNzo1MDoxOFoifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19"
+  },
+  "applicationArtifact": {
+    "digest": "4ad742a76c3104954c1d936ab2668d501fa79fc084ac9ca24ef69426f0259685",
+    "scope": "emitted application/runtime/web bytes; OCI digest separately recorded above",
+    "manifestPaths": [
+      "../hosted-before/deployment.json",
+      "../hosted-after/deployment.json"
+    ]
+  },
+  "configuration": {
+    "source": {
+      "repo": "BLamy/electric-forest",
+      "branch": "codex/railway-hosting",
+      "commitSha": "aba2f41a5141d0c26da5be613e9766078d839d35"
+    },
+    "networking": {
+      "serviceDomains": {
+        "electric-forest-preview-production.up.railway.app": {
+          "port": 8080
+        }
+      }
+    },
+    "build": {
+      "builder": "DOCKERFILE",
+      "buildEnvironment": "V3",
+      "dockerfilePath": "Dockerfile"
+    },
+    "deploy": {
+      "healthcheckPath": "/readyz",
+      "limitOverride": {
+        "containers": {
+          "cpu": 1,
+          "memoryBytes": 2000000000
+        }
+      },
+      "healthcheckTimeout": 60,
+      "restartPolicyMaxRetries": 3,
+      "useLegacyStacker": false,
+      "ipv6EgressEnabled": false,
+      "runtime": "V2",
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "drainingSeconds": 15,
+      "overlapSeconds": 0
+    },
+    "volumeMounts": {
+      "10d2103d-2374-45cc-ab5f-c63dd5c063f4": {
+        "mountPath": "/data"
+      }
+    }
+  },
+  "domains": {
+    "serviceDomains": [
+      {
+        "id": "5885f4ba-778a-4a5b-a217-81ba9ce03b2a",
+        "domain": "electric-forest-preview-production.up.railway.app",
+        "targetPort": 8080
+      }
+    ],
+    "customDomains": []
+  },
+  "volumes": [
+    {
+      "id": "10d2103d-2374-45cc-ab5f-c63dd5c063f4",
+      "name": "forest-preview-data",
+      "mountPath": "/data",
+      "sizeMB": 1000,
+      "region": "us-west2",
+      "state": "live"
+    }
+  ],
+  "variableNamesOnly": [
+    "EF_AGENT_RESPONDER",
+    "EF_BUILD_REVISION",
+    "EF_DEPLOYMENT_MODE",
+    "EF_PREVIEW_AUTH",
+    "EF_PREVIEW_DATA_DIR",
+    "EF_PUBLIC_ORIGIN",
+    "EF_WEB_ROOT",
+    "NODE_ENV",
+    "PORT"
+  ],
+  "liveState": {
+    "environment": {
+      "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+      "name": "production"
+    },
+    "services": [
+      {
+        "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+        "serviceName": "electric-forest-preview",
+        "state": "online",
+        "statusText": "Online",
+        "activeDeployments": [
+          {
+            "id": "4e413bd5-4413-461a-8afa-0b6d10589afb",
+            "status": "SUCCESS",
+            "createdAt": "2026-10-16T17:46:27.196Z",
+            "statusUpdatedAt": "2026-10-16T17:59:14.230Z"
+          }
+        ],
+        "replicaStatus": {
+          "running": 1,
+          "crashed": 0,
+          "total": 1
+        },
+        "cronJob": null,
+        "issues": {
+          "warningCount": 0,
+          "criticalCount": 0
+        },
+        "recentFailures": 0,
+        "recentFailedDeployments": [],
+        "hasIssues": false,
+        "isCronJob": false,
+        "hasVolume": true
+      }
+    ],
+    "pendingWork": [],
+    "summary": {
+      "totalServices": 1,
+      "servicesWithIssues": 0,
+      "totalFailures": 0
+    }
+  },
+  "restart": {
+    "requestedAt": "2026-10-16T17:59:08.258Z",
+    "apiResult": {
+      "deploymentId": "4e413bd5-4413-461a-8afa-0b6d10589afb",
+      "service": {
+        "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+        "name": "electric-forest-preview"
+      },
+      "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448"
+    },
+    "readyLog": {
+      "timestamp": "2026-10-16T17:59:16.938539408Z",
+      "severity": "info",
+      "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=aba2f41a5141d0c26da5be613e9766078d839d35 port=8080 agents=off integrations=off"
+    },
+    "readyLogElapsedMilliseconds": 8680,
+    "httpObservationPath": "../restart-ready.json",
+    "persistencePath": "../persistence.json"
+  },
+  "logs": {
+    "build": "build.json",
+    "runtime": "runtime.json"
+  },
+  "replay": "Replay: N/A (Replay QA authentication unavailable) + mitigation: actual hosted Playwright videos, console/network captures and independently replayed gateway event dumps",
+  "localDockerLimitation": "Local Docker final build encountered containerd storage I/O failure; no host prune/reset. This actual Railway clean Linux build completed, passed native checks, and produced the recorded OCI image."
+}

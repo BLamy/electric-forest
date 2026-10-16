@@ -1,0 +1,2467 @@
+[
+  {
+    "timestamp": "2026-10-16T17:46:29.526709387Z",
+    "severity": "info",
+    "message": "scheduling build on Metal builder \"builder-pcnxjx\""
+  },
+  {
+    "timestamp": "2026-10-16T17:46:31.417424043Z",
+    "severity": "info",
+    "message": "unpacking archive"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:31.691586224Z",
+    "severity": "info",
+    "message": "[internal] load build definition from Dockerfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:31.691602468Z",
+    "severity": "info",
+    "message": "[internal] load build definition from Dockerfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:31.750357954Z",
+    "severity": "info",
+    "message": "[internal] load build definition from Dockerfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:32.476977139Z",
+    "severity": "info",
+    "message": "uploading snapshot"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:33.888456273Z",
+    "severity": "info",
+    "message": "[internal] load build definition from Dockerfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:33.954273375Z",
+    "severity": "info",
+    "message": "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:34.431415826Z",
+    "severity": "info",
+    "message": "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:34.432631059Z",
+    "severity": "info",
+    "message": "[internal] load .dockerignore"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:34.432842306Z",
+    "severity": "info",
+    "message": "[internal] load .dockerignore"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:34.464983912Z",
+    "severity": "info",
+    "message": "[internal] load .dockerignore"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.121657003Z",
+    "severity": "info",
+    "message": "[internal] load .dockerignore"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.223351464Z",
+    "severity": "warn",
+    "message": "SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV \"EF_PREVIEW_AUTH\") (line 18)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)\n details: Sensitive data should not be used in the ARG or ENV commands\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225940880Z",
+    "severity": "info",
+    "message": "[preview 3/3] COPY --from=build /app /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225942352Z",
+    "severity": "info",
+    "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225942933Z",
+    "severity": "info",
+    "message": "[build 8/9] RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.argv[1]??\"\")) throw new Error(\"full build revision required\"); require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"aba2f41a5141d0c26da5be613e9766078d839d35\""
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225950214Z",
+    "severity": "info",
+    "message": "[build 7/9] RUN pnpm build"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225951035Z",
+    "severity": "info",
+    "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225952898Z",
+    "severity": "info",
+    "message": "[build 5/9] RUN pnpm install --frozen-lockfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225953729Z",
+    "severity": "info",
+    "message": "[build 4/9] COPY . ."
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225954600Z",
+    "severity": "info",
+    "message": "[internal] load build context"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225955131Z",
+    "severity": "info",
+    "message": "[build 3/9] RUN npm install --global pnpm@10.15.0"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225955572Z",
+    "severity": "info",
+    "message": "[build 2/9] WORKDIR /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.225956083Z",
+    "severity": "info",
+    "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.226030023Z",
+    "severity": "info",
+    "message": "[internal] load build context"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:36.226286138Z",
+    "severity": "info",
+    "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:38.296444890Z",
+    "severity": "info",
+    "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:40.898960608Z",
+    "severity": "info",
+    "message": "[build 2/9] WORKDIR /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:40.898967869Z",
+    "severity": "info",
+    "message": "[internal] load build context"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:41.365235854Z",
+    "severity": "info",
+    "message": "[build 2/9] WORKDIR /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:41.365707161Z",
+    "severity": "info",
+    "message": "[build 3/9] RUN npm install --global pnpm@10.15.0"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.175165761Z",
+    "severity": "info",
+    "message": "\nadded 1 package in 3s\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.175167504Z",
+    "severity": "info",
+    "message": ""
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.175174675Z",
+    "severity": "info",
+    "message": "1 package is looking for funding\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.175227985Z",
+    "severity": "info",
+    "message": "  run `npm fund` for details\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.177144701Z",
+    "severity": "info",
+    "message": "npm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.2.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\nnpm notice To update run: npm install -g npm@12.2.0\nnpm notice\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:46.291248791Z",
+    "severity": "info",
+    "message": "[internal] load build context"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:51.802355259Z",
+    "severity": "info",
+    "message": "[build 3/9] RUN npm install --global pnpm@10.15.0"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:52.256522179Z",
+    "severity": "info",
+    "message": "[build 4/9] COPY . ."
+  },
+  {
+    "timestamp": "2026-10-16T17:46:57.859929895Z",
+    "severity": "info",
+    "message": "[build 4/9] COPY . ."
+  },
+  {
+    "timestamp": "2026-10-16T17:46:57.919369427Z",
+    "severity": "info",
+    "message": "[build 5/9] RUN pnpm install --frozen-lockfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:46:59.931395608Z",
+    "severity": "info",
+    "message": "Scope: all 19 workspace projects\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:00.035305163Z",
+    "severity": "info",
+    "message": "Lockfile is up to date, resolution step is skipped\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:00.177912601Z",
+    "severity": "info",
+    "message": "Progress: resolved 1, reused 0, downloaded 0, added 0\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:00.313139925Z",
+    "severity": "info",
+    "message": "Packages: +1086\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:01.186799498Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 222, added 117\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:01.479223359Z",
+    "severity": "info",
+    "message": "\n   ╭──────────────────────────────────────────╮\n   │                                          │\n   │   Update available! 10.15.0 → 12.14.0.   │\n   │   Changelog: https://pnpm.io/v/12.14.0   │\n   │     To update, run: pnpm add -g pnpm     │\n   │                                          │\n   ╰──────────────────────────────────────────╯\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:02.220796060Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 503, added 424\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:03.220756043Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 665, added 534\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:04.224751862Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 897, added 812\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:05.224877123Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 1085, added 1084\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:05.586266740Z",
+    "severity": "info",
+    "message": "Progress: resolved 1086, reused 0, downloaded 1086, added 1086, done\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.302808535Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.302818980Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.303513933Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.519735160Z",
+    "severity": "info",
+    "message": "\ndevDependencies:\n+ @eslint/js 10.0.1\n+ @types/node 26.1.1\n+ chokidar 4.0.3\n+ eslint 10.6.0\n+ playwright-core 1.61.1\n+ prettier 3.9.4\n+ replayio 1.8.2\n+ typescript 6.0.3\n+ typescript-eslint 8.63.0\n+ undici 7.16.0\n+ vitest 4.1.10\n\n╭ Warning ─────────────────────────────────────────────────────────────────────╮\n│                                                                              │\n│   Ignored build scripts: @mongodb-js/zstd, @swc/core, esbuild, lmdb,         │\n│   msgpackr-extract, node-liblzma, protobufjs.                                │\n│   Run \"pnpm approve-builds\" to pick which dependencies should be allowed     │\n│   to run scripts.                                                            │\n│                                                                              │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.556863877Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.557765901Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.567678253Z",
+    "severity": "info",
+    "message": " WARN  Failed to create bin at /app/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/apps/web/node_modules/@eforest/platform/dist/src/bin.js'\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:06.699518025Z",
+    "severity": "info",
+    "message": "Done in 7.3s using pnpm v10.15.0\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:10.493692299Z",
+    "severity": "info",
+    "message": "[build 5/9] RUN pnpm install --frozen-lockfile"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:10.703171891Z",
+    "severity": "info",
+    "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:13.254104183Z",
+    "severity": "info",
+    "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\", import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/preview-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:13.461173128Z",
+    "severity": "info",
+    "message": "[build 7/9] RUN pnpm build"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:15.718507177Z",
+    "severity": "info",
+    "message": "\n> electric-forest@0.0.0 build /app\n> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:24.960477408Z",
+    "severity": "info",
+    "message": "\n> @eforest/identity@0.0.0 build /app/packages/identity\n> tsc -b tsconfig.build.json\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:25.550758963Z",
+    "severity": "info",
+    "message": "\n> @eforest/web@0.0.0 build /app/apps/web\n> vite build\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:26.163173075Z",
+    "severity": "info",
+    "message": "vite v7.3.6 building client environment for production...\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:26.245222311Z",
+    "severity": "info",
+    "message": "transforming...\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.005749815Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.005967572Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tanstack+react-devtools@0.10.12_@types+react-dom@19.2.3_@types+react@19.2.17__@types+r_d7013b24846f97b03b11e19ac060b659/node_modules/@tanstack/react-devtools/dist/esm/index.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.254879698Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/EditContext.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/EditContext.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.254890033Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/WorkerPoolContext.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/WorkerPoolContext.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.254903574Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/CodeView.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/CodeView.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.258900480Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/File.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/File.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.263495335Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/Virtualizer.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/Virtualizer.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.263501924Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/UnresolvedFile.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/UnresolvedFile.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.264211048Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/MultiFileDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/MultiFileDiff.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.264938460Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/FileDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/FileDiff.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.265739281Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/PatchDiff.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+diffs@1.3.6_@shikijs+themes@4.4.3_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/@pierre/diffs/dist/react/PatchDiff.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.453051604Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/FileTree.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/FileTree.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.455885195Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelector.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelector.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.457059868Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelection.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSelection.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.458194630Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSearch.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTreeSearch.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.460807380Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTree.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@pierre+trees@1.0.0-beta.6_@pierre+theme@2.0.0_@shikijs+themes@4.4.3_react-dom@19.2.8_r_4abc7392558689ad488c25e2eb00b5c5/node_modules/@pierre/trees/dist/react/useFileTree.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.468400723Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.470011280Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.471255086Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LazyMotion/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LazyMotion/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.471857380Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/MotionConfig/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/MotionConfig/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.472423970Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LayoutGroup/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/LayoutGroup/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.474020505Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-state.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.475346565Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-force-update.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-force-update.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.486587981Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-isomorphic-effect.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-isomorphic-effect.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.487736965Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-unmount-effect.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-unmount-effect.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.488065989Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-animation.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-animation.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.488685338Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-max.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-max.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.489068053Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-min.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/features-min.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.489455904Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-motion-value-event.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-motion-value-event.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.489687892Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-template.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-template.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.490425730Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-follow-value.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-follow-value.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.491634503Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-spring.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-spring.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.491640262Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-value.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-motion-value.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.492297117Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-time.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-time.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.492807724Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-transform.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-transform.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.493470178Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-velocity.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-velocity.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.493982506Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-will-change/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-will-change/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.494411630Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-scroll.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-scroll.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.496404450Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion-config.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion-config.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.499832994Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.500629669Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.501222198Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence-data.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence-data.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.501955970Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/events/use-dom-event.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/events/use-dom-event.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.502960787Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animation.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animation.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.503905184Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate-style.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animate-style.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.504942531Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-instant-transition.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-instant-transition.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.505684985Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-in-view.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-in-view.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.506128500Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-animation-frame.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-animation-frame.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.506546908Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-cycle.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-cycle.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.507055991Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-page-in-view.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-page-in-view.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.507499908Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.508018335Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionConfigContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionConfigContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.508501070Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/PresenceContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/PresenceContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.508613198Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/SwitchLayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/SwitchLayoutGroupContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.510373760Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.510835983Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animated-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/animation/hooks/use-animated-state.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.512063445Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimateSharedLayout.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimateSharedLayout.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.512589754Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/DeprecatedLayoutGroupContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/DeprecatedLayoutGroupContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:28.514161332Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-inverted-scale.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-inverted-scale.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.875462049Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.875465034Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.876649110Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.876697132Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.901496090Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:29.901699015Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/@tiptap+react@3.30.5_@floating-ui+dom@1.8.0_@tiptap+core@3.30.5_@tiptap+pm@3.30.5__@tip_c8f034c9d34675d23495cb6c8426d246/node_modules/@tiptap/react/dist/index.js\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:30.894123171Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/context.mjs (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/context.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:30.894745796Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LazyContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/LazyContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:30.895254529Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-constant.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-constant.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:30.896376692Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-is-mounted.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/utils/use-is-mounted.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:30.958040803Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/Icon.mjs (2:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/lucide-react@1.34.0_react@19.2.8/node_modules/lucide-react/dist/esm/Icon.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:31.143240145Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-combine-values.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-combine-values.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:31.144647496Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-computed.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/value/use-computed.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:31.149333758Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Group.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Group.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:31.150409682Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Item.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/components/Reorder/Item.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:31.863361641Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/features/layout/MeasureLayout.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/features/layout/MeasureLayout.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:32.130249367Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/ReorderContext.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/ReorderContext.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:32.510200934Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:32.510203157Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/index.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.539200568Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/create.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/context/MotionContext/create.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.540198976Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-svg-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-svg-visual-state.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.541034740Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/use-render.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/dom/use-render.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.542390184Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-html-visual-state.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-html-visual-state.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.543330925Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-element.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-visual-element.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:33.545157356Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-motion-ref.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/motion/utils/use-motion-ref.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:34.926830990Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-props.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/svg/use-props.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:34.927307054Z",
+    "severity": "info",
+    "message": "../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-props.mjs (1:0): Module level directives cause errors when bundled, \"use client\" in \"../../node_modules/.pnpm/framer-motion@13.4.6_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/framer-motion/dist/es/render/html/use-props.mjs\" was ignored.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:53.897287929Z",
+    "severity": "info",
+    "message": "✓ 6884 modules transformed.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:55.593510640Z",
+    "severity": "info",
+    "message": "rendering chunks...\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:47:59.167457757Z",
+    "severity": "info",
+    "message": "[plugin vite:reporter] \n(!) /app/node_modules/.pnpm/gpu-lexer@0.0.2/node_modules/gpu-lexer/dist/index.js is dynamically imported by /app/apps/web/src/components/code/syntax.ts, /app/node_modules/.pnpm/@brett_lamy+docstream-editor@1.5.0_8f8df79f19972bca8f8621bb725cb1ee/node_modules/@brett_lamy/docstream-editor/dist/editor/gpu-highlight.js but also statically imported by /app/node_modules/.pnpm/@brett_lamy+docstream@1.5.0_@agent-wasm+core@0.4.0_@emnapi+core@1.11.1_@emnapi+runtime@_a7b160f9e3181955de29ae6bfe289a03/node_modules/@brett_lamy/docstream/dist/docs/HighlightedCode.js, dynamic import will not move module into another chunk.\n\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:02.583974967Z",
+    "severity": "info",
+    "message": "computing gzip size...\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.448542472Z",
+    "severity": "info",
+    "message": "dist/index.html                                                   0.46 kB │ gzip:     0.29 kB\ndist/assets/KaTeX_Size3-Regular-CTq5MqoE.woff                     4.42 kB\ndist/assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2                    4.93 kB\ndist/assets/KaTeX_Size2-Regular-Dy4dx90m.woff2                    5.21 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.448545757Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Size1-Regular-mCD8mA8B.woff2                    5.47 kB\ndist/assets/KaTeX_Size4-Regular-BF-4gkZK.woff                     5.98 kB\ndist/assets/KaTeX_Size2-Regular-oD1tc_U0.woff                     6.19 kB\ndist/assets/KaTeX_Size1-Regular-C195tn64.woff                     6.50 kB\ndist/assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2              6.91 kB\ndist/assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2                 6.91 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.448546698Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Size3-Regular-DgpXs0kz.ttf                      7.59 kB\ndist/assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff               7.66 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449057274Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff                  7.72 kB\ndist/assets/KaTeX_Script-Regular-D3wIWfF6.woff2                   9.64 kB\ndist/assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2               10.34 kB\ndist/assets/KaTeX_Size4-Regular-DWFBv043.ttf                     10.36 kB\ndist/assets/KaTeX_Script-Regular-D5yQViql.woff                   10.59 kB\ndist/assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2                 11.32 kB\ndist/assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2                    11.35 kB\ndist/assets/KaTeX_Size2-Regular-B7gKUWhC.ttf                     11.51 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449060679Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2                12.03 kB\ndist/assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2                  12.22 kB\ndist/assets/KaTeX_Size1-Regular-Dbsnue_I.ttf                     12.23 kB\ndist/assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff                12.32 kB\ndist/assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf               12.34 kB\ndist/assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf                  12.37 kB\ndist/assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff                  13.21 kB\ndist/assets/KaTeX_Fraktur-Bold-BsDP51OF.woff                     13.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449061200Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2              13.57 kB\ndist/assets/KaTeX_SansSerif-Italic-DN2j7dab.woff                 14.11 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449083343Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff                   14.41 kB\ndist/assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff               16.03 kB\ndist/assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2                 16.40 kB\ndist/assets/KaTeX_Math-Italic-t53AETM-.woff2                     16.44 kB\ndist/assets/KaTeX_Script-Regular-C5JkGWo-.ttf                    16.65 kB\ndist/assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2                 16.78 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449084235Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Main-Italic-NWA7e6Wa.woff2                     16.99 kB\ndist/assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff                  18.67 kB\ndist/assets/KaTeX_Math-Italic-DA0__PXp.woff                      18.75 kB\ndist/assets/KaTeX_Main-BoldItalic-SpSLRI95.woff                  19.41 kB\ndist/assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf                 19.44 kB\ndist/assets/KaTeX_Fraktur-Regular-CB_wures.ttf                   19.57 kB\ndist/assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf                      19.58 kB\ndist/assets/KaTeX_Main-Italic-BMLOBm91.woff                      19.68 kB\ndist/assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf                  22.36 kB\ndist/assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf                    24.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449084745Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Main-Bold-Cx986IdX.woff2                       25.32 kB\ndist/assets/KaTeX_Main-Regular-B22Nviop.woff2                    26.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449113018Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf                27.56 kB\ndist/assets/KaTeX_AMS-Regular-BQhdFMY1.woff2                     28.08 kB\ndist/assets/KaTeX_Main-Bold-Jm3AIy58.woff                        29.91 kB\ndist/assets/KaTeX_Main-Regular-Dr94JaBh.woff                     30.77 kB\ndist/assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf                   31.20 kB\ndist/assets/KaTeX_Math-Italic-flOr_0UB.ttf                       31.31 kB\ndist/assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf                   32.97 kB\ndist/assets/KaTeX_AMS-Regular-DMm9YOAa.woff                      33.52 kB\ndist/assets/KaTeX_Main-Italic-3WenGoN9.ttf                       33.58 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449114450Z",
+    "severity": "info",
+    "message": "dist/assets/KaTeX_Main-Bold-waoOVXN0.ttf                         51.34 kB\ndist/assets/KaTeX_Main-Regular-ypZvNtVU.ttf                      53.58 kB\ndist/assets/KaTeX_AMS-Regular-DRggAlZN.ttf                       63.63 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449122051Z",
+    "severity": "info",
+    "message": "dist/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2                  72.92 kB\ndist/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf        82.20 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449136543Z",
+    "severity": "info",
+    "message": "dist/assets/NativeReplay-DcYM-0Vg.css                             1.92 kB │ gzip:     0.94 kB\ndist/assets/PublicSite-BZPKuWxP.css                              15.44 kB │ gzip:     3.73 kB\ndist/assets/math-GiyoSOpM.css                                    30.19 kB │ gzip:     8.06 kB\ndist/assets/index-Cde4F5DK.css                                  456.14 kB │ gzip:    74.34 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449387319Z",
+    "severity": "info",
+    "message": "dist/assets/channel-ByQG_ubD.js                                   0.59 kB │ gzip:     0.48 kB │ map:     0.31 kB\ndist/assets/init-Gi6I4Gst.js                                      0.72 kB │ gzip:     0.53 kB │ map:     0.38 kB\ndist/assets/chunk-2Q5K7J3B-CSIxSr2l.js                            0.83 kB │ gzip:     0.63 kB │ map:     0.43 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449394800Z",
+    "severity": "info",
+    "message": "dist/assets/chunk-JWPE2WC7-Bo1SxqBa.js                            0.89 kB │ gzip:     0.63 kB │ map:     0.45 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449402051Z",
+    "severity": "info",
+    "message": "dist/assets/chunk-5VM5RSS4-Dg2eXNFX.js                            0.91 kB │ gzip:     0.65 kB │ map:     0.36 kB\ndist/assets/chunk-XXDRQBXY-jv4Dxw10.js                            0.99 kB │ gzip:     0.75 kB │ map:     0.52 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449415512Z",
+    "severity": "info",
+    "message": "dist/assets/codeowners-Bp6g37R7.js                                1.02 kB │ gzip:     0.69 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449421481Z",
+    "severity": "info",
+    "message": "dist/assets/tsv-B_m7g4N7.js                                       1.18 kB │ gzip:     0.69 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449455311Z",
+    "severity": "info",
+    "message": "dist/assets/shellsession-BADoaaVG.js                              1.22 kB │ gzip:     0.81 kB │ map:     0.33 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449456423Z",
+    "severity": "info",
+    "message": "dist/assets/stateDiagram-v2-MP3YSRHH-Bdfm8JLE.js                  1.24 kB │ gzip:     0.84 kB │ map:     0.56 kB\ndist/assets/classDiagram-ZZMXUADV-X6s3Pbrg.js                     1.26 kB │ gzip:     0.85 kB │ map:     0.54 kB\ndist/assets/classDiagram-v2-VYDZK3BY-X6s3Pbrg.js                  1.26 kB │ gzip:     0.85 kB │ map:     0.55 kB\ndist/assets/swimlanesDiagram-VR7AAH4N-DFQJ6bEO.js                 1.31 kB │ gzip:     0.87 kB │ map:     0.52 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449457595Z",
+    "severity": "info",
+    "message": "dist/assets/html-derivative-DlHx6ybY.js                           1.41 kB │ gzip:     0.87 kB │ map:     0.34 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449471776Z",
+    "severity": "info",
+    "message": "dist/assets/qmldir-C8lEn-DE.js                                    1.46 kB │ gzip:     0.81 kB │ map:     0.29 kB\ndist/assets/git-rebase-r7XF79zn.js                                1.49 kB │ gzip:     0.84 kB │ map:     0.33 kB\ndist/assets/csv-fuZLfV_i.js                                       1.58 kB │ gzip:     0.71 kB │ map:     0.28 kB\ndist/assets/git-commit-F4YmCXRG.js                                1.72 kB │ gzip:     0.92 kB │ map:     0.32 kB\ndist/assets/xsl-CtQFsRM5.js                                       1.85 kB │ gzip:     0.88 kB │ map:     0.30 kB\ndist/assets/dotenv-Da5cRb03.js                                    1.88 kB │ gzip:     0.89 kB │ map:     0.29 kB\ndist/assets/sparql-rVzFXLq3.js                                    1.96 kB │ gzip:     1.20 kB │ map:     0.31 kB\ndist/assets/ini-BEwlwnbL.js                                       1.97 kB │ gzip:     0.85 kB │ map:     0.28 kB\ndist/assets/infoDiagram-27XIBGKW-Dyseu_cd.js                      2.03 kB │ gzip:     1.27 kB │ map:     1.03 kB\ndist/assets/chunk-POPQ4Y6H-DHL1YYLs.js                            2.08 kB │ gzip:     1.26 kB │ map:     1.13 kB\ndist/assets/docker-BcOcwvcX.js                                    2.19 kB │ gzip:     0.95 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449490014Z",
+    "severity": "info",
+    "message": "dist/assets/fortran-fixed-form-CkoXwp7k.js                        2.21 kB │ gzip:     1.10 kB │ map:     0.36 kB\ndist/assets/desktop-BmXAJ9_W.js                                   2.29 kB │ gzip:     1.12 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449493178Z",
+    "severity": "info",
+    "message": "dist/assets/hxml-2-FPmUDs.js                                      2.36 kB │ gzip:     1.29 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449494160Z",
+    "severity": "info",
+    "message": "dist/assets/wenyan-BV7otONQ.js                                    2.61 kB │ gzip:     1.49 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449652878Z",
+    "severity": "info",
+    "message": "dist/assets/jssm-C2t-YnRu.js                                      2.68 kB │ gzip:     0.98 kB │ map:     0.28 kB\ndist/assets/reg-C-SQnVFl.js                                       2.79 kB │ gzip:     1.04 kB │ map:     0.28 kB\ndist/assets/sizeCapture-INFHLROL-DX49ycai.js                      2.85 kB │ gzip:     1.65 kB │ map:     1.39 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449654150Z",
+    "severity": "info",
+    "message": "dist/assets/edge-FbVlp4U3.js                                      2.90 kB │ gzip:     1.13 kB │ map:     0.36 kB\ndist/assets/diff-D97Zzqfu.js                                      3.01 kB │ gzip:     1.06 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449655041Z",
+    "severity": "info",
+    "message": "dist/assets/gleam-BspZqrRM.js                                     3.03 kB │ gzip:     1.19 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449655762Z",
+    "severity": "info",
+    "message": "dist/assets/hy-DFXneXwc.js                                        3.09 kB │ gzip:     1.56 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449666508Z",
+    "severity": "info",
+    "message": "dist/assets/erb-DXfck5VN.js                                       3.10 kB │ gzip:     1.22 kB │ map:     0.32 kB\ndist/assets/PublicSite-CEe8FKn_.js                                3.11 kB │ gzip:     1.44 kB │ map:     1.23 kB\ndist/assets/json-Cp-IABpG.js                                      3.27 kB │ gzip:     1.15 kB │ map:     0.28 kB\ndist/assets/openscad-C4EeE6gA.js                                  3.29 kB │ gzip:     1.40 kB │ map:     0.30 kB\ndist/assets/log-2UxHyX5q.js                                       3.29 kB │ gzip:     1.25 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449689994Z",
+    "severity": "info",
+    "message": "dist/assets/cairo-KRGpt6FW.js                                     3.41 kB │ gzip:     1.20 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449691055Z",
+    "severity": "info",
+    "message": "dist/assets/berry-uYugtg8r.js                                     3.45 kB │ gzip:     1.19 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449698456Z",
+    "severity": "info",
+    "message": "dist/assets/jsonl-DcaNXYhu.js                                     3.46 kB │ gzip:     1.17 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449784966Z",
+    "severity": "info",
+    "message": "dist/assets/InvitePage-hReI6Mxd.js                                3.54 kB │ gzip:     1.89 kB │ map:     1.44 kB\ndist/assets/jsonc-Des-eS-w.js                                     3.56 kB │ gzip:     1.17 kB │ map:     0.29 kB\ndist/assets/logo-BtOb2qkB.js                                      3.57 kB │ gzip:     1.86 kB │ map:     0.28 kB\ndist/assets/po-BTJTHyun.js                                        3.68 kB │ gzip:     1.28 kB │ map:     0.28 kB\ndist/assets/json5-C9tS-k6U.js                                     3.70 kB │ gzip:     1.20 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449789243Z",
+    "severity": "info",
+    "message": "dist/assets/mipsasm-CKIfxQSi.js                                   3.72 kB │ gzip:     1.56 kB │ map:     0.29 kB\ndist/assets/tasl-QIJgUcNo.js                                      3.73 kB │ gzip:     1.21 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449856093Z",
+    "severity": "info",
+    "message": "dist/assets/rbs-CpoqiR4B.js                                       3.75 kB │ gzip:     1.09 kB │ map:     0.28 kB\ndist/assets/genie-D0YGMca9.js                                     3.81 kB │ gzip:     1.59 kB │ map:     0.29 kB\ndist/assets/rel-C3B-1QV4.js                                       3.81 kB │ gzip:     1.47 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449856914Z",
+    "severity": "info",
+    "message": "dist/assets/vala-CsfeWuGM.js                                      3.82 kB │ gzip:     1.56 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449857325Z",
+    "severity": "info",
+    "message": "dist/assets/splunk-BtCnVYZw.js                                    3.89 kB │ gzip:     1.91 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449861681Z",
+    "severity": "info",
+    "message": "dist/assets/DocsPage-TlFGFNPN.js                                  3.91 kB │ gzip:     1.76 kB │ map:     1.80 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449862132Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DGd3PeH6.js                                    3.95 kB │ gzip:     1.89 kB │ map:     0.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449881130Z",
+    "severity": "info",
+    "message": "dist/assets/fluent-C4IJs8-o.js                                    4.06 kB │ gzip:     1.27 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449881601Z",
+    "severity": "info",
+    "message": "dist/assets/kdl-DV7GczEv.js                                       4.07 kB │ gzip:     1.41 kB │ map:     0.28 kB\ndist/assets/readme-2GzXigE0.js                                    4.07 kB │ gzip:     1.96 kB │ map:     0.43 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449893208Z",
+    "severity": "info",
+    "message": "dist/assets/jsonnet-DFQXde-d.js                                   4.08 kB │ gzip:     1.42 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449907309Z",
+    "severity": "info",
+    "message": "dist/assets/ssh-config-_ykCGR6B.js                                4.09 kB │ gzip:     1.99 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449917925Z",
+    "severity": "info",
+    "message": "dist/assets/glsl-DplSGwfg.js                                      4.10 kB │ gzip:     1.79 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449918426Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BIB15BWD.js                                    4.12 kB │ gzip:     1.97 kB │ map:     0.51 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449929403Z",
+    "severity": "info",
+    "message": "dist/assets/narrat-DRg8JJMk.js                                    4.13 kB │ gzip:     1.49 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449929773Z",
+    "severity": "info",
+    "message": "dist/assets/turtle-BsS91CYL.js                                    4.15 kB │ gzip:     1.34 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449936163Z",
+    "severity": "info",
+    "message": "dist/assets/hurl-irOxFIW8.js                                      4.17 kB │ gzip:     1.57 kB │ map:     0.34 kB\ndist/assets/readme-BOFcOGbs.js                                    4.20 kB │ gzip:     1.98 kB │ map:     0.53 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449936624Z",
+    "severity": "info",
+    "message": "dist/assets/railroadDiagram-O6MQD6OU-DnIw_sIu.js                  4.30 kB │ gzip:     2.13 kB │ map:     1.97 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449943444Z",
+    "severity": "info",
+    "message": "dist/assets/ron-D8l8udqQ.js                                       4.36 kB │ gzip:     1.34 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449945447Z",
+    "severity": "info",
+    "message": "dist/assets/zenscript-DVFEvuxE.js                                 4.38 kB │ gzip:     1.66 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.449997976Z",
+    "severity": "info",
+    "message": "dist/assets/ordinal-Cboi1Yqb.js                                   4.40 kB │ gzip:     2.02 kB │ map:     2.36 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450003905Z",
+    "severity": "info",
+    "message": "dist/assets/gn-n2N0HUVH.js                                        4.44 kB │ gzip:     1.87 kB │ map:     0.28 kB\ndist/assets/pascal-D93ZcfNL.js                                    4.60 kB │ gzip:     2.06 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450022322Z",
+    "severity": "info",
+    "message": "dist/assets/readme-SA4lFxxk.js                                    4.67 kB │ gzip:     2.09 kB │ map:     0.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450029513Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CcWSMOJO.js                                    4.76 kB │ gzip:     2.11 kB │ map:     0.51 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450030264Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CUo9YU6Y.js                                    4.84 kB │ gzip:     2.18 kB │ map:     0.51 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450041902Z",
+    "severity": "info",
+    "message": "dist/assets/tcl-dwOrl1Do.js                                       4.87 kB │ gzip:     1.88 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450046669Z",
+    "severity": "info",
+    "message": "dist/assets/readme-ZPAfkF6Y.js                                    4.94 kB │ gzip:     2.23 kB │ map:     0.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450059448Z",
+    "severity": "info",
+    "message": "dist/assets/rosmsg-BJDFO7_C.js                                    4.98 kB │ gzip:     1.43 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450174641Z",
+    "severity": "info",
+    "message": "dist/assets/nextflow-C-mBbutL.js                                  5.01 kB │ gzip:     1.58 kB │ map:     0.33 kB\ndist/assets/readme-DxYaseTq.js                                    5.04 kB │ gzip:     2.20 kB │ map:     0.50 kB\ndist/assets/http-jrhK8wxY.js                                      5.10 kB │ gzip:     1.55 kB │ map:     0.37 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450175712Z",
+    "severity": "info",
+    "message": "dist/assets/polar-C0HS_06l.js                                     5.12 kB │ gzip:     1.51 kB │ map:     0.29 kB\ndist/assets/readme-CXe3cmgX.js                                    5.13 kB │ gzip:     2.27 kB │ map:     0.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450176463Z",
+    "severity": "info",
+    "message": "dist/assets/sdbl-DVxCFoDh.js                                      5.15 kB │ gzip:     2.40 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450276123Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CSbbXPUO.js                                    5.17 kB │ gzip:     2.28 kB │ map:     0.50 kB\ndist/assets/fennel-BYunw83y.js                                    5.22 kB │ gzip:     1.92 kB │ map:     0.29 kB\ndist/assets/readme-BSsnW6RB.js                                    5.23 kB │ gzip:     2.45 kB │ map:     0.19 kB\ndist/assets/bibtex-CHM0blh-.js                                    5.25 kB │ gzip:     1.20 kB │ map:     0.29 kB\ndist/assets/abnfDiagram-VCTEODGH-D7657z45.js                      5.40 kB │ gzip:     2.65 kB │ map:     2.64 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450277966Z",
+    "severity": "info",
+    "message": "dist/assets/llvm-BZoOZj88.js                                      5.49 kB │ gzip:     2.38 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450291676Z",
+    "severity": "info",
+    "message": "dist/assets/ebnfDiagram-PWID7BFC-B_gHvykA.js                      5.58 kB │ gzip:     2.58 kB │ map:     2.63 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450292778Z",
+    "severity": "info",
+    "message": "dist/assets/wgsl-Dx-B1_4e.js                                      5.59 kB │ gzip:     1.77 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450323023Z",
+    "severity": "info",
+    "message": "dist/assets/pegDiagram-XKGWAZYB-CYvoCOG5.js                       5.61 kB │ gzip:     2.65 kB │ map:     2.69 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450323704Z",
+    "severity": "info",
+    "message": "dist/assets/chunk-F27PBJKO-B9petcoW.js                            5.77 kB │ gzip:     2.50 kB │ map:     2.87 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450337675Z",
+    "severity": "info",
+    "message": "dist/assets/readme-f_NR0OBN.js                                    5.78 kB │ gzip:     2.49 kB │ map:     0.50 kB\ndist/assets/zig-VOosw3JB.js                                       5.78 kB │ gzip:     1.92 kB │ map:     0.28 kB\ndist/assets/dax-CEL-wOlO.js                                       5.81 kB │ gzip:     2.59 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450339108Z",
+    "severity": "info",
+    "message": "dist/assets/qml-3beO22l8.js                                       5.81 kB │ gzip:     1.78 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450363654Z",
+    "severity": "info",
+    "message": "dist/assets/gdresource-TyuKm33G.js                                5.81 kB │ gzip:     1.77 kB │ map:     0.35 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450364495Z",
+    "severity": "info",
+    "message": "dist/assets/bicep-Bmn6On1c.js                                     5.83 kB │ gzip:     1.53 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450368892Z",
+    "severity": "info",
+    "message": "dist/assets/xml-sdJ4AIDG.js                                       5.85 kB │ gzip:     1.59 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450396083Z",
+    "severity": "info",
+    "message": "dist/assets/awk-DMzUqQB5.js                                       5.90 kB │ gzip:     1.74 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450396854Z",
+    "severity": "info",
+    "message": "dist/assets/readme-wO5NKp6W.js                                    6.07 kB │ gzip:     2.67 kB │ map:     0.64 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450404606Z",
+    "severity": "info",
+    "message": "dist/assets/readme-1S9Gq-pv.js                                    6.15 kB │ gzip:     2.75 kB │ map:     0.67 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450420980Z",
+    "severity": "info",
+    "message": "dist/assets/readme-hcro6m5f.js                                    6.21 kB │ gzip:     2.75 kB │ map:     0.66 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450425277Z",
+    "severity": "info",
+    "message": "dist/assets/lean-BZvkOJ9d.js                                      6.23 kB │ gzip:     2.30 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450442372Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DcJFfZq0.js                                    6.26 kB │ gzip:     2.80 kB │ map:     0.64 kB\ndist/assets/readme-BOFQTlDe.js                                    6.29 kB │ gzip:     2.63 kB │ map:     0.68 kB\ndist/assets/readme-B5W6x-z5.js                                    6.32 kB │ gzip:     2.71 kB │ map:     0.64 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450453079Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CgluOyrW.js                                    6.37 kB │ gzip:     2.77 kB │ map:     0.67 kB\ndist/assets/powerquery-CEu0bR-o.js                                6.37 kB │ gzip:     1.92 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450494951Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DlnyT6l0.js                                    6.37 kB │ gzip:     2.87 kB │ map:     0.65 kB\ndist/assets/cypher-COkxafJQ.js                                    6.41 kB │ gzip:     2.09 kB │ map:     0.29 kB\ndist/assets/shaderlab-Dg9Lc6iA.js                                 6.41 kB │ gzip:     2.46 kB │ map:     0.32 kB\ndist/assets/readme-B98RZfRb.js                                    6.42 kB │ gzip:     2.70 kB │ map:     0.69 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450495893Z",
+    "severity": "info",
+    "message": "dist/assets/jinja-f2NsQr07.js                                     6.42 kB │ gzip:     1.88 kB │ map:     0.50 kB\ndist/assets/coq-C7JzOVbR.js                                       6.45 kB │ gzip:     2.32 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450505387Z",
+    "severity": "info",
+    "message": "dist/assets/readme-D0DCustC.js                                    6.50 kB │ gzip:     2.89 kB │ map:     0.67 kB\ndist/assets/readme-C_mTIcBW.js                                    6.50 kB │ gzip:     2.66 kB │ map:     0.71 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450599428Z",
+    "severity": "info",
+    "message": "dist/assets/vb-Cu-pLBUe.js                                        6.51 kB │ gzip:     2.68 kB │ map:     0.28 kB\ndist/assets/readme-CQy2mvy4.js                                    6.62 kB │ gzip:     2.88 kB │ map:     0.68 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450603734Z",
+    "severity": "info",
+    "message": "dist/assets/readme-B_J4pGq1.js                                    6.64 kB │ gzip:     2.74 kB │ map:     0.72 kB\ndist/assets/readme-C89I2QmU.js                                    6.66 kB │ gzip:     2.95 kB │ map:     0.68 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450612568Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BRdruGKc.js                                    6.69 kB │ gzip:     2.91 kB │ map:     0.69 kB\ndist/assets/readme-tNX5jPvA.js                                    6.70 kB │ gzip:     2.78 kB │ map:     0.51 kB\ndist/assets/min-dark-CafNBF8u.js                                  6.71 kB │ gzip:     2.06 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450613489Z",
+    "severity": "info",
+    "message": "dist/assets/readme-6kcTzPC8.js                                    6.71 kB │ gzip:     2.90 kB │ map:     0.68 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450623284Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CVFPdo1A.js                                    6.73 kB │ gzip:     2.89 kB │ map:     0.68 kB\ndist/assets/readme-C8W3PXBD.js                                    6.75 kB │ gzip:     2.83 kB │ map:     0.70 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450654751Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BzbvXoEy.js                                    6.79 kB │ gzip:     2.98 kB │ map:     0.69 kB\ndist/assets/gdshader-DkwncUOv.js                                  6.79 kB │ gzip:     2.12 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450666328Z",
+    "severity": "info",
+    "message": "dist/assets/ara-BRHolxvo.js                                       6.80 kB │ gzip:     2.19 kB │ map:     0.28 kB\ndist/assets/red-hvxz__6c.js                                       6.82 kB │ gzip:     1.96 kB │ map:     0.25 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450672287Z",
+    "severity": "info",
+    "message": "dist/assets/readme-sQ3ru6kY.js                                    6.83 kB │ gzip:     3.00 kB │ map:     0.69 kB\ndist/assets/readme-Ck2hqMuk.js                                    6.83 kB │ gzip:     3.01 kB │ map:     0.70 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450788141Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DcRqOQyE.js                                    6.84 kB │ gzip:     2.88 kB │ map:     0.67 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450797135Z",
+    "severity": "info",
+    "message": "dist/assets/verilog-nZwndyjY.js                                   6.86 kB │ gzip:     2.31 kB │ map:     0.29 kB\ndist/assets/clojure-P80f7IUj.js                                   6.87 kB │ gzip:     1.80 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450818937Z",
+    "severity": "info",
+    "message": "dist/assets/toml-vGWfd6FD.js                                      6.87 kB │ gzip:     1.66 kB │ map:     0.28 kB\ndist/assets/postcss-CXtECtnM.js                                   6.87 kB │ gzip:     2.32 kB │ map:     0.29 kB\ndist/assets/readme-Bu8cmKU5.js                                    6.89 kB │ gzip:     3.01 kB │ map:     0.71 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450819718Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CAGg9zlM.js                                    6.90 kB │ gzip:     3.02 kB │ map:     0.71 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450923714Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DtkAD6lo.js                                    6.91 kB │ gzip:     2.98 kB │ map:     0.71 kB\ndist/assets/readme-Bhwj71uc.js                                    6.93 kB │ gzip:     2.99 kB │ map:     0.69 kB\ndist/assets/readme-nugB9tn-.js                                    6.93 kB │ gzip:     2.91 kB │ map:     0.52 kB\ndist/assets/readme-BWZupUwO.js                                    6.94 kB │ gzip:     3.00 kB │ map:     0.69 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450926729Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BBU2IXCl.js                                    6.95 kB │ gzip:     3.04 kB │ map:     0.69 kB\ndist/assets/proto-C7zT0LnQ.js                                     7.00 kB │ gzip:     1.80 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450972257Z",
+    "severity": "info",
+    "message": "dist/assets/solarized-light-Dlz6yCKv.js                           7.08 kB │ gzip:     2.13 kB │ map:     0.29 kB\ndist/assets/readme-D3yWMOsx.js                                    7.09 kB │ gzip:     3.06 kB │ map:     0.69 kB\ndist/assets/chapel-DTp_pixX.js                                    7.10 kB │ gzip:     2.25 kB │ map:     0.31 kB\ndist/assets/readme-Bp0SUo1p.js                                    7.16 kB │ gzip:     2.89 kB │ map:     0.73 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450978076Z",
+    "severity": "info",
+    "message": "dist/assets/r-Cf5RLm7j.js                                         7.17 kB │ gzip:     2.21 kB │ map:     0.28 kB\ndist/assets/readme-S_1ZTCV-.js                                    7.23 kB │ gzip:     3.07 kB │ map:     0.73 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450993099Z",
+    "severity": "info",
+    "message": "dist/assets/talonscript-CkByrt1z.js                               7.23 kB │ gzip:     1.91 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.450993679Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DRXbDTBv.js                                    7.29 kB │ gzip:     2.99 kB │ map:     0.71 kB\ndist/assets/readme-DCCaCXIO.js                                    7.32 kB │ gzip:     3.01 kB │ map:     0.54 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451018477Z",
+    "severity": "info",
+    "message": "dist/assets/readme-6R7hReCY.js                                    7.34 kB │ gzip:     3.17 kB │ map:     0.72 kB\ndist/assets/riscv-BM1_JUlF.js                                     7.36 kB │ gzip:     2.36 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451036414Z",
+    "severity": "info",
+    "message": "dist/assets/min-light-CTRr51gU.js                                 7.39 kB │ gzip:     2.24 kB │ map:     0.27 kB\ndist/assets/readme-Ccj68yBS.js                                    7.44 kB │ gzip:     3.22 kB │ map:     0.74 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451040300Z",
+    "severity": "info",
+    "message": "dist/assets/solarized-dark-CpvCGNkr.js                            7.45 kB │ gzip:     2.21 kB │ map:     0.28 kB\ndist/assets/soy-8wufbnw4.js                                       7.45 kB │ gzip:     2.05 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451077806Z",
+    "severity": "info",
+    "message": "dist/assets/readme-D6YKn4xd.js                                    7.57 kB │ gzip:     2.98 kB │ map:     0.76 kB\ndist/assets/scheme-C98Dy4si.js                                    7.62 kB │ gzip:     2.44 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451133369Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CK7CB2JA.js                                    7.64 kB │ gzip:     3.23 kB │ map:     0.53 kB\ndist/assets/readme-CZLX46E0.js                                    7.67 kB │ gzip:     3.06 kB │ map:     0.77 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451134160Z",
+    "severity": "info",
+    "message": "dist/assets/hlsl-D3lLCCz7.js                                      7.71 kB │ gzip:     2.55 kB │ map:     0.28 kB\ndist/assets/readme-Cs-HzTDf.js                                    7.79 kB │ gzip:     3.18 kB │ map:     0.54 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451138417Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CftZViIo.js                                    7.83 kB │ gzip:     3.34 kB │ map:     0.75 kB\ndist/assets/readme-CR4Qb_JB.js                                    7.87 kB │ gzip:     3.40 kB │ map:     0.73 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451143935Z",
+    "severity": "info",
+    "message": "dist/assets/qss-IeuSbFQv.js                                       7.91 kB │ gzip:     2.95 kB │ map:     0.28 kB\ndist/assets/readme-Cuc-TfDC.js                                    7.98 kB │ gzip:     3.32 kB │ map:     0.54 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451192548Z",
+    "severity": "info",
+    "message": "dist/assets/prisma-Vru482bI.js                                    8.20 kB │ gzip:     1.86 kB │ map:     0.29 kB\ndist/assets/readme-7JR0e2Mx.js                                    8.21 kB │ gzip:     3.55 kB │ map:     0.77 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451193720Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CRNl53Rz.js                                    8.24 kB │ gzip:     3.35 kB │ map:     0.55 kB\ndist/assets/readme-DMuM5Akf.js                                    8.27 kB │ gzip:     3.46 kB │ map:     0.77 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451198697Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BroQA04Q.js                                    8.32 kB │ gzip:     3.50 kB │ map:     0.79 kB\ndist/assets/systemd-4A_iFExJ.js                                   8.33 kB │ gzip:     2.92 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451212778Z",
+    "severity": "info",
+    "message": "dist/assets/regexp-CDVJQ6XC.js                                    8.44 kB │ gzip:     1.79 kB │ map:     0.29 kB\ndist/assets/monokai-BRVnQi9A.js                                   8.45 kB │ gzip:     2.28 kB │ map:     0.26 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451272097Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CKcDUf9j.js                                    8.46 kB │ gzip:     3.56 kB │ map:     0.76 kB\ndist/assets/readme-C5spHkOm.js                                    8.47 kB │ gzip:     3.41 kB │ map:     0.53 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451390154Z",
+    "severity": "info",
+    "message": "dist/assets/haml-D5jkg6IW.js                                      8.76 kB │ gzip:     2.24 kB │ map:     0.33 kB\ndist/assets/readme-DPQ0l5aT.js                                    8.91 kB │ gzip:     3.72 kB │ map:     0.82 kB\ndist/assets/plsql-ChMvpjG-.js                                     8.96 kB │ gzip:     3.41 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451392197Z",
+    "severity": "info",
+    "message": "dist/assets/vue-html-AaS7Mt5G.js                                  8.97 kB │ gzip:     2.09 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451410885Z",
+    "severity": "info",
+    "message": "dist/assets/dart-bE4Kk8sk.js                                      9.07 kB │ gzip:     2.39 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451412167Z",
+    "severity": "info",
+    "message": "dist/assets/readme-kzCh_uw-.js                                    9.08 kB │ gzip:     3.74 kB │ map:     0.84 kB\ndist/assets/horizon-BUw7H-hv.js                                   9.20 kB │ gzip:     2.30 kB │ map:     0.26 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451451406Z",
+    "severity": "info",
+    "message": "dist/assets/readme-W8O5EHm-.js                                    9.21 kB │ gzip:     3.36 kB │ map:     0.85 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451452879Z",
+    "severity": "info",
+    "message": "dist/assets/horizon-bright-CUuTKBJd.js                            9.23 kB │ gzip:     2.34 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451461792Z",
+    "severity": "info",
+    "message": "dist/assets/kotlin-BdnUsdx6.js                                    9.24 kB │ gzip:     2.52 kB │ map:     0.29 kB\ndist/assets/readme-Dse9fqGA.js                                    9.26 kB │ gzip:     3.88 kB │ map:     0.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451490515Z",
+    "severity": "info",
+    "message": "dist/assets/readme-UIH08gGu.js                                    9.28 kB │ gzip:     3.79 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451491687Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Cx32D6HC.js                                    9.38 kB │ gzip:     3.85 kB │ map:     0.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451502633Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CZMRIPsx.js                                    9.40 kB │ gzip:     3.77 kB │ map:     0.55 kB\ndist/assets/make-CHLpvVh8.js                                      9.41 kB │ gzip:     2.14 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451526479Z",
+    "severity": "info",
+    "message": "dist/assets/andromeeda-C4gqWexZ.js                                9.44 kB │ gzip:     2.71 kB │ map:     0.27 kB\ndist/assets/readme-CivcpvAK.js                                    9.48 kB │ gzip:     3.91 kB │ map:     0.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451534401Z",
+    "severity": "info",
+    "message": "dist/assets/readme-OagUMC2S.js                                    9.49 kB │ gzip:     3.70 kB │ map:     0.93 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451561442Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CFYMCTGg.js                                    9.51 kB │ gzip:     3.80 kB │ map:     0.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451571126Z",
+    "severity": "info",
+    "message": "dist/assets/dark-plus-C3mMm8J8.js                                 9.52 kB │ gzip:     2.46 kB │ map:     0.27 kB\ndist/assets/sas-DEy46yEz.js                                       9.53 kB │ gzip:     4.20 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451625848Z",
+    "severity": "info",
+    "message": "dist/assets/slack-dark-BthQWCQV.js                                9.55 kB │ gzip:     2.32 kB │ map:     0.27 kB\ndist/assets/smithy-cds9vsN8.js                                    9.59 kB │ gzip:     1.91 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451636083Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DjXVmxV8.js                                    9.59 kB │ gzip:     3.97 kB │ map:     0.85 kB\ndist/assets/readme-DcHzOXsp.js                                    9.65 kB │ gzip:     3.85 kB │ map:     0.86 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451773610Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DZIEaGHT.js                                    9.65 kB │ gzip:     4.02 kB │ map:     0.86 kB\ndist/assets/plastic-3e1v2bzS.js                                   9.71 kB │ gzip:     2.32 kB │ map:     0.26 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451775913Z",
+    "severity": "info",
+    "message": "dist/assets/readme-gsVceJcB.js                                    9.72 kB │ gzip:     3.78 kB │ map:     0.87 kB\ndist/assets/sass-Cj5Yp3dK.js                                      9.73 kB │ gzip:     2.89 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451835943Z",
+    "severity": "info",
+    "message": "dist/assets/slack-ochin-DqwNpetd.js                               9.86 kB │ gzip:     2.46 kB │ map:     0.28 kB\ndist/assets/readme-C2PdVioQ.js                                   10.09 kB │ gzip:     4.00 kB │ map:     0.89 kB\ndist/assets/tex-D96PA37w.js                                      10.13 kB │ gzip:     3.46 kB │ map:     0.30 kB\ndist/assets/jison-wvAkD_A8.js                                    10.17 kB │ gzip:     2.28 kB │ map:     0.31 kB\ndist/assets/readme-CWRsJzmA.js                                   10.18 kB │ gzip:     4.23 kB │ map:     0.87 kB\ndist/assets/cmake-D1j8_8rp.js                                    10.30 kB │ gzip:     3.76 kB │ map:     0.29 kB\ndist/assets/light-plus-B7mTdjB0.js                               10.37 kB │ gzip:     2.62 kB │ map:     0.27 kB\ndist/assets/hcl-BWvSN4gD.js                                      10.49 kB │ gzip:     2.31 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451847440Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CuulWcZL.js                                   10.56 kB │ gzip:     4.31 kB │ map:     0.91 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451866700Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Brd5r9JE.js                                   10.58 kB │ gzip:     4.17 kB │ map:     0.92 kB\ndist/assets/pkl-u5AG7uiY.js                                      10.81 kB │ gzip:     1.75 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451871306Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CSdrbLFl.js                                   10.83 kB │ gzip:     4.43 kB │ map:     0.90 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451885918Z",
+    "severity": "info",
+    "message": "dist/assets/beancount-k_qm7-4y.js                                10.84 kB │ gzip:     1.81 kB │ map:     0.30 kB\ndist/assets/raku-DXvB9xmW.js                                     10.92 kB │ gzip:     3.32 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451893099Z",
+    "severity": "info",
+    "message": "dist/assets/nextflow-groovy-vE_lwT2v.js                          10.93 kB │ gzip:     2.54 kB │ map:     0.32 kB\ndist/assets/dream-maker-BtqSS_iP.js                              10.94 kB │ gzip:     2.66 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451907601Z",
+    "severity": "info",
+    "message": "dist/assets/yaml-Buea-lGh.js                                     10.95 kB │ gzip:     2.65 kB │ map:     0.28 kB\ndist/assets/rst-bs7f0vWN.js                                      11.34 kB │ gzip:     2.90 kB │ map:     0.45 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.451914852Z",
+    "severity": "info",
+    "message": "dist/assets/elm-DbKCFpqz.js                                      11.43 kB │ gzip:     2.51 kB │ map:     0.30 kB\ndist/assets/github-light-DAi9KRSo.js                             11.62 kB │ gzip:     2.87 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452070595Z",
+    "severity": "info",
+    "message": "dist/assets/prolog-CbFg5uaA.js                                   11.81 kB │ gzip:     4.24 kB │ map:     0.29 kB\ndist/assets/github-dark-DHJKELXO.js                              11.84 kB │ gzip:     2.92 kB │ map:     0.28 kB\ndist/assets/just-Cwhn7H3k.js                                     11.85 kB │ gzip:     3.27 kB │ map:     0.42 kB\ndist/assets/terraform-BETggiCN.js                                11.85 kB │ gzip:     2.90 kB │ map:     0.30 kB\ndist/assets/diagram-Z3DM3KII-CKlT0wUk.js                         11.86 kB │ gzip:     5.18 kB │ map:     5.68 kB\ndist/assets/puppet-BMWR74SV.js                                   11.89 kB │ gzip:     2.51 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452078988Z",
+    "severity": "info",
+    "message": "dist/assets/laserwave-DUszq2jm.js                                11.92 kB │ gzip:     2.95 kB │ map:     0.27 kB\ndist/assets/gherkin-DyxjwDmM.js                                  12.40 kB │ gzip:     5.47 kB │ map:     0.29 kB\ndist/assets/wasm-MzD3tlZU.js                                     12.45 kB │ gzip:     2.58 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452079829Z",
+    "severity": "info",
+    "message": "dist/assets/hjson-D5-asLiD.js                                    12.50 kB │ gzip:     2.03 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452091386Z",
+    "severity": "info",
+    "message": "dist/assets/surrealql-Cjom0U5J.js                                12.56 kB │ gzip:     3.72 kB │ map:     0.32 kB\ndist/assets/handlebars-BpdQsYii.js                               12.72 kB │ gzip:     2.86 kB │ map:     0.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452094110Z",
+    "severity": "info",
+    "message": "dist/assets/apache-Pmp26Uib.js                                   12.91 kB │ gzip:     4.09 kB │ map:     0.29 kB\ndist/assets/vesper-DRje8inN.js                                   13.15 kB │ gzip:     2.34 kB │ map:     0.26 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452106549Z",
+    "severity": "info",
+    "message": "dist/assets/bat-CickPsom.js                                      13.34 kB │ gzip:     3.62 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452107240Z",
+    "severity": "info",
+    "message": "dist/assets/fish-BvzEVeQv.js                                     13.48 kB │ gzip:     2.11 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452113490Z",
+    "severity": "info",
+    "message": "dist/assets/nsis-BlV79W_Q.js                                     13.57 kB │ gzip:     4.43 kB │ map:     0.28 kB\ndist/assets/v-BGw2Nkan.js                                        13.76 kB │ gzip:     3.15 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452114701Z",
+    "severity": "info",
+    "message": "dist/assets/arc-wvhs4tXz.js                                      13.94 kB │ gzip:     5.07 kB │ map:     7.84 kB\ndist/assets/vitesse-light-CVO1_9PV.js                            14.06 kB │ gzip:     3.39 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452166018Z",
+    "severity": "info",
+    "message": "dist/assets/aurora-x-D-2ljcwZ.js                                 14.08 kB │ gzip:     2.65 kB │ map:     0.27 kB\ndist/assets/vitesse-black-Bkuqu6BP.js                            14.12 kB │ gzip:     3.42 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452175753Z",
+    "severity": "info",
+    "message": "dist/assets/vitesse-dark-D0r3Knsf.js                             14.20 kB │ gzip:     3.44 kB │ map:     0.28 kB\ndist/assets/pug-DKIMFp6K.js                                      14.36 kB │ gzip:     3.03 kB │ map:     0.34 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452205768Z",
+    "severity": "info",
+    "message": "dist/assets/synthwave-84-CbfX1IO0.js                             14.47 kB │ gzip:     3.24 kB │ map:     0.28 kB\ndist/assets/smalltalk-BOQMe2GC.js                                14.59 kB │ gzip:     2.54 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452216214Z",
+    "severity": "info",
+    "message": "dist/assets/github-light-default-D7oLnXFd.js                     14.63 kB │ gzip:     3.44 kB │ map:     0.30 kB\ndist/assets/github-light-high-contrast-BfjtVDDH.js               14.76 kB │ gzip:     3.44 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452234361Z",
+    "severity": "info",
+    "message": "dist/assets/clarity-Dn5IMItf.js                                  14.82 kB │ gzip:     2.91 kB │ map:     0.29 kB\ndist/assets/github-dark-dimmed-DH5Ifo-i.js                       14.89 kB │ gzip:     3.51 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452278587Z",
+    "severity": "info",
+    "message": "dist/assets/github-dark-default-Cuk6v7N8.js                      14.90 kB │ gzip:     3.51 kB │ map:     0.30 kB\ndist/assets/github-dark-high-contrast-E3gJ1_iC.js                15.08 kB │ gzip:     3.47 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452279599Z",
+    "severity": "info",
+    "message": "dist/assets/gnuplot-DdkO51Og.js                                  15.24 kB │ gzip:     3.66 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452280771Z",
+    "severity": "info",
+    "message": "dist/assets/label-management-C7TgIr1t.js                         15.51 kB │ gzip:     5.16 kB │ map:     6.49 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452286740Z",
+    "severity": "info",
+    "message": "dist/assets/rust-B1yitclQ.js                                     15.52 kB │ gzip:     3.12 kB │ map:     0.29 kB\ndist/assets/readme-CFuEG5H-.js                                   15.59 kB │ gzip:     5.05 kB │ map:     1.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452301933Z",
+    "severity": "info",
+    "message": "dist/assets/kusto-wEQ09or8.js                                    15.62 kB │ gzip:     4.32 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452306129Z",
+    "severity": "info",
+    "message": "dist/assets/usePrs-CxGyGPCs.js                                   15.95 kB │ gzip:     6.64 kB │ map:     8.17 kB\ndist/assets/lua-BaeVxFsk.js                                      16.00 kB │ gzip:     3.57 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452317556Z",
+    "severity": "info",
+    "message": "dist/assets/actionscript-3-B3316cI-.js                           16.03 kB │ gzip:     3.12 kB │ map:     0.32 kB\ndist/assets/nix-CwoSXNpI.js                                      16.22 kB │ gzip:     3.04 kB │ map:     0.48 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452322593Z",
+    "severity": "info",
+    "message": "dist/assets/readme-C07fHA-E.js                                   16.26 kB │ gzip:     5.65 kB │ map:     1.32 kB\ndist/assets/abap-BdImnpbu.js                                     16.30 kB │ gzip:     6.29 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452354511Z",
+    "severity": "info",
+    "message": "dist/assets/RoadmapPage-CGNxKj7z.js                              16.32 kB │ gzip:     5.51 kB │ map:     7.21 kB\ndist/assets/readme-Buj7A7T7.js                                   16.35 kB │ gzip:     6.28 kB │ map:     1.24 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452358758Z",
+    "severity": "info",
+    "message": "dist/assets/matlab-D7o27uSR.js                                   16.54 kB │ gzip:     3.46 kB │ map:     0.29 kB\ndist/assets/luau-BnpPk5vE.js                                     16.59 kB │ gzip:     3.96 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452371577Z",
+    "severity": "info",
+    "message": "dist/assets/cue-D82EKSYY.js                                      16.65 kB │ gzip:     2.44 kB │ map:     0.28 kB\ndist/assets/readme-BLOcAeKN.js                                   16.79 kB │ gzip:     6.60 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452506069Z",
+    "severity": "info",
+    "message": "dist/assets/elixir-CkH2-t6x.js                                   16.80 kB │ gzip:     3.21 kB │ map:     0.31 kB\ndist/assets/readme-BaOnWpx0.js                                   16.82 kB │ gzip:     5.96 kB │ map:     1.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452506940Z",
+    "severity": "info",
+    "message": "dist/assets/solidity-DijEV5ha.js                                 16.87 kB │ gzip:     3.57 kB │ map:     0.30 kB\ndist/assets/odin-BBf5iR-q.js                                     16.96 kB │ gzip:     3.33 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452507982Z",
+    "severity": "info",
+    "message": "dist/assets/kanagawa-wave-DFGoQZhC.js                            17.56 kB │ gzip:     3.29 kB │ map:     0.28 kB\ndist/assets/kanagawa-lotus-C3DzagqV.js                           17.57 kB │ gzip:     3.32 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452513900Z",
+    "severity": "info",
+    "message": "dist/assets/kanagawa-dragon-BuwD2xS4.js                          17.58 kB │ gzip:     3.32 kB │ map:     0.29 kB\ndist/assets/defaultLocale-DX6XiGOO.js                            17.58 kB │ gzip:     6.73 kB │ map:     9.62 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452527881Z",
+    "severity": "info",
+    "message": "dist/assets/readme-6hgbfIYW.js                                   17.78 kB │ gzip:     6.06 kB │ map:     1.42 kB\ndist/assets/readme-BfEkD-d5.js                                   18.04 kB │ gzip:     5.82 kB │ map:     1.45 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452534702Z",
+    "severity": "info",
+    "message": "dist/assets/move-el3G9tDJ.js                                     18.11 kB │ gzip:     3.46 kB │ map:     0.29 kB\ndist/assets/readme-CMvkN71N.js                                   18.24 kB │ gzip:     6.54 kB │ map:     1.46 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452535232Z",
+    "severity": "info",
+    "message": "dist/assets/graphql-ChdNCCLP.js                                  18.58 kB │ gzip:     3.01 kB │ map:     0.38 kB\ndist/assets/ts-tags-D351s5mN.js                                  18.61 kB │ gzip:     2.93 kB │ map:     1.48 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452563185Z",
+    "severity": "info",
+    "message": "dist/assets/liquid-C0sCDyMI.js                                   18.65 kB │ gzip:     3.64 kB │ map:     0.37 kB\ndist/assets/svelte-Cy7k_4gC.js                                   18.82 kB │ gzip:     3.61 kB │ map:     0.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452567861Z",
+    "severity": "info",
+    "message": "dist/assets/diagram-UQ7AKVKN-BwFLnm3A.js                         18.91 kB │ gzip:     7.68 kB │ map:     9.57 kB\ndist/assets/material-theme-D5KoaKCx.js                           19.06 kB │ gzip:     3.50 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452576565Z",
+    "severity": "info",
+    "message": "dist/assets/material-theme-ocean-CyktbL80.js                     19.10 kB │ gzip:     3.53 kB │ map:     0.30 kB\ndist/assets/material-theme-darker-BfHTSMKl.js                    19.10 kB │ gzip:     3.51 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452627951Z",
+    "severity": "info",
+    "message": "dist/assets/material-theme-lighter-B0m2ddpp.js                   19.11 kB │ gzip:     3.49 kB │ map:     0.31 kB\ndist/assets/material-theme-palenight-Csfq5Kiy.js                 19.12 kB │ gzip:     3.53 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452636915Z",
+    "severity": "info",
+    "message": "dist/assets/gdscript-DqcFQ5yU.js                                 19.55 kB │ gzip:     4.19 kB │ map:     0.30 kB\ndist/assets/groovy-gcz8RCvz.js                                   19.64 kB │ gzip:     4.00 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452682794Z",
+    "severity": "info",
+    "message": "dist/assets/pieDiagram-E7YTZNPT-CppbkWEz.js                      19.72 kB │ gzip:     7.80 kB │ map:    10.02 kB\ndist/assets/readme-V1pw1Z_W.js                                   20.19 kB │ gzip:     6.90 kB │ map:     1.52 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452684496Z",
+    "severity": "info",
+    "message": "dist/assets/readme-C6lYjw3u.js                                   20.44 kB │ gzip:     7.23 kB │ map:     1.59 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452685468Z",
+    "severity": "info",
+    "message": "dist/assets/ayu-dark-DYE7WIF3.js                                 20.51 kB │ gzip:     4.33 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452693620Z",
+    "severity": "info",
+    "message": "dist/assets/ayu-mirage-32ctXXKs.js                               20.52 kB │ gzip:     4.31 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452694231Z",
+    "severity": "info",
+    "message": "dist/assets/ayu-light-BA47KaF1.js                                20.58 kB │ gzip:     4.30 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452708492Z",
+    "severity": "info",
+    "message": "dist/assets/powershell-BmBUJMz7.js                               20.63 kB │ gzip:     4.47 kB │ map:     0.31 kB\ndist/assets/glimmer-js-ByusRIyA.js                               20.66 kB │ gzip:     3.44 kB │ map:     0.39 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452744106Z",
+    "severity": "info",
+    "message": "dist/assets/glimmer-ts-BfAWNZQY.js                               20.66 kB │ gzip:     3.44 kB │ map:     0.39 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452745518Z",
+    "severity": "info",
+    "message": "dist/assets/mdc-D1_yUvq7.js                                      20.71 kB │ gzip:     7.28 kB │ map:     0.35 kB\ndist/assets/viml-CJc9bBzg.js                                     20.81 kB │ gzip:     7.14 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452752138Z",
+    "severity": "info",
+    "message": "dist/assets/snazzy-light-Bw305WKR.js                             21.21 kB │ gzip:     4.21 kB │ map:     0.28 kB\ndist/assets/nushell-D3jzshHO.js                                  21.34 kB │ gzip:     5.80 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452766630Z",
+    "severity": "info",
+    "message": "dist/assets/dracula-BzJJZx-M.js                                  21.49 kB │ gzip:     4.36 kB │ map:     0.27 kB\ndist/assets/dracula-soft-BXkSAIEj.js                             21.52 kB │ gzip:     4.42 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452787441Z",
+    "severity": "info",
+    "message": "dist/assets/readme-L2hfZyyE.js                                   21.67 kB │ gzip:     9.20 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452788563Z",
+    "severity": "info",
+    "message": "dist/assets/wit-5i3qLPDT.js                                      21.91 kB │ gzip:     3.28 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452837917Z",
+    "severity": "info",
+    "message": "dist/assets/rose-pine-5qJOZa0Y.js                                22.17 kB │ gzip:     4.26 kB │ map:     0.27 kB\ndist/assets/rose-pine-moon-C9pEdX9L.js                           22.20 kB │ gzip:     4.29 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452853500Z",
+    "severity": "info",
+    "message": "dist/assets/rose-pine-dawn-zx0QlTCp.js                           22.20 kB │ gzip:     4.29 kB │ map:     0.29 kB\ndist/assets/twig-27uCiNez.js                                     22.58 kB │ gzip:     4.45 kB │ map:     0.40 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452855022Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CfAHMfGH.js                                   22.71 kB │ gzip:     8.09 kB │ map:     1.71 kB\ndist/assets/readme-qNhzkjPH.js                                   22.86 kB │ gzip:     8.73 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452884196Z",
+    "severity": "info",
+    "message": "dist/assets/readme-C4Wk-KAw.js                                   22.95 kB │ gzip:     8.78 kB │ map:     0.19 kB\ndist/assets/common-lisp-Cg-RD9OK.js                              23.06 kB │ gzip:     6.50 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452886029Z",
+    "severity": "info",
+    "message": "dist/assets/nim-BIad80T-.js                                      23.08 kB │ gzip:     3.63 kB │ map:     0.42 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452918458Z",
+    "severity": "info",
+    "message": "dist/assets/gruvbox-dark-hard-CFHQjOhq.js                        23.09 kB │ gzip:     4.59 kB │ map:     0.29 kB\ndist/assets/gruvbox-dark-soft-CVdnzihN.js                        23.09 kB │ gzip:     4.58 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.452954712Z",
+    "severity": "info",
+    "message": "dist/assets/gruvbox-light-hard-CH1njM8p.js                       23.10 kB │ gzip:     4.60 kB │ map:     0.30 kB\ndist/assets/gruvbox-light-soft-hJgmCMqR.js                       23.10 kB │ gzip:     4.60 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453035082Z",
+    "severity": "info",
+    "message": "dist/assets/gruvbox-dark-medium-GsRaNv29.js                      23.10 kB │ gzip:     4.57 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453051918Z",
+    "severity": "info",
+    "message": "dist/assets/gruvbox-light-medium-DRw_LuNl.js                     23.11 kB │ gzip:     4.60 kB │ map:     0.30 kB\ndist/assets/linear-UuJVNlUp.js                                   23.86 kB │ gzip:     8.44 kB │ map:    13.60 kB\ndist/assets/sql-CRqJ_cUM.js                                      23.87 kB │ gzip:     7.84 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453181612Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DVk2eBbS.js                                   24.03 kB │ gzip:     9.05 kB │ map:     0.18 kB\ndist/assets/cadence-Bv_4Rxtq.js                                  24.13 kB │ gzip:     4.08 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453190646Z",
+    "severity": "info",
+    "message": "dist/assets/templ-DhtptRzy.js                                    24.59 kB │ gzip:     5.88 kB │ map:     0.35 kB\ndist/assets/apl-CORt7UWP.js                                      24.61 kB │ gzip:     4.67 kB │ map:     0.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453205117Z",
+    "severity": "info",
+    "message": "dist/assets/astro-HNnZUWAn.js                                    24.63 kB │ gzip:     8.05 kB │ map:     0.41 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453216655Z",
+    "severity": "info",
+    "message": "dist/assets/vhdl-CeAyd5Ju.js                                     24.71 kB │ gzip:     4.28 kB │ map:     0.29 kB\ndist/assets/diagram-S7CK7UJ4-g2EuRQzj.js                         24.76 kB │ gzip:    10.36 kB │ map:    12.36 kB\ndist/assets/purescript-CklMAg4u.js                               25.16 kB │ gzip:     3.67 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453217486Z",
+    "severity": "info",
+    "message": "dist/assets/moonbit-CHtswR0a.js                                  25.40 kB │ gzip:     4.21 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453236685Z",
+    "severity": "info",
+    "message": "dist/assets/Landing-BDZGxgGe.js                                  25.48 kB │ gzip:     7.53 kB │ map:     9.78 kB\ndist/assets/typespec-CAFt9gP4.js                                 25.51 kB │ gzip:     3.05 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453253861Z",
+    "severity": "info",
+    "message": "dist/assets/one-light-C3Wv6jpd.js                                25.73 kB │ gzip:     4.04 kB │ map:     0.27 kB\ndist/assets/readme-CT-KlgpR.js                                   25.77 kB │ gzip:    10.16 kB │ map:     0.20 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453254431Z",
+    "severity": "info",
+    "message": "dist/assets/fsharp-CXgrBDvD.js                                   25.79 kB │ gzip:     4.57 kB │ map:     0.32 kB\ndist/assets/readme-DepH3Z_B.js                                   25.85 kB │ gzip:     8.65 kB │ map:     2.15 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453255303Z",
+    "severity": "info",
+    "message": "dist/assets/angular-html-DA-rfuFy.js                             26.01 kB │ gzip:     4.92 kB │ map:     1.24 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453256194Z",
+    "severity": "info",
+    "message": "dist/assets/marko-DjSrsDqO.js                                    26.04 kB │ gzip:     4.07 kB │ map:     0.37 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453446750Z",
+    "severity": "info",
+    "message": "dist/assets/night-owl-light-CMTm3GFP.js                          26.35 kB │ gzip:     4.65 kB │ map:     0.29 kB\ndist/assets/readme-WXvZ188A.js                                   26.63 kB │ gzip:     9.74 kB │ map:     0.19 kB\ndist/assets/readme-BwuaOjTw.js                                   26.65 kB │ gzip:     7.63 kB │ map:     2.02 kB\ndist/assets/vue-BqiEGhQt.js                                      26.73 kB │ gzip:     3.89 kB │ map:     1.28 kB\ndist/assets/readme-DDNQVGx4.js                                   26.73 kB │ gzip:    10.20 kB │ map:     0.18 kB\ndist/assets/IssueDetail-ns1vG4JT.js                              26.76 kB │ gzip:     8.20 kB │ map:    10.79 kB\ndist/assets/c3-Dp5svz6Z.js                                       26.83 kB │ gzip:     4.39 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453447401Z",
+    "severity": "info",
+    "message": "dist/assets/system-verilog-0hqHdDBg.js                           27.05 kB │ gzip:     5.32 kB │ map:     0.32 kB\ndist/assets/nord-Ddv68eIx.js                                     27.13 kB │ gzip:     4.75 kB │ map:     0.26 kB\ndist/assets/codeql-DsOJ9woJ.js                                   27.34 kB │ gzip:     4.21 kB │ map:     0.29 kB\ndist/assets/readme-jHCiekjZ.js                                   27.47 kB │ gzip:     9.71 kB │ map:     1.93 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453447922Z",
+    "severity": "info",
+    "message": "dist/assets/java-CylS5w8V.js                                     27.67 kB │ gzip:     4.68 kB │ map:     0.29 kB\ndist/assets/scss-D5BDwBP9.js                                     27.68 kB │ gzip:     4.63 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453558948Z",
+    "severity": "info",
+    "message": "dist/assets/coffee-Ch7k5sss.js                                   27.91 kB │ gzip:     6.77 kB │ map:     0.32 kB\ndist/assets/readme-CyZlpPPs.js                                   27.99 kB │ gzip:     9.67 kB │ map:     2.01 kB\ndist/assets/razor-BjBPvh-w.js                                    28.02 kB │ gzip:     4.02 kB │ map:     0.33 kB\ndist/assets/readme-BujCcmSo.js                                   28.52 kB │ gzip:    10.18 kB │ map:     2.00 kB\ndist/assets/readme-SaQ0zRQA.js                                   28.66 kB │ gzip:    10.69 kB │ map:     0.18 kB\ndist/assets/readme-BMm61_Xq.js                                   28.81 kB │ gzip:    10.05 kB │ map:     2.04 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453559760Z",
+    "severity": "info",
+    "message": "dist/assets/readme-C_W0pO0R.js                                   29.32 kB │ gzip:    10.12 kB │ map:     2.05 kB\ndist/assets/scala-CqE71os6.js                                    29.34 kB │ gzip:     4.35 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453561552Z",
+    "severity": "info",
+    "message": "dist/assets/night-owl-C39BiMTA.js                                29.34 kB │ gzip:     5.53 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453561933Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BQz6LEQd.js                                   29.43 kB │ gzip:    10.25 kB │ map:     2.03 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453565759Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BKFDDkUe.js                                   29.53 kB │ gzip:    10.37 kB │ map:     2.05 kB\ndist/assets/readme-iFm8iBOD.js                                   29.70 kB │ gzip:    10.95 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453574211Z",
+    "severity": "info",
+    "message": "dist/assets/readme-D81ljAp2.js                                   29.82 kB │ gzip:    10.39 kB │ map:     2.18 kB\ndist/assets/readme-CQokvQoK.js                                   30.00 kB │ gzip:    11.25 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453576825Z",
+    "severity": "info",
+    "message": "dist/assets/crystal-DGywbUpC.js                                  30.01 kB │ gzip:     4.95 kB │ map:     0.41 kB\ndist/assets/cynefinDiagram-5FMLGOSQ-BnXjnPG1.js                  30.05 kB │ gzip:    10.76 kB │ map:    14.91 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453585038Z",
+    "severity": "info",
+    "message": "dist/assets/applescript-Co6uUVPk.js                              30.05 kB │ gzip:     6.37 kB │ map:     0.31 kB\ndist/assets/MembersPage-H7eq0lyT.js                              30.51 kB │ gzip:    10.54 kB │ map:    13.50 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453589134Z",
+    "severity": "info",
+    "message": "dist/assets/readme-B71u76z-.js                                   30.63 kB │ gzip:    10.88 kB │ map:     0.19 kB\ndist/assets/stateDiagram-D77RDMKH-tCS43dVh.js                    30.82 kB │ gzip:    10.50 kB │ map:    15.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453589594Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-dark-CyvmCCZW.js                              30.98 kB │ gzip:     5.10 kB │ map:     0.27 kB\ndist/assets/pierre-light-480U9XYS.js                             30.99 kB │ gzip:     5.11 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453612749Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-dark-soft-BHGpRqa4.js                         31.01 kB │ gzip:     5.16 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453613310Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-light-soft-CVdyfjmI.js                        31.02 kB │ gzip:     5.12 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453613590Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-dark-tritanopia-Beq2gCRQ.js                   31.04 kB │ gzip:     5.08 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453613851Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-light-tritanopia-B4_gpKOM.js                  31.05 kB │ gzip:     5.08 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453632229Z",
+    "severity": "info",
+    "message": "dist/assets/readme-QKd9Y4MF.js                                   31.10 kB │ gzip:    10.58 kB │ map:     0.18 kB\ndist/assets/pierre-dark-protanopia-deuteranopia-Rgc0TwpF.js      31.12 kB │ gzip:     5.18 kB │ map:     0.34 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453637807Z",
+    "severity": "info",
+    "message": "dist/assets/pierre-light-protanopia-deuteranopia-CaVOBURG.js     31.13 kB │ gzip:     5.15 kB │ map:     0.35 kB\ndist/assets/readme-D9Z7Z1x5.js                                   31.29 kB │ gzip:    10.60 kB │ map:     2.13 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453693170Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Cxt5I-DU.js                                   31.30 kB │ gzip:    11.40 kB │ map:     0.19 kB\ndist/assets/diagram-VSXAHHWV-D7P_x8-e.js                         31.34 kB │ gzip:    12.24 kB │ map:    15.42 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453695764Z",
+    "severity": "info",
+    "message": "dist/assets/stylus-BEDo0Tqx.js                                   31.53 kB │ gzip:     8.41 kB │ map:     0.29 kB\ndist/assets/readme-LGsbiRTW.js                                   31.61 kB │ gzip:    10.71 kB │ map:     2.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453702984Z",
+    "severity": "info",
+    "message": "dist/assets/julia-5Bft2YPA.js                                    31.65 kB │ gzip:     4.83 kB │ map:     0.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453743475Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DeiXUB63.js                                   31.72 kB │ gzip:    10.48 kB │ map:     2.29 kB\ndist/assets/readme-Cu8hcZzW.js                                   31.72 kB │ gzip:    10.75 kB │ map:     2.20 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453744166Z",
+    "severity": "info",
+    "message": "dist/assets/ahk-CsyLZFj1.js                                      31.88 kB │ gzip:     8.18 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453744787Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CbPY7Ris.js                                   32.34 kB │ gzip:    12.00 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453759960Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DYDFYLS-.js                                   32.91 kB │ gzip:     9.97 kB │ map:     2.34 kB\ndist/assets/dagre-GXQ25YYZ-Br0AUXxM.js                           33.16 kB │ gzip:    12.46 kB │ map:    16.81 kB\ndist/assets/readme-s0mcdKMI.js                                   33.48 kB │ gzip:    10.99 kB │ map:     2.45 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453826800Z",
+    "severity": "info",
+    "message": "dist/assets/poimandres-CS3Unz2-.js                               33.93 kB │ gzip:     5.86 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453827702Z",
+    "severity": "info",
+    "message": "dist/assets/one-dark-pro-DVMEJ2y_.js                             34.22 kB │ gzip:     5.92 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453870366Z",
+    "severity": "info",
+    "message": "dist/assets/readme-DdWniVFS.js                                   34.23 kB │ gzip:    11.56 kB │ map:     2.07 kB\ndist/assets/bsl-DlhNcFeZ.js                                      34.42 kB │ gzip:     8.77 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453914151Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CAei3ZFt.js                                   34.80 kB │ gzip:    13.10 kB │ map:     0.18 kB\ndist/assets/readme-ClR5lg4J.js                                   35.79 kB │ gzip:    12.42 kB │ map:     2.42 kB\ndist/assets/readme-CjZ8aLPU.js                                   35.83 kB │ gzip:    13.15 kB │ map:     0.20 kB\ndist/assets/houston-DnULxvSX.js                                  35.84 kB │ gzip:     6.15 kB │ map:     0.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453914512Z",
+    "severity": "info",
+    "message": "dist/assets/nginx-BpAMiNFr.js                                    35.85 kB │ gzip:     4.86 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453914833Z",
+    "severity": "info",
+    "message": "dist/assets/tokyo-night-hegEt444.js                              36.10 kB │ gzip:     6.62 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453936955Z",
+    "severity": "info",
+    "message": "dist/assets/haxe-CfZj7gIn.js                                     36.40 kB │ gzip:     6.42 kB │ map:     0.29 kB\ndist/assets/org-DM6o9KBp.js                                      37.96 kB │ gzip:     4.42 kB │ map:     1.18 kB\ndist/assets/erlang-DsQrWhSR.js                                   37.97 kB │ gzip:     4.83 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.453987211Z",
+    "severity": "info",
+    "message": "dist/assets/bird2-Bx8U0n9b.js                                    39.13 kB │ gzip:     8.91 kB │ map:     0.29 kB\ndist/assets/cobol-nBiQ_Alo.js                                    39.63 kB │ gzip:    11.31 kB │ map:     0.33 kB\ndist/assets/readme-CQWoaJUl.js                                   39.95 kB │ gzip:    14.32 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454009054Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CShVE-0u.js                                   40.38 kB │ gzip:    12.78 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454033921Z",
+    "severity": "info",
+    "message": "dist/assets/readme-D4xkDggF.js                                   40.55 kB │ gzip:    12.99 kB │ map:     2.83 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454053220Z",
+    "severity": "info",
+    "message": "dist/assets/asm-D_Q5rh1f.js                                      41.16 kB │ gzip:     8.61 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454054222Z",
+    "severity": "info",
+    "message": "dist/assets/readme-C1KvXfcV.js                                   41.80 kB │ gzip:    14.06 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454154632Z",
+    "severity": "info",
+    "message": "dist/assets/haskell-Df6bDoY_.js                                  41.95 kB │ gzip:     6.84 kB │ map:     0.30 kB\ndist/assets/shellscript-Yzrsuije.js                              41.96 kB │ gzip:     6.54 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454161392Z",
+    "severity": "info",
+    "message": "dist/assets/readme-6Tlv30ir.js                                   42.07 kB │ gzip:    13.56 kB │ map:     2.82 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454172699Z",
+    "severity": "info",
+    "message": "dist/assets/chunk-SVP7TREG-D--Qf0ZH.js                           42.43 kB │ gzip:    13.37 kB │ map:    19.97 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454177126Z",
+    "severity": "info",
+    "message": "dist/assets/perl-B9cMNwum.js                                     43.73 kB │ gzip:     5.14 kB │ map:     0.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454190646Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BXsiYyvp.js                                   44.03 kB │ gzip:    14.18 kB │ map:     3.07 kB\ndist/assets/d-85-TOEBH.js                                        44.23 kB │ gzip:     8.86 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454231848Z",
+    "severity": "info",
+    "message": "dist/assets/readme-D51APP71.js                                   44.55 kB │ gzip:    15.36 kB │ map:     0.18 kB\ndist/assets/pierre-dark-vibrant-BWBVywrn.js                      45.22 kB │ gzip:     5.69 kB │ map:     0.30 kB\ndist/assets/pierre-light-vibrant-DdTDNdfJ.js                     45.23 kB │ gzip:     5.67 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454237016Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CU6jPIMP.js                                   45.47 kB │ gzip:    14.33 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454275434Z",
+    "severity": "info",
+    "message": "dist/assets/ahk2-8Zs4aa1G.js                                     45.51 kB │ gzip:    10.28 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454328814Z",
+    "severity": "info",
+    "message": "dist/assets/WikiRoute-BFjUjemu.js                                46.28 kB │ gzip:    15.18 kB │ map:    21.36 kB\ndist/assets/go-C27-OAKa.js                                       47.26 kB │ gzip:     5.59 kB │ map:     0.28 kB\ndist/assets/ruby-C0TQ7zu5.js                                     47.47 kB │ gzip:     6.35 kB │ map:     0.51 kB\ndist/assets/readme-CM5DeiIb.js                                   47.77 kB │ gzip:    16.20 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454329524Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CYBTWglE.js                                   48.05 kB │ gzip:    16.57 kB │ map:     0.20 kB\ndist/assets/apex-DhZFqWV2.js                                     48.34 kB │ gzip:     7.30 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454393611Z",
+    "severity": "info",
+    "message": "dist/assets/ada-bCR0ucgS.js                                      48.53 kB │ gzip:     6.46 kB │ map:     0.28 kB\ndist/assets/css-CLj8gQPS.js                                      49.49 kB │ gzip:    12.28 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454394482Z",
+    "severity": "info",
+    "message": "dist/assets/imba-DGztddWO.js                                     50.38 kB │ gzip:     9.89 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454395263Z",
+    "severity": "info",
+    "message": "dist/assets/catppuccin-mocha-Ct7hS0mc.js                         51.31 kB │ gzip:     8.88 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454403105Z",
+    "severity": "info",
+    "message": "dist/assets/catppuccin-latte-DH-8KZSZ.js                         51.31 kB │ gzip:     8.89 kB │ map:     0.29 kB\ndist/assets/catppuccin-frappe-CZL1YF0i.js                        51.31 kB │ gzip:     8.93 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454435884Z",
+    "severity": "info",
+    "message": "dist/assets/catppuccin-macchiato-B7yYVSCf.js                     51.33 kB │ gzip:     8.93 kB │ map:     0.30 kB\ndist/assets/diagram-VX7I27RA-DLh2jGqp.js                         51.64 kB │ gzip:    17.66 kB │ map:    26.71 kB\ndist/assets/ishikawaDiagram-5VMMS53U-CquvUG7k.js                 52.17 kB │ gzip:    18.35 kB │ map:    25.98 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454436705Z",
+    "severity": "info",
+    "message": "dist/assets/readme-UUu3sQLc.js                                   52.94 kB │ gzip:    16.04 kB │ map:     0.18 kB\ndist/assets/readme-BapWIcmA.js                                   54.19 kB │ gzip:    18.57 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454469705Z",
+    "severity": "info",
+    "message": "dist/assets/everforest-dark-BgDCqdQA.js                          54.20 kB │ gzip:     8.83 kB │ map:     0.29 kB\ndist/assets/everforest-light-C8M2exoo.js                         54.21 kB │ gzip:     8.82 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454474072Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Ckay_5mf.js                                   54.35 kB │ gzip:    18.70 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454492148Z",
+    "severity": "info",
+    "message": "dist/assets/mermaid-CQcHuHx7.js                                  55.28 kB │ gzip:     5.22 kB │ map:     0.30 kB\ndist/assets/wikitext-BhOHFoWU.js                                 56.35 kB │ gzip:     5.16 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454541603Z",
+    "severity": "info",
+    "message": "dist/assets/kanban-definition-UXKFOSKX-C9PuPdwK.js               56.43 kB │ gzip:    17.94 kB │ map:    27.05 kB\ndist/assets/stata-DI20mbqo.js                                    57.47 kB │ gzip:    12.82 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454549014Z",
+    "severity": "info",
+    "message": "dist/assets/html-pp8916En.js                                     57.75 kB │ gzip:    12.15 kB │ map:     0.33 kB\ndist/assets/ballerina-BFfxhgS-.js                                59.16 kB │ gzip:     8.58 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454562694Z",
+    "severity": "info",
+    "message": "dist/assets/markdown-Cvjx9yec.js                                 59.80 kB │ gzip:     6.07 kB │ map:     0.30 kB\ndist/assets/readme-DH8tdfwB.js                                   61.57 kB │ gzip:    21.08 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454610897Z",
+    "severity": "info",
+    "message": "dist/assets/mindmap-definition-YA3MSWOX-BrWmCQqg.js              62.13 kB │ gzip:    19.52 kB │ map:    29.16 kB\ndist/assets/ocaml-C0hk2d4L.js                                    62.90 kB │ gzip:     5.45 kB │ map:     0.29 kB\ndist/assets/readme-BviBV7Yu.js                                   64.16 kB │ gzip:    19.68 kB │ map:     0.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454611588Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CLNxy_RZ.js                                   65.51 kB │ gzip:    19.82 kB │ map:     4.24 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454631077Z",
+    "severity": "info",
+    "message": "dist/assets/journeyDiagram-3NMN7TZE-B_TM0HbZ.js                  66.77 kB │ gzip:    22.27 kB │ map:    32.35 kB\ndist/assets/mojo-DJz3ZmWd.js                                     69.97 kB │ gzip:     9.68 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454672609Z",
+    "severity": "info",
+    "message": "dist/assets/python-B6aJPvgy.js                                   70.41 kB │ gzip:     9.55 kB │ map:     0.29 kB\ndist/assets/wardleyDiagram-VM6X3IG4-B9qkxB5L.js                  71.76 kB │ gzip:    20.24 kB │ map:    34.64 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454722705Z",
+    "severity": "info",
+    "message": "dist/assets/c-BIGW1oBm.js                                        72.55 kB │ gzip:    10.89 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454723125Z",
+    "severity": "info",
+    "message": "dist/assets/sankeyDiagram-P5KCCOFB-DAaG4al7.js                   72.69 kB │ gzip:    24.84 kB │ map:    37.07 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454725389Z",
+    "severity": "info",
+    "message": "dist/assets/latex-D5pSuvFb.js                                    73.38 kB │ gzip:     7.22 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454730156Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CegV7yCy.js                                   73.41 kB │ gzip:    23.75 kB │ map:     0.20 kB\ndist/assets/vyper-CDx5xZoG.js                                    75.10 kB │ gzip:    11.15 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454855013Z",
+    "severity": "info",
+    "message": "dist/assets/ChatChannelPage-CITunl6T.js                          77.42 kB │ gzip:    26.96 kB │ map:    35.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454855404Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BY8r4Cne.js                                   78.30 kB │ gzip:    24.64 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454855704Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Dx3fVpir.js                                   80.60 kB │ gzip:    22.74 kB │ map:     5.18 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454855994Z",
+    "severity": "info",
+    "message": "dist/assets/hack-BWmVpMyf.js                                     81.63 kB │ gzip:    26.82 kB │ map:     0.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454861923Z",
+    "severity": "info",
+    "message": "dist/assets/gitGraphDiagram-WWUBYQGX-BIgYBMwN.js                 86.91 kB │ gzip:    26.32 kB │ map:    43.07 kB\ndist/assets/readme-D5tbfhTu.js                                   87.61 kB │ gzip:    26.81 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454862615Z",
+    "severity": "info",
+    "message": "dist/assets/swift-C2oV4EkX.js                                    87.68 kB │ gzip:    15.25 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454863265Z",
+    "severity": "info",
+    "message": "dist/assets/requirementDiagram-BXWQKSXE-CJQylFBm.js              87.81 kB │ gzip:    21.89 kB │ map:    42.55 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454872579Z",
+    "severity": "info",
+    "message": "dist/assets/timeline-definition-24CTP7MA-CZe6OhuJ.js             88.85 kB │ gzip:    28.06 kB │ map:    43.46 kB\ndist/assets/fortran-free-form-BxgE0vQu.js                        89.47 kB │ gzip:    11.74 kB │ map:     0.33 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454872960Z",
+    "severity": "info",
+    "message": "dist/assets/erDiagram-RLTQ6QDP-7J2kerWz.js                       89.54 kB │ gzip:    24.48 kB │ map:    44.01 kB\ndist/assets/csharp-DSvCPggb.js                                   90.65 kB │ gzip:    11.20 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454910907Z",
+    "severity": "info",
+    "message": "dist/assets/racket-BqYA7rlc.js                                   92.85 kB │ gzip:    15.47 kB │ map:     0.29 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454911638Z",
+    "severity": "info",
+    "message": "dist/assets/quadrantDiagram-AXDQQJYC-C5yk-xUn.js                 95.32 kB │ gzip:    24.31 kB │ map:    45.93 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454963726Z",
+    "severity": "info",
+    "message": "dist/assets/route-pages-DVzrj5W6.js                              95.72 kB │ gzip:    30.25 kB │ map:    40.75 kB\ndist/assets/less-B1dDrJ26.js                                     98.08 kB │ gzip:    15.14 kB │ map:     0.29 kB\ndist/assets/readme-DGe6MXMR.js                                   99.39 kB │ gzip:    22.54 kB │ map:     6.71 kB\ndist/assets/chunk-IMKFNOWR-Djr9AFQ_.js                          103.03 kB │ gzip:    30.12 kB │ map:    48.66 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454964447Z",
+    "severity": "info",
+    "message": "dist/assets/blade-2xfisSek.js                                   105.62 kB │ gzip:    28.71 kB │ map:     0.43 kB\ndist/assets/objective-c-DXmwc3jG.js                             105.89 kB │ gzip:    23.76 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.454970456Z",
+    "severity": "info",
+    "message": "dist/assets/blockDiagram-I7D4REHJ-BS7EUrhr.js                   112.92 kB │ gzip:    33.30 kB │ map:    53.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455011908Z",
+    "severity": "info",
+    "message": "dist/assets/php-Csjmro_R.js                                     113.68 kB │ gzip:    29.23 kB │ map:     0.40 kB\ndist/assets/readme-Q-Iu5J9D.js                                  122.28 kB │ gzip:    37.09 kB │ map:     0.19 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455017757Z",
+    "severity": "info",
+    "message": "dist/assets/xychartDiagram-S5SC5T6Z-CIfV6bek.js                 122.38 kB │ gzip:    33.65 kB │ map:    58.35 kB\ndist/assets/chunk-TICWLB2K-BqemmXOy.js                          132.34 kB │ gzip:    33.25 kB │ map:    62.32 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455028673Z",
+    "severity": "info",
+    "message": "dist/assets/asciidoc-CSVQ5wI8.js                                136.52 kB │ gzip:     9.94 kB │ map:     0.30 kB\ndist/assets/mdx-Cmh6b_Ma.js                                     136.56 kB │ gzip:    23.73 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455039470Z",
+    "severity": "info",
+    "message": "dist/assets/readme-OclixXTV.js                                  139.22 kB │ gzip:    41.37 kB │ map:     9.45 kB\ndist/assets/vennDiagram-4TSXK5OY-B4rrY9jk.js                    140.16 kB │ gzip:    45.74 kB │ map:    73.60 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455065208Z",
+    "severity": "info",
+    "message": "dist/assets/layout-pfVg8j-7.js                                  145.18 kB │ gzip:    46.36 kB │ map:    82.26 kB\ndist/assets/RVI7YCPX-DDcoj7co.js                                149.88 kB │ gzip:    52.11 kB │ map:    77.44 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455081272Z",
+    "severity": "info",
+    "message": "dist/assets/c4Diagram-7LVT6UL2-CBgcGEOU.js                      165.29 kB │ gzip:    41.89 kB │ map:    74.81 kB\ndist/assets/typst-BUadGCkm.js                                   165.47 kB │ gzip:    11.83 kB │ map:     1.39 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455128003Z",
+    "severity": "info",
+    "message": "dist/assets/readme-BS9NhOJZ.js                                  170.83 kB │ gzip:    52.02 kB │ map:     0.19 kB\ndist/assets/flowDiagram-HODETNUW-Cmdqxx_9.js                    171.41 kB │ gzip:    41.24 kB │ map:    82.12 kB\ndist/assets/objective-cpp-CLxacb5B.js                           172.46 kB │ gzip:    31.08 kB │ map:     0.31 kB\ndist/assets/javascript-wDzz0qaB.js                              175.30 kB │ gzip:    16.99 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455145459Z",
+    "severity": "info",
+    "message": "dist/assets/tsx-COt5Ahok.js                                     175.98 kB │ gzip:    16.95 kB │ map:     0.28 kB\ndist/assets/jsx-g9-lgVsj.js                                     178.24 kB │ gzip:    17.05 kB │ map:     0.28 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455192049Z",
+    "severity": "info",
+    "message": "dist/assets/readme-CYAAx66Y.js                                  180.69 kB │ gzip:    49.83 kB │ map:     0.19 kB\ndist/assets/typescript-BPQ3VLAy.js                              181.55 kB │ gzip:    16.52 kB │ map:     0.31 kB\ndist/assets/angular-ts-BrjP3tb8.js                              185.13 kB │ gzip:    17.52 kB │ map:     0.94 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455193040Z",
+    "severity": "info",
+    "message": "dist/assets/vue-vine-BoDAl6tE.js                                190.67 kB │ gzip:    18.54 kB │ map:     0.42 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455379310Z",
+    "severity": "info",
+    "message": "dist/assets/readme-Df3b-W_W.js                                  197.57 kB │ gzip:    48.43 kB │ map:    12.49 kB\ndist/assets/SiteShell-CCsqU7g0.js                               213.77 kB │ gzip:    62.81 kB │ map:    18.35 kB\ndist/assets/ganttDiagram-EL5Y4UJY-COik_meZ.js                   216.51 kB │ gzip:    62.75 kB │ map:   110.06 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455380472Z",
+    "severity": "info",
+    "message": "dist/assets/cose-bilkent-JH36ORCC-TRoLCnK7.js                   226.88 kB │ gzip:    66.49 kB │ map:   108.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455381193Z",
+    "severity": "info",
+    "message": "dist/assets/wolfram-lXgVvXCa.js                                 262.85 kB │ gzip:    77.51 kB │ map:     0.30 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455386290Z",
+    "severity": "info",
+    "message": "dist/assets/sequenceDiagram-WJ2MYXX4-CAi3AuYX.js                302.99 kB │ gzip:    75.68 kB │ map:   139.47 kB\ndist/assets/swimlanes-42K2YHIH-Dss4R_JU.js                      429.01 kB │ gzip:   140.72 kB │ map:   234.86 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455399981Z",
+    "severity": "info",
+    "message": "dist/assets/architectureDiagram-5GKGNRK7-BRSQKOVV.js            437.35 kB │ gzip:   128.54 kB │ map:   214.10 kB\ndist/assets/3GWKGGQS-DLRLDo1o.js                                481.17 kB │ gzip:   138.01 kB │ map:   212.22 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455404788Z",
+    "severity": "info",
+    "message": "dist/assets/NativeReplay-D41MFT-a.js                            546.94 kB │ gzip:   170.66 kB │ map:   264.21 kB\ndist/assets/wasm-CG6Dc4jp.js                                    623.01 kB │ gzip:   230.80 kB │ map:     0.46 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455447672Z",
+    "severity": "info",
+    "message": "dist/assets/katex-HP8lGamR.js                                   706.01 kB │ gzip:   174.82 kB │ map:   333.47 kB\ndist/assets/math-QFVGd67x.js                                    706.21 kB │ gzip:   175.58 kB │ map:   333.84 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455454062Z",
+    "severity": "info",
+    "message": "dist/assets/cpp-BMRokrvK.js                                     786.28 kB │ gzip:    53.84 kB │ map:     0.55 kB\ndist/assets/emacs-lisp-C_m_b--Z.js                              790.48 kB │ gzip:   199.29 kB │ map:     0.31 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455454663Z",
+    "severity": "info",
+    "message": "dist/assets/pull-request-BxU7NUzj.js                          1,347.35 kB │ gzip:   386.08 kB │ map:   613.27 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.455478008Z",
+    "severity": "info",
+    "message": "dist/assets/cytoscape.esm-DzSz-X2X.js                         1,406.04 kB │ gzip:   435.26 kB │ map:   722.20 kB\ndist/assets/cynefin-OW5HDTMX-D1zpuZat.js                      1,672.88 kB │ gzip:   437.71 kB │ map:   738.68 kB\ndist/assets/mermaid.core-B6lzjHA1.js                          1,930.69 kB │ gzip:   472.63 kB │ map:   935.97 kB\ndist/assets/index-C4lEhpk1.js                                 5,717.22 kB │ gzip: 1,772.11 kB │ map: 2,821.38 kB\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.465186875Z",
+    "severity": "info",
+    "message": "\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:04.466470801Z",
+    "severity": "info",
+    "message": "✓ built in 38.27s\n"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:19.087485806Z",
+    "severity": "info",
+    "message": "[build 7/9] RUN pnpm build"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:19.151661655Z",
+    "severity": "info",
+    "message": "[build 8/9] RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.argv[1]??\"\")) throw new Error(\"full build revision required\"); require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"aba2f41a5141d0c26da5be613e9766078d839d35\""
+  },
+  {
+    "timestamp": "2026-10-16T17:48:20.994263853Z",
+    "severity": "info",
+    "message": "[build 8/9] RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.argv[1]??\"\")) throw new Error(\"full build revision required\"); require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"aba2f41a5141d0c26da5be613e9766078d839d35\""
+  },
+  {
+    "timestamp": "2026-10-16T17:48:21.032155085Z",
+    "severity": "info",
+    "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures"
+  },
+  {
+    "timestamp": "2026-10-16T17:48:22.500041132Z",
+    "severity": "info",
+    "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures"
+  },
+  {
+    "timestamp": "2026-10-16T17:49:24.970900519Z",
+    "severity": "info",
+    "message": "[preview 3/3] COPY --from=build /app /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:49:57.921634864Z",
+    "severity": "info",
+    "message": "[preview 3/3] COPY --from=build /app /app"
+  },
+  {
+    "timestamp": "2026-10-16T17:49:58.147294753Z",
+    "severity": "info",
+    "message": "exporting to docker image format"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:21.352720762Z",
+    "severity": "info",
+    "message": "exporting to docker image format"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:32.580877495Z",
+    "severity": "info",
+    "message": "containerimage.config.digest: sha256:e94592333aa8e346672be8419b94625a96964b34d41b302029c008d359460040"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:32.580882422Z",
+    "severity": "info",
+    "message": "containerimage.digest: sha256:bb550117d768d23f37ddcf28600e61675bfc60edb5f08c1c8b44746d36515189"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:32.580886458Z",
+    "severity": "info",
+    "message": "containerimage.descriptor: eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6YmI1NTAxMTdkNzY4ZDIzZjM3ZGRjZjI4NjAwZTYxNjc1YmZjNjBlZGI1ZjA4YzFjOGI0NDc0NmQzNjUxNTE4OSIsInNpemUiOjE2MjUsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0xMC0xNlQxNzo1MDoxOFoifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:44.771205663Z",
+    "severity": "info",
+    "message": "image push"
+  },
+  {
+    "timestamp": "2026-10-16T17:50:44.771241176Z",
+    "severity": "info",
+    "message": "image push"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.094698443Z",
+    "severity": "info",
+    "message": ""
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.094705156Z",
+    "severity": "info",
+    "message": "\u001b[35m====================\nStarting Healthcheck\n====================\n\u001b[0m"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.094706823Z",
+    "severity": "info",
+    "message": "\u001b[37mPath: /readyz\u001b[0m"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.094708233Z",
+    "severity": "info",
+    "message": "\u001b[37mRetry window: 1m0s\u001b[0m"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.094709455Z",
+    "severity": "info",
+    "message": ""
+  },
+  {
+    "timestamp": "2026-10-16T17:51:04.241900220Z",
+    "severity": "info",
+    "message": "\u001b[92m[1/1] Healthcheck succeeded!\u001b[0m"
+  }
+]

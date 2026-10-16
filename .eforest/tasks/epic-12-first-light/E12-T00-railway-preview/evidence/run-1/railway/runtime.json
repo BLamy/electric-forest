@@ -1,0 +1,47 @@
+[
+  {
+    "timestamp": "2026-10-16T17:51:02.207296997Z",
+    "severity": "info",
+    "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9f5240ab-7f43-4892-a3e2-458aafcab19e/vol_a8p48m2jtp5oohy5"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.216462549Z",
+    "severity": "info",
+    "message": "Starting Container"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.763999322Z",
+    "severity": "info",
+    "message": "[info] [FileBackedStreamStore] Starting recovery..."
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.764003352Z",
+    "severity": "info",
+    "message": "[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors"
+  },
+  {
+    "timestamp": "2026-10-16T17:51:03.764007552Z",
+    "severity": "info",
+    "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=aba2f41a5141d0c26da5be613e9766078d839d35 port=8080 agents=off integrations=off"
+  },
+  {
+    "timestamp": "2026-10-16T17:59:13.997801324Z",
+    "severity": "info",
+    "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9f5240ab-7f43-4892-a3e2-458aafcab19e/vol_a8p48m2jtp5oohy5"
+  },
+  {
+    "timestamp": "2026-10-16T17:59:16.938526419Z",
+    "severity": "info",
+    "message": "[info] [FileBackedStreamStore] Starting recovery..."
+  },
+  {
+    "timestamp": "2026-10-16T17:59:16.938532978Z",
+    "severity": "info",
+    "message": "[info] [FileBackedStreamStore] Recovery complete: 14 streams, 0 reconciled, 0 errors"
+  },
+  {
+    "timestamp": "2026-10-16T17:59:16.938539408Z",
+    "severity": "info",
+    "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=aba2f41a5141d0c26da5be613e9766078d839d35 port=8080 agents=off integrations=off"
+  }
+]

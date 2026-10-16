@@ -1,0 +1,225 @@
+{
+  "after": {
+    "at": {
+      "local": "2026-10-16T13:57:33.464681-04:00",
+      "utc": "2026-10-16T17:57:33.464681+00:00"
+    },
+    "branch": "codex/railway-hosting",
+    "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+    "tracked_status_porcelain_v1": ""
+  },
+  "audit_directory": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a",
+  "before": {
+    "at": {
+      "local": "2026-10-16T13:45:46.204011-04:00",
+      "utc": "2026-10-16T17:45:46.204011+00:00"
+    },
+    "branch": "codex/railway-hosting",
+    "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+    "tracked_status_porcelain_v1": ""
+  },
+  "candidate_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "commands_in_order": [
+    "pnpm format:check && pnpm lint",
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm build"
+  ],
+  "ended_at": {
+    "local": "2026-10-16T13:57:33.464660-04:00",
+    "utc": "2026-10-16T17:57:33.464660+00:00"
+  },
+  "execution": "Strictly sequential, inherited environment, /bin/zsh -c, no gate timeout or retries.",
+  "gates": [
+    {
+      "after": {
+        "at": {
+          "local": "2026-10-16T13:46:00.476226-04:00",
+          "utc": "2026-10-16T17:46:00.476226+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "before": {
+        "at": {
+          "local": "2026-10-16T13:45:46.313195-04:00",
+          "utc": "2026-10-16T17:45:46.313195+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "command": "pnpm format:check && pnpm lint",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 14.06,
+      "ended_at": {
+        "local": "2026-10-16T13:46:00.476166-04:00",
+        "utc": "2026-10-16T17:46:00.476166+00:00"
+      },
+      "exit_code": 0,
+      "name": "01-format-lint",
+      "normalized_log": {
+        "bytes": 511,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/01-format-lint.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "pid": 79046,
+      "raw_log": {
+        "bytes": 511,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/01-format-lint.raw.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:45:46.415303-04:00",
+        "utc": "2026-10-16T17:45:46.415303+00:00"
+      },
+      "status": "passed"
+    },
+    {
+      "after": {
+        "at": {
+          "local": "2026-10-16T13:46:10.275717-04:00",
+          "utc": "2026-10-16T17:46:10.275717+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "before": {
+        "at": {
+          "local": "2026-10-16T13:46:00.624145-04:00",
+          "utc": "2026-10-16T17:46:00.624145+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "command": "pnpm typecheck",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 9.588,
+      "ended_at": {
+        "local": "2026-10-16T13:46:10.275670-04:00",
+        "utc": "2026-10-16T17:46:10.275670+00:00"
+      },
+      "exit_code": 0,
+      "name": "02-typecheck",
+      "normalized_log": {
+        "bytes": 161,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/02-typecheck.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "pid": 79128,
+      "raw_log": {
+        "bytes": 161,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/02-typecheck.raw.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:46:00.687617-04:00",
+        "utc": "2026-10-16T17:46:00.687617+00:00"
+      },
+      "status": "passed"
+    },
+    {
+      "after": {
+        "at": {
+          "local": "2026-10-16T13:57:15.806722-04:00",
+          "utc": "2026-10-16T17:57:15.806722+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "before": {
+        "at": {
+          "local": "2026-10-16T13:46:10.356984-04:00",
+          "utc": "2026-10-16T17:46:10.356984+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "command": "pnpm test",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 665.353,
+      "ended_at": {
+        "local": "2026-10-16T13:57:15.806563-04:00",
+        "utc": "2026-10-16T17:57:15.806563+00:00"
+      },
+      "exit_code": 0,
+      "name": "03-test",
+      "normalized_log": {
+        "bytes": 107139,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/03-test.log",
+        "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418"
+      },
+      "pid": 79179,
+      "raw_log": {
+        "bytes": 107139,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/03-test.raw.log",
+        "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:46:10.443548-04:00",
+        "utc": "2026-10-16T17:46:10.443548+00:00"
+      },
+      "status": "passed"
+    },
+    {
+      "after": {
+        "at": {
+          "local": "2026-10-16T13:57:33.386505-04:00",
+          "utc": "2026-10-16T17:57:33.386505+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "before": {
+        "at": {
+          "local": "2026-10-16T13:57:15.901953-04:00",
+          "utc": "2026-10-16T17:57:15.901953+00:00"
+        },
+        "branch": "codex/railway-hosting",
+        "head_oid": "aba2f41a5141d0c26da5be613e9766078d839d35",
+        "tracked_status_porcelain_v1": ""
+      },
+      "command": "pnpm build",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 17.41,
+      "ended_at": {
+        "local": "2026-10-16T13:57:33.386343-04:00",
+        "utc": "2026-10-16T17:57:33.386343+00:00"
+      },
+      "exit_code": 0,
+      "name": "04-build",
+      "normalized_log": {
+        "bytes": 105647,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/04-build.log",
+        "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d"
+      },
+      "pid": 82554,
+      "raw_log": {
+        "bytes": 105647,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/gate-audit-aba2f41a/04-build.raw.log",
+        "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d"
+      },
+      "started_at": {
+        "local": "2026-10-16T13:57:15.975632-04:00",
+        "utc": "2026-10-16T17:57:15.975632+00:00"
+      },
+      "status": "passed"
+    }
+  ],
+  "log_normalization": "UTF-8 replacement decoding; strip ANSI OSC and CSI escapes; CRLF and CR to LF. Raw logs retained.",
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "role": "fresh-read-only-gate-auditor",
+  "schema": "eforest-gate-audit-v1",
+  "started_at": {
+    "local": "2026-10-16T13:45:46.203975-04:00",
+    "utc": "2026-10-16T17:45:46.203975+00:00"
+  },
+  "status": "passed",
+  "task": "E12-T00"
+}

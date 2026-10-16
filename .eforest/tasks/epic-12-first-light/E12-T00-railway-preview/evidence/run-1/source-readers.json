@@ -1,0 +1,18 @@
+{
+  "command": "git show 11931416c47ed7d7f4e9891b1bd754e70302149e:packages/identity/scripts/work-queue-snapshot.mjs | node --input-type=module - --attester 11931416c47ed7d7f4e9891b1bd754e70302149e --source aba2f41a5141d0c26da5be613e9766078d839d35 --base 11931416c47ed7d7f4e9891b1bd754e70302149e --task E12-T00",
+  "independentReaders": [
+    "preview_source_reader_a",
+    "preview_source_reader_b"
+  ],
+  "readType": "new independent tool reads of committed source, not cached prior source output",
+  "snapshot": "source-readback.json",
+  "stdoutSha256": "57710493706d0bfb2c68624ccb116f59a26bd19aec0f417e2ab6c1396cadec5b",
+  "matchingFields": {
+    "sourceCommit": "aba2f41a5141d0c26da5be613e9766078d839d35",
+    "taskDigest": "14d6aaa7d613262b058757fe802d4d6177a4cf75ce0c5a5c83cc66b2c911b77d",
+    "ledgerDigest": "b78e83d42fddb4e898888ee5d1092892387d9c0e3acffe3f1b2e273ea6deb05b",
+    "controlDigest": "64cb3dd424a3f70c1b084f2c56db51c3ab935d1d1b3fd78e93e071e819f7e967",
+    "runCount": 0,
+    "runCeiling": 10
+  }
+}
