@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "/bin/zsh",
+    "-f",
+    "-c",
+    "pnpm build"
+  ],
+  "command": "pnpm build",
+  "commandPid": 63052,
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "envOverrides": {
+    "GIT_OPTIONAL_LOCKS": "0"
+  },
+  "gate": 4,
+  "monotonicStartNs": 26625958,
+  "removedEnvironmentNames": [],
+  "runnerPid": 63051,
+  "runnerScript": {
+    "bytes": 3620,
+    "path": "run-gate.py",
+    "sha256": "16be71791cea84167bf6ab5852fcf4bb22faf8a31c2bc91c1d164d0a1e65fb0c"
+  },
+  "sourceFreezeScript": {
+    "bytes": 8837,
+    "path": "source-freeze.py",
+    "sha256": "276609e0b41ca0b42c0b3f8dc80305111acfd2b8991009c30f97cfa0a62613e1"
+  },
+  "utcStart": "2026-10-17T00:15:01.020519+00:00"
+}

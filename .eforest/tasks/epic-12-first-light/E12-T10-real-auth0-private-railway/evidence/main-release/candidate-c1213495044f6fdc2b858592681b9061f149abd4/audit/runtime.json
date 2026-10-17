@@ -1,0 +1,58 @@
+{
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "durationSeconds": 0.015223625,
+      "exitCode": 0,
+      "matchesExpected": true,
+      "observed": "v24.20.0",
+      "stderr": {
+        "bytes": 0,
+        "path": "node-version.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 9,
+        "path": "node-version.stdout.log",
+        "sha256": "b67d0ced059f9313d861ddbbe734d2d1f9219106a9e036ae6d88407afa0846e6"
+      },
+      "utcEnd": "2026-10-17T00:01:11.467425+00:00",
+      "utcStart": "2026-10-17T00:01:11.452224+00:00"
+    },
+    {
+      "command": [
+        "pnpm",
+        "--version"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "durationSeconds": 0.271540125,
+      "exitCode": 0,
+      "matchesExpected": true,
+      "observed": "10.15.0",
+      "stderr": {
+        "bytes": 0,
+        "path": "pnpm-version.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 8,
+        "path": "pnpm-version.stdout.log",
+        "sha256": "9870c4dadae90a6a834e61f250fb36fd9dfe1f8353a9ea3a7a75a4176aca3b3e"
+      },
+      "utcEnd": "2026-10-17T00:01:11.739253+00:00",
+      "utcStart": "2026-10-17T00:01:11.467735+00:00"
+    }
+  ],
+  "envOverrides": {
+    "GIT_OPTIONAL_LOCKS": "0"
+  },
+  "expectedNode": "v24.20.0",
+  "expectedPnpm": "10.15.0",
+  "ok": true,
+  "removedEnvironmentNames": [],
+  "utc": "2026-10-17T00:01:11.451887+00:00"
+}

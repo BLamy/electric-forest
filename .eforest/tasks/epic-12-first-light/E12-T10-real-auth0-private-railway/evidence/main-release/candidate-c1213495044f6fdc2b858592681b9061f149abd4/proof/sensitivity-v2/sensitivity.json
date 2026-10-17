@@ -1,0 +1,20 @@
+{
+  "kind": "expected-negative-fixture-replay-sensitivity",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+    "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/replay_final.py",
+    "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity-v2",
+    "--out",
+    "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity-v2/unexpected-success.json"
+  ],
+  "mutatedPath": "browser/two-profiles-live.jsonl",
+  "originalSha256": "6c25a8dc2d20d922a8d4da8b1a1f9eeee4331a7cbeb63efa82e9cb8e8f24cdab",
+  "mutatedSha256": "131d8c9b488fe47c37dbcd9a602c0d0e803152e7dbb9926890df99a6a918a9cd",
+  "changedByteCount": 1,
+  "mutation": "one semantic character in one synthetic chat event; JSON remains valid; recorded receipt unchanged",
+  "exitCode": 1,
+  "rejected": true,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "e06547b888a97e3a77450e4341fc39ae1b3b8a09c98255fe66f63e9bfd5213db",
+  "productionDataUsed": false
+}

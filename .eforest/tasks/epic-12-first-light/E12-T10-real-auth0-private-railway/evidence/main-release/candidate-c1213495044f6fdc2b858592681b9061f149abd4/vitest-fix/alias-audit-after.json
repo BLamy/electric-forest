@@ -1,0 +1,187 @@
+{
+  "currentAliases": [
+    "@eforest/client",
+    "@eforest/evidence",
+    "@eforest/identity",
+    "@eforest/issues",
+    "@eforest/loop",
+    "@eforest/meadow",
+    "@eforest/platform",
+    "@eforest/pr",
+    "@eforest/protocol",
+    "@eforest/protocol/fixtures/reducer",
+    "@eforest/protocol/offset-allocation",
+    "@eforest/reducers",
+    "@eforest/server",
+    "@eforest/streamfs",
+    "@eforest/streamfs/worktree-node",
+    "@eforest/tasks",
+    "@eforest/tasks/sync-node",
+    "@eforest/web-hooks",
+    "@eforest/workspace"
+  ],
+  "missingAliases": {
+    "@eforest/browser-verify": [
+      "apps/web/test/branch-switcher.pw.ts",
+      "apps/web/test/capstone-e5.pw.ts",
+      "apps/web/test/e4-t12-capstone.pw.ts",
+      "apps/web/test/evidence.pw.ts",
+      "apps/web/test/file-tree.pw.ts",
+      "apps/web/test/file-viewer.pw.ts",
+      "apps/web/test/history-event-log.pw.ts",
+      "apps/web/test/issues.pw.ts",
+      "apps/web/test/labels.pw.ts",
+      "apps/web/test/prs.pw.ts",
+      "apps/web/test/reading-room-capstone.pw.ts",
+      "apps/web/test/registry-live.pw.ts",
+      "apps/web/test/repo-home.pw.ts",
+      "apps/web/test/shell.pw.ts",
+      "apps/web/test/stream-reducer.pw.ts",
+      "apps/web/test/visual-capstone.pw.ts",
+      "apps/web/test/wiki.pw.ts"
+    ]
+  },
+  "addedAliases": {
+    "@eforest/loop": "packages/loop/src/index.ts",
+    "@eforest/meadow": "packages/meadow/src/index.ts",
+    "@eforest/web-hooks": "packages/web-hooks/src/index.ts"
+  },
+  "addedTargetsExist": true,
+  "workspaceExports": {
+    "@eforest/browser-verify": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/cli": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/client": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/evidence": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/identity": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/issues": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/loop": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/meadow": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/platform": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/pr": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/protocol": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./fixtures/reducer": {
+        "types": "./dist/fixtures/reducer.d.ts",
+        "default": "./dist/fixtures/reducer.js"
+      },
+      "./offset-allocation": {
+        "types": "./dist/src/offset-allocation.d.ts",
+        "default": "./dist/src/offset-allocation.js"
+      }
+    },
+    "@eforest/reducers": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/seed": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "@eforest/server": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/streamfs": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./worktree-node": {
+        "types": "./dist/src/worktree-node.d.ts",
+        "default": "./dist/src/worktree-node.js"
+      }
+    },
+    "@eforest/sync-harness": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/tasks": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./disk": {
+        "types": "./dist/io/disk.d.ts",
+        "default": "./dist/io/disk.js"
+      },
+      "./sync-node": {
+        "types": "./dist/io/sync-node.d.ts",
+        "default": "./dist/io/sync-node.js"
+      }
+    },
+    "@eforest/web-hooks": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "@eforest/workspace": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    }
+  },
+  "remainingUnmappedBoundary": "All @eforest/browser-verify importers are apps/web/test/*.pw.ts, outside the default Vitest include apps/web/src/**/*.test.ts and packages/**/*.test.ts."
+}

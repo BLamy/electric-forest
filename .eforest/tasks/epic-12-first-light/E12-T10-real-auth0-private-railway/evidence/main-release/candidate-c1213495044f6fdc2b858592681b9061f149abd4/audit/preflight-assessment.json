@@ -1,0 +1,192 @@
+{
+  "allRequiredSourceFreezeChecksPass": true,
+  "auditDirectoryIgnoreCheck": {
+    "command": [
+      "git",
+      "--no-optional-locks",
+      "check-ignore",
+      ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-c1213495"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+    "durationSeconds": 0.013650916,
+    "exitCode": 0,
+    "stderr": {
+      "bytes": 0,
+      "path": "preflight.ignored.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout": {
+      "bytes": 103,
+      "path": "preflight.ignored.stdout.log",
+      "sha256": "50ccbe60a4606c17b3682d8677e62ca993a9b777d0fb4052b73cb76c016e838b"
+    },
+    "utcEnd": "2026-10-17T00:01:13.734102+00:00",
+    "utcStart": "2026-10-17T00:01:13.720490+00:00"
+  },
+  "auditDirectoryIgnored": true,
+  "cleanTrackedChecks": [
+    {
+      "clean": true,
+      "command": [
+        "git",
+        "--no-optional-locks",
+        "diff-files",
+        "--raw",
+        "-z",
+        "--ignore-submodules=none"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "durationSeconds": 0.033568916,
+      "exitCode": 0,
+      "kind": "worktree",
+      "repo": "root",
+      "stderr": {
+        "bytes": 0,
+        "path": "preflight.root.worktree.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "preflight.root.worktree.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "utcEnd": "2026-10-17T00:01:13.672207+00:00",
+      "utcStart": "2026-10-17T00:01:13.638663+00:00"
+    },
+    {
+      "clean": true,
+      "command": [
+        "git",
+        "--no-optional-locks",
+        "diff-index",
+        "--cached",
+        "--raw",
+        "-z",
+        "HEAD",
+        "--"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "durationSeconds": 0.013754708,
+      "exitCode": 0,
+      "kind": "index",
+      "repo": "root",
+      "stderr": {
+        "bytes": 0,
+        "path": "preflight.root.index.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "preflight.root.index.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "utcEnd": "2026-10-17T00:01:13.686210+00:00",
+      "utcStart": "2026-10-17T00:01:13.672472+00:00"
+    },
+    {
+      "clean": true,
+      "command": [
+        "git",
+        "--no-optional-locks",
+        "diff-files",
+        "--raw",
+        "-z",
+        "--ignore-submodules=none"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/vendor/emulate",
+      "durationSeconds": 0.016946334,
+      "exitCode": 0,
+      "kind": "worktree",
+      "repo": "emulate",
+      "stderr": {
+        "bytes": 0,
+        "path": "preflight.emulate.worktree.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "preflight.emulate.worktree.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "utcEnd": "2026-10-17T00:01:13.703383+00:00",
+      "utcStart": "2026-10-17T00:01:13.686461+00:00"
+    },
+    {
+      "clean": true,
+      "command": [
+        "git",
+        "--no-optional-locks",
+        "diff-index",
+        "--cached",
+        "--raw",
+        "-z",
+        "HEAD",
+        "--"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/vendor/emulate",
+      "durationSeconds": 0.016334209,
+      "exitCode": 0,
+      "kind": "index",
+      "repo": "emulate",
+      "stderr": {
+        "bytes": 0,
+        "path": "preflight.emulate.index.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "preflight.emulate.index.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "utcEnd": "2026-10-17T00:01:13.720031+00:00",
+      "utcStart": "2026-10-17T00:01:13.703720+00:00"
+    }
+  ],
+  "initialSnapshot": "before-gates/snapshot.json",
+  "initialSnapshotSha256": "c745cb33f4bfdcbefdceb744cc77f31558b640391a2f7888dc10cfb3a7c84b24",
+  "physicalIndexPreflightReadback": [
+    {
+      "bytes": 80044,
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.git/modules/vendor/emulate/index",
+      "repo": "emulate",
+      "sha256": "e94218bde1a96425fd35b076e780ab052c74f604cbfc2551a1168e07aac3b277",
+      "unchanged": true
+    },
+    {
+      "bytes": 480852,
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.git/index",
+      "repo": "root",
+      "sha256": "5edbf1192e3e490061e9aa35c12e7e265bba7207e936b15804901bdd2e1646cf",
+      "unchanged": true
+    }
+  ],
+  "runtimePass": true,
+  "sourceCheck": {
+    "command": [
+      "python3",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-c1213495/source-freeze.py",
+      "before-gates"
+    ],
+    "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+    "durationSeconds": 1.898100791,
+    "exitCode": 0,
+    "stderr": {
+      "bytes": 0,
+      "path": "preflight.source-check.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout": {
+      "bytes": 488,
+      "path": "preflight.source-check.stdout.log",
+      "sha256": "9d90d89fef818742b57e0b15942021591e87cabc710975b814115b576ee7ef60"
+    },
+    "utcEnd": "2026-10-17T00:01:13.638298+00:00",
+    "utcStart": "2026-10-17T00:01:11.740165+00:00"
+  },
+  "sourceCheckExitCode": 0,
+  "untrackedObservation": {
+    "action": "left untouched; excluded from clean-tracked constraint by assignment",
+    "path": "critic-work/e7-t06-skeptic.test.ts"
+  },
+  "utc": "2026-10-17T00:01:13.744902+00:00"
+}

@@ -1,0 +1,9 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada@e12-t10.fixture.invalid","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"t0VLJz1tkx_Utz3akMTldhEPEeFVPfkZ","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000002","payload":{"email":"grace@e12-t10.fixture.invalid","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"sessionId":"Ua_YIQhxUI6PzK1bmRHKhf30EDQ-SF1M","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000004","payload":{"sessionId":"z90S_lVaKuFe2Hv1AiOcunjrUsD7LYft","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000005","payload":{"grantId":"grant_YT3BAfubvlUACMrRpIK5WNOf","issuedAt":1800000000000,"kind":"web-session-mint","name":"browser-fixture-grant","scopes":["repo:write"],"sub":"auth0|e12-t10-fixture-ada","tokenHash":"e54287e7857422d8c1a173d795235e8f4f0bc46eec3da6f595963314df85b023","tokenKind":"web-mint","v":2},"ts":1800000000000,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000006","payload":{"grantId":"grant_YT3BAfubvlUACMrRpIK5WNOf","revokedAt":1800000000000,"v":2},"ts":1800000000000,"type":"identity.grant.revoked"}
+{"offset":"0000000000000000_0000000000000007","payload":{"sessionId":"t0VLJz1tkx_Utz3akMTldhEPEeFVPfkZ","v":1},"ts":1800000000000,"type":"identity.session.ended"}
+{"offset":"0000000000000000_0000000000000008","payload":{"sessionId":"NUCmWvYcCA5oIaw2Cl9YmZYU7oymhOXE","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}

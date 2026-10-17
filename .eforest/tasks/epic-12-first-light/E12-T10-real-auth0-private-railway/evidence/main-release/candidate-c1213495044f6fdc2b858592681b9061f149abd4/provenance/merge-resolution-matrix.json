@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "integrationCommit": "06e18df04f9db6112a425f050587c6d61588347c",
+  "candidateCommit": "56fb7b0b3b9398c39c9baf8e93142fae7df74810",
+  "entries": [
+    {
+      "path": ".eforest/tasks/QUEUE.md",
+      "intent": "Hosting T10 gate and main earned E6 lifecycle.",
+      "resolution": "Regenerated unchanged queue builder; T01\u2013T04 verified, unfinished T05/T07 pending with explicit Context deferral preserving all original logs; T10 sole active gate.",
+      "candidateBlob": "48d421a8f6d45495984a97b6aefacd422d7dede1",
+      "hostingBlob": "ed680555f1d2099c004eaaacceaf63ce56cf0189",
+      "mainBlob": "ec141ebcea7752e94c58a2ef4d08d8a35dea2f0b"
+    },
+    {
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/readme.md",
+      "intent": "Main earned verified proofs and hosting future roadmap guidance.",
+      "resolution": "Main original status/dependencies and byte-identical Verification-log suffix retained; hosting future guidance moved under Context as H3 to conform to frozen six-section syntax.",
+      "candidateBlob": "3b87649b6ad4172706541143f0e98f6624cecdd6",
+      "hostingBlob": "5f8a3e8ce7580947879235a747b7027e43b946a4",
+      "mainBlob": "d229b04851b32a24cf002d9c84f120ae3c83663d"
+    },
+    {
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T02-task-folder-contract/readme.md",
+      "intent": "Main earned verified proofs and hosting future roadmap guidance.",
+      "resolution": "Main original status/dependencies and byte-identical Verification-log suffix retained; hosting future guidance moved under Context as H3 to conform to frozen six-section syntax.",
+      "candidateBlob": "60576d51691592d0bfe60ed236700d308ab5d9c0",
+      "hostingBlob": "1ae705a65f2adcaff8e53855c2a728778862d7c6",
+      "mainBlob": "cca5525f7b2239e0b73b74d695ee1acba8aaca57"
+    },
+    {
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T03-project-state-machine/readme.md",
+      "intent": "Main earned verified proofs and hosting future roadmap guidance.",
+      "resolution": "Main original status/dependencies and byte-identical Verification-log suffix retained; hosting future guidance moved under Context as H3 to conform to frozen six-section syntax.",
+      "candidateBlob": "4eba068335b188b081ae895fb3b91b25a20b33ab",
+      "hostingBlob": "265926d6d4a7d11e33639211c693c353e5fda6f0",
+      "mainBlob": "e7e22eefe9f0e03f3d26c221dc438658c21fbd65"
+    },
+    {
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T07-agent-run-protocol/readme.md",
+      "intent": "Main unverified implementation claim and hosting human priority.",
+      "resolution": "Full main original log retained; administrative pending deferral from implemented documented under Context and history-import receipt. No prior finding/run reset or parser acceptance change.",
+      "candidateBlob": "9907f4fc6d441d27d300d2581e11e96f651c2f31",
+      "hostingBlob": "0e91274f8551a739033dc2c828c70c67da55c33a",
+      "mainBlob": "cefc269487f8c0ef08bd1afa8ed0f6b51c75e370"
+    },
+    {
+      "path": "apps/web/package.json",
+      "intent": "Main older Docstream/UI release versus hosting complete newer UI migration.",
+      "resolution": "Keep hosting Docstream/editor1.5.0 and UI2.0.0; E6 workspace dependencies remain on their new importers.",
+      "candidateBlob": "25f0b1b273163e8f751d81837a166bdecd30a74f",
+      "hostingBlob": "25f0b1b273163e8f751d81837a166bdecd30a74f",
+      "mainBlob": "a99ca6e779b18cd72db8bf0227928208d72cc2f4"
+    },
+    {
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "intent": "Hosting migrated shell/personal account/agent-off banner and main registry sharing.",
+      "resolution": "Retain migrated shell; port shared RegistryProvider with centralized explicit refresh, single10s idle registry tail, and mount channel/search sheets only while open.",
+      "candidateBlob": "f454a2822441795efabe603648f54b5240b1b571",
+      "hostingBlob": "02356056f373f8c175c2c1a55787ce929c910b70",
+      "mainBlob": "42b290dbfef4320a1c1f4f14322ce81abe8df312"
+    },
+    {
+      "path": "apps/web/src/components/trees/RepositoryTree.tsx",
+      "intent": "Both branches already fixed exact-optional props; hosting migrated Pierre tree.",
+      "resolution": "Retain migrated typed adapter; both optional-property fixes remain equivalent.",
+      "candidateBlob": "e79918593c75b82ff2c6eae70d97fcca200a0565",
+      "hostingBlob": "e79918593c75b82ff2c6eae70d97fcca200a0565",
+      "mainBlob": "989ccffdba023d74a6d92f1e34acfeededfb57af"
+    },
+    {
+      "path": "apps/web/src/prs/usePrs.ts",
+      "intent": "Hosting bounded/shared follows and main cached whoami.",
+      "resolution": "Both LIVE_FOLLOW and getWhoami imports/behavior retained.",
+      "candidateBlob": "0c7bb38127f07ae95e8a812635b75b1868fca4d5",
+      "hostingBlob": "e310c72bfd66e3f70dd1d359ff8c9e160146c5e3",
+      "mainBlob": "dcf30453e61cbfb26484f8286352397f94f0edc2"
+    },
+    {
+      "path": "apps/web/src/route-pages.tsx",
+      "intent": "Hosting migrated routes/personal scopes and main shared registry plus exact org/repo keyboard search.",
+      "resolution": "Retain migrated responsive code/PR/issue/history pages and personal scope; use shared registry projection/refresh; exact org/repo search resolves first with filter-result fallback.",
+      "candidateBlob": "f4c6d06cbdce5595b7a5b088b0318d17aa39062e",
+      "hostingBlob": "f00acb3d32ea49f259c9dca0dd5ea5fa0e4a4fa9",
+      "mainBlob": "0ec20b9cef75b7b66080409349dde4a1fecc47c0"
+    },
+    {
+      "path": "apps/web/src/routes.tsx",
+      "intent": "Hosting responsive ForestShell/preload/private-build paths and main proof availability/lazy legacy shell.",
+      "resolution": "Retain ForestShell/preload/hosted guard; port server-advertised proof marker gate; no unused legacy shell resurrection.",
+      "candidateBlob": "dd42ed903ce69e83672ea104aba70161812a5332",
+      "hostingBlob": "d50689f64aeccea29f598d131321234f4a71f152",
+      "mainBlob": "dcf3d0701af346109dad7ee0936eda6cf1d309c9"
+    },
+    {
+      "path": "apps/web/src/site/Landing.tsx",
+      "intent": "Hosting accessible decorative arrows and main explicit login/GitHub labels.",
+      "resolution": "Retain both hidden decorative arrow semantics and explicit accessible names.",
+      "candidateBlob": "917f2c5a516ac05be477e26463d745c4d277afcd",
+      "hostingBlob": "8db9ca5115cf467225ac64d1e716ea03316ffe59",
+      "mainBlob": "26915bd1889783fa743b3390f67bfe8da0fd47d6"
+    },
+    {
+      "path": "apps/web/src/site/SiteShell.tsx",
+      "intent": "Hosting accessible decorative arrows and main explicit login/GitHub labels.",
+      "resolution": "Retain both hidden decorative arrow semantics and explicit accessible names.",
+      "candidateBlob": "9b6cc5953119d3e4894d4f08cc09ad183cde5208",
+      "hostingBlob": "13c0696f32ef06b2deb7f4ff1e5e2189ac9aac0b",
+      "mainBlob": "19c8fe2e788133561d4bd9d4e83afdc445ca8dbe"
+    },
+    {
+      "path": "apps/web/src/prs/RepoChrome.tsx",
+      "intent": "Main changed legacy shell/styles deleted by hosting migration.",
+      "resolution": "Keep deleted; live navigation and replacement block styles provide the reachable migrated surface. Also delete newly imported dead MobileRepositoryRoute.tsx rather than resurrect deprecated dependencies.",
+      "candidateBlob": null,
+      "hostingBlob": null,
+      "mainBlob": "476690c9e0ffc698ec06d5128cebf36841a8ac53"
+    },
+    {
+      "path": "apps/web/src/styles.css",
+      "intent": "Main changed legacy shell/styles deleted by hosting migration.",
+      "resolution": "Keep deleted; live navigation and replacement block styles provide the reachable migrated surface. Also delete newly imported dead MobileRepositoryRoute.tsx rather than resurrect deprecated dependencies.",
+      "candidateBlob": null,
+      "hostingBlob": null,
+      "mainBlob": "2e6a0986c0be6f4273a2da59603c12aeeb8e089f"
+    },
+    {
+      "path": "apps/web/src/styles/product-shell.css",
+      "intent": "Main changed legacy shell/styles deleted by hosting migration.",
+      "resolution": "Keep deleted; live navigation and replacement block styles provide the reachable migrated surface. Also delete newly imported dead MobileRepositoryRoute.tsx rather than resurrect deprecated dependencies.",
+      "candidateBlob": null,
+      "hostingBlob": null,
+      "mainBlob": "e9fc3f97ae7116fb6de11054dedb2aee925c294f"
+    },
+    {
+      "path": "packages/platform/src/auth/routes.ts",
+      "intent": "Hosted canonical-origin/PKCE/cookie-mutation boundaries and main local-emulator proxy plus error UX.",
+      "resolution": "Retain explicit hosted policy and independent local oidcProxyTarget/publicOrigin options, cached proof seam, and HTML retry UX; hosted configuration continues rejecting proxy/inherited secrets.",
+      "candidateBlob": "3f7c6bf4fcd1632d57233b4080b5c0a4d4878125",
+      "hostingBlob": "bdb4e0a5b61b862de101b9f77f4fc84d7dfabf42",
+      "mainBlob": "7d68e653bbf1c16b345a02b123c6ad46bbbc6268"
+    },
+    {
+      "path": "packages/platform/src/gateway.ts",
+      "intent": "Main task/project/lease protocol and hosting grant-safe private gateway plus legacy chat agent-run logs.",
+      "resolution": "Retain all task/project validators/fences/queue routes, both first-event stream creation paths, legacy read/follow and new lease/run protocol doors with explicit routing; no dropped shared switch arm.",
+      "candidateBlob": "de0478f586395cfe398f0495ab8c3d45f4474f19",
+      "hostingBlob": "4c7764dff3a5acb41958a4a243a9a0c708843972",
+      "mainBlob": "567a11680bcadcc1a21dddecc74bfb1af2c4e228"
+    },
+    {
+      "path": "packages/platform/src/production.ts",
+      "intent": "Main coordinator composition and hosting responder/capability/private bearer composition.",
+      "resolution": "Create coordinator and pass it to gateway; retain hosted opaque-only/device policy, existing responder opt-in and grant-recovery callback closure with one const gateway.",
+      "candidateBlob": "1d3f4ab1ce538e48106674232cfabf91badd898c",
+      "hostingBlob": "74ca3b24ca64d2d395a46b76b1638f3270790481",
+      "mainBlob": "ead354b32a17e44965e074c7df675b5ea7025cde"
+    },
+    {
+      "path": "packages/platform/src/route-topology.ts",
+      "intent": "Both run APIs share prefix.",
+      "resolution": "Keep exact and prefix explicit topology; gateway dispatches protocol leases/runs or legacy read/follow handler.",
+      "candidateBlob": "29284c5863aac8326b935f650c58f9cda2cf5e38",
+      "hostingBlob": "40d0a8e0df362cc18a0a3ce7d171844f91b1ef8a",
+      "mainBlob": "29284c5863aac8326b935f650c58f9cda2cf5e38"
+    },
+    {
+      "path": "packages/platform/src/web/spa.ts",
+      "intent": "Hosting private deep-link login return/assets and main optional harness proof marker.",
+      "resolution": "Retain both option fields, no-store shell/public hashed-asset caching, proof marker only when installed and authenticated.",
+      "candidateBlob": "c5c23e3d86cc0498816ab4765b1750b5b5effcba",
+      "hostingBlob": "3448db100af880bab4de4aca41d474d8593fbcdf",
+      "mainBlob": "010f8c7ade7f334be86ebc4e548f79949ced4a77"
+    },
+    {
+      "path": "packages/platform/test/agent-runs.test.ts",
+      "intent": "Add/add independent legacy responder and E6 coordinator suites.",
+      "resolution": "Keep full hosting suite at original path and full main suite byte-identical at agent-run-protocol.test.ts; E6-T07 Makefile target now executes both.",
+      "candidateBlob": "6ed11bb387c15ec3b26c3f29c0e8417aeb9a65d9",
+      "hostingBlob": "6ed11bb387c15ec3b26c3f29c0e8417aeb9a65d9",
+      "mainBlob": "78689971a34b353b7cab69aa0241592c65d0c721"
+    },
+    {
+      "path": "packages/reducers/src/index.ts",
+      "intent": "Hosting chat run reducer and main tasks reducer.",
+      "resolution": "Import/register/export both reducer families.",
+      "candidateBlob": "edbfd68708dac3d34ffa93aad21c6b5585644207",
+      "hostingBlob": "3c844c546e504159c827ddf6d14df6cf4f3a88d0",
+      "mainBlob": "ba4d76d923f683c5868ded6e656d2a2450fdd322"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "intent": "Hosting newer pinned UI dependencies and main E6 packages/parser closure.",
+      "resolution": "Preserve all hosting existing lock records, add loop/tasks workspace importers and exact frozen main mdast-util-from-markdown2.0.3 dependency closure; frozen install passes; no incidental latest-version resolution.",
+      "candidateBlob": "e57673614e947ff3ddb99417d40eb3330a758975",
+      "hostingBlob": "880cd9166af1bb23e93e41b61e1b2023cb30eda2",
+      "mainBlob": "225bf0971f9bf003172cce35275d228612b76f28"
+    },
+    {
+      "path": "tools/verify/cold_clone_targets.txt",
+      "intent": "Each branch added verify targets.",
+      "resolution": "Union E6-T01/02/03/04/05/07 with E12-T00/T10; no target removed.",
+      "candidateBlob": "fae9ddd2c5de891edebfaad41f5e56dde6cda457",
+      "hostingBlob": "35fd1fb591bdb9798104037ca9b08ac62791fa07",
+      "mainBlob": "f4386dd37db451861c46ef9ef0cc1dbd5947d48d"
+    },
+    {
+      "path": "packages/cli/src/replay-command.ts",
+      "intent": "Automatic merge dropped moved shared declarations.",
+      "resolution": "Restore DigestKind and STREAMFS_REDUCER while preserving main project/v1 fallback and hosting worktree/tree digests.",
+      "candidateBlob": "cea1174832f934ddb7ea7ed465abe86569af1510",
+      "hostingBlob": "fabc6d2e1a36636adc83083cc457a4de9c5b60f9",
+      "mainBlob": "ea1fe3a24a4c1e1d65054fd099f0e229bed81896"
+    }
+  ]
+}

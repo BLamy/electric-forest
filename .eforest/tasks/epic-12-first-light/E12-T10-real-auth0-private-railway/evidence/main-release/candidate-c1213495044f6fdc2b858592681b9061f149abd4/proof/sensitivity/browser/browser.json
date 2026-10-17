@@ -1,0 +1,2878 @@
+{
+  "task": "E12-T10",
+  "journey": "E12-T10 Auth0 login and private workspace",
+  "proof": "dedicated-fixture browser fallback; not actual Auth0 operator",
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "origin": "https://127.0.0.1:50709",
+  "timeline": [
+    {
+      "name": "ada-dedicated-issuer-before-login",
+      "ms": 536,
+      "target": "/settings/cli-tokens",
+      "issuer": "https://127.0.0.1:50708/",
+      "productionCredentialsUsed": false
+    },
+    {
+      "name": "ada-PKCE-callback-and-local-return",
+      "ms": 821,
+      "target": "/settings/cli-tokens",
+      "sessionCookie": {
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "Lax",
+        "path": "/",
+        "valueRetained": false
+      }
+    },
+    {
+      "name": "ada-login-deep-return",
+      "ms": 1381,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-login-deep-return.jsonl",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "digest": "ad14837f225ef2566cdbf634cadde28b76363da9080d125b8f9d053f7bd57282",
+      "eventCount": 2
+    },
+    {
+      "name": "browser-ada",
+      "ms": 2448,
+      "defaultAgentsSeeded": false
+    },
+    {
+      "name": "ada-organization",
+      "ms": 2880,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-organization.jsonl",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "digest": "ad14837f225ef2566cdbf634cadde28b76363da9080d125b8f9d053f7bd57282",
+      "eventCount": 2
+    },
+    {
+      "name": "grace-dedicated-issuer-before-login",
+      "ms": 3080,
+      "target": "/settings/cli-tokens",
+      "issuer": "https://127.0.0.1:50708/",
+      "productionCredentialsUsed": false
+    },
+    {
+      "name": "grace-PKCE-callback-and-local-return",
+      "ms": 3437,
+      "target": "/settings/cli-tokens",
+      "sessionCookie": {
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "Lax",
+        "path": "/",
+        "valueRetained": false
+      }
+    },
+    {
+      "name": "browser-grace",
+      "ms": 4451,
+      "defaultAgentsSeeded": false
+    },
+    {
+      "name": "grace-organization",
+      "ms": 5224,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/grace-organization.jsonl",
+      "transportCursor": "0000000000000000_0000000000000798",
+      "lastApplicationOffset": "0000000000000000_0000000000000003",
+      "digest": "acfdfbfe340dd01f734451305aa770c3b54698eaee89b2eaf934ee7c44e25c5e",
+      "eventCount": 4
+    },
+    {
+      "name": "ada-dedicated-issuer-before-login",
+      "ms": 6459,
+      "target": "/chat/browser-ada/welcome",
+      "issuer": "https://127.0.0.1:50708/",
+      "productionCredentialsUsed": false
+    },
+    {
+      "name": "ada-PKCE-callback-and-local-return",
+      "ms": 7378,
+      "target": "/chat/browser-ada/welcome",
+      "sessionCookie": {
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "Lax",
+        "path": "/",
+        "valueRetained": false
+      }
+    },
+    {
+      "name": "two-profiles-live",
+      "ms": 9538,
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/two-profiles-live.jsonl",
+      "offset": "0000000000000000_0000000000000000",
+      "digest": "35c34e311964c1f2a8c5af02ef5dfdc9b6e2e3517f7d1da100a333dcf45cb5b9",
+      "eventCount": 1,
+      "viewers": 2
+    },
+    {
+      "name": "private-read-refused-to-other-tenant-and-anonymous",
+      "ms": 9875,
+      "checks": [
+        {
+          "name": "other-tenant",
+          "path": "/api/chat/browser-ada/welcome",
+          "status": 404
+        },
+        {
+          "name": "anonymous",
+          "path": "/api/chat/browser-ada/welcome",
+          "status": 404
+        }
+      ]
+    },
+    {
+      "name": "witness-disconnected-with-session-retained",
+      "ms": 10026
+    },
+    {
+      "name": "witness-reconnected",
+      "ms": 13291,
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/witness-reconnected.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 2
+    },
+    {
+      "name": "disabled-agent-capability-and-human-member-dialog",
+      "ms": 14175
+    },
+    {
+      "name": "browser-grant-minted",
+      "ms": 15411,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-grant-minted.jsonl",
+      "transportCursor": "0000000000000000_0000000000001407",
+      "lastApplicationOffset": "0000000000000000_0000000000000005",
+      "digest": "dec47a4a77263029782440d2d4c7da58429671e33eac8fc20e200ec7e243ce98",
+      "eventCount": 6
+    },
+    {
+      "name": "opaque-CLI-token-minted",
+      "ms": 15610,
+      "tokenValueRetained": false,
+      "videoRedaction": "secret output hidden before mint; token-format assertion executes in page"
+    },
+    {
+      "name": "browser-grant-revoked",
+      "ms": 16184,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-grant-revoked.jsonl",
+      "transportCursor": "0000000000000000_0000000000001597",
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "digest": "caabdc51e644098150ea8df412c687919bd828f7c4c4317db00612fbae8e7552",
+      "eventCount": 7
+    },
+    {
+      "name": "grant-revoked-returning-home",
+      "ms": 16263
+    },
+    {
+      "name": "home-before-logout",
+      "ms": 16497
+    },
+    {
+      "name": "account-menu-before-logout",
+      "ms": 16608
+    },
+    {
+      "name": "logout-form-submitted",
+      "ms": 16867
+    },
+    {
+      "name": "logout-session-refused",
+      "ms": 16970,
+      "status": 401,
+      "secretRetained": false
+    },
+    {
+      "name": "active-pages-disconnected-before-controlled-restart",
+      "ms": 19774,
+      "sessionContextsRetained": true
+    },
+    {
+      "name": "active-session-after-restart",
+      "ms": 29131,
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/active-session-after-restart.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 1
+    },
+    {
+      "name": "active-session-restarted",
+      "ms": 29722,
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/active-session-restarted.jsonl",
+      "transportCursor": "0000000000000000_0000000000001765",
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "digest": "32dd0fd408eea761843b3e14c2410bd0e6611721f3bd64dfcb940341945e4a85",
+      "eventCount": 8
+    },
+    {
+      "name": "ada-dedicated-issuer-before-login",
+      "ms": 30163,
+      "target": "/chat/browser-ada/welcome",
+      "issuer": "https://127.0.0.1:50708/",
+      "productionCredentialsUsed": false
+    },
+    {
+      "name": "ada-PKCE-callback-and-local-return",
+      "ms": 30490,
+      "target": "/chat/browser-ada/welcome",
+      "sessionCookie": {
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "Lax",
+        "path": "/",
+        "valueRetained": false
+      }
+    },
+    {
+      "name": "relogin-preserves-state",
+      "ms": 31926,
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/relogin-preserves-state.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 2
+    }
+  ],
+  "network": [
+    {
+      "name": "ada",
+      "ms": 486,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/settings/cli-tokens",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 491,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/login",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 497,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 657,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 758,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/callback",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 767,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/settings/cli-tokens",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 1566,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 1942,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 1979,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2097,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2104,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2133,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2133,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2148,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2200,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2279,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2280,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2428,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/dispatch",
+      "status": 202,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2900,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 2913,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3006,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/settings/cli-tokens",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3007,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/login",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3015,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3240,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3359,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/callback",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3372,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/settings/cli-tokens",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3548,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 3640,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 3938,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 3990,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 3990,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 3990,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 3990,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4001,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 4004,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 4004,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4115,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4132,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4148,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4163,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4163,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4204,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4273,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4275,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4419,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/dispatch",
+      "status": 202,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 4472,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4509,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 4521,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 5448,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5710,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 5776,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/dispatch",
+      "status": 202,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5814,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5824,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5834,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 5842,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5842,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 5864,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/ChatChannelPage-Bw6v_0mE.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5873,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 5885,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6280,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6280,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6280,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6280,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6293,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 6293,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6402,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6406,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/login",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6412,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6603,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6690,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/callback",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6718,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 6761,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 6806,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7200,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7390,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7390,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 7429,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7488,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7513,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7524,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7579,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7581,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/ChatChannelPage-Bw6v_0mE.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7625,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7708,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7708,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7809,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7809,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7833,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7833,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 7888,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7911,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 7984,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 7990,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 7996,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 8156,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/dispatch",
+      "status": 202,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 8286,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 8296,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 9318,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9318,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 9359,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9508,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 9519,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9533,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9541,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 9572,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9579,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9602,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9630,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9644,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9657,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9662,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness",
+      "ms": 9875,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 9883,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 10395,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 10395,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/dispatch",
+      "status": 202,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 10989,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 10991,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 11011,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11094,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 11113,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 11412,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11493,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11634,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11641,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11721,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11732,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11795,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/ChatChannelPage-Bw6v_0mE.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11796,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11807,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11870,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 11999,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12021,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 12058,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12088,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12099,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12193,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12203,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12250,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 12320,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13127,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13145,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13145,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13163,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 13163,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13362,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13458,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13520,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13558,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13572,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/MembersPage-Mlmb0Xqs.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13579,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13629,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13640,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13646,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13838,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13865,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 13909,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13933,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 13933,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 14319,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/settings/cli-tokens",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 14597,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/cli-tokens",
+      "status": 201,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 14668,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/cli-tokens",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 15473,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 15491,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 15491,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 15494,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 15494,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 15619,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 15826,
+      "method": "DELETE",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/cli-tokens/grant_YT3BAfubvlUACMrRpIK5WNOf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 15859,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/cli-tokens",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16344,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16358,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16358,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16397,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16397,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16397,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16397,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16430,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16431,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16440,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16510,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16831,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/logout",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16840,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16884,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16885,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16911,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/PublicSite-Rx0SxCIq.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16911,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/PublicSite-CwKSEPA8.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16970,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Landing-BtfR8uwy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 16970,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/SiteShell-d1RSF4PJ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 17111,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 17134,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 17188,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 17205,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-reconnected",
+      "ms": 17308,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "grace",
+      "ms": 18886,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-grace",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27418,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27647,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27689,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27834,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27843,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27879,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27897,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27897,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27916,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/ChatChannelPage-Bw6v_0mE.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 27963,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28026,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28064,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28108,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28222,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28233,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28233,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28233,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28292,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 28372,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 29771,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 29893,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 29902,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 29902,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 29929,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30030,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30030,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30057,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30071,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/login",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30080,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30102,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30102,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30145,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 30145,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30309,
+      "method": "POST",
+      "origin": "https://127.0.0.1:50708",
+      "path": "/authorize",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30382,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/auth/callback",
+      "status": 302,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30391,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30395,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-0zCPUWXr.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30395,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30415,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/route-pages-CAkTcjM2.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30415,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/usePrs-CVIdiJy9.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30415,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/RVI7YCPX-DUSeRlIZ.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30415,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/3GWKGGQS-BS9AjN0f.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30415,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/ChatChannelPage-Bw6v_0mE.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30468,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30468,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30511,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/whoami",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30520,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30547,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30673,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30674,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30688,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30688,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30688,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/orgs/browser-ada/members",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 30897,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 31813,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 31814,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 31830,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada-witness-after-restart",
+      "ms": 31837,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/api/agents/browser-ada",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pull-request-lmv-P2mc.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 31919,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "callbackQueryRetained": false
+    },
+    {
+      "name": "ada",
+      "ms": 32270,
+      "method": "GET",
+      "origin": "https://127.0.0.1:50709",
+      "path": "/registry/me",
+      "status": 200,
+      "callbackQueryRetained": false
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "terminalLongPolls": [
+    {
+      "name": "ada",
+      "path": "/api/chat/browser-ada/welcome",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/api/agents/browser-ada",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/registry/me",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/api/agents/browser-ada",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/api/chat/browser-ada",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/registry/me",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "name": "ada",
+      "path": "/registry/me",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "denialChecks": [
+    {
+      "name": "other-tenant",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 404
+    },
+    {
+      "name": "anonymous",
+      "path": "/api/chat/browser-ada/welcome",
+      "status": 404
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-issuer.png",
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/local-deep-link-return.png",
+      "sha256": "ed2b39471133ea7ebbc6a53433cf54114d278b9491c84706565c00e5322a87fe"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/first-private-workspace.png",
+      "sha256": "574741bb383241896e7bce3eb0f5bec38b7712d61a1257e367a0ce6389b3242a"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/grace-issuer.png",
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/separate-private-workspace.png",
+      "sha256": "a40fc3e10527184fbf0f2d5d49d93b5ad7ffc73aaae29570e4ac6b36a25ab487"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-issuer.png",
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/private-live-convergence.png",
+      "sha256": "d2508ea3633d88abfdd96f7475d7ee91de4970e2d4b74372129f3e500ea4a556"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/agents-off-human-members.png",
+      "sha256": "183d2b33ce173517a5edd17a1eb9d023a451475365d4100baa144d46d9ffdae8"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/web-cli-grant-minted-redacted.png",
+      "sha256": "72e0fa4620269f4120bb4c3273c2fd1186fbe20e131c4fed228a003473ffe2e0"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/web-cli-grant-revoked.png",
+      "sha256": "9b0c701b5b6b82116e5d366b4846ab686f9d6ac65d3873cda0295358a635ff6a"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/session-and-private-writes-survive-restart.png",
+      "sha256": "d22dbf25ab0937394b1e6f8dd825e77518b2625150797223fc8c9789aa504729"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-issuer.png",
+      "sha256": "919503cb48a4f6910c9c805fbd0a9ce17b03a5acad1142f520eda8513e886e86"
+    }
+  ],
+  "videos": [
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada.mp4",
+      "duration": 31.52,
+      "sha256": "79dba6bfda7eab298e91a4aa312c610125a0e7cb706ba465fbac698c0e6bc21c"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/grace.mp4",
+      "duration": 17.28,
+      "sha256": "76cdc7f21211b384e57604b900ebac6fd8ef2b8a83a7577c51d78987fe736668"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-witness.mp4",
+      "duration": 4.16,
+      "sha256": "bc101228cdb31f2d53c16c77321e65f6cb8e9986b4a9082b5cc2a1fc32709b16"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-witness-reconnected.mp4",
+      "duration": 5.84,
+      "sha256": "70d766700bac83913317899c0b4f167779e169acb6d52fcc742ead204665e4fe"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-witness-after-restart.mp4",
+      "duration": 4.56,
+      "sha256": "99479d2daa8bca539beeb6424313debe741b55fe7e0068bebdf865acc5261d1b"
+    }
+  ],
+  "dumps": [
+    {
+      "name": "ada-login-deep-return",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-login-deep-return.jsonl",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "digest": "ad14837f225ef2566cdbf634cadde28b76363da9080d125b8f9d053f7bd57282",
+      "eventCount": 2
+    },
+    {
+      "name": "ada-organization",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ada-organization.jsonl",
+      "transportCursor": "0000000000000000_0000000000000396",
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "digest": "ad14837f225ef2566cdbf634cadde28b76363da9080d125b8f9d053f7bd57282",
+      "eventCount": 2
+    },
+    {
+      "name": "grace-organization",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/grace-organization.jsonl",
+      "transportCursor": "0000000000000000_0000000000000798",
+      "lastApplicationOffset": "0000000000000000_0000000000000003",
+      "digest": "acfdfbfe340dd01f734451305aa770c3b54698eaee89b2eaf934ee7c44e25c5e",
+      "eventCount": 4
+    },
+    {
+      "name": "two-profiles-live",
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/two-profiles-live.jsonl",
+      "offset": "0000000000000000_0000000000000000",
+      "digest": "35c34e311964c1f2a8c5af02ef5dfdc9b6e2e3517f7d1da100a333dcf45cb5b9",
+      "eventCount": 1,
+      "viewers": 2
+    },
+    {
+      "name": "witness-reconnected",
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/witness-reconnected.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 2
+    },
+    {
+      "name": "browser-grant-minted",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-grant-minted.jsonl",
+      "transportCursor": "0000000000000000_0000000000001407",
+      "lastApplicationOffset": "0000000000000000_0000000000000005",
+      "digest": "dec47a4a77263029782440d2d4c7da58429671e33eac8fc20e200ec7e243ce98",
+      "eventCount": 6
+    },
+    {
+      "name": "browser-grant-revoked",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-grant-revoked.jsonl",
+      "transportCursor": "0000000000000000_0000000000001597",
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "digest": "caabdc51e644098150ea8df412c687919bd828f7c4c4317db00612fbae8e7552",
+      "eventCount": 7
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-identity-before-restart.jsonl",
+      "count": 8,
+      "transportCursor": "0000000000000000_0000000000001765",
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "digest": "32dd0fd408eea761843b3e14c2410bd0e6611721f3bd64dfcb940341945e4a85",
+      "sha256": "1f556411d7e597dc1aabe640c09ca881af108f58a77013566627e988bf4d1081",
+      "name": "identity-before-restart",
+      "layer": "identity"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-identity-after-restart.jsonl",
+      "count": 8,
+      "transportCursor": "0000000000000000_0000000000001765",
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "digest": "32dd0fd408eea761843b3e14c2410bd0e6611721f3bd64dfcb940341945e4a85",
+      "sha256": "1f556411d7e597dc1aabe640c09ca881af108f58a77013566627e988bf4d1081",
+      "name": "identity-after-restart",
+      "layer": "identity"
+    },
+    {
+      "name": "active-session-after-restart",
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/active-session-after-restart.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 1
+    },
+    {
+      "name": "active-session-restarted",
+      "layer": "identity",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/active-session-restarted.jsonl",
+      "transportCursor": "0000000000000000_0000000000001765",
+      "lastApplicationOffset": "0000000000000000_0000000000000007",
+      "digest": "32dd0fd408eea761843b3e14c2410bd0e6611721f3bd64dfcb940341945e4a85",
+      "eventCount": 8
+    },
+    {
+      "name": "relogin-preserves-state",
+      "layer": "chat-channel",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/relogin-preserves-state.jsonl",
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "288ec029322640c043d7aa9c25b561ad689cf0f783e426da802dc4982f88814a",
+      "eventCount": 2,
+      "viewers": 2
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/browser-identity-final.jsonl",
+      "count": 9,
+      "transportCursor": "0000000000000000_0000000000001969",
+      "lastApplicationOffset": "0000000000000000_0000000000000008",
+      "digest": "5687e89e4b4499c7e5b4c6b53eccc642f987dddfddb6317efbb3c5359db0d4ac",
+      "sha256": "6b6e52ec13bc570ae1566bd905f118416a58af83ba9ce095287a0f3de267a7fa",
+      "name": "identity-final",
+      "layer": "identity"
+    },
+    {
+      "name": "ns:root",
+      "layer": "namespace",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ns-root.jsonl",
+      "eventCount": 2
+    },
+    {
+      "name": "ns:org:browser-ada",
+      "layer": "namespace",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ns-org-browser-ada.jsonl",
+      "eventCount": 0
+    },
+    {
+      "name": "ns:org:browser-grace",
+      "layer": "namespace",
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/browser/ns-org-browser-grace.jsonl",
+      "eventCount": 0
+    }
+  ],
+  "timings": [
+    {
+      "name": "startup",
+      "elapsedMs": 227
+    },
+    {
+      "name": "shutdown-for-restart",
+      "elapsedMs": 7293
+    },
+    {
+      "name": "restart",
+      "elapsedMs": 189
+    }
+  ],
+  "productionCredentialsUsed": false
+}

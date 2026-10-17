@@ -1,0 +1,51 @@
+[
+  {
+    "task": "E6-T01",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T01-task-event-model/readme.md",
+    "mainLogSha256": "027664ea604fb41677c6882bcf6884df490a908eababa42872cbfb218387f2c0",
+    "mainLogBytes": 13387,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T02",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T02-task-folder-contract/readme.md",
+    "mainLogSha256": "f4e937e9351ab961bc409fd134057066797e5f674ccd835a39912afef68e6383",
+    "mainLogBytes": 28088,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T03",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T03-project-state-machine/readme.md",
+    "mainLogSha256": "024103eb6d55fbb2e47afb8fe7e13766a28ecc40d6d720e8b5e7b441599a8a5e",
+    "mainLogBytes": 41915,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T04",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T04-task-queue-projection/readme.md",
+    "mainLogSha256": "025954091b53acdb1d92e8580408dda3422941fedded0344386fe0d87562464d",
+    "mainLogBytes": 31609,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T05",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T05-task-folder-stream-sync/readme.md",
+    "mainLogSha256": "5dcce7b806c337b037fd218a23d574c6398ed0a2df76ddadd01eb341b0adfaa6",
+    "mainLogBytes": 78196,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T06",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T06-live-task-board/readme.md",
+    "mainLogSha256": "a8d8e6bf8c97c9b963c129837ec421ff8ca589897f4b23f691b8879365ec4453",
+    "mainLogBytes": 20,
+    "exactSuffix": true
+  },
+  {
+    "task": "E6-T07",
+    "path": ".eforest/tasks/epic-6-the-loop/E6-T07-agent-run-protocol/readme.md",
+    "mainLogSha256": "6a0b1cf8a453bd7a41d2f91591e723198c8993c675b677df6b2625f4363f6fb4",
+    "mainLogBytes": 3475,
+    "exactSuffix": true
+  }
+]

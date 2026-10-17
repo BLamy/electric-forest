@@ -1,0 +1,33 @@
+{
+  "candidateCommit": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "gateSessions": [
+    {
+      "completionChunk": "88f0ce",
+      "gate": 1,
+      "sessionId": 11612,
+      "startChunk": "e5b0f6"
+    },
+    {
+      "completionChunk": "c97d23",
+      "gate": 2,
+      "sessionId": 25998,
+      "startChunk": "3c21c5"
+    },
+    {
+      "completionChunk": "0ff1b3",
+      "gate": 3,
+      "sessionId": 44930,
+      "startChunk": "a5fccf"
+    },
+    {
+      "completionChunk": "fb50ad",
+      "gate": 4,
+      "sessionId": 49863,
+      "startChunk": "f26037"
+    }
+  ],
+  "preflightSessionId": 19209,
+  "receiptPolicy": "Exact argv, UTC timestamps, exit codes, elapsed durations, complete stdout/stderr and their hashes are in gate-N.json and gate-N.{stdout,stderr}.log; after-gate snapshots independently attest source/index conservation. Process-monitor receipts live in gate-3.process-checkpoints.jsonl; its first elapsed field is superseded as documented in monitor-correction.json.",
+  "schemaVersion": 1,
+  "transport": "exec_command/write_stdin"
+}

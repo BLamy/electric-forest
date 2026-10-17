@@ -261,3 +261,68 @@ Commands/actions: Auth0 Save, settings reload/readback, fresh production `/auth/
 normal Google sign-in, app workspace/channel/message actions; read-only Railway
 describe-service; public HTTPS health/readiness/build/deployment and anonymous private
 channel checks. No restart, production identity dump or credential extraction occurred.
+
+### 2026-10-16 — builder — integrated main release checkpoint (rollout pending)
+
+The human requested merging the hosting work into main and automatic Railway deployment
+on future main merges. Integration `06e18df04f9db6112a425f050587c6d61588347c` preserves
+hosting `d35834a0a677ba3b5c0ecc96f1e034035807afa8` and main
+`bd56c79feb8ada96736e7b6d2e79eb71738ea3a3` as its two parents. Both product histories,
+prior verification reports, evidence blobs and controls remain present. Imported legacy
+E6 histories retain their original verdicts and activation blocker; no counter was reset.
+
+The final runtime/config candidate is `c1213495044f6fdc2b858592681b9061f149abd4`, tree
+`2d60f1ee091d33dcee4f7be33e19d47e4343da6d`. Two source-mapping corrections address
+actual clean Linux CI failures: TypeScript paths at `1eda083c…` and Vitest aliases at
+`c1213495…`. With all 20 generated workspace output directories hidden, full collection
+finds 141 files/1,144 tests and the six affected suites pass 19 tests. Outputs were
+restored byte-for-byte; no build was moved ahead of the required gates.
+
+- Fresh auditor `/root/main_vitest_gate_auditor` passed format/lint, typecheck, all
+  141 test files/1,144 tests, then build, once each in order. Six source/index snapshots
+  preserved 3,015 root and 668 pinned vendor entries. Node is 24.20.0, pnpm 10.15.0;
+  lockfile SHA-256 is `a977812903abfd8904af23424cb0ceb09e695986db4f252c5e1035ac1f6dc9da`.
+- Actual Linux CI run `38984310568` passed all four ordered gates. The complete job log
+  confirms checkout `02bce2f8d280f33cda03a2c69184746c3a909fbf`, the GitHub PR merge
+  commit whose tree equals the candidate tree. Earlier failed CI logs are retained.
+- Final dedicated fixtures passed 9 native deadline/phase cases, 77 HTTP checks and
+  30 browser scenes in five videos with zero console/page/request failures. Standalone
+  Python models replayed 23 dumps and four byte-identical restart prefixes. A one-byte
+  semantic mutation correctly refuted the frozen receipt. An initial scratch sensitivity
+  command named a nonexistent dump; its failure is retained. The helper was then corrected
+  to the recorded browser chat dump without product changes, and the sensor went red.
+- Two independent committed readers returned identical 1,176-byte candidate snapshots,
+  SHA-256 `a3c97cbb1619e6872b7e49bbeebfc34eee71095b85240b2fc7bc4aa233915a43`.
+  Controls, project/task state, complete prior ledgers and the queue were unchanged.
+
+Completed receipts are at
+`evidence/main-release/candidate-c1213495044f6fdc2b858592681b9061f149abd4/`.
+Its manifest binds 281 copied files (34,650,347 bytes) to original workshop paths,
+SHA-256 values and full Git blob addresses. Manifest SHA-256 is
+`db589bbf74e59e091678a411d19ad04e55a2513fc271e12dca38282b44a35562`.
+Changed source is linked by full Git content addresses; no textual patch file is stored.
+Fixture private stores, generated signing keys and production identities are excluded.
+
+Railway's GitHub App installation `172240212` is present with repository access limited
+to `BLamy/electric-forest`. Main branch, Wait for CI, removal of the old commit pin and
+removal of the fixed revision variable are staged only. The healthy live deployment
+still runs historical source `9a5861e8…`; applying the new source and observing an actual
+main-triggered deployment remain pending at this checkpoint. The actual Auth0 login
+receipt is historical evidence; no fresh main rollout or persistence claim is made here.
+This metadata-only append changes no runtime/config/control, task status, queue or prior
+ledger. T10 remains `in-progress`, run 0/10; T11 remains pending.
+
+Replay: N/A (Replay QA authentication unavailable in this session) + mitigation:
+dedicated-fixture Playwright videos/timeline/console/network checks and independently
+replayed stream dumps. Production credentials never enter an external QA recording.
+Cold-clone task acceptance and the fresh independent task critic/judge remain absent;
+this is an incomplete release checkpoint, not an implemented claim or verdict.
+
+Commands: pnpm format:check && pnpm lint; pnpm typecheck; pnpm test; pnpm build;
+node tools/verify/e12_t10_deadlines.mjs <work-output>;
+node tools/verify/e12_t10_hosted.mjs <work-output>;
+node tools/verify/e12_t10_browser.mjs <work-output>;
+python3 <committed-stream-proof>/replay_final.py <proof-root> --out <receipt>;
+python3 <retained-check_replay_sensitivity.py> <proof-root> <model> <scratch-root>;
+gh run view 38984310568 --log. Exact argv, UTC times, exit codes and full output hashes
+are retained. Passing root gates were not rerun for metadata.

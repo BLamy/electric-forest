@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-10-16T23:51:26.898735+00:00",
+  "pullRequest": 78,
+  "ciRunId": 38982575450,
+  "event": "pull_request",
+  "candidateHead": "1eda083c1ab66bb89125734610063e14cdd448e8",
+  "syntheticMergeRef": "refs/pull/78/merge",
+  "syntheticMergeSha": "bcbbebe4c8fcd25d63517f3ceb05ee29270fe9d0",
+  "syntheticMergeParents": [
+    "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+    "1eda083c1ab66bb89125734610063e14cdd448e8"
+  ],
+  "candidateTree": "410bdb5d683155701a27f02d5a12cac0ca927cf5",
+  "syntheticMergeTree": "410bdb5d683155701a27f02d5a12cac0ca927cf5",
+  "treeIdentical": true,
+  "qualification": "Actual job checkout hash found in complete retained log; synthetic merge tree equals frozen candidate tree",
+  "identityFieldsRetained": false,
+  "actualCheckoutCommitConfirmedInCompleteJobLog": true,
+  "completeJobLog": {
+    "path": "ci-38982575450.log",
+    "bytes": 167865,
+    "sha256": "e0ba6b1569e6a3bd93ebf6622ea05bcdf99bbc7d271a8c7b05a0718a4bb257af"
+  },
+  "result": "failure",
+  "summary": "135 suites and1125tests passed;6suitecollectionfailures only, all missing @eforest/web-hooks"
+}

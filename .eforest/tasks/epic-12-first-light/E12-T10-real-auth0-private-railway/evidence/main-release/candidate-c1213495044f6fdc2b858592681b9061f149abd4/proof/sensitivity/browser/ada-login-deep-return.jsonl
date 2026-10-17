@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada@e12-t10.fixture.invalid","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"t0VLJz1tkx_Utz3akMTldhEPEeFVPfkZ","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}

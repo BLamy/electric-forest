@@ -1,0 +1,343 @@
+Ordered root gates	Set up job	﻿2026-10-16T23:33:31.7856181Z Current runner version: '2.337.0'
+Ordered root gates	Set up job	2026-10-16T23:33:31.7886949Z ##[group]Runner Image Provisioner
+Ordered root gates	Set up job	2026-10-16T23:33:31.7888451Z Hosted Compute Agent
+Ordered root gates	Set up job	2026-10-16T23:33:31.7889253Z Version: 20261012.601
+Ordered root gates	Set up job	2026-10-16T23:33:31.7890198Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+Ordered root gates	Set up job	2026-10-16T23:33:31.7891217Z Build Date: 2026-10-12T17:48:21Z
+Ordered root gates	Set up job	2026-10-16T23:33:31.7892143Z Worker ID: {7e230ac0-e26a-4502-b1cd-a6f8f269a4ce}
+Ordered root gates	Set up job	2026-10-16T23:33:31.7893217Z Region: northcentralus
+Ordered root gates	Set up job	2026-10-16T23:33:31.7893997Z Cloud: Azure
+Ordered root gates	Set up job	2026-10-16T23:33:31.7894759Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:33:31.7896783Z ##[group]Operating System
+Ordered root gates	Set up job	2026-10-16T23:33:31.7897825Z Ubuntu
+Ordered root gates	Set up job	2026-10-16T23:33:31.7898631Z 24.04.5
+Ordered root gates	Set up job	2026-10-16T23:33:31.7899290Z LTS
+Ordered root gates	Set up job	2026-10-16T23:33:31.7900030Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:33:31.7900825Z ##[group]Runner Image
+Ordered root gates	Set up job	2026-10-16T23:33:31.7901627Z Image: ubuntu-24.04
+Ordered root gates	Set up job	2026-10-16T23:33:31.7902394Z Version: 20261012.334.1
+Ordered root gates	Set up job	2026-10-16T23:33:31.7903795Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+Ordered root gates	Set up job	2026-10-16T23:33:31.7906220Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+Ordered root gates	Set up job	2026-10-16T23:33:31.7907810Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:33:31.7909381Z ##[group]GITHUB_TOKEN Permissions
+Ordered root gates	Set up job	2026-10-16T23:33:31.7911787Z Contents: read
+Ordered root gates	Set up job	2026-10-16T23:33:31.7912678Z Metadata: read
+Ordered root gates	Set up job	2026-10-16T23:33:31.7913440Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:33:31.7916044Z Secret source: Actions
+Ordered root gates	Set up job	2026-10-16T23:33:31.7917404Z Cache mode: write
+Ordered root gates	Set up job	2026-10-16T23:33:31.7918678Z Prepare workflow directory
+Ordered root gates	Set up job	2026-10-16T23:33:31.8353843Z Prepare all required actions
+Ordered root gates	Set up job	2026-10-16T23:33:31.8420408Z Getting action download info
+Ordered root gates	Set up job	2026-10-16T23:33:32.0466808Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+Ordered root gates	Set up job	2026-10-16T23:33:32.1548240Z Download action repository 'pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa' (SHA:f40ffcd9367d9f12939873eb1018b921a783ffaa)
+Ordered root gates	Set up job	2026-10-16T23:33:32.5321454Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Ordered root gates	Set up job	2026-10-16T23:33:32.7289273Z Complete job name: Ordered root gates
+Ordered root gates	Check out source and pinned emulators	﻿2026-10-16T23:33:32.7954006Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7954944Z with:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7955496Z   submodules: recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7956048Z   persist-credentials: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7956683Z   repository: BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7960695Z   token: ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7961172Z   ssh-strict: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7961693Z   ssh-user: git
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7962163Z   clean: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7962674Z   sparse-checkout-cone-mode: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7963316Z   fetch-depth: 1
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7963778Z   fetch-tags: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7964296Z   show-progress: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7964793Z   lfs: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7965264Z   set-safe-directory: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7965848Z   allow-unsafe-pr-checkout: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.7966589Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.8897377Z Syncing repository: BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.8900379Z ##[group]Getting Git version info
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.8901787Z Working directory is '/home/runner/work/electric-forest/electric-forest'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.8903596Z [command]/usr/bin/git version
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.8982485Z git version 2.55.0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9003742Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9016445Z Temporarily overriding HOME='/home/runner/work/_temp/9754a5fa-4013-48f6-af1c-48bae2c4f9df' before making global git config changes
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9026637Z Adding repository directory to the temporary git global config as a safe directory
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9028268Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9074696Z Deleting the contents of '/home/runner/work/electric-forest/electric-forest'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9079046Z ##[group]Initializing the repository
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9083386Z [command]/usr/bin/git init /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9180226Z hint: Using 'master' as the name for the initial branch. This default branch name
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9181851Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9182991Z hint: to use in all of your new repositories, which will suppress this warning,
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9183778Z hint: call:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9184414Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9184986Z hint: 	git config --global init.defaultBranch <name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9185677Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9186298Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9187218Z hint: 'development'. The just-created branch can be renamed via this command:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9188399Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9189104Z hint: 	git branch -m <name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9200556Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9201556Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9202665Z Initialized empty Git repository in /home/runner/work/electric-forest/electric-forest/.git/
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9209093Z [command]/usr/bin/git remote add origin https://github.com/BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9251602Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9252728Z ##[group]Disabling automatic garbage collection
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9254546Z [command]/usr/bin/git config --local gc.auto 0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9314269Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9315378Z ##[group]Setting up auth
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9321572Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9350738Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9679751Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9714240Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9898779Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:32.9927081Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:33.0103797Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:33.0140437Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:33.0142062Z ##[group]Fetching the repository
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:33.0150399Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8b43f9c95ef16ffd7a4fa6b220c3c66e9b621406:refs/remotes/pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.3990947Z From https://github.com/BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.3993704Z  * [new ref]         8b43f9c95ef16ffd7a4fa6b220c3c66e9b621406 -> pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.3999991Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4002325Z ##[group]Determining the checkout info
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4004951Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4006730Z [command]/usr/bin/git sparse-checkout disable
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4057426Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4091367Z ##[group]Checking out the ref
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.4093899Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7557004Z Note: switching to 'refs/remotes/pull/78/merge'.
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7557743Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7558189Z You are in 'detached HEAD' state. You can look around, make experimental
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7559135Z changes and commit them, and you can discard any commits you make in this
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7559978Z state without impacting any branches by switching back to a branch.
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7560714Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7561111Z If you want to create a new branch to retain commits you create, you may
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7561866Z do so (now or later) by using -c with the switch command. Example:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7562318Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7562525Z   git switch -c <new-branch-name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7562817Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7563044Z Or undo this operation with:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7563314Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7563479Z   git switch -
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7563768Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7564149Z Turn off this advice by setting config variable advice.detachedHead to false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7564598Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7565164Z HEAD is now at 8b43f9c Merge 56fb7b0b3b9398c39c9baf8e93142fae7df74810 into bd56c79feb8ada96736e7b6d2e79eb71738ea3a3
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7574960Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7575598Z ##[group]Setting up auth for fetching submodules
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7580901Z [command]/usr/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7626036Z [command]/usr/bin/git config --global --unset-all url.https://github.com/.insteadOf
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7652514Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7682634Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf org-324928@github.com:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7709562Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7710184Z ##[group]Fetching submodules
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7712576Z [command]/usr/bin/git submodule sync --recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.7901519Z [command]/usr/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.8092013Z Submodule 'vendor/emulate' (https://github.com/blamy/emulate.git) registered for path 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:35.8114065Z Cloning into '/home/runner/work/electric-forest/electric-forest/vendor/emulate'...
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.4684623Z Submodule path 'vendor/emulate': checked out '2d3e21005f10071869ee6f73e9ccc821edaab971'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.4710316Z [command]/usr/bin/git submodule foreach --recursive git config --local gc.auto 0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.4896097Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.4949816Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.4991559Z [command]/usr/bin/git log -1 --format=%H
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5013351Z 8b43f9c95ef16ffd7a4fa6b220c3c66e9b621406
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5033608Z ##[group]Removing auth
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5034346Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5062340Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5237300Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5285476Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5311321Z http.https://github.com/.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5318800Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5358360Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5540111Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5586468Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5613075Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5781181Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5801625Z file:/home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config	remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5858347Z [command]/usr/bin/git config --file /home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:33:36.5865978Z ##[endgroup]
+Ordered root gates	Install pnpm	﻿2026-10-16T23:33:36.6063521Z ##[group]Run pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6063897Z with:
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6064097Z   version: 10.15.0
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6064306Z   run_install: false
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6064525Z   dest: ~/setup-pnpm
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6064743Z   cache: false
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6064974Z   cache_dependency_path: pnpm-lock.yaml
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6065245Z   package_json_file: package.json
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6065512Z   standalone: false
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.6065744Z ##[endgroup]
+Ordered root gates	Install pnpm	2026-10-16T23:33:36.7379106Z ##[group]Running self-installer...
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.1209487Z (node:2486) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.1210481Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.2566821Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.2646591Z Packages: +1
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.2647329Z +
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.5758130Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6159551Z 
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6160015Z dependencies:
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6160391Z + pnpm 10.15.0 (12.14.0 is available)
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6160663Z 
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6184144Z Done in 688ms
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6309308Z ##[endgroup]
+Ordered root gates	Install pnpm	2026-10-16T23:33:37.6309666Z Installation Completed!
+Ordered root gates	Install Node.js	﻿2026-10-16T23:33:37.6482662Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6483047Z with:
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6483266Z   node-version: 24.20.0
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6483488Z   cache: pnpm
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6483689Z   always-auth: false
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6483903Z   check-latest: false
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6486339Z   token: ***
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6486531Z env:
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6486798Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.6487090Z ##[endgroup]
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.7760780Z Attempting to download 24.20.0...
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.7858075Z (node:2502) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Ordered root gates	Install Node.js	2026-10-16T23:33:37.7859581Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Ordered root gates	Install Node.js	2026-10-16T23:33:38.4266546Z Acquiring 24.20.0 - x64 from https://github.com/actions/node-versions/releases/download/24.20.0-33034074684/node-24.20.0-linux-x64.tar.gz
+Ordered root gates	Install Node.js	2026-10-16T23:33:38.8193610Z Extracting ...
+Ordered root gates	Install Node.js	2026-10-16T23:33:38.8293183Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/0aaef7a4-fbcb-4c3f-9038-681f521e264e -f /home/runner/work/_temp/30b358e7-1924-48db-bf22-dc3be4f1013e
+Ordered root gates	Install Node.js	2026-10-16T23:33:40.1585293Z Adding to the cache ...
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.1578907Z ##[group]Environment details
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.3747435Z node: v24.20.0
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.3748153Z npm: 11.19.0
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.3748469Z yarn: 1.22.22
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.3749172Z ##[endgroup]
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.3766106Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.7020781Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+Ordered root gates	Install Node.js	2026-10-16T23:33:42.8117426Z pnpm cache is not found
+Ordered root gates	Install frozen dependencies	﻿2026-10-16T23:33:42.8255379Z ##[group]Run pnpm install --frozen-lockfile
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:42.8255807Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:42.8435602Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:42.8435889Z env:
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:42.8436151Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:42.8436449Z ##[endgroup]
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:43.1062419Z Scope: all 21 workspace projects
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:43.1818805Z Lockfile is up to date, resolution step is skipped
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:43.2509317Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:43.3386584Z Packages: +1108
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:43.3388386Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:44.2527158Z Progress: resolved 1108, reused 0, downloaded 284, added 272
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:45.2521152Z Progress: resolved 1108, reused 0, downloaded 418, added 392
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:46.2550752Z Progress: resolved 1108, reused 0, downloaded 523, added 467
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:47.2521575Z Progress: resolved 1108, reused 0, downloaded 593, added 496
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:48.2568999Z Progress: resolved 1108, reused 0, downloaded 646, added 523
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:49.2629204Z Progress: resolved 1108, reused 0, downloaded 756, added 594
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:50.2585810Z Progress: resolved 1108, reused 0, downloaded 868, added 700
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:51.2588959Z Progress: resolved 1108, reused 0, downloaded 1068, added 949
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:52.2594551Z Progress: resolved 1108, reused 0, downloaded 1108, added 1107
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:52.2922250Z Progress: resolved 1108, reused 0, downloaded 1108, added 1108, done
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:52.6422503Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:52.6425591Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:52.6427682Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0641020Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0641662Z devDependencies:
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0642157Z + @eslint/js 10.0.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0642598Z + @types/node 26.1.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0642962Z + chokidar 4.0.3
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0643248Z + eslint 10.6.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0643582Z + playwright-core 1.61.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0643898Z + prettier 3.9.4
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0644183Z + replayio 1.8.2
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0644539Z + typescript 6.0.3
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0644873Z + typescript-eslint 8.63.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0645205Z + undici 7.16.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0645495Z + vitest 4.1.10
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0645645Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0646490Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0647391Z │                                                                              │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0648399Z │   Ignored build scripts: @mongodb-js/zstd, @swc/core, esbuild, lmdb,         │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0649344Z │   msgpackr-extract, node-liblzma, protobufjs.                                │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0650295Z │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0651174Z │   to run scripts.                                                            │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0651974Z │                                                                              │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0652909Z ╰──────────────────────────────────────────────────────────────────────────────╯
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0653386Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0793877Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0797269Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0861422Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:33:53.0952616Z Done in 10.2s using pnpm v10.15.0
+Ordered root gates	Check formatting and lint	﻿2026-10-16T23:33:53.1353241Z ##[group]Run pnpm format:check && pnpm lint
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.1353583Z ^[[36;1mpnpm format:check && pnpm lint^[[0m
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.1395870Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.1396147Z env:
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.1396406Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.1396699Z ##[endgroup]
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.3828387Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.3829248Z > electric-forest@0.0.0 format:check /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.3830382Z > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.3831014Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:33:53.4631364Z Checking formatting...
+Ordered root gates	Check formatting and lint	2026-10-16T23:34:04.0225707Z All matched files use Prettier code style!
+Ordered root gates	Check formatting and lint	2026-10-16T23:34:04.2891110Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:34:04.2891977Z > electric-forest@0.0.0 lint /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check formatting and lint	2026-10-16T23:34:04.2892975Z > eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
+Ordered root gates	Check formatting and lint	2026-10-16T23:34:04.2893557Z 
+Ordered root gates	Typecheck	﻿2026-10-16T23:34:13.6333707Z ##[group]Run pnpm typecheck
+Ordered root gates	Typecheck	2026-10-16T23:34:13.6334012Z ^[[36;1mpnpm typecheck^[[0m
+Ordered root gates	Typecheck	2026-10-16T23:34:13.6374383Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Typecheck	2026-10-16T23:34:13.6374662Z env:
+Ordered root gates	Typecheck	2026-10-16T23:34:13.6374917Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Typecheck	2026-10-16T23:34:13.6375221Z ##[endgroup]
+Ordered root gates	Typecheck	2026-10-16T23:34:13.8784006Z 
+Ordered root gates	Typecheck	2026-10-16T23:34:13.8784810Z > electric-forest@0.0.0 typecheck /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Typecheck	2026-10-16T23:34:13.8785551Z > tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit
+Ordered root gates	Typecheck	2026-10-16T23:34:13.8785896Z 
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7350087Z ##[error]packages/platform/src/gateway.ts(81,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7357421Z ##[error]packages/platform/src/gateway.ts(590,13): error TS2339: Property 'closes' does not exist on type 'Event'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7359400Z ##[error]packages/platform/src/gateway.ts(590,27): error TS7006: Parameter 'ref' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7360801Z ##[error]packages/platform/src/gateway.ts(767,11): error TS2339: Property 'closes' does not exist on type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7362010Z ##[error]packages/platform/src/gateway.ts(767,31): error TS2700: Rest types may only be created from object types.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7363160Z ##[error]packages/platform/src/gateway.ts(828,41): error TS18046: 'action.payload' is of type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7364265Z ##[error]packages/platform/src/gateway.ts(835,21): error TS18046: 'action.payload' is of type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7365413Z ##[error]packages/platform/src/gateway.ts(886,27): error TS7006: Parameter 'ref' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7366663Z ##[error]packages/platform/src/gateway.ts(886,32): error TS7006: Parameter 'issueOffset' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7368057Z ##[error]packages/platform/src/gateway.ts(1928,24): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7369450Z ##[error]packages/platform/src/gateway.ts(1942,30): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7370719Z ##[error]packages/platform/src/gateway.ts(1959,33): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7372047Z ##[error]packages/platform/src/gateway.ts(1959,43): error TS7006: Parameter 'event' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7373316Z ##[error]packages/platform/src/gateway.ts(1959,50): error TS7006: Parameter 'expectedHead' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7374788Z ##[error]packages/platform/src/gateway.ts(1983,25): error TS2339: Property 'status' does not exist on type 'Event'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7375998Z ##[error]packages/platform/src/gateway.ts(1985,25): error TS2339: Property 'status' does not exist on type 'Event'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7377233Z ##[error]packages/platform/src/gateway.ts(1995,38): error TS7006: Parameter 'context' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7378711Z ##[error]packages/platform/src/gateway.ts(2002,41): error TS7006: Parameter 'context' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7380007Z ##[error]packages/platform/src/gateway.ts(2007,25): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7381171Z ##[error]packages/platform/src/gateway.ts(2007,35): error TS7006: Parameter 'run' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7382348Z ##[error]packages/platform/src/gateway.ts(2139,18): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7383526Z ##[error]packages/platform/src/gateway.ts(2140,21): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7384826Z ##[error]packages/platform/src/gateway.ts(2141,32): error TS7006: Parameter 'streamId' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7386068Z ##[error]packages/platform/src/gateway.ts(2141,42): error TS7006: Parameter 'event' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7387280Z ##[error]packages/platform/src/gateway.ts(2141,49): error TS7006: Parameter 'expectedHead' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7388991Z ##[error]packages/platform/src/gateway.ts(2154,26): error TS7006: Parameter 'error' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7390122Z ##[error]packages/platform/src/gateway.ts(2969,57): error TS18046: 'error' is of type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7391182Z ##[error]packages/platform/src/gateway.ts(3357,74): error TS18046: 'error' is of type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7392252Z ##[error]packages/platform/src/gateway.ts(3360,74): error TS18046: 'error' is of type 'unknown'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7393737Z ##[error]packages/platform/test/cross-entity-linking.file.test.ts(10,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7395330Z ##[error]packages/platform/test/cross-entity-linking.rework.test.ts(8,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7396831Z ##[error]packages/platform/test/cross-entity-linking.rework.test.ts(596,20): error TS2339: Property 'links' does not exist on type 'PersistedEvent'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7398636Z ##[error]packages/platform/test/cross-entity-linking.test.ts(8,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7400378Z ##[error]packages/platform/test/pr-merge-door.test.ts(10,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7402012Z ##[error]packages/platform/test/pr-merge-door.test.ts(246,88): error TS2339: Property 'status' does not exist on type 'Event & { readonly offset: Offset; }'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7403356Z ##[error]packages/platform/test/pr-merge-door.test.ts(394,87): error TS2339: Property 'status' does not exist on type 'Event'.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7404855Z ##[error]packages/platform/test/task-folder-sync.test.ts(15,32): error TS2307: Cannot find module '@eforest/tasks/sync-node' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7406232Z ##[error]packages/platform/test/task-folder-sync.test.ts(147,19): error TS7006: Parameter 'message' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7407656Z ##[error]packages/platform/test/task-folder-sync.test.ts(158,19): error TS7006: Parameter 'message' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7409125Z ##[error]packages/platform/test/task-folder-sync.test.ts(434,30): error TS7006: Parameter 'record' implicitly has an 'any' type.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7410678Z ##[error]packages/reducers/src/index.ts(19,8): error TS2307: Cannot find module '@eforest/meadow' or its corresponding type declarations.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7792610Z  ELIFECYCLE  Command failed with exit code 2.
+Ordered root gates	Typecheck	2026-10-16T23:34:20.7942682Z ##[error]Process completed with exit code 2.
+Ordered root gates	Post Install pnpm	﻿2026-10-16T23:34:20.8049287Z Post job cleanup.
+Ordered root gates	Post Install pnpm	2026-10-16T23:34:20.9363678Z Pruning is unnecessary.
+Ordered root gates	Post Check out source and pinned emulators	﻿2026-10-16T23:34:20.9505528Z Post job cleanup.
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0343790Z [command]/usr/bin/git version
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0389351Z git version 2.55.0
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0430372Z Temporarily overriding HOME='/home/runner/work/_temp/dad86df1-a254-40a4-892b-4004e17c442c' before making global git config changes
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0432062Z Adding repository directory to the temporary git global config as a safe directory
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0441127Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0489122Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0525817Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0779455Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0850374Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.0890191Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1135532Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1203212Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1251524Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1478593Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1502085Z file:/home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config	remote.origin.url
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:34:21.1540506Z [command]/usr/bin/git config --file /home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Complete job	﻿2026-10-16T23:34:21.1704127Z Cleaning up orphan processes
+Ordered root gates	Complete job	2026-10-16T23:34:21.1933259Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

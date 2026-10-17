@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/blamy/Documents/Codex/electric-forest
+
+
+ Test Files  6 passed (6)
+      Tests  19 passed (19)
+   Start at  19:58:58
+   Duration  8.14s (transform 1.90s, setup 0ms, import 7.45s, tests 78ms, environment 0ms)
+

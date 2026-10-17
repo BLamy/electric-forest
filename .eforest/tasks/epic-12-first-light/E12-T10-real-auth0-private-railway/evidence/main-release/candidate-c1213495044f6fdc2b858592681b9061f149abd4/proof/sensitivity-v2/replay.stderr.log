@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/replay_final.py", line 95, in <module>
+    main()
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/replay_final.py", line 54, in main
+    assert value == item['digest'], (path, value, item['digest'])
+AssertionError: (PosixPath('/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity-v2/browser/two-profiles-live.jsonl'), 'b2bce9f9302e6d20867ede076e77c82516f969126fb08d38e90b911721b0b66f', '35c34e311964c1f2a8c5af02ef5dfdc9b6e2e3517f7d1da100a333dcf45cb5b9')
