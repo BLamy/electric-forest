@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdir,mkdtemp,rm} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {readPreviewEnvironment,createPreviewRuntime} from './repo/packages/platform/dist/src/preview.js';
+const root=resolve(import.meta.dirname,'repo');const out=resolve(import.meta.dirname,'config-edges');await mkdir(out,{recursive:true});
+const directory=await mkdtemp(resolve(out,'data-'));const env={EF_DEPLOYMENT_MODE:'preview',EF_PREVIEW_AUTH:'fixture',EF_PUBLIC_ORIGIN:'http://localhost:7',EF_BUILD_REVISION:'a7e861d023651925a16e9103c0f50fce9c368a4e',EF_PREVIEW_DATA_DIR:directory,PORT:'0'};const records=[];
+for(const [key,values] of Object.entries({EF_PUBLIC_ORIGIN:['http://public.critic.invalid','https://user:pass@critic.invalid','https://critic.invalid/a','https://critic.invalid?x=1','https://critic.invalid#x','ftp://critic.invalid','not a URL'],EF_BUILD_REVISION:['a'.repeat(39),'g'.repeat(40),'','A'.repeat(40)],PORT:['-1','65536','1.0','NaN',''],EF_PREVIEW_DATA_DIR:['relative'],EF_WEB_ROOT:['relative']}))for(const value of values){assert.throws(()=>readPreviewEnvironment({...env,[key]:value}));records.push({key,case:value,refused:true});}
+for(const flag of ['EF_DEPLOYMENT_MODE','EF_PREVIEW_AUTH']){const incomplete={...env};delete incomplete[flag];assert.throws(()=>readPreviewEnvironment(incomplete));records.push({key:flag,case:'missing',refused:true});}
+assert.equal(readPreviewEnvironment({...env,EF_PUBLIC_ORIGIN:undefined,RAILWAY_PUBLIC_DOMAIN:'r2-preview.up.railway.app'}).origin,'https://r2-preview.up.railway.app');records.push({key:'RAILWAY_PUBLIC_DOMAIN',acceptedCanonicalOrigin:true});
+for(const marker of ['not json',JSON.stringify({version:2,fixture:'railway-first-light-v1',bootstrap:'ready',sessionSecret:'a'.repeat(64)}),JSON.stringify({version:1,fixture:'other',bootstrap:'ready',sessionSecret:'a'.repeat(64)}),JSON.stringify({version:1,fixture:'railway-first-light-v1',bootstrap:'initializing',sessionSecret:'a'.repeat(64)}),JSON.stringify({version:1,fixture:'railway-first-light-v1',bootstrap:'ready',sessionSecret:'too short'})]){await writeFile(resolve(directory,'preview-state.json'),marker);await assert.rejects(createPreviewRuntime(env),/bootstrap/);assert.equal(await readFile(resolve(directory,'preview-state.json'),'utf8'),marker);records.push({key:'volume-marker',refused:true,unchanged:true});}
+await rm(directory,{recursive:true,force:true});
+const baked=resolve(root,'build-revision');await assert.rejects(readFile(baked),{code:'ENOENT'});
+try {await writeFile(baked,'b'.repeat(40)+'\n');await assert.rejects(createPreviewRuntime(env),/configured revision does not match/);records.push({key:'baked-revision-mismatch',refused:true});}finally{await rm(baked,{force:true});}
+await writeFile(resolve(out,'results.json'),JSON.stringify({records},null,2)+'\n');console.log('CONFIG_EDGE_PROBES_OK',records.length);

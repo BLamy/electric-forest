@@ -164,7 +164,7 @@ async function grantToken(
   return { token, grantId };
 }
 
-function dispatchBody(streamId: string, event: Record<string, unknown>): string {
+function dispatchBody(streamId: string, event: unknown): string {
   return JSON.stringify({ streamId, event });
 }
 

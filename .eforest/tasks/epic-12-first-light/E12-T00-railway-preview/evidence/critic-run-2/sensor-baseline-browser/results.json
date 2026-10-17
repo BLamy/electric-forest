@@ -1,0 +1,498 @@
+{
+  "origin": "http://127.0.0.1:54828",
+  "seed": "e1e9c3fe1c2e8d65",
+  "records": [
+    {
+      "name": "initial-frozen-value-valid",
+      "digest": "c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19",
+      "eventCount": 1
+    },
+    {
+      "name": "real-write-accepted-and-witness-visible",
+      "seed": "e1e9c3fe1c2e8d65",
+      "acceptedDigest": "72f2dce79c656e36a6d45b3082a112bcf26e112e9df8c8383a2db52fd2aaaac0",
+      "offset": "0000000000000000_0000000000000001",
+      "dispatchStatuses": [
+        202
+      ],
+      "domDigests": [
+        "72f2dce79c656e36a6d45b3082a112bcf26e112e9df8c8383a2db52fd2aaaac0",
+        "72f2dce79c656e36a6d45b3082a112bcf26e112e9df8c8383a2db52fd2aaaac0"
+      ]
+    },
+    {
+      "name": "reconnected-canonical-convergence",
+      "digest": "44581b206be25c62bccbf669721e9f3d4cb0de17dafdec3efcc31274342e962d",
+      "offset": "0000000000000000_0000000000000002",
+      "eventCount": 3,
+      "errors": []
+    }
+  ],
+  "network": [
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/chat/preview/welcome",
+      "status": 302,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/auth/preview",
+      "status": 303,
+      "method": "POST"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/chat/preview/welcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/index-2ohkynXU.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/route-pages-XojYSxbE.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/usePrs-Crqro-dg.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/RVI7YCPX-C2QLl0bC.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/ChatChannelPage-Dj0sFnH2.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/3GWKGGQS-DCMp3ufx.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/orgs/preview/members",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/chat/preview/welcome",
+      "status": 302,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/auth/preview",
+      "status": 303,
+      "method": "POST"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/chat/preview/welcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/index-2ohkynXU.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/route-pages-XojYSxbE.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/usePrs-Crqro-dg.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/RVI7YCPX-C2QLl0bC.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/ChatChannelPage-Dj0sFnH2.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/pull-request-sNDlA1WL.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/3GWKGGQS-DCMp3ufx.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/orgs/preview/members",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/dispatch",
+      "status": 202,
+      "method": "POST",
+      "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbc4v3d_c3fggt\",\"body\":\"Critic own pointer keyboard seed e1e9c3fe1c2e8d65\"},\"ts\":1792177372777}}"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/pull-request-sNDlA1WL.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:54828/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/dispatch",
+      "status": 202,
+      "method": "POST",
+      "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbc4vuw_jin7be\",\"body\":\"Critic own pointer keyboard seed e1e9c3fe1c2e8d65 offline\"},\"ts\":1792177373768}}"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:54828/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "errors": []
+}

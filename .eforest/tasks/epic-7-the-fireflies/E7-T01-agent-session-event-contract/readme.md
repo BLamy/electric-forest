@@ -32,10 +32,12 @@ mutations claimed by a session. Sequence numbers are positive safe integers, sta
 1, and are contiguous per session; stream offsets remain opaque strings.
 
 The frozen event kinds are `agent/session-started`, `agent/tool-started`,
-`agent/source-ref`, `agent/tool-finished`, and `agent/session-ended`. Existing
-file-patch and task events retain their existing schemas and add only `origin`;
+`agent/source-ref`, `agent/tool-finished`, and `agent/session-ended`. New E14 changeset publications and task events carry validated `origin`; legacy
+file-patch events remain read-only replay compatibility, not a new agent write format;
 `agent/source-ref` is provenance, not a second mutation or a copy of file/task state.
-Tool payloads store redacted summaries plus SHA-256 digests, never raw credentials. No
+Tool payloads store redacted summaries plus SHA-256 digests, never raw credentials.
+Redacted agent tool logs may include edit deltas, but source-reference records store
+changeset/file-version/content identities without copying textual patch bodies. No
 database, transcript file, or process-local map is authoritative.
 
 ## Deliverables
@@ -84,5 +86,24 @@ database, transcript file, or process-local map is authoritative.
    fails. A green sabotage run refutes test sensitivity.
 6. Run from a cold clone with scrubbed environment and grep source and dependencies for
    database or side-log storage. Any required warm state or hidden authority refutes.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

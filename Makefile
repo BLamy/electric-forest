@@ -874,10 +874,26 @@ verify-E6-T07: _v-e6-t07
 	@echo "verify-E6-T07: OK"
 
 _v-e6-t07: _v-build
-	@CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/loop/test/run-protocol.test.ts packages/platform/test/agent-runs.test.ts
+	@CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/loop/test/run-protocol.test.ts packages/platform/test/agent-run-protocol.test.ts packages/platform/test/agent-runs.test.ts
 	@node tools/verify/e6_t07_evidence.mjs
 	@node tools/verify/e6_t07_sensitivity.mjs
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E6-T07"
 
 # --- end verify section ---
+.PHONY: verify-E12-T00
+verify-E12-T00:
+	@CI=true pnpm -r --filter '@eforest/web...' --filter '@eforest/cli...' run build
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/preview.test.ts
+	@node tools/verify/e12_t00_preview.mjs
+	@node tools/verify/e12_t00_browser.mjs
+	@echo "verify-E12-T00: OK"
+
+.PHONY: verify-E12-T10
+verify-E12-T10:
+	@CI=true pnpm -r --filter '@eforest/web...' --filter '@eforest/cli...' run build
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/hosted.test.ts packages/platform/test/auth.test.ts packages/platform/test/cli-tokens.test.ts packages/platform/test/spa.test.ts packages/platform/test/preview.test.ts
+	@node tools/verify/e12_t10_deadlines.mjs
+	@node tools/verify/e12_t10_hosted.mjs
+	@node tools/verify/e12_t10_browser.mjs
+	@echo "verify-E12-T10: OK"

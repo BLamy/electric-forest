@@ -8,6 +8,7 @@ import {
   type ChatChannelState,
 } from "@eforest/reducers";
 import type { ChatCatalogBinding, ChatChannelBinding } from "./types.js";
+import { LIVE_FOLLOW } from "../live.js";
 
 function encoded(value: string): string {
   return encodeURIComponent(value);
@@ -20,9 +21,8 @@ export function useChatCatalog(org: string): ChatCatalogBinding {
     apiPath: `/api/chat/${encoded(org)}`,
     streamId,
     reducerId: CHAT_CATALOG_REDUCER,
-    // A long-poll returns the moment a new event lands, so a long wait costs no
-    // latency; short waits only burn the per-org follow budget (1000/min).
-    followWaitMs: 10_000,
+    // See live.ts: a bounded hold keeps the shared connection pool turning over.
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 1_000,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });
@@ -39,7 +39,7 @@ export function useChatChannel(
     apiPath: `/api/chat/${encoded(org)}/${encoded(channel)}`,
     streamId,
     reducerId: CHAT_CHANNEL_REDUCER,
-    followWaitMs: 10_000,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 1_000,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });

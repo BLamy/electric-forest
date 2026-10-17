@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"preview|ada","body":"Welcome! Try posting here from two browsers. Everything in this fixture is public and disposable.","id":"preview-welcome","v":1,"writer":{"seq":1,"sub":"preview|ada","v":1}},"ts":4,"type":"chat.message.post"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"preview|ada","body":"Critic own pointer keyboard seed e1e9c3fe1c2e8d65","id":"msg_mvbc4v3d_c3fggt","v":1,"writer":{"seq":2,"sub":"preview|ada","v":1}},"ts":1792177372777,"type":"chat.message.post"}

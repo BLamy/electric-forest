@@ -1,0 +1,36 @@
+{
+  "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "origin": "http://127.0.0.1:53542",
+  "assertions": [
+    "real-platform-runtime",
+    "private-reference-streams",
+    "fixture-notice-before-data",
+    "real-gateway-mutation",
+    "independent-second-fixture-read",
+    "restart-preserves-session-secret-and-events",
+    "separate-volume-isolation",
+    "partial-bootstrap-refusal",
+    "missing-assets-refusal",
+    "configuration-refusal-before-listen",
+    "ended-session-refusal"
+  ],
+  "records": [
+    {
+      "name": "startup",
+      "ms": 640
+    },
+    {
+      "name": "shutdown",
+      "ms": 501
+    },
+    {
+      "name": "restart",
+      "ms": 119
+    }
+  ],
+  "stream": "chat:preview/welcome",
+  "offset": "0000000000000000_0000000000000001",
+  "digest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+  "eventCount": 2,
+  "readmeSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5"
+}

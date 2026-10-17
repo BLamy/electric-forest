@@ -1,0 +1,46 @@
+Scope: all 19 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1081
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1081, reused 1081, downloaded 0, added 127
+Progress: resolved 1081, reused 1081, downloaded 0, added 429
+Progress: resolved 1081, reused 1081, downloaded 0, added 547
+Progress: resolved 1081, reused 1081, downloaded 0, added 740
+Progress: resolved 1081, reused 1081, downloaded 0, added 797
+Progress: resolved 1081, reused 1081, downloaded 0, added 969
+Progress: resolved 1081, reused 1081, downloaded 0, added 1012
+Progress: resolved 1081, reused 1081, downloaded 0, added 1065
+Progress: resolved 1081, reused 1081, downloaded 0, added 1079
+Progress: resolved 1081, reused 1081, downloaded 0, added 1080
+Progress: resolved 1081, reused 1081, downloaded 0, added 1081, done
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/platform/dist/src/bin.js'
+
+devDependencies:
++ @eslint/js 10.0.1
++ @types/node 26.1.1
++ chokidar 4.0.3
++ eslint 10.6.0
++ playwright-core 1.61.1
++ prettier 3.9.4
++ replayio 1.8.2
++ typescript 6.0.3
++ typescript-eslint 8.63.0
++ undici 7.16.0
++ vitest 4.1.10
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: @mongodb-js/zstd, @swc/core, esbuild, lmdb,         │
+│   msgpackr-extract, node-liblzma, protobufjs.                                │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-target-selfcheck/repo/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Done in 11.6s using pnpm v10.15.0

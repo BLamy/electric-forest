@@ -1,0 +1,123 @@
+{
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "scenes": [
+    "shared-fixture-notice",
+    "members-agent-disabled-notice",
+    "add-member-human-only",
+    "escape-closes-member-dialog",
+    "production-integration-routes-refused"
+  ],
+  "focusObservation": {
+    "restoredToTrigger": false,
+    "activeTag": "BODY"
+  },
+  "focusScope": "Focus restoration is recorded for the later design audit; E12-T00 changes no member-dialog focus implementation and makes no focus-restoration claim.",
+  "memberDialogHtml": "<div data-slot=\"credenza\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_m_\" tabindex=\"-1\" class=\"z-401 box-border overflow-hidden bg-card text-foreground shadow-[0_24px_80px_--alpha(black/34%),0_0_0_1px_var(--border)] outline-none absolute top-1/2 left-1/2 w-[400px] max-w-[calc(100%-44px)] rounded-[24px]\" style=\"opacity: 1; transform: translateX(-50%) translateY(-50%);\"><div class=\"relative z-2 flex items-center gap-2.5 px-[14px] pt-[14px] pb-1.5\"><div id=\"_r_m_\" class=\"relative h-[26px] min-w-0 flex-1\"><div class=\"absolute top-0 left-0 text-[18px] leading-[26px] font-bold tracking-[-.2px] whitespace-nowrap\" style=\"opacity: 1; filter: blur(0px); transform: none;\">Add member</div></div><button class=\"bl-btn grid size-[30px] shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-secondary p-0 text-muted-foreground\" data-rac=\"\" type=\"button\" tabindex=\"0\" data-react-aria-pressable=\"true\" aria-label=\"Close\" id=\"react-aria8923756876-_r_v_\"><svg data-slot=\"icon\" class=\"block shrink-0\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6.8 6.8l10.4 10.4M17.2 6.8L6.8 17.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></svg></button></div><div class=\"relative overflow-hidden\" style=\"height: 299px;\"><div class=\"w-full\" style=\"opacity: 1; filter: blur(0px); transform: none;\"><div><div class=\"max-h-[70vh] overflow-y-auto px-4 pt-1 pb-4\"><div class=\"grid gap-3\"><div data-slot=\"segmented\" class=\"isolate flex gap-0.5 rounded-[9px] bg-secondary p-0.5\" data-rac=\"\" aria-label=\"Member kind\" role=\"radiogroup\" aria-orientation=\"horizontal\" id=\"react-aria8923756876-_r_15_\" data-orientation=\"horizontal\"><label data-react-aria-pressable=\"true\" class=\"bl-btn relative flex flex-1 cursor-pointer items-center justify-center rounded-[7px] px-3 py-[5px] text-[13px] font-semibold whitespace-nowrap text-foreground outline-none data-focus-visible:ring-2 data-focus-visible:ring-ring\" data-rac=\"\" data-selected=\"true\"><span style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap;\"><input data-react-aria-pressable=\"true\" tabindex=\"0\" type=\"radio\" value=\"human\" checked=\"\" name=\"react-aria8923756876-_r_1a_\" title=\"\"></span><div data-slot=\"segmented-indicator\" class=\"absolute top-0 left-0 -z-1 size-full rounded-[inherit] bg-card shadow-[0_1px_4px_black] shadow-black/14 transition-[translate,width,height] duration-spring-smooth ease-spring-smooth motion-reduce:transition-none\" data-rac=\"\"></div>Human</label></div><form class=\"grid gap-3\" data-testid=\"invite-form\"><label class=\"grid gap-1 text-[13px] font-semibold\"><span>Email</span><input class=\"h-8 min-w-0 rounded-md border border-border bg-muted px-2 text-[14px] text-foreground placeholder:text-tertiary-foreground focus-visible:outline-2 focus-visible:outline-ring\" placeholder=\"grace@example.test\" data-testid=\"invite-email\" type=\"email\" value=\"\"></label><div data-slot=\"segmented\" class=\"isolate flex gap-0.5 rounded-[9px] bg-secondary p-0.5\" data-rac=\"\" aria-label=\"Role\" role=\"radiogroup\" aria-orientation=\"horizontal\" id=\"react-aria8923756876-_r_1c_\" data-orientation=\"horizontal\"><label data-react-aria-pressable=\"true\" class=\"bl-btn relative flex flex-1 cursor-pointer items-center justify-center rounded-[7px] px-3 py-[5px] text-[13px] font-semibold whitespace-nowrap text-foreground outline-none data-focus-visible:ring-2 data-focus-visible:ring-ring\" data-rac=\"\" data-selected=\"true\"><span style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap;\"><input data-react-aria-pressable=\"true\" tabindex=\"0\" type=\"radio\" value=\"member\" checked=\"\" name=\"react-aria8923756876-_r_1h_\" title=\"\"></span><div data-slot=\"segmented-indicator\" class=\"absolute top-0 left-0 -z-1 size-full rounded-[inherit] bg-card shadow-[0_1px_4px_black] shadow-black/14 transition-[translate,width,height] duration-spring-smooth ease-spring-smooth motion-reduce:transition-none\" data-rac=\"\"></div>Member</label><label data-react-aria-pressable=\"true\" class=\"bl-btn relative flex flex-1 cursor-pointer items-center justify-center rounded-[7px] px-3 py-[5px] text-[13px] font-semibold whitespace-nowrap text-foreground outline-none data-focus-visible:ring-2 data-focus-visible:ring-ring\" data-rac=\"\"><span style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap;\"><input data-react-aria-pressable=\"true\" tabindex=\"-1\" type=\"radio\" value=\"admin\" name=\"react-aria8923756876-_r_1h_\" title=\"\"></span>Admin</label></div><button data-slot=\"button\" class=\"bl-btn box-border [font-family:inherit] transition-[scale,background-color,opacity] duration-spring-snappy ease-spring-snappy data-pressed:not-aria-expanded:scale-[.97] motion-reduce:transition-none inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-[14px] font-medium outline-none whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring data-focus-visible:ring-2 data-focus-visible:ring-ring data-focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50 border-border bg-(--gh-btn) text-foreground hover:bg-(--gh-btn-hover) data-hovered:bg-(--gh-btn-hover)\" data-rac=\"\" type=\"button\" tabindex=\"0\" data-react-aria-pressable=\"true\" id=\"react-aria8923756876-_r_1k_\"><span data-slot=\"text-morph\" class=\"contents\"><span>Send invite</span></span></button><small class=\"text-muted-foreground\">Appends one `member.invite` event on the workspace member stream. The invite is bound to the email; membership is granted when that person signs in and accepts.</small></form></div></div></div></div></div></div>",
+  "endpoints": [
+    {
+      "path": "/api/build",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e"
+      }
+    },
+    {
+      "path": "/healthz",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "path": "/readyz",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "path": "/settings/cli-tokens",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/cli-tokens",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/device-grants",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/dispatch",
+      "action": "agent.register",
+      "status": 403,
+      "body": {
+        "error": "preview-agent-execution-disabled"
+      }
+    },
+    {
+      "path": "/auth/callback?state=fixture&code=fixture",
+      "status": 404,
+      "body": {
+        "error": "preview-oidc-disabled"
+      }
+    },
+    {
+      "path": "/streams/__identity__",
+      "status": 404,
+      "body": {
+        "error": "not-found"
+      }
+    },
+    {
+      "path": "/admin",
+      "status": 404,
+      "body": {
+        "error": "not-found"
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "abortedFollows": [],
+  "screenshot": {
+    "path": "human-only-members.png",
+    "sha256": "6b2910408f08a9d74f9c17ee5f62d9f92ead3f266b0045460c1a6aa67ccdb7e9"
+  },
+  "video": {
+    "path": "hosted-supplement.mp4",
+    "duration": 6.44,
+    "sha256": "9f07a5dfb40813b0809fdd282867c787570b7c381ee0ad397d6f5378bb5879dd"
+  }
+}

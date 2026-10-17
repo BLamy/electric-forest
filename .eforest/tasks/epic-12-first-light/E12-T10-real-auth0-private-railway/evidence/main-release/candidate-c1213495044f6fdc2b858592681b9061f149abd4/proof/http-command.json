@@ -1,0 +1,40 @@
+{
+  "name": "http",
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "command": [
+    "node",
+    "tools/verify/e12_t10_hosted.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http"
+  ],
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "startedAt": "2026-10-17T00:16:45.482223+00:00",
+  "endedAt": "2026-10-17T00:17:02.908693+00:00",
+  "elapsedSeconds": 17.425776,
+  "exitCode": 0,
+  "before": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "after": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "candidateUnchanged": true,
+  "environmentScrubbed": [
+    "NODE_OPTIONS",
+    "NODE_ENV",
+    "npm_config_*"
+  ],
+  "stdout": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http.stdout.log",
+    "bytes": 785,
+    "sha256": "353ced83ac28dc0cf89ddbe681669cd8457f016653e7b179c4893b1e740246ca"
+  },
+  "stderr": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http.stderr.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { DispatchRefusalError } from "@eforest/web-hooks";
+import { cn } from "@brett_lamy/ui";
 import { RouteLink } from "../navigation.js";
+import { Box, ghButton, ghTextarea } from "../blocks/github/parts.js";
 import { chooseWikiSaveRequest, useWikiPage, wikiIndexPath, wikiPageRoute } from "./useWiki.js";
 
 export interface LoadedSource {
@@ -90,7 +92,7 @@ export function WikiEditor(props: {
   const missing = wiki.tree.status === "live" && wiki.page === undefined;
   return (
     <section
-      className="wiki-view wiki-editor"
+      className="grid gap-4"
       data-testid="wiki-editor"
       data-ef-stream={wiki.streamId}
       data-ef-offset={wiki.tree.checkpoint}
@@ -107,62 +109,97 @@ export function WikiEditor(props: {
       data-saving-offset={savingOffset ?? ""}
       data-stream-status={wiki.tree.status}
     >
-      <nav aria-label="Wiki editor breadcrumb">
+      <nav aria-label="Wiki editor breadcrumb" className="flex items-center gap-1 text-[14px]">
         <RouteLink href={wikiIndexPath(props.org, props.repo)}>Wiki</RouteLink>
-        <span aria-hidden="true"> / </span>
+        <span aria-hidden="true" className="text-tertiary-foreground">
+          /
+        </span>
         <RouteLink href={wikiPageRoute(props.org, props.repo, props.slug)}>{props.slug}</RouteLink>
-        <span aria-hidden="true"> / edit</span>
+        <span aria-hidden="true" className="text-tertiary-foreground">
+          / edit
+        </span>
       </nav>
-      <div className="wiki-heading">
-        <div>
-          <p className="eyebrow">Patch editor</p>
-          <h2>Edit {props.slug}.md</h2>
-        </div>
-        <code data-testid="wiki-editor-base">{loaded?.revision ?? "loading"}</code>
-      </div>
 
       {missing ? (
-        <p role="alert" data-testid="wiki-editor-missing">
+        <p role="alert" data-testid="wiki-editor-missing" className="m-0 text-destructive">
           This page no longer exists.
         </p>
       ) : loaded === undefined ? (
-        <p data-testid="wiki-editor-loading">Loading source and base revision…</p>
+        <p data-testid="wiki-editor-loading" role="status" className="m-0 text-muted-foreground">
+          Loading source and base revision…
+        </p>
       ) : (
-        <form onSubmit={(event) => void save(event)}>
-          <label htmlFor="wiki-source">Markdown source</label>
-          <textarea
-            id="wiki-source"
-            data-testid="wiki-source"
-            value={draft}
-            rows={22}
-            spellCheck={false}
-            onChange={(event) => {
-              setDraft(event.currentTarget.value);
-              setDirty(event.currentTarget.value !== loaded.text);
-            }}
-          />
-          <div className="wiki-editor-actions">
-            <button type="submit" disabled={!dirty || savingOffset !== undefined}>
-              {savingOffset === undefined ? "Save changes" : "Waiting for live replay…"}
-            </button>
-            <span data-testid="wiki-save-status">
-              {savingOffset === undefined
-                ? dirty
-                  ? "Unsaved changes"
-                  : "Up to date"
-                : savingOffset}
-            </span>
-          </div>
-        </form>
+        <Box
+          header={
+            <>
+              <h1 className="m-0 min-w-0 flex-1 truncate text-[14px] font-semibold">
+                Edit {props.slug}.md
+              </h1>
+              <code data-testid="wiki-editor-base" className="text-[12px] text-muted-foreground">
+                {loaded.revision}
+              </code>
+            </>
+          }
+        >
+          <form className="grid gap-3 p-4" onSubmit={(event) => void save(event)}>
+            <label htmlFor="wiki-source" className="text-[13px] font-semibold">
+              Markdown source
+            </label>
+            <textarea
+              id="wiki-source"
+              data-testid="wiki-source"
+              className={cn(ghTextarea, "font-mono text-[13px]")}
+              value={draft}
+              rows={22}
+              spellCheck={false}
+              onChange={(event) => {
+                setDraft(event.currentTarget.value);
+                setDirty(event.currentTarget.value !== loaded.text);
+              }}
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={!dirty || savingOffset !== undefined}
+                className={ghButton(true)}
+              >
+                {savingOffset === undefined ? "Save changes" : "Waiting for live replay…"}
+              </button>
+              <span data-testid="wiki-save-status" className="text-[12px] text-muted-foreground">
+                {savingOffset === undefined
+                  ? dirty
+                    ? "Unsaved changes"
+                    : "Up to date"
+                  : savingOffset}
+              </span>
+            </div>
+          </form>
+        </Box>
       )}
 
+      {loaded === undefined && !missing ? (
+        <code data-testid="wiki-editor-base" className="sr-only">
+          loading
+        </code>
+      ) : null}
+
       {refusal === undefined ? null : (
-        <div className="wiki-stale-refusal" role="alert" data-testid="wiki-stale-refusal">
+        <div
+          className="grid gap-2 rounded-md border border-destructive/60 p-4"
+          role="alert"
+          data-testid="wiki-stale-refusal"
+        >
           <strong>
             {refusal === "stale-base" ? "This page changed while you were editing." : refusal}
           </strong>
-          <p>Your draft was not applied and the branch was not changed.</p>
-          <button type="button" onClick={loadLatest}>
+          <p className="m-0 text-muted-foreground">
+            Your draft was not applied and the branch was not changed.
+          </p>
+          <button
+            type="button"
+            onClick={loadLatest}
+            className={cn(ghButton(), "justify-self-start")}
+          >
             Load latest
           </button>
         </div>

@@ -1,0 +1,16 @@
+{
+  "before": {
+    "path": "../hosted-before/witness-reconnected.jsonl",
+    "eventCount": 9,
+    "sha256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0"
+  },
+  "after": {
+    "path": "../hosted-after/witness-reconnected.jsonl",
+    "eventCount": 11,
+    "sha256": "42efd9c81759f43d818e5c4d5d6fe1b554677b744f44131396ed6fe4a91210ba"
+  },
+  "preservedPrefixSha256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0",
+  "prefixByteIdentical": true,
+  "welcomeSeedCount": 1,
+  "additionalAcceptedEvents": 2
+}

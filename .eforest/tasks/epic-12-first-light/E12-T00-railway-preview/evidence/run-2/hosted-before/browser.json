@@ -1,0 +1,213 @@
+{
+  "mode": "preview",
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+  "browser": "155.0.8059.80",
+  "evidenceLayer": "Playwright fallback; Replay QA unavailable (authentication required)",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "terminalLongPolls": [
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/repos/preview/forest/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/repos/preview/forest/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "role": "ada",
+      "url": "https://electric-forest-preview-production.up.railway.app/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "captures": [
+    {
+      "name": "ada-notice.png",
+      "sha256": "80b10ff47175330361e4882a9d8192d75078dd7c703fb060fb14463adf0b684d"
+    },
+    {
+      "name": "seeded-file.png",
+      "sha256": "7a5d3dc9960530785fb8418acc2fddb7a8ce15ca9a460e9f787117bcc4d43c51"
+    },
+    {
+      "name": "grace-notice.png",
+      "sha256": "80b10ff47175330361e4882a9d8192d75078dd7c703fb060fb14463adf0b684d"
+    },
+    {
+      "name": "live-convergence.png",
+      "sha256": "b21474bbc682b5198910352f9e9271f4c13a33744a93911db0bd632f22f976fd"
+    },
+    {
+      "name": "agents-disabled.png",
+      "sha256": "d8b80ae8e15d5b374178c74746b9e374206aed6593d6e1aed518fed6b1d26b83"
+    },
+    {
+      "name": "ada-notice.png",
+      "sha256": "80b10ff47175330361e4882a9d8192d75078dd7c703fb060fb14463adf0b684d"
+    },
+    {
+      "name": "relogin.png",
+      "sha256": "1bd12dfc74b6f13088cf46f33526705166f5550f5c2d6bb038132f8e3ae15536"
+    }
+  ],
+  "videos": [
+    {
+      "name": "ada.mp4",
+      "duration": 14.08,
+      "sha256": "c31ae49fa4233c7c4e960aff20df0bc0fcc319e461b215a644127548eff9f3c5"
+    },
+    {
+      "name": "grace-before-reconnect.mp4",
+      "duration": 8.88,
+      "sha256": "758150d37834306b678a7fa279300126fd0b6e7d2a1f1643b364fcdeb941600b"
+    },
+    {
+      "name": "grace-after-reconnect.mp4",
+      "duration": 3.6,
+      "sha256": "21db860a09a292ed2ca8fea127646554d8cce10b65ce00f0498a8b617c22d7e7"
+    }
+  ],
+  "timeline": [
+    {
+      "name": "ada-notice-before-fixture-data",
+      "ms": 1154,
+      "path": "/preview/forest/blob/main/README.md"
+    },
+    {
+      "name": "seeded-file-browsed",
+      "ms": 3371,
+      "bytesSha256": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5",
+      "build": "1f9e06b87109a93c75107842d4c8aa65902f8622"
+    },
+    {
+      "name": "grace-notice-before-fixture-data",
+      "ms": 3835,
+      "path": "/chat/preview/welcome"
+    },
+    {
+      "name": "two-profile-accepted",
+      "ms": 9582,
+      "dump": "two-profile-accepted.jsonl",
+      "offset": "0000000000000000_0000000000000007",
+      "digest": "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12",
+      "eventCount": 8,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000007",
+          "digest": "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000007",
+          "digest": "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12"
+        }
+      ]
+    },
+    {
+      "name": "witness-disconnected",
+      "ms": 9750,
+      "method": "closed page; isolated profile and its session retained"
+    },
+    {
+      "name": "witness-reconnected",
+      "ms": 11399,
+      "dump": "witness-reconnected.jsonl",
+      "offset": "0000000000000000_0000000000000008",
+      "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "eventCount": 9,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000008",
+          "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000008",
+          "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+        }
+      ]
+    },
+    {
+      "name": "agent-execution-and-integrations-off",
+      "ms": 11905
+    },
+    {
+      "name": "invalid-and-ended-session-refused",
+      "ms": 12756,
+      "invalid": 401,
+      "ended": 401
+    },
+    {
+      "name": "ada-notice-before-fixture-data",
+      "ms": 13048,
+      "path": "/chat/preview/welcome"
+    },
+    {
+      "name": "relogin-preserves-writes",
+      "ms": 13790,
+      "dump": "relogin-preserves-writes.jsonl",
+      "offset": "0000000000000000_0000000000000008",
+      "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "eventCount": 9,
+      "states": [
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000008",
+          "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+        },
+        {
+          "stream": "chat:preview/welcome",
+          "offset": "0000000000000000_0000000000000008",
+          "digest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+        }
+      ]
+    }
+  ]
+}

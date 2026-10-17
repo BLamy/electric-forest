@@ -1,0 +1,3975 @@
+{
+  "task": "E12-T10",
+  "proof": "dedicated-fixture-real-gateway-provider; not actual Auth0",
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "origin": "https://127.0.0.1:50453",
+  "records": [
+    {
+      "name": "ready-volume-missing-authority-refuses-before-ensure",
+      "markerUnchanged": true,
+      "keyUnchanged": true
+    },
+    {
+      "name": "bad-revision-altered-missing-assets-refuse-before-store-and-listen",
+      "privateDirectoryCreated": false
+    },
+    {
+      "name": "/healthz",
+      "revision": "c1213495044f6fdc2b858592681b9061f149abd4",
+      "artifactDigest": "008a546a9046e6de140e83ad7b2ee5db4092020aa74e2b28486a706a56265c48",
+      "limits": {
+        "maxBodyBytes": 8388608,
+        "requestDeadlineMs": 1000,
+        "readinessMs": 60000,
+        "drainMs": 15000,
+        "transactionTtlMs": 600000,
+        "sessionTtlSeconds": 86400,
+        "maxLongPollMs": 10000,
+        "http": {
+          "headersTimeout": 1000,
+          "requestTimeout": 1000,
+          "connectionsCheckingInterval": 100,
+          "keepAliveTimeout": 1000
+        }
+      }
+    },
+    {
+      "name": "/readyz",
+      "revision": "c1213495044f6fdc2b858592681b9061f149abd4",
+      "artifactDigest": "008a546a9046e6de140e83ad7b2ee5db4092020aa74e2b28486a706a56265c48",
+      "limits": {
+        "maxBodyBytes": 8388608,
+        "requestDeadlineMs": 1000,
+        "readinessMs": 60000,
+        "drainMs": 15000,
+        "transactionTtlMs": 600000,
+        "sessionTtlSeconds": 86400,
+        "maxLongPollMs": 10000,
+        "http": {
+          "headersTimeout": 1000,
+          "requestTimeout": 1000,
+          "connectionsCheckingInterval": 100,
+          "keepAliveTimeout": 1000
+        }
+      }
+    },
+    {
+      "name": "/api/build",
+      "revision": "c1213495044f6fdc2b858592681b9061f149abd4",
+      "artifactDigest": "008a546a9046e6de140e83ad7b2ee5db4092020aa74e2b28486a706a56265c48",
+      "limits": {
+        "maxBodyBytes": 8388608,
+        "requestDeadlineMs": 1000,
+        "readinessMs": 60000,
+        "drainMs": 15000,
+        "transactionTtlMs": 600000,
+        "sessionTtlSeconds": 86400,
+        "maxLongPollMs": 10000,
+        "http": {
+          "headersTimeout": 1000,
+          "requestTimeout": 1000,
+          "connectionsCheckingInterval": 100,
+          "keepAliveTimeout": 1000
+        }
+      }
+    },
+    {
+      "name": "/api/deployment",
+      "revision": "c1213495044f6fdc2b858592681b9061f149abd4",
+      "artifactDigest": "008a546a9046e6de140e83ad7b2ee5db4092020aa74e2b28486a706a56265c48",
+      "limits": {
+        "maxBodyBytes": 8388608,
+        "requestDeadlineMs": 1000,
+        "readinessMs": 60000,
+        "drainMs": 15000,
+        "transactionTtlMs": 600000,
+        "sessionTtlSeconds": 86400,
+        "maxLongPollMs": 10000,
+        "http": {
+          "headersTimeout": 1000,
+          "requestTimeout": 1000,
+          "connectionsCheckingInterval": 100,
+          "keepAliveTimeout": 1000
+        }
+      }
+    },
+    {
+      "name": "normalized-double-slash-target",
+      "status": 400,
+      "location": null
+    },
+    {
+      "name": "private-route /streams/__identity__",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /%73treams/__identity__",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /%2573treams/__identity__",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /admin",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /__admin",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /.env",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /.git/config",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /__proof/e3-t02",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "private-route /auth/preview",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "hosted-device-refused",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "cross-browser-callback-transplant",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "missing-browser-cookie",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "wrong-browser-cookie",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "unknown-state",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "expired-transaction",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-nonce",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-audience",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-issuer",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-expiry",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-signature",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-algorithm",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-unverified-email",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-missing-email-verification",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "OIDC-verifier",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "accepted-browser-PKCE-login",
+      "cookies": [
+        {
+          "name": "ef_session",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax",
+          "path": "/",
+          "maxAge": "86400"
+        },
+        {
+          "name": "ef_login",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax",
+          "path": "/auth",
+          "maxAge": "0"
+        },
+        {
+          "name": "ef_next",
+          "secure": true,
+          "httpOnly": true,
+          "sameSite": "Lax",
+          "path": "/",
+          "maxAge": "0"
+        }
+      ],
+      "subject": "auth0|e12-t10-fixture-ada",
+      "identity": {
+        "__identity__": {
+          "count": 2,
+          "sha256": "07e2b718ccd6ba0d453453148e555783fa465aecfebd6f81711329a64f69d924"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "reused-callback",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 2,
+          "sha256": "07e2b718ccd6ba0d453453148e555783fa465aecfebd6f81711329a64f69d924"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 2,
+          "sha256": "07e2b718ccd6ba0d453453148e555783fa465aecfebd6f81711329a64f69d924"
+        },
+        "ns:root": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-ada": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ns:org:private-grace": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "chat:private-ada/welcome": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "name": "other-tenant-read",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "other-tenant-follow",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "other-tenant-chat",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "other-tenant-chat-follow",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "other-tenant-write",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "anonymous-read",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "anonymous-follow",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "anonymous-chat",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "anonymous-chat-follow",
+      "status": 404,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "anonymous-write",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/dispatch missing",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/dispatch null",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/dispatch https://evil.invalid",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/orgs/private-ada/invites missing",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/orgs/private-ada/invites null",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/orgs/private-ada/invites https://evil.invalid",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens missing",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens null",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens https://evil.invalid",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens/unknown missing",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens/unknown null",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /api/cli-tokens/unknown https://evil.invalid",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /auth/logout missing",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /auth/logout null",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "origin-refusal /auth/logout https://evil.invalid",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "canonical-invite-no-outbound",
+      "origin": "https://127.0.0.1:50453",
+      "emailed": null
+    },
+    {
+      "name": "integration-admission agent.register",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "integration-admission agent.run.started",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "integration-admission integration.configure",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "integration-admission webhook.configure",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "integration-admission email.send",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "integration-admission mcp.register",
+      "status": 403,
+      "before": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 4,
+          "sha256": "f679d466a8d50bb658d2347ec2406eb3675510ed70f50592c8d6573dd1a54459"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "valid-web-ID-JWT-is-not-an-API-credential",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "mixed-credential-web-session-only /api/cli-tokens",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "mixed-credential-web-session-only /api/cli-tokens/unknown",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "mixed-credential-web-session-only /auth/logout",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "bad-bearer-never-falls-back-to-cookie",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 5,
+          "sha256": "c314088287088768105e34754bf3af02486dad16e6f7dba7b275a693ec6fb82e"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 2,
+          "sha256": "5adf05b712199bd94f41766c5afd8c2eccf7021bccee9569445c202744f936ef"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "hosted-follow-over-profile",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 7,
+          "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 7,
+          "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "drain-with-pending-follow",
+      "outcome": "socket-closed"
+    },
+    {
+      "name": "interrupted-login-fails-closed-after-restart",
+      "status": 400,
+      "before": {
+        "__identity__": {
+          "count": 7,
+          "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 7,
+          "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "ended-session-stays-refused-after-restart",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 9,
+          "sha256": "80b95815313c96de9276803d7b592f407e2c28e7c4230b3090b6135460de8aa4"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 9,
+          "sha256": "80b95815313c96de9276803d7b592f407e2c28e7c4230b3090b6135460de8aa4"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "revoked-grant-stays-refused-after-restart",
+      "status": 401,
+      "before": {
+        "__identity__": {
+          "count": 9,
+          "sha256": "80b95815313c96de9276803d7b592f407e2c28e7c4230b3090b6135460de8aa4"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      },
+      "after": {
+        "__identity__": {
+          "count": 9,
+          "sha256": "80b95815313c96de9276803d7b592f407e2c28e7c4230b3090b6135460de8aa4"
+        },
+        "ns:root": {
+          "count": 2,
+          "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+        },
+        "ns:org:private-ada": {
+          "count": 3,
+          "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+        },
+        "ns:org:private-grace": {
+          "count": 2,
+          "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+        },
+        "chat:private-ada/welcome": {
+          "count": 1,
+          "sha256": "1f980aef286f7895a8d4fb4a2c6ed7009e682616bfcfff0936a5eb17d059baa2"
+        },
+        "fs:private-ada/notebook:main:meta": {
+          "count": 1,
+          "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+        }
+      }
+    },
+    {
+      "name": "body-at-supported-boundary",
+      "bytes": 8388608,
+      "status": 401
+    },
+    {
+      "name": "bounded-socket-bodies",
+      "declaredOversize": 413,
+      "chunkedOversize": 413,
+      "stalled": 408,
+      "fixtureDeadlineMs": 1000,
+      "defaultDeadlineMs": 30000
+    }
+  ],
+  "dumps": [
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/identity-before-restart.jsonl",
+      "count": 7,
+      "transportCursor": "0000000000000000_0000000000001841",
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "digest": "05fcc5ec376e09aaef1c8ed7ac76f286f66fadf7f9472a8efe2963aa966a9130",
+      "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/identity-after-restart.jsonl",
+      "count": 7,
+      "transportCursor": "0000000000000000_0000000000001841",
+      "lastApplicationOffset": "0000000000000000_0000000000000006",
+      "digest": "05fcc5ec376e09aaef1c8ed7ac76f286f66fadf7f9472a8efe2963aa966a9130",
+      "sha256": "5ec7ceeb44de980e2a6eb550e91800e3e9d959872a56b23f6a6149716cc469ea"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/identity-final.jsonl",
+      "count": 10,
+      "transportCursor": "0000000000000000_0000000000002405",
+      "lastApplicationOffset": "0000000000000000_0000000000000009",
+      "digest": "21303147695f63bbdded22fa5b6f8ec877000ec1e1660efc43c3591a0f9536d3",
+      "sha256": "e7945761ee875e2e91c5a8069e77c01dc6ae7e5fcb079a185e97e1a74c807832"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/ns-root.jsonl",
+      "streamId": "ns:root",
+      "count": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "sha256": "3015d0abe69aacf0ee27780ef8c2b2574bc953143a9c8f339476181ca07bd83f"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/ns-org-private-ada.jsonl",
+      "streamId": "ns:org:private-ada",
+      "count": 3,
+      "lastApplicationOffset": "0000000000000000_0000000000000002",
+      "sha256": "06d73ebe8e7ff440939e29e693ae62f6276cff71965d8715bbbb513c0db23640"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/ns-org-private-grace.jsonl",
+      "streamId": "ns:org:private-grace",
+      "count": 2,
+      "lastApplicationOffset": "0000000000000000_0000000000000001",
+      "sha256": "eb014d1c3ed93f778096fc1d66ad11578c7e1a291b1f1967c14be67c6e90da96"
+    },
+    {
+      "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/http/fs-private-ada-notebook-main-meta.jsonl",
+      "streamId": "fs:private-ada/notebook:main:meta",
+      "count": 1,
+      "lastApplicationOffset": "0000000000000000_0000000000000000",
+      "sha256": "f1895661ef62d8f119a7a76b669a318fb707b274e203191bbc5629678c9306f4"
+    }
+  ],
+  "exchanges": [
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": false,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    },
+    {
+      "pkce": "S256",
+      "challengeMatched": true,
+      "clientIdMatched": true,
+      "callback": "https://127.0.0.1:50453/auth/callback",
+      "credentialsRetained": false
+    }
+  ],
+  "timings": [
+    {
+      "name": "startup",
+      "elapsedMs": 198
+    },
+    {
+      "name": "shutdown-for-restart",
+      "elapsedMs": 2009
+    },
+    {
+      "name": "restart",
+      "elapsedMs": 138
+    },
+    {
+      "name": "shutdown-for-restart",
+      "elapsedMs": 507
+    },
+    {
+      "name": "restart",
+      "elapsedMs": 151
+    }
+  ],
+  "stableSecret": {
+    "privateDirectoryMode": "0700",
+    "keyMode": "0600",
+    "beforeSha256": "06d5a242293145ea8a3b128d3733286faa5880bd043bf89f002de0de5cbeeddc",
+    "afterSha256": "06d5a242293145ea8a3b128d3733286faa5880bd043bf89f002de0de5cbeeddc"
+  },
+  "providerPubliclyReachable": false,
+  "publicFixtureSeam": false,
+  "productionCredentialsUsed": false
+}

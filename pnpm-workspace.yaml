@@ -3,8 +3,8 @@ packages:
   - apps/*
 
 allowBuilds:
-  '@mongodb-js/zstd': set this to true or false
-  '@swc/core': set this to true or false
+  "@mongodb-js/zstd": set this to true or false
+  "@swc/core": set this to true or false
   esbuild: set this to true or false
   lmdb: set this to true or false
   msgpackr-extract: set this to true or false

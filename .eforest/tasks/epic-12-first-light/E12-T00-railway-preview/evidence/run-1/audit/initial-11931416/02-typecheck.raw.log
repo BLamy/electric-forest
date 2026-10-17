@@ -1,0 +1,4 @@
+
+> electric-forest@0.0.0 typecheck /Users/blamy/Documents/Codex/electric-forest
+> tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit
+

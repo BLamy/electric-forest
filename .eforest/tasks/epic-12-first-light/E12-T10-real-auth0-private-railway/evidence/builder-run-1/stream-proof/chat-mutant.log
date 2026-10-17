@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py", line 52, in <module>
+    main()
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/chat.py", line 47, in main
+    assert value == args.expect, (value, args.expect)
+AssertionError: ('09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3', '6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670')

@@ -1,0 +1,27 @@
+{
+  "streams": {
+    "ns:root": {
+      "records": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "892166733b1871aaa31a0fb9029d07da2fc666bad17f1ffd449a0e9f5d1ef9a0",
+      "bytesSha256": "77e8d1b986a71539f15daa18430edace16036a0a9d47adc53afb93d66a04fedc"
+    },
+    "ns:org:alpha": {
+      "records": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "a38fbb3dd39ef01b76f93851cec9dea7aa775ae2549cbb3be1ed3c8c07458982",
+      "bytesSha256": "626b1b7482e1f4c71c760b93454b4d1008ddb1c25ce0ae898ad7adad047e501f"
+    },
+    "ns:org:beta": {
+      "records": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "e76cf2e07dec2fdc31c8a995ea16e0afbb49c617814ef4933bd52dd2640f8309",
+      "bytesSha256": "869fb5997d9117f6f4042fb32bece94e7ab04efc1f522932691484a46dc0871c"
+    }
+  },
+  "viewDigest": "fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f",
+  "visibleOrgs": [
+    "alpha",
+    "beta"
+  ]
+}

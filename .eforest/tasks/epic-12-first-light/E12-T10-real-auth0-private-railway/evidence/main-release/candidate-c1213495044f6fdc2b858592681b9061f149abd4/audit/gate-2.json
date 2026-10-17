@@ -1,0 +1,60 @@
+{
+  "argv": [
+    "/bin/zsh",
+    "-f",
+    "-c",
+    "pnpm typecheck"
+  ],
+  "auditInstrumentationUnchanged": true,
+  "command": "pnpm typecheck",
+  "commandPid": 56018,
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "durationSeconds": 11.941903625,
+  "envOverrides": {
+    "GIT_OPTIONAL_LOCKS": "0"
+  },
+  "exitCode": 0,
+  "gate": 2,
+  "monotonicEndNs": 11961697166,
+  "monotonicStartNs": 19793541,
+  "removedEnvironmentNames": [],
+  "runnerPid": 56017,
+  "runnerScript": {
+    "bytes": 3620,
+    "path": "run-gate.py",
+    "sha256": "16be71791cea84167bf6ab5852fcf4bb22faf8a31c2bc91c1d164d0a1e65fb0c"
+  },
+  "sourceCheckArgv": [
+    "python3",
+    "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-c1213495/source-freeze.py",
+    "after-gate-2"
+  ],
+  "sourceCheckExitCode": 0,
+  "sourceCheckStderr": {
+    "bytes": 0,
+    "path": "gate-2.source-check.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourceCheckStdout": {
+    "bytes": 488,
+    "path": "gate-2.source-check.stdout.log",
+    "sha256": "0ae963e78df477630f8a49e3958e168c9ff2fbf983342062ae923370d534045f"
+  },
+  "sourceFreezeScript": {
+    "bytes": 8837,
+    "path": "source-freeze.py",
+    "sha256": "276609e0b41ca0b42c0b3f8dc80305111acfd2b8991009c30f97cfa0a62613e1"
+  },
+  "stderr": {
+    "bytes": 0,
+    "path": "gate-2.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stdout": {
+    "bytes": 161,
+    "path": "gate-2.stdout.log",
+    "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+  },
+  "utcEnd": "2026-10-17T00:01:46.949863+00:00",
+  "utcStart": "2026-10-17T00:01:35.007430+00:00"
+}

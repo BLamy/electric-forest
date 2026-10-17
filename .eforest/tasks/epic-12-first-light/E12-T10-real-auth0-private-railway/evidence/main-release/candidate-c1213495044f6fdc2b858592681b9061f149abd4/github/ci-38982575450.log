@@ -1,0 +1,933 @@
+Ordered root gates	Set up job	﻿2026-10-16T23:39:28.3695943Z Current runner version: '2.337.0'
+Ordered root gates	Set up job	2026-10-16T23:39:28.3731586Z ##[group]Runner Image Provisioner
+Ordered root gates	Set up job	2026-10-16T23:39:28.3732999Z Hosted Compute Agent
+Ordered root gates	Set up job	2026-10-16T23:39:28.3734288Z Version: 20261012.601
+Ordered root gates	Set up job	2026-10-16T23:39:28.3735468Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+Ordered root gates	Set up job	2026-10-16T23:39:28.3736670Z Build Date: 2026-10-12T17:48:21Z
+Ordered root gates	Set up job	2026-10-16T23:39:28.3737787Z Worker ID: {03aaf324-6aff-4cae-abe9-6a27b3d8f7d1}
+Ordered root gates	Set up job	2026-10-16T23:39:28.3739122Z Region: eastus
+Ordered root gates	Set up job	2026-10-16T23:39:28.3740037Z Cloud: Azure
+Ordered root gates	Set up job	2026-10-16T23:39:28.3740962Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:39:28.3743529Z ##[group]Operating System
+Ordered root gates	Set up job	2026-10-16T23:39:28.3744571Z Ubuntu
+Ordered root gates	Set up job	2026-10-16T23:39:28.3745527Z 24.04.5
+Ordered root gates	Set up job	2026-10-16T23:39:28.3746399Z LTS
+Ordered root gates	Set up job	2026-10-16T23:39:28.3747337Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:39:28.3748237Z ##[group]Runner Image
+Ordered root gates	Set up job	2026-10-16T23:39:28.3749159Z Image: ubuntu-24.04
+Ordered root gates	Set up job	2026-10-16T23:39:28.3750220Z Version: 20261012.334.1
+Ordered root gates	Set up job	2026-10-16T23:39:28.3752077Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+Ordered root gates	Set up job	2026-10-16T23:39:28.3755417Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+Ordered root gates	Set up job	2026-10-16T23:39:28.3757277Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:39:28.3759118Z ##[group]GITHUB_TOKEN Permissions
+Ordered root gates	Set up job	2026-10-16T23:39:28.3762044Z Contents: read
+Ordered root gates	Set up job	2026-10-16T23:39:28.3763070Z Metadata: read
+Ordered root gates	Set up job	2026-10-16T23:39:28.3764277Z ##[endgroup]
+Ordered root gates	Set up job	2026-10-16T23:39:28.3767321Z Secret source: Actions
+Ordered root gates	Set up job	2026-10-16T23:39:28.3768842Z Cache mode: write
+Ordered root gates	Set up job	2026-10-16T23:39:28.3770073Z Prepare workflow directory
+Ordered root gates	Set up job	2026-10-16T23:39:28.4243842Z Prepare all required actions
+Ordered root gates	Set up job	2026-10-16T23:39:28.4315407Z Getting action download info
+Ordered root gates	Set up job	2026-10-16T23:39:28.6237163Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+Ordered root gates	Set up job	2026-10-16T23:39:28.7340602Z Download action repository 'pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa' (SHA:f40ffcd9367d9f12939873eb1018b921a783ffaa)
+Ordered root gates	Set up job	2026-10-16T23:39:28.9405427Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Ordered root gates	Set up job	2026-10-16T23:39:29.1261091Z Complete job name: Ordered root gates
+Ordered root gates	Check out source and pinned emulators	﻿2026-10-16T23:39:29.2131729Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2132808Z with:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2133440Z   submodules: recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2133946Z   persist-credentials: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2134473Z   repository: BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2138019Z   token: ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2138455Z   ssh-strict: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2138890Z   ssh-user: git
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2139310Z   clean: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2139799Z   sparse-checkout-cone-mode: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2140319Z   fetch-depth: 1
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2140747Z   fetch-tags: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2141190Z   show-progress: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2141635Z   lfs: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2142054Z   set-safe-directory: true
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2142556Z   allow-unsafe-pr-checkout: false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.2143588Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3145694Z Syncing repository: BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3147973Z ##[group]Getting Git version info
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3149399Z Working directory is '/home/runner/work/electric-forest/electric-forest'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3150717Z [command]/usr/bin/git version
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3240896Z git version 2.55.0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3288285Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3298005Z Temporarily overriding HOME='/home/runner/work/_temp/9b72a776-ab1d-49ab-b6e1-d7d6838b7019' before making global git config changes
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3317090Z Adding repository directory to the temporary git global config as a safe directory
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3319590Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3371067Z Deleting the contents of '/home/runner/work/electric-forest/electric-forest'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3375575Z ##[group]Initializing the repository
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3380715Z [command]/usr/bin/git init /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3496570Z hint: Using 'master' as the name for the initial branch. This default branch name
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3498020Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3499539Z hint: to use in all of your new repositories, which will suppress this warning,
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3501027Z hint: call:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3502018Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3503425Z hint: 	git config --global init.defaultBranch <name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3504936Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3506205Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3508307Z hint: 'development'. The just-created branch can be renamed via this command:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3509864Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3510736Z hint: 	git branch -m <name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3511875Z hint:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3513582Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3516070Z Initialized empty Git repository in /home/runner/work/electric-forest/electric-forest/.git/
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3526957Z [command]/usr/bin/git remote add origin https://github.com/BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3576675Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3578738Z ##[group]Disabling automatic garbage collection
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3581334Z [command]/usr/bin/git config --local gc.auto 0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3619564Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3621606Z ##[group]Setting up auth
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3636308Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.3673985Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4156050Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4202004Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4483172Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4523839Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4778085Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4820358Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4822387Z ##[group]Fetching the repository
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:29.4831575Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bcbbebe4c8fcd25d63517f3ceb05ee29270fe9d0:refs/remotes/pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4633727Z From https://github.com/BLamy/electric-forest
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4636063Z  * [new ref]         bcbbebe4c8fcd25d63517f3ceb05ee29270fe9d0 -> pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4640970Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4643615Z ##[group]Determining the checkout info
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4646035Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4650311Z [command]/usr/bin/git sparse-checkout disable
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4703797Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4739384Z ##[group]Checking out the ref
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.4742662Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/78/merge
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8391132Z Note: switching to 'refs/remotes/pull/78/merge'.
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8393465Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8395686Z You are in 'detached HEAD' state. You can look around, make experimental
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8397685Z changes and commit them, and you can discard any commits you make in this
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8399589Z state without impacting any branches by switching back to a branch.
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8400960Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8401781Z If you want to create a new branch to retain commits you create, you may
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8403546Z do so (now or later) by using -c with the switch command. Example:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8404541Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8404959Z   git switch -c <new-branch-name>
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8405726Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8406158Z Or undo this operation with:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8406783Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8407232Z   git switch -
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8407702Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8408729Z Turn off this advice by setting config variable advice.detachedHead to false
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8410463Z 
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8412532Z HEAD is now at bcbbebe Merge 1eda083c1ab66bb89125734610063e14cdd448e8 into bd56c79feb8ada96736e7b6d2e79eb71738ea3a3
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8419160Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8421679Z ##[group]Setting up auth for fetching submodules
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8425484Z [command]/usr/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8472256Z [command]/usr/bin/git config --global --unset-all url.https://github.com/.insteadOf
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8510879Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8627591Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf org-324928@github.com:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8635226Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8637832Z ##[group]Fetching submodules
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8639471Z [command]/usr/bin/git submodule sync --recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.8831396Z [command]/usr/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.9059351Z Submodule 'vendor/emulate' (https://github.com/blamy/emulate.git) registered for path 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:31.9085720Z Cloning into '/home/runner/work/electric-forest/electric-forest/vendor/emulate'...
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4414196Z Submodule path 'vendor/emulate': checked out '2d3e21005f10071869ee6f73e9ccc821edaab971'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4448361Z [command]/usr/bin/git submodule foreach --recursive git config --local gc.auto 0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4671388Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4729783Z ##[endgroup]
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4776223Z [command]/usr/bin/git log -1 --format=%H
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4814287Z bcbbebe4c8fcd25d63517f3ceb05ee29270fe9d0
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4825516Z ##[group]Removing auth
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4826401Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.4871382Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5108066Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5169524Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5200660Z http.https://github.com/.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5208565Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5245362Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5460436Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5518167Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5551865Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5767385Z Entering 'vendor/emulate'
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5788959Z file:/home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config	remote.origin.url
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5822807Z [command]/usr/bin/git config --file /home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Check out source and pinned emulators	2026-10-16T23:39:32.5860288Z ##[endgroup]
+Ordered root gates	Install pnpm	﻿2026-10-16T23:39:32.6117097Z ##[group]Run pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6117528Z with:
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6117728Z   version: 10.15.0
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6117932Z   run_install: false
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6118158Z   dest: ~/setup-pnpm
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6118365Z   cache: false
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6118581Z   cache_dependency_path: pnpm-lock.yaml
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6118870Z   package_json_file: package.json
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6119136Z   standalone: false
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.6119361Z ##[endgroup]
+Ordered root gates	Install pnpm	2026-10-16T23:39:32.7567927Z ##[group]Running self-installer...
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.2033107Z (node:2580) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.2035427Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.4231246Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.4324265Z Packages: +1
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.4324703Z +
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8293636Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8574047Z 
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8574738Z dependencies:
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8575986Z + pnpm 10.15.0 (12.14.0 is available)
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8576361Z 
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8599657Z Done in 893ms
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8785964Z ##[endgroup]
+Ordered root gates	Install pnpm	2026-10-16T23:39:33.8786673Z Installation Completed!
+Ordered root gates	Install Node.js	﻿2026-10-16T23:39:33.8998136Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.8998541Z with:
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.8998732Z   node-version: 24.20.0
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.8998942Z   cache: pnpm
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.8999131Z   always-auth: false
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.8999337Z   check-latest: false
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.9001527Z   token: ***
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.9001719Z env:
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.9001995Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Install Node.js	2026-10-16T23:39:33.9002301Z ##[endgroup]
+Ordered root gates	Install Node.js	2026-10-16T23:39:34.0387263Z Attempting to download 24.20.0...
+Ordered root gates	Install Node.js	2026-10-16T23:39:34.0493426Z (node:2594) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Ordered root gates	Install Node.js	2026-10-16T23:39:34.0494936Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Ordered root gates	Install Node.js	2026-10-16T23:39:34.4938769Z Acquiring 24.20.0 - x64 from https://github.com/actions/node-versions/releases/download/24.20.0-33034074684/node-24.20.0-linux-x64.tar.gz
+Ordered root gates	Install Node.js	2026-10-16T23:39:34.9897062Z Extracting ...
+Ordered root gates	Install Node.js	2026-10-16T23:39:35.0023981Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/ad3b0c43-591f-4102-842c-8066ee5ca0fb -f /home/runner/work/_temp/d9c9fd54-a80e-4136-b7ef-803be76abb1d
+Ordered root gates	Install Node.js	2026-10-16T23:39:36.2354178Z Adding to the cache ...
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.2743119Z ##[group]Environment details
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.5019296Z node: v24.20.0
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.5019677Z npm: 11.19.0
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.5019929Z yarn: 1.22.22
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.5020479Z ##[endgroup]
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.5041205Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.8673892Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+Ordered root gates	Install Node.js	2026-10-16T23:39:38.9366101Z pnpm cache is not found
+Ordered root gates	Install frozen dependencies	﻿2026-10-16T23:39:38.9541430Z ##[group]Run pnpm install --frozen-lockfile
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:38.9541869Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:38.9791654Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:38.9791977Z env:
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:38.9792284Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:38.9792668Z ##[endgroup]
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:39.2861565Z Scope: all 21 workspace projects
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:39.3695975Z Lockfile is up to date, resolution step is skipped
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:39.4395538Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:39.5728344Z Packages: +1108
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:39.5729163Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:40.4404874Z Progress: resolved 1108, reused 0, downloaded 212, added 201
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:41.4423849Z Progress: resolved 1108, reused 0, downloaded 382, added 318
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:42.4404480Z Progress: resolved 1108, reused 0, downloaded 484, added 377
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:43.4424977Z Progress: resolved 1108, reused 0, downloaded 522, added 390
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:44.4411687Z Progress: resolved 1108, reused 0, downloaded 596, added 427
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:45.4410748Z Progress: resolved 1108, reused 0, downloaded 707, added 497
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:46.4410844Z Progress: resolved 1108, reused 0, downloaded 808, added 532
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:47.4408940Z Progress: resolved 1108, reused 0, downloaded 1082, added 737
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:47.8564885Z Progress: resolved 1108, reused 0, downloaded 1108, added 1108, done
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.3466665Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.3471188Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.3478739Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5207973Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5208992Z devDependencies:
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5209880Z + @eslint/js 10.0.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5210590Z + @types/node 26.1.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5211017Z + chokidar 4.0.3
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5211381Z + eslint 10.6.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5211809Z + playwright-core 1.61.1
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5212209Z + prettier 3.9.4
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5212550Z + replayio 1.8.2
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5212912Z + typescript 6.0.3
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5213594Z + typescript-eslint 8.63.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5213997Z + undici 7.16.0
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5214341Z + vitest 4.1.10
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5214537Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5215444Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5216451Z │                                                                              │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5217539Z │   Ignored build scripts: @mongodb-js/zstd, @swc/core, esbuild, lmdb,         │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5218726Z │   msgpackr-extract, node-liblzma, protobufjs.                                │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5219906Z │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5220979Z │   to run scripts.                                                            │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5221899Z │                                                                              │
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5222901Z ╰──────────────────────────────────────────────────────────────────────────────╯
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5223587Z 
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5406858Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5411902Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5501981Z  WARN  Failed to create bin at /home/runner/work/electric-forest/electric-forest/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/home/runner/work/electric-forest/electric-forest/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Ordered root gates	Install frozen dependencies	2026-10-16T23:39:48.5717528Z Done in 9.5s using pnpm v10.15.0
+Ordered root gates	Check formatting and lint	﻿2026-10-16T23:39:48.6366173Z ##[group]Run pnpm format:check && pnpm lint
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.6366558Z ^[[36;1mpnpm format:check && pnpm lint^[[0m
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.6432033Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.6432301Z env:
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.6432567Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.6432910Z ##[endgroup]
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.9447379Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.9448911Z > electric-forest@0.0.0 format:check /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.9451311Z > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:48.9452762Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:39:49.0431756Z Checking formatting...
+Ordered root gates	Check formatting and lint	2026-10-16T23:40:01.5848224Z All matched files use Prettier code style!
+Ordered root gates	Check formatting and lint	2026-10-16T23:40:01.9084240Z 
+Ordered root gates	Check formatting and lint	2026-10-16T23:40:01.9085325Z > electric-forest@0.0.0 lint /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Check formatting and lint	2026-10-16T23:40:01.9086309Z > eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
+Ordered root gates	Check formatting and lint	2026-10-16T23:40:01.9086834Z 
+Ordered root gates	Typecheck	﻿2026-10-16T23:40:12.4345294Z ##[group]Run pnpm typecheck
+Ordered root gates	Typecheck	2026-10-16T23:40:12.4345616Z ^[[36;1mpnpm typecheck^[[0m
+Ordered root gates	Typecheck	2026-10-16T23:40:12.4408747Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Typecheck	2026-10-16T23:40:12.4409005Z env:
+Ordered root gates	Typecheck	2026-10-16T23:40:12.4409258Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Typecheck	2026-10-16T23:40:12.4409571Z ##[endgroup]
+Ordered root gates	Typecheck	2026-10-16T23:40:12.7225426Z 
+Ordered root gates	Typecheck	2026-10-16T23:40:12.7226406Z > electric-forest@0.0.0 typecheck /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Typecheck	2026-10-16T23:40:12.7227320Z > tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit
+Ordered root gates	Typecheck	2026-10-16T23:40:12.7227729Z 
+Ordered root gates	Test	﻿2026-10-16T23:40:27.8082903Z ##[group]Run pnpm test
+Ordered root gates	Test	2026-10-16T23:40:27.8083535Z ^[[36;1mpnpm test^[[0m
+Ordered root gates	Test	2026-10-16T23:40:27.8148275Z shell: /usr/bin/bash -e {0}
+Ordered root gates	Test	2026-10-16T23:40:27.8148543Z env:
+Ordered root gates	Test	2026-10-16T23:40:27.8148797Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Ordered root gates	Test	2026-10-16T23:40:27.8149114Z ##[endgroup]
+Ordered root gates	Test	2026-10-16T23:40:28.1008555Z 
+Ordered root gates	Test	2026-10-16T23:40:28.1009279Z > electric-forest@0.0.0 pretest /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Test	2026-10-16T23:40:28.1010233Z > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
+Ordered root gates	Test	2026-10-16T23:40:28.1010618Z 
+Ordered root gates	Test	2026-10-16T23:40:28.4133162Z 
+Ordered root gates	Test	2026-10-16T23:40:28.4134442Z > @eforest/identity@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/identity
+Ordered root gates	Test	2026-10-16T23:40:28.4135203Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:28.4135431Z 
+Ordered root gates	Test	2026-10-16T23:40:29.8557084Z 
+Ordered root gates	Test	2026-10-16T23:40:29.8558198Z > @eforest/platform@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/platform
+Ordered root gates	Test	2026-10-16T23:40:29.8559208Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:29.8559649Z 
+Ordered root gates	Test	2026-10-16T23:40:35.1573142Z 
+Ordered root gates	Test	2026-10-16T23:40:35.1574211Z > electric-forest@0.0.0 test /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Test	2026-10-16T23:40:35.1575021Z > node tools/test.mjs
+Ordered root gates	Test	2026-10-16T23:40:35.1575270Z 
+Ordered root gates	Test	2026-10-16T23:40:35.4913820Z 
+Ordered root gates	Test	2026-10-16T23:40:35.4914940Z > @eforest/protocol@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/protocol
+Ordered root gates	Test	2026-10-16T23:40:35.4915748Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:35.4916177Z 
+Ordered root gates	Test	2026-10-16T23:40:35.8966815Z 
+Ordered root gates	Test	2026-10-16T23:40:35.8967940Z > @eforest/client@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/client
+Ordered root gates	Test	2026-10-16T23:40:35.8969297Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:35.8969540Z 
+Ordered root gates	Test	2026-10-16T23:40:36.2978145Z 
+Ordered root gates	Test	2026-10-16T23:40:36.2979373Z > @eforest/streamfs@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/streamfs
+Ordered root gates	Test	2026-10-16T23:40:36.2980116Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:36.2980344Z 
+Ordered root gates	Test	2026-10-16T23:40:36.7107520Z 
+Ordered root gates	Test	2026-10-16T23:40:36.7108994Z > @eforest/server@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/server
+Ordered root gates	Test	2026-10-16T23:40:36.7110084Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:36.7110313Z 
+Ordered root gates	Test	2026-10-16T23:40:37.1139457Z 
+Ordered root gates	Test	2026-10-16T23:40:37.1140747Z > @eforest/cli@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/cli
+Ordered root gates	Test	2026-10-16T23:40:37.1141737Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:37.1142062Z 
+Ordered root gates	Test	2026-10-16T23:40:39.9271031Z 
+Ordered root gates	Test	2026-10-16T23:40:39.9272102Z > @eforest/workspace@0.0.0 build /home/runner/work/electric-forest/electric-forest/packages/workspace
+Ordered root gates	Test	2026-10-16T23:40:39.9273542Z > tsc -b tsconfig.build.json
+Ordered root gates	Test	2026-10-16T23:40:39.9273770Z 
+Ordered root gates	Test	2026-10-16T23:40:40.3441821Z 
+Ordered root gates	Test	2026-10-16T23:40:40.3446787Z ^[[1m^[[30m^[[46m RUN ^[[49m^[[39m^[[22m ^[[36mv4.1.10 ^[[39m^[[90m/home/runner/work/electric-forest/electric-forest^[[39m
+Ordered root gates	Test	2026-10-16T23:40:40.3447596Z 
+Ordered root gates	Test	2026-10-16T23:40:46.4657795Z  ^[[32m✓^[[39m packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts ^[[2m(^[[22m^[[2m52 tests^[[22m^[[2m)^[[22m^[[33m 5537^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:40:54.3754827Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mlets exactly one of a racing human pause and agent launch win at the same offset
+Ordered root gates	Test	2026-10-16T23:40:54.3756623Z ^[[22m^[[39mE6_T03_RACE [{"loser":"project/stale-offset","winner":"pause"},{"loser":"project/stale-offset","winner":"pause"},{"loser":"project/stale-offset","winner":"pause"}]
+Ordered root gates	Test	2026-10-16T23:40:54.3757263Z 
+Ordered root gates	Test	2026-10-16T23:40:54.8667858Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:54.8672896Z ^[[22m^[[39mE6_T03_XLAG_ROUND 0 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000003 cited=0000000000000000_0000000000000002
+Ordered root gates	Test	2026-10-16T23:40:54.8675909Z 
+Ordered root gates	Test	2026-10-16T23:40:55.2452841Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:55.2456732Z ^[[22m^[[39mE6_T03_XLAG_ROUND 1 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000006 cited=0000000000000000_0000000000000005
+Ordered root gates	Test	2026-10-16T23:40:55.2458286Z 
+Ordered root gates	Test	2026-10-16T23:40:55.6334148Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:55.6336928Z ^[[22m^[[39mE6_T03_XLAG_ROUND 2 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000009 cited=0000000000000000_0000000000000008
+Ordered root gates	Test	2026-10-16T23:40:55.6338160Z 
+Ordered root gates	Test	2026-10-16T23:40:56.0395572Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:56.0398210Z ^[[22m^[[39mE6_T03_XLAG_ROUND 3 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000012 cited=0000000000000000_0000000000000011
+Ordered root gates	Test	2026-10-16T23:40:56.0399846Z 
+Ordered root gates	Test	2026-10-16T23:40:56.4676194Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:56.4678798Z ^[[22m^[[39mE6_T03_XLAG_ROUND 4 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000015 cited=0000000000000000_0000000000000014
+Ordered root gates	Test	2026-10-16T23:40:56.4680047Z 
+Ordered root gates	Test	2026-10-16T23:40:56.9077143Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:56.9079865Z ^[[22m^[[39mE6_T03_XLAG_ROUND 5 complete=409 {"error":{"class":"validator-rejected","reason":"project/stale-proof","project":{"stream":"project:maple/xlag","offset":"-1","status":"building"}}} start=202 {"ok":true,"actor":"agent-ash","identityOffset":"-1","offset":"0000000000000000_0000000000000001"} tail=0000000000000000_0000000000000018 cited=0000000000000000_0000000000000017
+Ordered root gates	Test	2026-10-16T23:40:56.9081363Z 
+Ordered root gates	Test	2026-10-16T23:40:57.0300457Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever completes over a fenced task whose record has not landed, across two gateways
+Ordered root gates	Test	2026-10-16T23:40:57.0302957Z ^[[22m^[[39mE6_T03_XGATEWAY_LAG ["start-fenced-complete-stale","start-fenced-complete-stale","start-fenced-complete-stale","start-fenced-complete-stale","start-fenced-complete-stale","start-fenced-complete-stale"]
+Ordered root gates	Test	2026-10-16T23:40:57.0304608Z 
+Ordered root gates	Test	2026-10-16T23:40:58.0906802Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mrefuses a proof computed at the fenced tail while the record is in flight; only an open fence blocks
+Ordered root gates	Test	2026-10-16T23:40:58.0909820Z ^[[22m^[[39mE6_T03_FENCE_HTTP open-fence=stale-proof dead-fence=ignored crash=open
+Ordered root gates	Test	2026-10-16T23:40:58.0910896Z 
+Ordered root gates	Test	2026-10-16T23:41:00.1488962Z ^[[90mstdout^[[2m | packages/platform/test/project-state.test.ts^[[2m > ^[[22m^[[2mproject state machine on the real dispatch door^[[2m > ^[[22m^[[2mnever appends a task loop event after an accepted pause across two gateway processes
+Ordered root gates	Test	2026-10-16T23:41:00.1491738Z ^[[22m^[[39mE6_T03_XGATEWAY_RACE ["pause-then-refused","pause-then-refused","pause-then-refused","pause-then-refused","pause-then-refused","pause-then-refused","pause-then-refused","pause-then-refused"]
+Ordered root gates	Test	2026-10-16T23:41:00.1492877Z 
+Ordered root gates	Test	2026-10-16T23:41:00.2083454Z  ^[[32m✓^[[39m packages/platform/test/project-state.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[33m 12589^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2084670Z      ^[[33m^[[2m✓^[[22m^[[39m drives the frozen lifecycle end to end and dumps the committed project log ^[[33m 687^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2085577Z      ^[[33m^[[2m✓^[[22m^[[39m holds every state x role x action tuple to the frozen matrix ^[[33m 4670^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2086456Z      ^[[33m^[[2m✓^[[22m^[[39m refuses every forged completion proof and accepts only the true one ^[[33m 1309^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2087590Z      ^[[33m^[[2m✓^[[22m^[[39m never completes over a fenced task whose record has not landed, across two gateways ^[[33m 2655^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2088646Z      ^[[33m^[[2m✓^[[22m^[[39m refuses a proof computed at the fenced tail while the record is in flight; only an open fence blocks ^[[33m 1061^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:00.2089757Z      ^[[33m^[[2m✓^[[22m^[[39m never appends a task loop event after an accepted pause across two gateway processes ^[[33m 2058^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:01.4192896Z  ^[[32m✓^[[39m packages/tasks/test/folder-sync.test.ts ^[[2m(^[[22m^[[2m66 tests^[[22m^[[2m)^[[22m^[[33m 918^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:02.8127385Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mdispatches through a real Durable Stream and bootstraps the registered issue projection
+Ordered root gates	Test	2026-10-16T23:41:02.8130385Z ^[[22m^[[39mE5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=0000000000000000_0000000000000001 digest=aa2705cdef253a9a41747a50da43ef9a214b415c5740e6ac87847ac48149f423 online-offline-digest=e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105 cross-type=404 untouched=0
+Ordered root gates	Test	2026-10-16T23:41:02.8132540Z 
+Ordered root gates	Test	2026-10-16T23:41:04.6961424Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mrefuses every NUL and astral issue string-field shape before validation or replay
+Ordered root gates	Test	2026-10-16T23:41:04.6963615Z ^[[22m^[[39mE5_T01_LIMITS {"dispatchBytes":10485760,"stringCodeUnits":1048576}
+Ordered root gates	Test	2026-10-16T23:41:04.6963967Z 
+Ordered root gates	Test	2026-10-16T23:41:17.3791526Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mvalidates issue mutations through the HTTP dispatch door
+Ordered root gates	Test	2026-10-16T23:41:17.3796214Z ^[[22m^[[39mE5_T01_REFUSAL {"after":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"before":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"case":"duplicate-open","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.opened\",\"payload\":{\"v\":1,\"title\":\"Again\",\"body\":\"Nope\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/already-opened\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3800594Z E5_T01_REFUSAL {"after":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"before":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"case":"closed-reason-schema","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.closed\",\"payload\":{\"reason\":42,\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:17.3804474Z E5_T01_REFUSAL {"after":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"before":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"case":"unknown-action","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.unknown\",\"payload\":{\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"unknown-action-type\"}}","status":404}
+Ordered root gates	Test	2026-10-16T23:41:17.3807903Z E5_T01_REFUSAL {"after":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"before":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"case":"prototype-to-string-action","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"toString\",\"payload\":{\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"unknown-action-type\"}}","status":404}
+Ordered root gates	Test	2026-10-16T23:41:17.3811201Z E5_T01_REFUSAL {"after":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"before":{"digest":"227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1","head":0},"case":"prototype-constructor-action","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"constructor\",\"payload\":{\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"unknown-action-type\"}}","status":404}
+Ordered root gates	Test	2026-10-16T23:41:17.3814996Z E5_T01_REFUSAL {"after":{"digest":"d38be0afd88758806e33b48de81d71105490fa013b902cb33ad70b8cf2ef62f3","head":1},"before":{"digest":"d38be0afd88758806e33b48de81d71105490fa013b902cb33ad70b8cf2ef62f3","head":1},"case":"duplicate-comment","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.commented\",\"payload\":{\"body\":\"again\",\"commentId\":\"c1\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/duplicate-comment\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3818868Z E5_T01_REFUSAL {"after":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"before":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"case":"duplicate-label","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.labeled\",\"payload\":{\"label\":\"bug\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/duplicate-label\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3822453Z E5_T01_REFUSAL {"after":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"before":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"case":"missing-label","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.unlabeled\",\"payload\":{\"label\":\"missing\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/missing-label\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3826239Z E5_T01_REFUSAL {"after":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"before":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"case":"self-transition","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.state-changed\",\"payload\":{\"to\":\"open\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/illegal-transition\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3829895Z E5_T01_REFUSAL {"after":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"before":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":2},"case":"state-changed-to-closed","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.state-changed\",\"payload\":{\"to\":\"closed\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/illegal-transition\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3833955Z E5_T01_REFUSAL {"after":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":4},"before":{"digest":"5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5","head":4},"case":"duplicate-reopen","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.reopened\",\"payload\":{\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/illegal-transition\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3837536Z E5_T01_REFUSAL {"after":{"digest":"a4dfedda9d7326645b80de457367def89560c089dd2aeefd1405fc2d8168a1d2","head":5},"before":{"digest":"a4dfedda9d7326645b80de457367def89560c089dd2aeefd1405fc2d8168a1d2","head":5},"case":"closed-from-done","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-1\",\"event\":{\"type\":\"issue.closed\",\"payload\":{\"reason\":\"late\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/illegal-transition\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3840600Z E5_T01_REFUSAL {"after":{"digest":"a4dfedda9d7326645b80de457367def89560c089dd2aeefd1405fc2d8168a1d2","head":5},"before":{"digest":"a4dfedda9d7326645b80de457367def89560c089dd2aeefd1405fc2d8168a1d2","head":5},"case":"malformed-body","requestBody":"{","responseBody":"{\"error\":{\"code\":\"invalid_request\",\"reason\":\"malformed_json\"}}","status":400}
+Ordered root gates	Test	2026-10-16T23:41:17.3844128Z E5_T01_REFUSAL {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"pre-open-comment","requestBody":"{\"streamId\":\"issue:maple/reading-room/i-pre\",\"event\":{\"type\":\"issue.commented\",\"payload\":{\"body\":\"too soon\",\"commentId\":\"c\",\"v\":1},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/not-opened\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:17.3846021Z 
+Ordered root gates	Test	2026-10-16T23:41:17.3921849Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mrefuses malformed UTF-8 over live HTTP without append
+Ordered root gates	Test	2026-10-16T23:41:17.3925696Z ^[[22m^[[39mE5_T01_UTF8_REFUSAL {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"malformed-utf8-body","invalidBytesHex":"c328","requestBodyBytes":135,"requestBodySha256":"a457a1027500dc636b7a3aca43a8703dfd5bd478f93346bbdf21fd66812baa81","responseBody":"{\"error\":{\"code\":\"invalid_request\",\"reason\":\"malformed_json\"}}","status":400}
+Ordered root gates	Test	2026-10-16T23:41:17.3927584Z 
+Ordered root gates	Test	2026-10-16T23:41:20.5075877Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mrefuses the exact source, size, and string attacks over live HTTP without append
+Ordered root gates	Test	2026-10-16T23:41:20.5081818Z ^[[22m^[[39mE5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"exact-version-1.0","field":"v","invalid":"lexical-1.0","payloadCodeUnits":3,"requestBodyBytes":129,"requestBodyCodeUnits":129,"requestBodySha256":"f6847bcc63eb07b8005119c7cbfe2adfdfbbbb8e1fe7fac0a6f3d66397527786","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5089287Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"exact-body-10mib","field":"body","invalid":"request-over-10mib","payloadCodeUnits":10485760,"requestBodyBytes":10485889,"requestBodyCodeUnits":10485889,"requestBodySha256":"503c0fa4fd4e135a694627277653c74350f1c9e8b112bef76289222a99e69d41","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5096472Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"exact-opened-nul-astral","field":"title+body","invalid":"nul+astral","payloadCodeUnits":21,"requestBodyBytes":169,"requestBodyCodeUnits":165,"requestBodySha256":"d227d4d44c567560c95a511062a7bbbe29ee331fb4316f3579b5aa34623e113d","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5103415Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"opened-title-nul","field":"title","invalid":"nul","payloadCodeUnits":12,"requestBodyBytes":144,"requestBodyCodeUnits":144,"requestBodySha256":"ca30568ec954afdf9d680f8abbd90e116ec27fe4647cbba1d070c87d20806530","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5109681Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"opened-title-astral","field":"title","invalid":"astral","payloadCodeUnits":8,"requestBodyBytes":137,"requestBodyCodeUnits":135,"requestBodySha256":"8824b73b97d132c158914bd818f45eb83e68f63e93678ec9d62169541fb9a9ec","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5113899Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"opened-body-nul","field":"body","invalid":"nul","payloadCodeUnits":5,"requestBodyBytes":137,"requestBodyCodeUnits":137,"requestBodySha256":"c613dcd5b51dda09b50f9bf0c9417afe23cc6ce36b2b31ca2334daadaaca67f0","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5117982Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"opened-body-astral","field":"body","invalid":"astral","payloadCodeUnits":12,"requestBodyBytes":141,"requestBodyCodeUnits":139,"requestBodySha256":"acb2b8a2145799f2652b5cb815320da0c2f38f47c882636721b346f96bcf1c14","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5121927Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"commented-comment-id-nul","field":"commentId","invalid":"nul","payloadCodeUnits":10,"requestBodyBytes":149,"requestBodyCodeUnits":149,"requestBodySha256":"e7fdc9a63180ab17e9985ba827d724e7d1c617bffe8df1a06005b68be7c13c57","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5127937Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"commented-comment-id-astral","field":"commentId","invalid":"astral","payloadCodeUnits":10,"requestBodyBytes":146,"requestBodyCodeUnits":144,"requestBodySha256":"03895b0a10f250a9abc0c4782b64e6be9458e699e61a93d64f933215fc9f6c91","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5135548Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"commented-body-nul","field":"body","invalid":"nul","payloadCodeUnits":13,"requestBodyBytes":156,"requestBodyCodeUnits":156,"requestBodySha256":"0a677d5f1a4207f392f808ebf3b390c99b45e99284f89a9659a9ea37cb4d2787","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5142861Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"commented-body-astral","field":"body","invalid":"astral","payloadCodeUnits":15,"requestBodyBytes":158,"requestBodyCodeUnits":156,"requestBodySha256":"3cf74a9ed9d0d953a676952c8ffeb5cba9e976b570e61d403c285b5d7a5b255a","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5150524Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"labeled-label-nul","field":"label","invalid":"nul","payloadCodeUnits":9,"requestBodyBytes":131,"requestBodyCodeUnits":131,"requestBodySha256":"d5a185da394f379824fc424aadfdff9ab37cad1b27bbe4a73d2c1dffa7ea5066","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5158439Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"labeled-label-astral","field":"label","invalid":"astral","payloadCodeUnits":8,"requestBodyBytes":127,"requestBodyCodeUnits":125,"requestBodySha256":"e83662abe433fe2e45626ee2288aa9c1eafbad6834830eac7bcea379a47b164c","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5166634Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"unlabeled-label-nul","field":"label","invalid":"nul","payloadCodeUnits":8,"requestBodyBytes":133,"requestBodyCodeUnits":133,"requestBodySha256":"6ee9749eac566d7a37fea3d7ee3a9ac399662f0525994d24d2c335e342fc922c","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5171560Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"unlabeled-label-astral","field":"label","invalid":"astral","payloadCodeUnits":10,"requestBodyBytes":132,"requestBodyCodeUnits":130,"requestBodySha256":"1d11be776a7baf427b812fc88d01f8cd99e70427e8c1af4195dcac5eae9d59bc","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5175961Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"state-changed-to-nul","field":"to","invalid":"nul","payloadCodeUnits":5,"requestBodyBytes":131,"requestBodyCodeUnits":131,"requestBodySha256":"bf3f7b924316c665d7ece3ed16bea4417476d60dd4d8eb65e39f25c2a838d50e","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5180946Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"state-changed-to-astral","field":"to","invalid":"astral","payloadCodeUnits":2,"requestBodyBytes":125,"requestBodyCodeUnits":123,"requestBodySha256":"3297bcf62e4411e2fa634169fbb2694d2cde5d7074f0d1c5918a8c39cd4809e1","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5185803Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"closed-reason-nul","field":"reason","invalid":"nul","payloadCodeUnits":11,"requestBodyBytes":134,"requestBodyCodeUnits":134,"requestBodySha256":"0179a050e185bb0fff8e985c1b6e0aed7792b047e693a3b703da33a586e4e81f","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5190223Z E5_T01_BOUNDARY {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"closed-reason-astral","field":"reason","invalid":"astral","payloadCodeUnits":9,"requestBodyBytes":129,"requestBodyCodeUnits":127,"requestBodySha256":"c4e9301b24b3697bd3dcb5a0a914aabec33f7de3bfb61ae5a4a06d2aa8d7bd9b","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5194317Z E5_T01_PRECEDENCE {"after":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"before":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"case":"unknown-before-schema","layer":"unknown-action-type","requestBodyBytes":129,"requestBodyCodeUnits":129,"requestBodySha256":"a8e4016c976e558262a12982fef0afdfdb6f505447d9cfea6862f4b00df0baa9","responseBody":"{\"error\":{\"class\":\"unknown-action-type\"}}","status":404}
+Ordered root gates	Test	2026-10-16T23:41:20.5198067Z E5_T01_PRECEDENCE {"after":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"before":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"case":"schema-before-validator","layer":"schema-violation","requestBodyBytes":151,"requestBodyCodeUnits":151,"requestBodySha256":"6ea1d3db41f556e81749d21d1af314fff4bd064cf466cabeb74e3755f79fbb06","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422}
+Ordered root gates	Test	2026-10-16T23:41:20.5202085Z E5_T01_PRECEDENCE {"after":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"before":{"digest":"632bc87f41ceb955dbdc95f0e5bac1415ae38d47d3bd54cf809c0493bf381a16","head":0},"case":"validator-after-schema","layer":"validator-rejected","requestBodyBytes":140,"requestBodyCodeUnits":140,"requestBodySha256":"4f2e5f197624280996c51a23b6309add1d5311c78209781948011d026034bc37","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"issue/already-opened\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:41:20.5204149Z 
+Ordered root gates	Test	2026-10-16T23:41:23.3221193Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mtracks escaped keys, duplicate last keys, and decoy version text over live HTTP
+Ordered root gates	Test	2026-10-16T23:41:23.3227834Z ^[[22m^[[39mE5_T01_SCANNER {"after":{"digest":"b05a9882421483fe5183e9b5cb63bf16d2da88765824798830fb5c8d822cd3a4","head":0},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"escaped-key-valid","outcome":"accepted","requestBodyBytes":146,"requestBodyCodeUnits":146,"requestBodySha256":"5d01c9feab9aab9aa8d1e6d25c3e31dca4cc44cd2dc9a77b03ec418eeec77858","responseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","status":202,"versionToken":"1"}
+Ordered root gates	Test	2026-10-16T23:41:23.3234418Z E5_T01_SCANNER {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"escaped-key-invalid","outcome":"refused","requestBodyBytes":150,"requestBodyCodeUnits":150,"requestBodySha256":"faee0f185cd68a599ceb6ef8658dad04f8c276f0bc77498d7711cd750645359d","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"versionToken":"1.0"}
+Ordered root gates	Test	2026-10-16T23:41:23.3240963Z E5_T01_SCANNER {"after":{"digest":"b05a9882421483fe5183e9b5cb63bf16d2da88765824798830fb5c8d822cd3a4","head":0},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"duplicate-last-valid","outcome":"accepted","requestBodyBytes":151,"requestBodyCodeUnits":151,"requestBodySha256":"ba9b7520f9db27e516d34e76e85a0a77a48939174e16df519d3c58e4c9b62e6d","responseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","status":202,"versionToken":"1"}
+Ordered root gates	Test	2026-10-16T23:41:23.3247620Z E5_T01_SCANNER {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"duplicate-last-invalid","outcome":"refused","requestBodyBytes":153,"requestBodyCodeUnits":153,"requestBodySha256":"8cdfd19c77a0dadd191c2f230f431b00574a501849c6854ccf046ef8aeebc0e1","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"versionToken":"1.0"}
+Ordered root gates	Test	2026-10-16T23:41:23.3253132Z E5_T01_SCANNER {"after":{"digest":"4fb2ad4f1356ecdc0ff83dee899a81095f20778592dd1cb675bd69f1466df54e","head":0},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"decoy-valid","outcome":"accepted","requestBodyBytes":203,"requestBodyCodeUnits":203,"requestBodySha256":"99a6ab3e19724e4c9f86d7133ff67705cdd131c416a3631d8f01fcc7968ee95c","responseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","status":202,"versionToken":"1"}
+Ordered root gates	Test	2026-10-16T23:41:23.3257204Z E5_T01_SCANNER {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"decoy-invalid","outcome":"refused","requestBodyBytes":201,"requestBodyCodeUnits":201,"requestBodySha256":"d3f33eecd3a7259533eccbe2160934edb9502ffa303a13869db3a364fe996f03","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"versionToken":"1.0"}
+Ordered root gates	Test	2026-10-16T23:41:23.3261175Z E5_T01_SCANNER {"after":{"digest":"b05a9882421483fe5183e9b5cb63bf16d2da88765824798830fb5c8d822cd3a4","head":0},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"array-decoy-valid","outcome":"accepted","requestBodyBytes":187,"requestBodyCodeUnits":187,"requestBodySha256":"ceba5756a610f47a57bc7df6384f96056757d694ad4e2a9b2dae4be69d2af4c9","responseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","status":202,"versionToken":"1"}
+Ordered root gates	Test	2026-10-16T23:41:23.3265200Z E5_T01_SCANNER {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"array-decoy-invalid","outcome":"refused","requestBodyBytes":189,"requestBodyCodeUnits":189,"requestBodySha256":"1b5200eab7b60a6a00501a408b6bfaf8d18d1d2a4a463a46c6a3b10b13600dbc","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"versionToken":"1.0"}
+Ordered root gates	Test	2026-10-16T23:41:23.3270965Z E5_T01_SCANNER {"after":{"digest":"b05a9882421483fe5183e9b5cb63bf16d2da88765824798830fb5c8d822cd3a4","head":0},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"duplicate-ancestor-valid","outcome":"accepted","requestBodyBytes":236,"requestBodyCodeUnits":236,"requestBodySha256":"6ff0de219c98fd5e82d9729608430ad998c6b32f996094a0b17f85e83ced04e9","responseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","status":202,"versionToken":"1"}
+Ordered root gates	Test	2026-10-16T23:41:23.3278683Z E5_T01_SCANNER {"after":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"before":{"digest":"ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba","head":-1},"case":"duplicate-ancestor-invalid","outcome":"refused","requestBodyBytes":238,"requestBodyCodeUnits":238,"requestBodySha256":"07d0d7b2bdac44032771c257a02afc3c717dd115b9ec0016ea9bca1e47867bca","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"versionToken":"1.0"}
+Ordered root gates	Test	2026-10-16T23:41:23.3282143Z 
+Ordered root gates	Test	2026-10-16T23:41:24.3386552Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mrejects lexical v:1.0 before stable operation-id writer recovery
+Ordered root gates	Test	2026-10-16T23:41:24.3391568Z ^[[22m^[[39mE5_T01_RECOVERY {"after":{"digest":"1052dfff54ced8f7cb187e4dcaf2e3b76f9643590e42bfdb7f050fcd30772838","head":0},"authorizedMutationCalls":1,"before":{"digest":"1052dfff54ced8f7cb187e4dcaf2e3b76f9643590e42bfdb7f050fcd30772838","head":0},"case":"operation-id-lexical-bypass","decodedPayloadSha256":"0798fadc9a0952a713c71cc7513dfeae22f4f8589cc4db52d6c54936b8565e54","invalidRequestSha256":"bb31919f8f8dd64a1887d9f86eb317c092b888dc08769c736d50047c09acf8d1","operationId":"issue-lexical-version-recovery","responseBody":"{\"error\":{\"class\":\"schema-violation\"}}","status":422,"validRequestSha256":"df064bb5d06232b6e171ad1560632ee19c2f7b54267aeecaff0e6956972f5d6e","validResponseBody":"{\"ok\":true,\"actor\":\"alice\",\"identityOffset\":\"-1\"}","validStatus":202,"writerOperationId":"issue-lexical-version-recovery"}
+Ordered root gates	Test	2026-10-16T23:41:24.3395083Z 
+Ordered root gates	Test	2026-10-16T23:41:24.8515994Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mproperty (a): 1000 seeded randomized sequences match an independent oracle
+Ordered root gates	Test	2026-10-16T23:41:24.8517729Z ^[[22m^[[39mE5_T01_PROPERTY property=(a) seeds=1000 steps=24 seed-range=0..999
+Ordered root gates	Test	2026-10-16T23:41:24.8518237Z 
+Ordered root gates	Test	2026-10-16T23:41:24.9248645Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mproperty (b): 1000 generated accepted sequences preserve canonical invariants
+Ordered root gates	Test	2026-10-16T23:41:24.9250687Z ^[[22m^[[39mE5_T01_PROPERTY property=(b) seeds=1000 steps=24 seed-range=0..999
+Ordered root gates	Test	2026-10-16T23:41:24.9251479Z 
+Ordered root gates	Test	2026-10-16T23:41:25.0375877Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mproperty (c): 1000 generated accepted replays have identical digests
+Ordered root gates	Test	2026-10-16T23:41:25.0377938Z ^[[22m^[[39mE5_T01_PROPERTY property=(c) seeds=1000 steps=24 seed-range=0..999
+Ordered root gates	Test	2026-10-16T23:41:25.0378710Z 
+Ordered root gates	Test	2026-10-16T23:41:25.1329373Z ^[[90mstdout^[[2m | packages/platform/test/issues.test.ts^[[2m > ^[[22m^[[2missue event model^[[2m > ^[[22m^[[2mproperty (d): 1000 generated refused interleavings are log-neutral
+Ordered root gates	Test	2026-10-16T23:41:25.1331285Z ^[[22m^[[39mE5_T01_PROPERTY property=(d) seeds=1000 steps=24 seed-range=0..999
+Ordered root gates	Test	2026-10-16T23:41:25.1331880Z 
+Ordered root gates	Test	2026-10-16T23:41:25.1347600Z  ^[[32m✓^[[39m packages/platform/test/issues.test.ts ^[[2m(^[[22m^[[2m18 tests^[[22m^[[2m)^[[22m^[[33m 23257^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1349420Z      ^[[33m^[[2m✓^[[22m^[[39m dispatches through a real Durable Stream and bootstraps the registered issue projection ^[[33m 928^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1351217Z      ^[[33m^[[2m✓^[[22m^[[39m exercises every state-change destination through the HTTP dispatch door ^[[33m 1876^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1352186Z      ^[[33m^[[2m✓^[[22m^[[39m validates issue mutations through the HTTP dispatch door ^[[33m 12683^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1353095Z      ^[[33m^[[2m✓^[[22m^[[39m refuses the exact source, size, and string attacks over live HTTP without append ^[[33m 3115^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1354301Z      ^[[33m^[[2m✓^[[22m^[[39m tracks escaped keys, duplicate last keys, and decoy version text over live HTTP ^[[33m 2814^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1355210Z      ^[[33m^[[2m✓^[[22m^[[39m rejects lexical v:1.0 before stable operation-id writer recovery ^[[33m 1017^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:41:25.1356113Z      ^[[33m^[[2m✓^[[22m^[[39m property (a): 1000 seeded randomized sequences match an independent oracle ^[[33m 508^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:34.8161505Z  ^[[32m✓^[[39m packages/cli/test/watch-duplex.test.ts ^[[2m(^[[22m^[[2m14 tests^[[22m^[[2m)^[[22m^[[33m 68921^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:34.8164215Z      ^[[33m^[[2m✓^[[22m^[[39m converges foreign and own edits without echoing ^[[33m 65762^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:34.8167691Z      ^[[33m^[[2m✓^[[22m^[[39m restarts after SIGKILL and accounts for a graceful-stop burst ^[[33m 1353^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:34.8169759Z      ^[[33m^[[2m✓^[[22m^[[39m restarts a real child after SIGKILL before conflict dispatch ^[[33m 348^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8488068Z  ^[[32m✓^[[39m packages/platform/test/authz.gateway.test.ts ^[[2m(^[[22m^[[2m24 tests^[[22m^[[2m)^[[22m^[[33m 11602^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8490256Z      ^[[33m^[[2m✓^[[22m^[[39m serves anonymous public reads with the decision offset and refuses private/nonexistent identically ^[[33m 619^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8496821Z      ^[[33m^[[2m✓^[[22m^[[39m authorizes private reads by role and by presented scoped grant only ^[[33m 595^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8504545Z      ^[[33m^[[2m✓^[[22m^[[39m long-polls a live follow through the authorization door ^[[33m 635^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8506664Z      ^[[33m^[[2m✓^[[22m^[[39m dispatches to a repo stream only with the branch-scoped write grant and cites the offset ^[[33m 556^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8508794Z      ^[[33m^[[2m✓^[[22m^[[39m applies Epic-2 credential and write-grant refusals to both evidence stream families ^[[33m 513^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8510902Z      ^[[33m^[[2m✓^[[22m^[[39m revocation takes effect at the next replayed identity-view offset without a restart ^[[33m 463^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8512906Z      ^[[33m^[[2m✓^[[22m^[[39m re-authorizes a resumed private follow at the post-revocation identity offset ^[[33m 469^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8515082Z      ^[[33m^[[2m✓^[[22m^[[39m appends nothing and performs no target-stream operation for any refusal ^[[33m 530^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8516949Z      ^[[33m^[[2m✓^[[22m^[[39m keeps the frozen sandbox and control door bodies byte-stable ^[[33m 471^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8518683Z      ^[[33m^[[2m✓^[[22m^[[39m rejects unknown repo-route shapes without resolving anything ^[[33m 407^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8521242Z      ^[[33m^[[2m✓^[[22m^[[39m is forwarded by the platform web app front door ^[[33m 389^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8523006Z      ^[[33m^[[2m✓^[[22m^[[39m membership revocation takes effect at the next replayed identity view ^[[33m 416^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8526147Z      ^[[33m^[[2m✓^[[22m^[[39m refuses a revocation racing the dispatch at the durable serialization point ^[[33m 498^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8528337Z      ^[[33m^[[2m✓^[[22m^[[39m fails closed on plain-verifier gateways: public reads work, repo writes never do ^[[33m 462^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8530283Z      ^[[33m^[[2m✓^[[22m^[[39m resolves web-mint opaque tokens and refuses every cross-credential confusion ^[[33m 453^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8532234Z      ^[[33m^[[2m✓^[[22m^[[39m maps an unexpected grant-operation liveness failure to 502 with no append ^[[33m 459^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8534395Z      ^[[33m^[[2m✓^[[22m^[[39m fails closed with 503 and no append when the namespace view cannot be replayed ^[[33m 441^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8536235Z      ^[[33m^[[2m✓^[[22m^[[39m replays a missing ns:root as the empty view and refuses as not-found ^[[33m 394^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8538081Z      ^[[33m^[[2m✓^[[22m^[[39m maps read-route credential failures through the same taxonomy as the door ^[[33m 371^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8540012Z      ^[[33m^[[2m✓^[[22m^[[39m refuses undecodable percent-escapes as malformed targets with no side effect ^[[33m 407^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8541839Z      ^[[33m^[[2m✓^[[22m^[[39m bounds follow parameters and serves empty and timed-out polls as empty lists ^[[33m 772^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8543925Z      ^[[33m^[[2m✓^[[22m^[[39m returns the items gathered so far when the long-poll transport aborts on timeout ^[[33m 441^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8545712Z      ^[[33m^[[2m✓^[[22m^[[39m rethrows non-not-found stream failures instead of masking them ^[[33m 412^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:46.8547887Z      ^[[33m^[[2m✓^[[22m^[[39m classifies a revoked credential before the body parses and survives verifier throws ^[[33m 427^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:51.0066346Z  ^[[32m✓^[[39m packages/streamfs/test/three-way-merge-adversarial.integration.test.ts ^[[2m(^[[22m^[[2m32 tests^[[22m^[[2m)^[[22m^[[33m 3821^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:51.0067529Z      ^[[33m^[[2m✓^[[22m^[[39m adopts source-only file and directory renames without losing content identity ^[[33m 363^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:51.0068662Z      ^[[33m^[[2m✓^[[22m^[[39m replays replacement, chained, and swap rename programs with inherited identity ^[[33m 637^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:42:51.0069668Z      ^[[33m^[[2m✓^[[22m^[[39m tracks patch history through intermediate aliases without taint from path reuse ^[[33m 329^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3078657Z  ^[[32m✓^[[39m packages/platform/test/registry.test.ts ^[[2m(^[[22m^[[2m19 tests^[[22m^[[2m)^[[22m^[[33m 17857^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3080147Z      ^[[33m^[[2m✓^[[22m^[[39m answers all three doors, visibility-filtered per identity, with asOf ^[[33m 996^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3081846Z      ^[[33m^[[2m✓^[[22m^[[39m requires E2-T03's exact 401 on /registry/me and filters (never 403s) /registry/org ^[[33m 614^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3082829Z      ^[[33m^[[2m✓^[[22m^[[39m replays through the shared reducer with contiguous private-safe offsets ^[[33m 570^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3084632Z      ^[[33m^[[2m✓^[[22m^[[39m follows from the projected checkpoint without exposing hidden-event gaps ^[[33m 654^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3086882Z      ^[[33m^[[2m✓^[[22m^[[39m refuses ns/repo-not-found, ns/not-owner, rename ns/name-taken, reserved newName — head offset and dump digest byte-identical ^[[33m 704^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3088928Z      ^[[33m^[[2m✓^[[22m^[[39m payload actor fields and malformed shapes are 422 schema-violation ^[[33m 581^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3090690Z      ^[[33m^[[2m✓^[[22m^[[39m refuses a dispatch and a raw protocol append targeting __registry__, log-neutrally ^[[33m 523^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3093937Z      ^[[33m^[[2m✓^[[22m^[[39m delivers an accepted ns.repo.create as an SSE frame within 2000ms, offset-cited, while an anonymous tail of the same private creation receives nothing ^[[33m 2676^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3096327Z      ^[[33m^[[2m✓^[[22m^[[39m repeats the live proof under long-poll and suppresses a public→private flip from a held-open anonymous tail ^[[33m 8642^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3098441Z      ^[[33m^[[2m✓^[[22m^[[39m filters the long-poll CATCH-UP half over pre-existing hidden events for anonymous and non-member tails ^[[33m 694^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3100438Z      ^[[33m^[[2m✓^[[22m^[[39m refuses ns.repo.create on a freed name whose creation-time prefix is still claimed, log-neutrally ^[[33m 693^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.3102656Z      ^[[33m^[[2m✓^[[22m^[[39m lists a repo its creator owns in an org they have NO relation to — non-member create and post-revocation — in snapshot AND live modes ^[[33m 320^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:09.7429000Z ^[[90mstdout^[[2m | packages/issues/test/board.integration.test.ts^[[2m > ^[[22m^[[2missue board server integration^[[2m > ^[[22m^[[2mkeeps incremental output equal to cold replay across a mixed 61-event run
+Ordered root gates	Test	2026-10-16T23:43:09.7430343Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:43:09.7431089Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:43:09.7431538Z 
+Ordered root gates	Test	2026-10-16T23:43:20.4784368Z ^[[90mstdout^[[2m | packages/issues/test/board.integration.test.ts^[[2m > ^[[22m^[[2missue board server integration^[[2m > ^[[22m^[[2mrebuilds after platform and file-backed stream-server restarts with deleted and corrupt snapshots
+Ordered root gates	Test	2026-10-16T23:43:20.4788183Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:43:20.4789156Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:43:20.4789726Z 
+Ordered root gates	Test	2026-10-16T23:43:20.6281114Z ^[[90mstdout^[[2m | packages/issues/test/board.integration.test.ts^[[2m > ^[[22m^[[2missue board server integration^[[2m > ^[[22m^[[2mrebuilds after platform and file-backed stream-server restarts with deleted and corrupt snapshots
+Ordered root gates	Test	2026-10-16T23:43:20.6282670Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:43:20.6283724Z [info] [FileBackedStreamStore] Recovery complete: 4 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:43:20.6284207Z 
+Ordered root gates	Test	2026-10-16T23:43:20.6519886Z ^[[90mstdout^[[2m | packages/issues/test/board.integration.test.ts^[[2m > ^[[22m^[[2missue board server integration^[[2m > ^[[22m^[[2mrebuilds after platform and file-backed stream-server restarts with deleted and corrupt snapshots
+Ordered root gates	Test	2026-10-16T23:43:20.6521075Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:43:20.6521682Z [info] [FileBackedStreamStore] Recovery complete: 4 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:43:20.6522026Z 
+Ordered root gates	Test	2026-10-16T23:43:22.0984961Z  ^[[32m✓^[[39m packages/issues/test/board.integration.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[33m 12367^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:22.0986930Z      ^[[33m^[[2m✓^[[22m^[[39m keeps incremental output equal to cold replay across a mixed 61-event run ^[[33m 9688^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:22.0988727Z      ^[[33m^[[2m✓^[[22m^[[39m replays label logs deterministically in separate processes and fails corrupt logs ^[[33m 1417^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:25.1101450Z  ^[[32m✓^[[39m packages/platform/test/cli-tokens.test.ts ^[[2m(^[[22m^[[2m17 tests^[[22m^[[2m)^[[22m^[[33m 2576^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:29.4134911Z  ^[[32m✓^[[39m packages/platform/test/ns.test.ts ^[[2m(^[[22m^[[2m22 tests^[[22m^[[2m)^[[22m^[[33m 3841^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:29.4135858Z      ^[[33m^[[2m✓^[[22m^[[39m keeps Stream-Seq ordered after ten sequential namespace events ^[[33m 334^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:29.4137132Z      ^[[33m^[[2m✓^[[22m^[[39m accepts every distinct-name create in a two-gateway concurrent burst ^[[33m 849^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:29.4138306Z      ^[[33m^[[2m✓^[[22m^[[39m survives a pipe-buffer-exceeding write left in flight at terminate() ^[[33m 448^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:33.3771740Z  ^[[32m✓^[[39m packages/platform/test/auth.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[33m 3515^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:33.3775902Z      ^[[33m^[[2m✓^[[22m^[[39m fences concurrent first-login callbacks with a per-trial replay reference ^[[33m 944^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:33.3782602Z      ^[[33m^[[2m✓^[[22m^[[39m fuzzes callback, token, and cookie parsers without a 5xx or log mutation ^[[33m 445^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:43:33.3784598Z      ^[[33m^[[2m✓^[[22m^[[39m survives SIGKILL from stream replay without writing platform-local state ^[[33m 1069^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:38.6468280Z  ^[[32m✓^[[39m packages/platform/test/evidence-contract.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 124845^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:38.6470663Z      ^[[33m^[[2m✓^[[22m^[[39m attaches content and references to a real issue and a merged PR without moving either entity log ^[[33m 403^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:38.6472473Z      ^[[33m^[[2m✓^[[22m^[[39m drives every frozen refusal and the corrupt-seal and URL-smuggling hard cases through the real door ^[[33m 1033^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:38.6474105Z      ^[[33m^[[2m✓^[[22m^[[39m holds the exact 512 KiB and 16 MiB decoded boundaries at the door ^[[33m 122747^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:38.6475426Z      ^[[33m^[[2m✓^[[22m^[[39m serializes concurrent chunk and seal races into legal deterministic logs ^[[33m 661^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:40.0081799Z  ^[[32m✓^[[39m packages/cli/test/branch-checkout.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 899^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:40.5309801Z  ^[[32m✓^[[39m packages/cli/test/downlink.test.ts ^[[2m(^[[22m^[[2m11 tests^[[22m^[[2m)^[[22m^[[33m 310^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:43.8321237Z  ^[[32m✓^[[39m packages/cli/test/uplink.test.ts ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[33m 2862^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:43.8322472Z      ^[[33m^[[2m✓^[[22m^[[39m converges, journals append-only offsets, and mirrors every record ^[[33m 429^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:43.8324204Z      ^[[33m^[[2m✓^[[22m^[[39m keeps accepted empty-directory create and remove clean ^[[33m 386^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:43.8325496Z      ^[[33m^[[2m✓^[[22m^[[39m re-derives the committed golden shape from the phase-gated edit script ^[[33m 429^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:43.8327179Z      ^[[33m^[[2m✓^[[22m^[[39m treats debounce width as load-bearing for the same edit burst ^[[33m 784^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:44.6655520Z  ^[[32m✓^[[39m packages/cli/src/clone.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[33m 583^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:45.8792739Z  ^[[32m✓^[[39m packages/cli/src/init.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[33m 764^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:45:45.8794414Z      ^[[33m^[[2m✓^[[22m^[[39m publishes an adopted repo through the real gateway and registry door ^[[33m 486^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:46:55.9167265Z  ^[[32m✓^[[39m packages/platform/test/cross-entity-linking.rework.test.ts ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[33m 69650^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:46:55.9169574Z      ^[[33m^[[2m✓^[[22m^[[39m multi-ref + idempotence: 200 refs, a duplicate, and a dangling ref converge in order ^[[33m 69084^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:13.6987394Z  ^[[32m✓^[[39m packages/identity/test/identity.test.ts ^[[2m(^[[22m^[[2m11 tests^[[22m^[[2m)^[[22m^[[33m 17598^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:13.6989355Z      ^[[33m^[[2m✓^[[22m^[[39m stores and queries every schema-valid prototype-named identity as own state ^[[33m 481^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:13.6991045Z      ^[[33m^[[2m✓^[[22m^[[39m CLI reports every corrupt-log invariant at its exact line ^[[33m 14841^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:13.6992626Z      ^[[33m^[[2m✓^[[22m^[[39m golden CLI, protocol replay, direct fold, and independent fold agree ^[[33m 474^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:13.6994536Z      ^[[33m^[[2m✓^[[22m^[[39m bisects a digest-changing byte in every issued grant to that offset ^[[33m 1506^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:19.9140826Z  ^[[32m✓^[[39m packages/cli/src/materialize.test.ts ^[[2m(^[[22m^[[2m20 tests^[[22m^[[2m)^[[22m^[[33m 6032^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:19.9142157Z      ^[[33m^[[2m✓^[[22m^[[39m materializes metadata from an actual content-stream sidecar ^[[33m 537^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:19.9144016Z      ^[[33m^[[2m✓^[[22m^[[39m materializes same-stream full, patch, and later full generations in causal order ^[[33m 556^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:20.1911412Z  ^[[32m✓^[[39m packages/meadow/test/pr-merge.test.ts ^[[2m(^[[22m^[[2m18 tests^[[22m^[[2m)^[[22m^[[32m 29^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:20.6077201Z  ^[[32m✓^[[39m packages/platform/test/authz.test.ts ^[[2m(^[[22m^[[2m14 tests^[[22m^[[2m)^[[22m^[[32m 23^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2420244Z  ^[[32m✓^[[39m packages/cli/src/cli.test.ts ^[[2m(^[[22m^[[2m38 tests^[[22m^[[2m)^[[22m^[[33m 23473^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2421731Z      ^[[33m^[[2m✓^[[22m^[[39m is deterministic across cwd, timezone, and locale ^[[33m 537^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2423587Z      ^[[33m^[[2m✓^[[22m^[[39m loads the committed alternate reducer deterministically in separate CLI processes ^[[33m 958^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2425226Z      ^[[33m^[[2m✓^[[22m^[[39m binds custom reducer initial state to the explicit stream identity ^[[33m 1448^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2426945Z      ^[[33m^[[2m✓^[[22m^[[39m rejects unsupported and malformed stream-aware reducers clearly ^[[33m 952^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2428502Z      ^[[33m^[[2m✓^[[22m^[[39m rejects a missing alternate reducer in a separate CLI process ^[[33m 471^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2429844Z      ^[[33m^[[2m✓^[[22m^[[39m isolates stdout from a noisy reducer module ^[[33m 474^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2431215Z      ^[[33m^[[2m✓^[[22m^[[39m isolates descriptor-level stdout writes in a reducer worker ^[[33m 475^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2432957Z      ^[[33m^[[2m✓^[[22m^[[39m hides the result channel from early-ipc-reducer.mjs and returns only the wrapper digest ^[[33m 472^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2435132Z      ^[[33m^[[2m✓^[[22m^[[39m hides the result channel from forged-ipc-reducer.mjs and returns only the wrapper digest ^[[33m 479^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2438684Z      ^[[33m^[[2m✓^[[22m^[[39m rejects a reducer that sends one forged result and exits during import ^[[33m 479^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2439747Z      ^[[33m^[[2m✓^[[22m^[[39m replays the E1-T07 snapshot golden and proves its hard cases ^[[33m 539^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2440633Z      ^[[33m^[[2m✓^[[22m^[[39m rejects truncated merge stages in direct and bootstrap replay processes ^[[33m 533^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2441516Z      ^[[33m^[[2m✓^[[22m^[[39m resolves parent dumps, cuts at fork offsets, and emits a fork-free log ^[[33m 799^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2442318Z      ^[[33m^[[2m✓^[[22m^[[39m rejects empty, missing, and physically truncated files ^[[33m 794^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2443531Z      ^[[33m^[[2m✓^[[22m^[[39m detects a one-byte payload mutation at its exact record ^[[33m 799^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:44.2445070Z      ^[[33m^[[2m✓^[[22m^[[39m detects every payload byte sweep as parse failure or digest change ^[[33m 7415^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:46.7722795Z  ^[[32m✓^[[39m packages/platform/test/task-folder-sync.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 2099^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:46.7726158Z      ^[[33m^[[2m✓^[[22m^[[39m runs the issue-to-verified lifecycle through folder edits on two branches ^[[33m 1947^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:48.2519589Z  ^[[32m✓^[[39m packages/platform/test/agent-run-protocol.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 1041^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:48.2521444Z      ^[[33m^[[2m✓^[[22m^[[39m admits one of 100 racers, rotates the fence, and refuses old-token writes ^[[33m 691^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:48.4766532Z  ^[[32m✓^[[39m packages/meadow/test/links.plan.test.ts ^[[2m(^[[22m^[[2m19 tests^[[22m^[[2m)^[[22m^[[32m 23^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:48.9863000Z  ^[[32m✓^[[39m packages/cli/src/status.test.ts ^[[2m(^[[22m^[[2m13 tests^[[22m^[[2m)^[[22m^[[32m 267^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:49.4168846Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mbet-4 destruction^[[2m > ^[[22m^[[2mdeletes the materialized index entirely and rebuilds it byte-identically from the source logs alone
+Ordered root gates	Test	2026-10-16T23:47:49.4171170Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:49.4172211Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:49.4172822Z 
+Ordered root gates	Test	2026-10-16T23:47:51.0923749Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mbet-4 destruction^[[2m > ^[[22m^[[2mrefuses to rebuild while __registry__ survives, unless --force discards it
+Ordered root gates	Test	2026-10-16T23:47:51.0940953Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:51.0946830Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:51.0955603Z 
+Ordered root gates	Test	2026-10-16T23:47:52.9014978Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mbet-4 destruction^[[2m > ^[[22m^[[2mtwo independent-process rebuilds are byte-identical (distinct pids)
+Ordered root gates	Test	2026-10-16T23:47:52.9016334Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:52.9017998Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:52.9018606Z 
+Ordered root gates	Test	2026-10-16T23:47:55.7534487Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mcrash idempotence (seed committed)^[[2m > ^[[22m^[[2mrestarts on a copy of the stream-store directory alone and answers identically
+Ordered root gates	Test	2026-10-16T23:47:55.7535899Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:55.7536637Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:55.7537060Z 
+Ordered root gates	Test	2026-10-16T23:47:56.4172330Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mcrash idempotence (seed committed)^[[2m > ^[[22m^[[2mrestarts on a copy of the stream-store directory alone and answers identically
+Ordered root gates	Test	2026-10-16T23:47:56.4174929Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:56.4175882Z [info] [FileBackedStreamStore] Recovery complete: 5 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:56.4176411Z 
+Ordered root gates	Test	2026-10-16T23:47:56.5060248Z ^[[90mstdout^[[2m | packages/platform/test/registry.rebuild.test.ts^[[2m > ^[[22m^[[2mregistry dump digest instrument^[[2m > ^[[22m^[[2mef replay --digest over a __registry__ dump equals registryStateDigest
+Ordered root gates	Test	2026-10-16T23:47:56.5061726Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:47:56.5062830Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:47:56.5063719Z 
+Ordered root gates	Test	2026-10-16T23:47:57.6213766Z  ^[[32m✓^[[39m packages/platform/test/registry.rebuild.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 8213^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6216233Z      ^[[33m^[[2m✓^[[22m^[[39m deletes the materialized index entirely and rebuilds it byte-identically from the source logs alone ^[[33m 1681^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6220135Z      ^[[33m^[[2m✓^[[22m^[[39m refuses to rebuild while __registry__ survives, unless --force discards it ^[[33m 1810^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6221423Z      ^[[33m^[[2m✓^[[22m^[[39m two independent-process rebuilds are byte-identical (distinct pids) ^[[33m 2162^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6222865Z      ^[[33m^[[2m✓^[[22m^[[39m kills the projector at randomized offsets; the derived log has exactly one event per source event and the digest equals an uninterrupted run ^[[33m 690^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6224607Z      ^[[33m^[[2m✓^[[22m^[[39m restarts on a copy of the stream-store directory alone and answers identically ^[[33m 752^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:57.6226035Z      ^[[33m^[[2m✓^[[22m^[[39m ef replay --digest over a __registry__ dump equals registryStateDigest ^[[33m 1115^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:58.2211535Z  ^[[32m✓^[[39m packages/tasks/test/queue-eligibility.test.ts ^[[2m(^[[22m^[[2m14 tests^[[22m^[[2m)^[[22m^[[33m 354^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:47:59.3685225Z  ^[[32m✓^[[39m packages/streamfs/test/durable-streams.integration.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[33m 918^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:00.9357917Z  ^[[32m✓^[[39m packages/streamfs/test/three-way-merge.integration.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[33m 1339^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:00.9359049Z      ^[[33m^[[2m✓^[[22m^[[39m surfaces stable overlap, binary, delete-edit, rename-rename, and add-add conflicts ^[[33m 345^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:01.4546102Z  ^[[32m✓^[[39m packages/tasks/test/folder-contract.test.ts ^[[2m(^[[22m^[[2m20 tests^[[22m^[[2m)^[[22m^[[32m 267^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:03.5807415Z  ^[[32m✓^[[39m packages/platform/test/hosted.test.ts ^[[2m(^[[22m^[[2m48 tests^[[22m^[[2m)^[[22m^[[33m 1688^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:03.5809445Z      ^[[33m^[[2m✓^[[22m^[[39m does not charge first-connection idle time to an admitted request's deadline ^[[33m 573^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:03.5811424Z      ^[[33m^[[2m✓^[[22m^[[39m does not charge keepalive idle time to an admitted request's deadline ^[[33m 573^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:05.0275864Z  ^[[32m✓^[[39m packages/platform/test/gateway.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[33m 1058^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:06.4952757Z  ^[[32m✓^[[39m packages/platform/test/task-queue.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 969^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:06.4965193Z      ^[[33m^[[2m✓^[[22m^[[39m derives the queue from the catalog and task streams, cites every head, and re-decides at the new head ^[[33m 949^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:07.3957660Z  ^[[32m✓^[[39m packages/platform/test/pr-merge-door.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[33m 493^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:07.8947906Z  ^[[32m✓^[[39m packages/platform/test/branch-projection.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 116^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:08.9902573Z ^[[90mstdout^[[2m | packages/pr/test/pr-refusals.test.ts^[[2m > ^[[22m^[[2mPR refusal taxonomy^[[2m > ^[[22m^[[2mdrives all ten frozen validator reasons through HTTP with byte-neutral logs
+Ordered root gates	Test	2026-10-16T23:48:08.9908325Z ^[[22m^[[39mE5_T02_REFUSAL {"after":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"before":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"reason":"pr/first-event-must-be-opened","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-first\",\"event\":{\"type\":\"pr.review-comment\",\"payload\":{\"v\":1,\"author\":\"bob\",\"body\":\"no root\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/first-event-must-be-opened\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9915465Z E5_T02_REFUSAL {"after":{"digest":"18737a9b19a7dbe5a094e38ee77f0acca4061c826753a5f780ce6835b33f27b1","dumpSha256":"51b33176c2efcedb9416fe9e68247367119b8eefe30a7da450c298d5d8dc6bdf","headOffset":"0000000000000000_0000000000000000"},"before":{"digest":"18737a9b19a7dbe5a094e38ee77f0acca4061c826753a5f780ce6835b33f27b1","dumpSha256":"51b33176c2efcedb9416fe9e68247367119b8eefe30a7da450c298d5d8dc6bdf","headOffset":"0000000000000000_0000000000000000"},"reason":"pr/already-opened","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-already\",\"event\":{\"type\":\"pr.opened\",\"payload\":{\"v\":1,\"sourceBranch\":\"fs:maple/reading-room:feature:meta\",\"targetBranch\":\"fs:maple/reading-room:main:meta\",\"forkOffset\":\"0000000000000000_0000000000000000\",\"title\":\"Add the meadow\",\"body\":\"A replayable proposal\",\"author\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/already-opened\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9923058Z E5_T02_REFUSAL {"after":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"before":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"reason":"pr/unknown-branch","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-unknown\",\"event\":{\"type\":\"pr.opened\",\"payload\":{\"v\":1,\"sourceBranch\":\"fs:maple/reading-room:feature:meta\",\"targetBranch\":\"fs:maple/reading-room:missing:meta\",\"forkOffset\":\"0000000000000000_0000000000000000\",\"title\":\"Add the meadow\",\"body\":\"A replayable proposal\",\"author\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/unknown-branch\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9931646Z E5_T02_REFUSAL {"after":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"before":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"reason":"pr/same-branch","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-same\",\"event\":{\"type\":\"pr.opened\",\"payload\":{\"v\":1,\"sourceBranch\":\"fs:maple/reading-room:main:meta\",\"targetBranch\":\"fs:maple/reading-room:main:meta\",\"forkOffset\":\"0000000000000000_0000000000000000\",\"title\":\"Add the meadow\",\"body\":\"A replayable proposal\",\"author\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/same-branch\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9944647Z E5_T02_REFUSAL {"after":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"before":{"digest":"7d1092cc4a79b73177ad6b91a81a25a6453978fd34b1bdca2332b6a0dcea1653","dumpSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","headOffset":"-1"},"reason":"pr/fork-offset-out-of-range","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-frontier\",\"event\":{\"type\":\"pr.opened\",\"payload\":{\"v\":1,\"sourceBranch\":\"fs:maple/reading-room:feature:meta\",\"targetBranch\":\"fs:maple/reading-room:main:meta\",\"forkOffset\":\"0000000000000000_0000000000000001\",\"title\":\"Add the meadow\",\"body\":\"A replayable proposal\",\"author\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/fork-offset-out-of-range\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9952565Z E5_T02_REFUSAL {"after":{"digest":"f454bc30c2331e71cc98dc848879bdea5a00abeea1f741365f09b6aea466db09","dumpSha256":"1e8f8629d46272f53aca54ef8d4af07892306b67ff9b2272128507ddde1b58bb","headOffset":"0000000000000000_0000000000000002"},"before":{"digest":"f454bc30c2331e71cc98dc848879bdea5a00abeea1f741365f09b6aea466db09","dumpSha256":"1e8f8629d46272f53aca54ef8d4af07892306b67ff9b2272128507ddde1b58bb","headOffset":"0000000000000000_0000000000000002"},"reason":"pr/merge-without-approval","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-merge\",\"event\":{\"type\":\"pr.merged\",\"payload\":{\"v\":1,\"mergedBy\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/merge-without-approval\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9959026Z E5_T02_REFUSAL {"after":{"digest":"ce4c2d0faaddcb269e5af9bffc1f6192264ef7e870e8d8dbee0e728211b15b97","dumpSha256":"c8d369426486d46f8b9773c2a76da15b6764dde56e8a96688dae4faec30c3078","headOffset":"0000000000000000_0000000000000002"},"before":{"digest":"ce4c2d0faaddcb269e5af9bffc1f6192264ef7e870e8d8dbee0e728211b15b97","dumpSha256":"c8d369426486d46f8b9773c2a76da15b6764dde56e8a96688dae4faec30c3078","headOffset":"0000000000000000_0000000000000002"},"reason":"pr/terminal","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-terminal\",\"event\":{\"type\":\"pr.review-comment\",\"payload\":{\"v\":1,\"author\":\"bob\",\"body\":\"late\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/terminal\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9967614Z E5_T02_REFUSAL {"after":{"digest":"dafeb5366ff77e72c818c400d98d690b5be7c7e708688a01421ff660eccca40b","dumpSha256":"437b02da4ea1bc945b53fb1c9ba0eaf7f96957ce215b004817d6f9fb63eb77b7","headOffset":"0000000000000000_0000000000000001"},"before":{"digest":"dafeb5366ff77e72c818c400d98d690b5be7c7e708688a01421ff660eccca40b","dumpSha256":"437b02da4ea1bc945b53fb1c9ba0eaf7f96957ce215b004817d6f9fb63eb77b7","headOffset":"0000000000000000_0000000000000001"},"reason":"pr/duplicate-verdict","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-duplicate\",\"event\":{\"type\":\"pr.approved\",\"payload\":{\"v\":1,\"reviewer\":\"bob\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/duplicate-verdict\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9974522Z E5_T02_REFUSAL {"after":{"digest":"18737a9b19a7dbe5a094e38ee77f0acca4061c826753a5f780ce6835b33f27b1","dumpSha256":"51b33176c2efcedb9416fe9e68247367119b8eefe30a7da450c298d5d8dc6bdf","headOffset":"0000000000000000_0000000000000000"},"before":{"digest":"18737a9b19a7dbe5a094e38ee77f0acca4061c826753a5f780ce6835b33f27b1","dumpSha256":"51b33176c2efcedb9416fe9e68247367119b8eefe30a7da450c298d5d8dc6bdf","headOffset":"0000000000000000_0000000000000000"},"reason":"pr/self-review","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-self\",\"event\":{\"type\":\"pr.approved\",\"payload\":{\"v\":1,\"reviewer\":\"alice\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/self-review\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9980696Z E5_T02_REFUSAL {"after":{"digest":"dafeb5366ff77e72c818c400d98d690b5be7c7e708688a01421ff660eccca40b","dumpSha256":"437b02da4ea1bc945b53fb1c9ba0eaf7f96957ce215b004817d6f9fb63eb77b7","headOffset":"0000000000000000_0000000000000001"},"before":{"digest":"dafeb5366ff77e72c818c400d98d690b5be7c7e708688a01421ff660eccca40b","dumpSha256":"437b02da4ea1bc945b53fb1c9ba0eaf7f96957ce215b004817d6f9fb63eb77b7","headOffset":"0000000000000000_0000000000000001"},"reason":"pr/reply-to-unknown-comment","requestBody":"{\"streamId\":\"pr:maple/reading-room/refuse-reply\",\"event\":{\"type\":\"pr.review-comment\",\"payload\":{\"v\":1,\"author\":\"carol\",\"body\":\"not a comment\",\"replyTo\":\"0000000000000000_0000000000000001\"},\"ts\":1}}","responseBody":"{\"error\":{\"class\":\"validator-rejected\",\"reason\":\"pr/reply-to-unknown-comment\"}}","status":409}
+Ordered root gates	Test	2026-10-16T23:48:08.9983948Z 
+Ordered root gates	Test	2026-10-16T23:48:09.5728874Z  ^[[32m✓^[[39m packages/pr/test/pr-refusals.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[33m 1252^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:09.5730744Z      ^[[33m^[[2m✓^[[22m^[[39m drives all ten frozen validator reasons through HTTP with byte-neutral logs ^[[33m 670^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:09.9053799Z  ^[[32m✓^[[39m packages/cli/test/session.replay.test.ts ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[32m 35^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4023144Z  ^[[32m✓^[[39m packages/cli/src/bisect.test.ts ^[[2m(^[[22m^[[2m40 tests^[[22m^[[2m)^[[22m^[[33m 10964^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4025195Z      ^[[33m^[[2m✓^[[22m^[[39m pins exact boundaries, prefix symmetry, and one-field mutations ^[[33m 552^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4026761Z      ^[[33m^[[2m✓^[[22m^[[39m agrees with ef replay and proves the reconvergence trap ^[[33m 812^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4028131Z      ^[[33m^[[2m✓^[[22m^[[39m honors a custom reducer and keeps stats off stdout ^[[33m 1019^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4029870Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file duplicate-offset.jsonl in both positions ^[[33m 535^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4031744Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file invalid-json.jsonl in both positions ^[[33m 533^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4032826Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file missing-field.jsonl in both positions ^[[33m 527^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4034113Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file noncanonical.jsonl in both positions ^[[33m 530^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4035398Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file out-of-order.jsonl in both positions ^[[33m 530^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4036359Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file truncated-mid-record.jsonl in both positions ^[[33m 534^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4037296Z      ^[[33m^[[2m✓^[[22m^[[39m rejects malformed E0-T04 corpus file wrong-type.jsonl in both positions ^[[33m 532^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.4038052Z      ^[[33m^[[2m✓^[[22m^[[39m rejects missing bisect inputs and reducers ^[[33m 528^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:21.7773013Z  ^[[32m✓^[[39m packages/evidence/test/validation.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[32m 213^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:22.1928448Z  ^[[32m✓^[[39m packages/platform/test/agent-responder.test.ts ^[[2m(^[[22m^[[2m13 tests^[[22m^[[2m)^[[22m^[[32m 23^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:25.0089821Z  ^[[32m✓^[[39m packages/cli/test/watch-command.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 2610^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:25.0091019Z      ^[[33m^[[2m✓^[[22m^[[39m renews the graceful-stop deadline while durable journal progress continues ^[[33m 1855^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:25.0092137Z      ^[[33m^[[2m✓^[[22m^[[39m does not renew the graceful-stop deadline for metadata or byte-identical churn ^[[33m 549^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:25.9562820Z  ^[[32m✓^[[39m packages/pr/test/pr-lifecycle.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 541^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:25.9564379Z      ^[[33m^[[2m✓^[[22m^[[39m folds the six-event merged golden at every application offset ^[[33m 330^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:26.3692423Z  ^[[32m✓^[[39m packages/platform/test/repo-home.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 28^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:26.8661432Z  ^[[32m✓^[[39m packages/platform/test/cross-entity-linking.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 113^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:38.2002220Z  ^[[32m✓^[[39m packages/platform/test/tasks.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 10912^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:38.2004819Z      ^[[33m^[[2m✓^[[22m^[[39m drives the frozen lifecycle end to end and dumps the committed task log ^[[33m 460^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:38.2006595Z      ^[[33m^[[2m✓^[[22m^[[39m refuses every frozen scenario before append with byte-identical head and dump ^[[33m 10339^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:48:38.9603672Z  ^[[32m✓^[[39m packages/platform/test/writer-lanes.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[33m 350^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:50.3108380Z ^[[90mstdout^[[2m | packages/pr/test/pr-property.fuzz.test.ts^[[2m > ^[[22m^[[2mseeded PR workflow properties through the real HTTP door^[[2m > ^[[22m^[[2mholds machine, neutrality, and replay invariants for at least 500 sequences
+Ordered root gates	Test	2026-10-16T23:52:50.3113609Z ^[[22m^[[39mE5_T02_PROPERTY sequences=512 accepted=1317 refused=4750 generated={"pr.opened":1046,"pr.review-comment":1045,"pr.approved":1013,"pr.changes-requested":1030,"pr.merged":952,"pr.closed":981} acceptedEvents={"pr.opened":465,"pr.review-comment":125,"pr.approved":206,"pr.changes-requested":180,"pr.merged":58,"pr.closed":283} seeds=0x1a2b3c4d,0x5eedc0de,0x9e3779b9,0xc001d00d
+Ordered root gates	Test	2026-10-16T23:52:50.3115111Z 
+Ordered root gates	Test	2026-10-16T23:52:50.3146610Z  ^[[32m✓^[[39m packages/pr/test/pr-property.fuzz.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 250948^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:50.3147850Z      ^[[33m^[[2m✓^[[22m^[[39m holds machine, neutrality, and replay invariants for at least 500 sequences ^[[33m 250946^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:50.7496414Z ^[[90mstdout^[[2m | packages/platform/test/cross-entity-linking.file.test.ts^[[2m > ^[[22m^[[2mE5-T07 file-backed golden lifecycle^[[2m > ^[[22m^[[2mreproduces both committed streams, pinned digests, and reciprocal citations
+Ordered root gates	Test	2026-10-16T23:52:50.7497565Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:52:50.7498163Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:52:50.7498516Z 
+Ordered root gates	Test	2026-10-16T23:52:51.1652712Z ^[[90mstdout^[[2m | packages/platform/test/cross-entity-linking.file.test.ts^[[2m > ^[[22m^[[2mE5-T07 file-backed golden lifecycle^[[2m > ^[[22m^[[2mreproduces both committed streams, pinned digests, and reciprocal citations
+Ordered root gates	Test	2026-10-16T23:52:51.1655041Z ^[[22m^[[39m[info] [FileBackedStreamStore] Starting recovery...
+Ordered root gates	Test	2026-10-16T23:52:51.1655784Z [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+Ordered root gates	Test	2026-10-16T23:52:51.1656222Z 
+Ordered root gates	Test	2026-10-16T23:52:51.4944621Z  ^[[32m✓^[[39m packages/platform/test/cross-entity-linking.file.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 752^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:51.4946687Z      ^[[33m^[[2m✓^[[22m^[[39m reproduces both committed streams, pinned digests, and reciprocal citations ^[[33m 751^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:54.0464579Z  ^[[32m✓^[[39m packages/cli/src/official.integration.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 2404^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:54.0466260Z      ^[[33m^[[2m✓^[[22m^[[39m runs the server binary and parses ef snapshot and merge end to end ^[[33m 2401^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:54.5306124Z  ^[[32m✓^[[39m packages/platform/test/history.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[32m 87^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:56.1776917Z ^[[90mstdout^[[2m | packages/cli/test/uplink.fencing.test.ts^[[2m > ^[[22m^[[2mE4-T06 authenticated stale-base fencing^[[2m > ^[[22m^[[2mkeeps the refusal log-neutral, remains live, and returns quiesce 3
+Ordered root gates	Test	2026-10-16T23:52:56.1779252Z ^[[22m^[[39mE4_T06_FENCING before=3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7 after=3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7
+Ordered root gates	Test	2026-10-16T23:52:56.1779967Z 
+Ordered root gates	Test	2026-10-16T23:52:56.1846316Z  ^[[32m✓^[[39m packages/cli/test/uplink.fencing.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 1192^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:56.1847515Z      ^[[33m^[[2m✓^[[22m^[[39m keeps the refusal log-neutral, remains live, and returns quiesce 3 ^[[33m 1176^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1804098Z  ^[[32m✓^[[39m packages/platform/test/ns.fuzz.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[33m 2591^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1806477Z      ^[[33m^[[2m✓^[[22m^[[39m survives seed 115474433 with refusal neutrality and oracle parity ^[[33m 653^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1808158Z      ^[[33m^[[2m✓^[[22m^[[39m survives seed 115474434 with refusal neutrality and oracle parity ^[[33m 544^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1809856Z      ^[[33m^[[2m✓^[[22m^[[39m survives seed 115474435 with refusal neutrality and oracle parity ^[[33m 467^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1811550Z      ^[[33m^[[2m✓^[[22m^[[39m survives seed 115474436 with refusal neutrality and oracle parity ^[[33m 431^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:52:59.1813484Z      ^[[33m^[[2m✓^[[22m^[[39m survives seed 115474437 with refusal neutrality and oracle parity ^[[33m 494^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6529170Z  ^[[32m✓^[[39m packages/cli/src/worktree.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[33m 5010^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6530826Z      ^[[33m^[[2m✓^[[22m^[[39m makes tree-digest, replay, and materialize byte-identical ^[[33m 1625^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6532585Z      ^[[33m^[[2m✓^[[22m^[[39m refuses on-disk symlink, FIFO, NFD, and unreadable entries with empty stdout ^[[33m 1064^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6534550Z      ^[[33m^[[2m✓^[[22m^[[39m keeps root .ef excluded while materialized nested .ef remains measured ^[[33m 784^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6535997Z      ^[[33m^[[2m✓^[[22m^[[39m counts prototype-looking filenames in the on-disk digest ^[[33m 525^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.6536760Z      ^[[33m^[[2m✓^[[22m^[[39m measures a root .ef regular file ^[[33m 526^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:04.9579343Z  ^[[32m✓^[[39m packages/reducers/src/index.test.ts ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[32m 20^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:05.1229726Z  ^[[32m✓^[[39m packages/streamfs/test/verify-task-workflow.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 18^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:05.4010919Z  ^[[32m✓^[[39m packages/reducers/src/file-content.test.ts ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[32m 95^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:05.9811225Z  ^[[32m✓^[[39m packages/platform/test/application-projection.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[32m 142^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:06.7723126Z  ^[[32m✓^[[39m packages/platform/test/cross-entity-linking.production.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 375^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:06.7725601Z    ^[[33m^[[2m✓^[[22m^[[39m production operation recovery: revalidates and propagates before completion ^[[33m 360^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:07.4827290Z  ^[[32m✓^[[39m packages/platform/test/issues-live-read.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 300^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:07.7864719Z  ^[[32m✓^[[39m packages/loop/test/run-protocol.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 21^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:08.1208037Z  ^[[32m✓^[[39m packages/web-hooks/src/useStreamReducer.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[32m 37^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:08.7988344Z  ^[[32m✓^[[39m packages/platform/test/spa.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 272^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:08.9961784Z  ^[[32m✓^[[39m packages/protocol/src/protocol.test.ts ^[[2m(^[[22m^[[2m31 tests^[[22m^[[2m)^[[22m^[[32m 41^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:09.3086010Z  ^[[32m✓^[[39m packages/cli/test/conflict.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 166^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:09.4914502Z  ^[[32m✓^[[39m packages/streamfs/src/worktree.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[32m 27^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:09.6869662Z  ^[[32m✓^[[39m packages/issues/test/board.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 40^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:14.3790364Z  ^[[32m✓^[[39m packages/evidence/test/attachment-property.fuzz.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 4534^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:14.3792335Z      ^[[33m^[[2m✓^[[22m^[[39m round-trips at least 500 generated binary uploads and keeps every refusal log-neutral ^[[33m 4533^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:14.7898320Z  ^[[32m✓^[[39m packages/platform/test/pr-index.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 27^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:16.4985441Z  ^[[32m✓^[[39m packages/tasks/test/critic-attacks.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[33m 1471^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:16.4986722Z      ^[[33m^[[2m✓^[[22m^[[39m survives duplicated, swapped, and relocated loop records under fresh seeds ^[[33m 1461^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:16.8915356Z  ^[[32m✓^[[39m packages/platform/test/agent-runs.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:17.1029359Z  ^[[32m✓^[[39m packages/workspace/src/workspace.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[32m 52^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:17.7356799Z  ^[[32m✓^[[39m packages/browser-verify/test/emulator-startup.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 209^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:18.3978626Z  ^[[32m✓^[[39m packages/platform/test/evidence-live-read.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 245^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:18.7985705Z  ^[[32m✓^[[39m packages/platform/test/file-viewer.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 30^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:18.9584704Z  ^[[32m✓^[[39m apps/web/src/chat/runSteps.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 8^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:19.2494602Z  ^[[32m✓^[[39m packages/reducers/src/chat.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 9^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:19.4081559Z  ^[[32m✓^[[39m packages/platform/test/canopy-corpus.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 15^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:19.6069914Z  ^[[32m✓^[[39m apps/web/src/site/site.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 49^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:19.7701789Z  ^[[32m✓^[[39m packages/evidence/test/content-reducer.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:21.8235419Z  ^[[31m❯^[[39m apps/web/src/prs/usePrs.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:22.0227179Z  ^[[31m❯^[[39m apps/web/src/wiki/useWiki.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:27.4965438Z  ^[[32m✓^[[39m packages/tasks/test/folder-property.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 5243^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:27.4967916Z      ^[[33m^[[2m✓^[[22m^[[39m parses, renders, and reparses 1,000 generated folders canonically, matching the frozen corpus digest ^[[33m 4994^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:27.9767001Z  ^[[32m✓^[[39m packages/cli/test/login.device-flow.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 18^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:28.4250894Z  ^[[32m✓^[[39m packages/identity/test/ordering.property.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 297^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:28.6208582Z  ^[[32m✓^[[39m packages/meadow/test/provision.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 9^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:28.7744982Z  ^[[32m✓^[[39m packages/cli/test/coalesce.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:29.2539890Z  ^[[32m✓^[[39m apps/web/src/live.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 343^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:37.3926100Z  ^[[32m✓^[[39m packages/tasks/test/queue-fuzz.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[33m 7909^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:37.3927931Z      ^[[33m^[[2m✓^[[22m^[[39m is invariant under every per-stream-consistent permutation of the fetch order ^[[33m 4756^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:37.3929672Z      ^[[33m^[[2m✓^[[22m^[[39m decides every random DAG validly and every violation deterministically ^[[33m 1563^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:37.3931504Z      ^[[33m^[[2m✓^[[22m^[[39m refuses a proof after any single source stream moves, naming that stream ^[[33m 1588^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:37.5758195Z  ^[[32m✓^[[39m packages/web-hooks/src/useDispatch.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 31^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:38.3770101Z  ^[[32m✓^[[39m packages/pr/test/pr-races.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 391^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:38.7694820Z  ^[[32m✓^[[39m packages/platform/test/rate-limit.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:39.0194162Z  ^[[32m✓^[[39m packages/tasks/test/lifecycle.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 19^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:40.4307054Z  ^[[32m✓^[[39m packages/tasks/test/property.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 1179^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:40.4308853Z      ^[[33m^[[2m✓^[[22m^[[39m accepts 1,000 generated legal sequences event-by-event and replays each identically ^[[33m 1176^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:40.6015297Z  ^[[32m✓^[[39m apps/web/src/evidence/model.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 12^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:42.4612671Z  ^[[32m✓^[[39m packages/evidence/test/attachment-lifecycle.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 1704^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:42.4614004Z      ^[[33m^[[2m✓^[[22m^[[39m round-trips empty and multi-chunk hostile bytes byte-for-byte ^[[33m 1691^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:42.7499529Z  ^[[32m✓^[[39m packages/reducers/src/roster.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 8^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:43.1317783Z  ^[[32m✓^[[39m packages/platform/test/issue-linking.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 9^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:43.7838587Z  ^[[32m✓^[[39m packages/cli/test/session.dump.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 230^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:43.9344046Z  ^[[32m✓^[[39m packages/issues/test/labelReducer.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:47.5184057Z  ^[[32m✓^[[39m packages/tasks/test/queue-differential.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 3345^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:47.5187487Z      ^[[33m^[[2m✓^[[22m^[[39m selects the same task and renders the same tuples and markdown for every valid frozen graph ^[[33m 979^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:47.5189240Z      ^[[33m^[[2m✓^[[22m^[[39m agrees with build_queue.py on random DAGs ^[[33m 2345^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:47.6769048Z  ^[[32m✓^[[39m packages/sync-harness/test/schedule.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 9^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:47.8395557Z  ^[[32m✓^[[39m packages/evidence/test/golden-replay.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:49.0490040Z  ^[[32m✓^[[39m apps/web/src/components/shell/stack.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:49.6461369Z  ^[[32m✓^[[39m packages/pr/test/pr-compacted-frontier.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 193^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:49.8335783Z  ^[[32m✓^[[39m packages/streamfs/test/domain.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 10^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:50.7617727Z  ^[[32m✓^[[39m packages/pr/test/pr-reviewer-keys.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 523^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:50.7619767Z      ^[[33m^[[2m✓^[[22m^[[39m derives verdicts for every schema-valid string through the HTTP dispatch door ^[[33m 521^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:51.9893951Z  ^[[31m❯^[[39m apps/web/src/components/markdown/surfaces.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:52.1531286Z  ^[[32m✓^[[39m packages/streamfs/src/writer-events.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 12^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:52.6242373Z  ^[[32m✓^[[39m packages/cli/test/credentials.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 13^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:53.0438547Z  ^[[32m✓^[[39m packages/platform/test/preview.test.ts ^[[2m(^[[22m^[[2m18 tests^[[22m^[[2m)^[[22m^[[32m 10^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:53.3397828Z  ^[[32m✓^[[39m packages/tasks/test/refusals.test.ts ^[[2m(^[[22m^[[2m27 tests^[[22m^[[2m)^[[22m^[[32m 61^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:53.7559975Z  ^[[32m✓^[[39m packages/cli/test/registry-command.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[32m 10^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:53.9085725Z  ^[[32m✓^[[39m packages/cli/test/reconcile.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:54.1800533Z  ^[[32m✓^[[39m packages/cli/test/conflict.integration.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 67^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:54.9271372Z  ^[[32m✓^[[39m apps/web/src/components/markdown/Markdown.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 22^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:55.3792451Z  ^[[32m✓^[[39m apps/web/src/styles/tailwind-sources.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 248^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:55.5709124Z  ^[[32m✓^[[39m packages/pr/test/pr-index-stream.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 13^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:55.7513856Z  ^[[32m✓^[[39m packages/browser-verify/test/authenticated-page.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:55.9054586Z  ^[[32m✓^[[39m packages/issues/test/board-projection.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:56.0864441Z  ^[[32m✓^[[39m packages/pr/test/pr-diff.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:56.2734275Z  ^[[32m✓^[[39m packages/streamfs/test/conflict-event.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:56.4248070Z  ^[[32m✓^[[39m packages/cli/test/reconcile.crash.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:56.5739951Z  ^[[32m✓^[[39m apps/web/src/components/code/syntax.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:56.7213516Z  ^[[31m❯^[[39m apps/web/src/chat/referenceSources.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:56.8671148Z  ^[[32m✓^[[39m packages/protocol/src/offset-allocation.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 5^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:57.0524410Z  ^[[32m✓^[[39m packages/streamfs/test/patch.property.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 12^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:57.2306532Z  ^[[32m✓^[[39m packages/streamfs/test/three-way-merge.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 5^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:57.3838729Z  ^[[32m✓^[[39m apps/web/src/personal-account.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:57.5638835Z  ^[[32m✓^[[39m apps/web/src/history.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:57.7143944Z  ^[[31m❯^[[39m apps/web/src/wiki/WikiEditor.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:57.8624608Z  ^[[32m✓^[[39m packages/issues/test/catalog.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:58.0058849Z  ^[[32m✓^[[39m apps/web/src/repository-search.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:58.1481415Z  ^[[32m✓^[[39m packages/reducers/src/history.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 3^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:58.2921352Z  ^[[32m✓^[[39m packages/protocol/src/digest.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:58.4958153Z  ^[[32m✓^[[39m packages/platform/test/canopy-verifier-spine.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 70^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:53:59.7116458Z  ^[[31m❯^[[39m apps/web/src/components/shell/forest-shell.test.ts ^[[2m(^[[22m^[[2m0 test^[[22m^[[2m)^[[22m
+Ordered root gates	Test	2026-10-16T23:53:59.8601014Z  ^[[32m✓^[[39m packages/cli/test/reconcile.overlap.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0060112Z  ^[[32m✓^[[39m packages/seed/src/index.test.ts ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0115399Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0116730Z ^[[31m⎯⎯⎯⎯⎯⎯^[[39m^[[1m^[[41m Failed Suites 6 ^[[49m^[[22m^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0117262Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0121065Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/chat/referenceSources.test.ts^[[2m [ apps/web/src/chat/referenceSources.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0128939Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0130728Z ^[[36m ^[[2m❯^[[22m apps/web/src/chat/referenceSources.ts:^[[2m2:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0173617Z     ^[[90m  1|^[[39m ^[[35mimport^[[39m { useEffect^[[33m,^[[39m useMemo^[[33m,^[[39m useRef } ^[[35mfrom^[[39m ^[[32m"react"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0175698Z     ^[[90m  2|^[[39m ^[[35mimport^[[39m { useStreamReducer } ^[[35mfrom^[[39m ^[[32m"@eforest/web-hooks"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0176781Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0178031Z     ^[[90m  3|^[[39m ^[[35mimport^[[39m type { ^[[33mRegistryState^[[39m } ^[[35mfrom^[[39m ^[[32m"@eforest/reducers"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0179549Z     ^[[90m  4|^[[39m import type { ReferenceOption, ReferenceSources } from "@brett_lamy/do…
+Ordered root gates	Test	2026-10-16T23:54:00.0180797Z ^[[90m ^[[2m❯^[[22m apps/web/src/chat/referenceSources.test.ts:^[[2m3:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0181373Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0181851Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0182243Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0183118Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/prs/usePrs.test.ts^[[2m [ apps/web/src/prs/usePrs.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0185606Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0187681Z ^[[36m ^[[2m❯^[[22m apps/web/src/blocks/github/pull-request.tsx:^[[2m33:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0288623Z     ^[[90m 31|^[[39m ^[[35mimport^[[39m type { ^[[33mPrDiffFile^[[39m } ^[[35mfrom^[[39m ^[[32m"@eforest/pr"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0304993Z     ^[[90m 32|^[[39m import { fileViewStreamId, type FileContentState } from "@eforest/redu…
+Ordered root gates	Test	2026-10-16T23:54:00.0306358Z     ^[[90m 33|^[[39m import { useStreamReducer, type ApplicationRecord } from "@eforest/web…
+Ordered root gates	Test	2026-10-16T23:54:00.0307338Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0308567Z     ^[[90m 34|^[[39m ^[[35mimport^[[39m { ^[[33mMarkdown^[[39m } ^[[35mfrom^[[39m ^[[32m"../../components/markdown/Markdown.js"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0310300Z     ^[[90m 35|^[[39m ^[[35mimport^[[39m { ^[[33mAppSheet^[[39m } ^[[35mfrom^[[39m ^[[32m"../../components/overlay.js"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0311767Z ^[[90m ^[[2m❯^[[22m apps/web/src/prs/usePrs.test.ts:^[[2m11:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0312282Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0312779Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0313436Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0314451Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/wiki/WikiEditor.test.ts^[[2m [ apps/web/src/wiki/WikiEditor.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0316699Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0318354Z ^[[36m ^[[2m❯^[[22m apps/web/src/wiki/WikiEditor.tsx:^[[2m2:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0319605Z     ^[[90m  1|^[[39m ^[[35mimport^[[39m { useEffect^[[33m,^[[39m useState } ^[[35mfrom^[[39m ^[[32m"react"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0321202Z     ^[[90m  2|^[[39m ^[[35mimport^[[39m { ^[[33mDispatchRefusalError^[[39m } ^[[35mfrom^[[39m ^[[32m"@eforest/web-hooks"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0322259Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0323175Z     ^[[90m  3|^[[39m ^[[35mimport^[[39m { cn } ^[[35mfrom^[[39m ^[[32m"@brett_lamy/ui"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0328828Z     ^[[90m  4|^[[39m ^[[35mimport^[[39m { ^[[33mRouteLink^[[39m } ^[[35mfrom^[[39m ^[[32m"../navigation.js"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0330097Z ^[[90m ^[[2m❯^[[22m apps/web/src/wiki/WikiEditor.test.ts:^[[2m2:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0330608Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0331089Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0332019Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0332991Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/wiki/useWiki.test.ts^[[2m [ apps/web/src/wiki/useWiki.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0335631Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0337390Z ^[[36m ^[[2m❯^[[22m apps/web/src/wiki/provisionWiki.ts:^[[2m8:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0338346Z     ^[[90m  6|^[[39m   type ^[[33mWikiDispatchDoor^[[39m^[[33m,^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0339626Z     ^[[90m  7|^[[39m } ^[[35mfrom^[[39m ^[[32m"@eforest/meadow"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0340846Z     ^[[90m  8|^[[39m ^[[35mimport^[[39m { postDispatch } ^[[35mfrom^[[39m ^[[32m"@eforest/web-hooks"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0341793Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0342255Z     ^[[90m  9|^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0343705Z     ^[[90m 10|^[[39m ^[[35mfunction^[[39m ^[[34meventsPath^[[39m(org^[[33m:^[[39m string^[[33m,^[[39m repo^[[33m:^[[39m string)^[[33m:^[[39m string {
+Ordered root gates	Test	2026-10-16T23:54:00.0345120Z ^[[90m ^[[2m❯^[[22m apps/web/src/wiki/useWiki.test.ts:^[[2m10:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0345607Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0346043Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0346412Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0347611Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/components/markdown/surfaces.test.ts^[[2m [ apps/web/src/components/markdown/surfaces.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0350005Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0351991Z ^[[36m ^[[2m❯^[[22m apps/web/src/chat/RunAccordion.tsx:^[[2m2:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0353774Z     ^[[90m  1|^[[39m ^[[35mimport^[[39m { useEffect^[[33m,^[[39m useMemo^[[33m,^[[39m useState } ^[[35mfrom^[[39m ^[[32m"react"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0355475Z     ^[[90m  2|^[[39m ^[[35mimport^[[39m { useStreamReducer } ^[[35mfrom^[[39m ^[[32m"@eforest/web-hooks"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0356463Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0357390Z     ^[[90m  3|^[[39m import { AGENT_RUN_REDUCER, type AgentRunState } from "@eforest/reduce…
+Ordered root gates	Test	2026-10-16T23:54:00.0358643Z     ^[[90m  4|^[[39m import { diffLines, formatDuration, parseRun, type RunStep } from "./r…
+Ordered root gates	Test	2026-10-16T23:54:00.0359930Z ^[[90m ^[[2m❯^[[22m apps/web/src/blocks/chat/channel-message.tsx:^[[2m13:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0360501Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0360927Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0361330Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0362587Z ^[[41m^[[1m FAIL ^[[22m^[[49m apps/web/src/components/shell/forest-shell.test.ts^[[2m [ apps/web/src/components/shell/forest-shell.test.ts ]^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0365296Z ^[[31m^[[1mError^[[22m: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0367100Z ^[[36m ^[[2m❯^[[22m apps/web/src/components/shell/ForestShell.tsx:^[[2m13:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0393794Z     ^[[90m 11|^[[39m   cn^[[33m,^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0394801Z     ^[[90m 12|^[[39m } ^[[35mfrom^[[39m ^[[32m"@brett_lamy/ui"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0396271Z     ^[[90m 13|^[[39m ^[[35mimport^[[39m { useDispatch^[[33m,^[[39m useStreamReducer } ^[[35mfrom^[[39m ^[[32m"@eforest/web-hooks"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0397330Z     ^[[90m   |^[[39m ^[[31m^^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0398642Z     ^[[90m 14|^[[39m ^[[35mimport^[[39m { agentsStreamId^[[33m,^[[39m type ^[[33mRegistryState^[[39m } ^[[35mfrom^[[39m ^[[32m"@eforest/reducers"^[[39m^[[33m;^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0400042Z     ^[[90m 15|^[[39m import DiscordClone, { type Workspace } from "../../blocks/chat/page.j…
+Ordered root gates	Test	2026-10-16T23:54:00.0401096Z ^[[90m ^[[2m❯^[[22m apps/web/src/components/shell/forest-shell.test.ts:^[[2m2:1^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0401577Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0401923Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯^[[22m^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0402215Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0402256Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0410503Z ^[[2m Test Files ^[[22m ^[[1m^[[31m6 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m135 passed^[[39m^[[22m^[[90m (141)^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0418668Z ^[[2m      Tests ^[[22m ^[[1m^[[32m1125 passed^[[39m^[[22m^[[90m (1125)^[[39m
+Ordered root gates	Test	2026-10-16T23:54:00.0419872Z ^[[2m   Start at ^[[22m 23:40:40
+Ordered root gates	Test	2026-10-16T23:54:00.0423904Z ^[[2m   Duration ^[[22m 799.64s^[[2m (transform 3.80s, setup 0ms, import 24.31s, tests 753.11s, environment 16ms)^[[22m
+Ordered root gates	Test	2026-10-16T23:54:00.0424969Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0448135Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0476085Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/chat/referenceSources.ts:2:1
+Ordered root gates	Test	 ❯ apps/web/src/chat/referenceSources.test.ts:3:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.0485992Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0488405Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/blocks/github/pull-request.tsx:33:1
+Ordered root gates	Test	 ❯ apps/web/src/prs/usePrs.test.ts:11:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.0490165Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0492155Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/wiki/WikiEditor.tsx:2:1
+Ordered root gates	Test	 ❯ apps/web/src/wiki/WikiEditor.test.ts:2:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.0493725Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0495719Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/wiki/provisionWiki.ts:8:1
+Ordered root gates	Test	 ❯ apps/web/src/wiki/useWiki.test.ts:10:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.0497238Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0499602Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/chat/RunAccordion.tsx:2:1
+Ordered root gates	Test	 ❯ apps/web/src/blocks/chat/channel-message.tsx:13:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.0500913Z 
+Ordered root gates	Test	2026-10-16T23:54:00.0503918Z ##[error]Error: Failed to resolve entry for package "@eforest/web-hooks". The package may have incorrect main/module/exports specified in its package.json.
+Ordered root gates	Test	 ❯ apps/web/src/components/shell/ForestShell.tsx:13:1
+Ordered root gates	Test	 ❯ apps/web/src/components/shell/forest-shell.test.ts:2:1
+Ordered root gates	Test	
+Ordered root gates	Test	
+Ordered root gates	Test	2026-10-16T23:54:00.1493978Z  ELIFECYCLE  Test failed. See above for more details.
+Ordered root gates	Test	2026-10-16T23:54:00.1705190Z ##[error]Process completed with exit code 1.
+Ordered root gates	Post Install pnpm	﻿2026-10-16T23:54:00.1861675Z Post job cleanup.
+Ordered root gates	Post Install pnpm	2026-10-16T23:54:00.3342494Z Pruning is unnecessary.
+Ordered root gates	Post Check out source and pinned emulators	﻿2026-10-16T23:54:00.3592524Z Post job cleanup.
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4477864Z [command]/usr/bin/git version
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4523989Z git version 2.55.0
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4569220Z Temporarily overriding HOME='/home/runner/work/_temp/31b8692c-621e-4005-9730-436b382b73bb' before making global git config changes
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4570381Z Adding repository directory to the temporary git global config as a safe directory
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4576040Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/electric-forest/electric-forest
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4624687Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4661521Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4897639Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.4973919Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5007098Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5251762Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5324518Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5360267Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5601631Z Entering 'vendor/emulate'
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5619860Z file:/home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config	remote.origin.url
+Ordered root gates	Post Check out source and pinned emulators	2026-10-16T23:54:00.5660259Z [command]/usr/bin/git config --file /home/runner/work/electric-forest/electric-forest/.git/modules/vendor/emulate/config --name-only --get-regexp ^includeIf\.gitdir:
+Ordered root gates	Complete job	﻿2026-10-16T23:54:00.5847938Z Cleaning up orphan processes
+Ordered root gates	Complete job	2026-10-16T23:54:00.6270664Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

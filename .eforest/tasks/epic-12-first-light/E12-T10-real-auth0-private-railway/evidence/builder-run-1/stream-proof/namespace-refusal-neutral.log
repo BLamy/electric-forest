@@ -1,0 +1,20 @@
+{
+  "streams": {
+    "ns:root": {
+      "records": 1,
+      "offset": "0000000000000000_0000000000000000",
+      "digest": "0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29",
+      "bytesSha256": "e3bda35dfde72def2b871ae386640781ca1d5eedb7edd40a07a7850b05184c03"
+    },
+    "ns:org:acme": {
+      "records": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "digest": "2dc686b147b38e31d1d21c1ecb1d4e86cece9b23d039cc76333c0e359170d248",
+      "bytesSha256": "c27dad95b13185315e13edaac7dd0226266797162ce57d552f08fb4cd7121bad"
+    }
+  },
+  "viewDigest": "c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89",
+  "visibleOrgs": [
+    "acme"
+  ]
+}

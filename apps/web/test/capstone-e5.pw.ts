@@ -408,7 +408,10 @@ const world = await bootWorld({
     operation: input.operation,
     identityOffset: input.identityOffset,
     basis: "grant:write",
-    streamId: input.target.kind === "repo" ? input.target.streamId : "test",
+    // Org-scoped application streams (the frame follows the workspace chat catalog) resolve
+    // to their own stream id exactly like repo streams; only control targets keep the stub.
+    streamId:
+      input.target.kind === "repo" || input.target.kind === "org" ? input.target.streamId : "test",
   }),
   gatewayNamespaceViewReader: {
     viewFor: async (orgName) =>
@@ -557,7 +560,7 @@ try {
   );
 
   witnessHome = await witness.context.newPage();
-  await witnessHome.goto(`${world.platformUrl}/${org}/${repo}`);
+  await witnessHome.goto(`${world.platformUrl}/${org}/${repo}/branches`);
   await waitLive(witnessHome.getByTestId("repo-branches-region"));
   watched.push(watchNoDocumentNavigation(witnessHome, "branch-catalog"));
   const mainRecords = await readDurableJson<StreamRecord>({

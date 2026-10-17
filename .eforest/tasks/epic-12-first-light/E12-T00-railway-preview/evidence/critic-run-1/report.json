@@ -1,0 +1,1326 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "role": "fresh consolidated lead critic; official verdict belongs to separate skeptic/judge",
+  "claimHead": "49b46a180cfebe2e368b5611e668e8ed9c41fd25",
+  "codeCandidate": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "diffBase": "59aefbe244e57ce096ea05b94ad462d97d8831a8",
+  "recordedAt": "2026-10-16T14:28:32.729910-04:00",
+  "recommendation": "refuted, subject to fresh judge: one blocking AC1 falsification",
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "env-dependence",
+      "severity": "blocking",
+      "criterion": "AC1",
+      "statement": "Predicted the registered make verify-E12-T00 target would build required workspace dependencies from clean state. Observed platform and CLI builds succeed, then web Vite build cannot resolve @eforest/web-hooks because its dist has never been built. Exact Make exits2 before task assertions. This falsifies the explicit cold-target acceptance, not optional apparatus polish.",
+      "citation": "Makefile:793-795 at aba2f41a5141d0c26da5be613e9766078d839d35; .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/exact-target-recheck.log:18 resolver failure, :32 Make failure; SHA-256 68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4; same failure independently precedes it in focus-build-3.log.",
+      "demand": "Build the web workspace dependencies in the committed task recipe, then submit a new immutable candidate and prove the registered target with the required single cold clone.",
+      "rechecked": true
+    }
+  ],
+  "completion": {
+    "criteria": [
+      "AC1 failed: prediction=The final ordered audit records bind unchanged source to aba2f41a5141d0c26da5be613e9766078d839d35; every gate/log hash verifies and the registered task target passes exactly one fresh clone without warm servers or skipped assertions. observed=All ordered audit boundaries bind unchanged ABA; manifest and eight log hashes match,123 files / 924 tests pass. Exact fresh Make exits2 at missing web-hooks dist before assertions. citations=integrity.json; target-blocker.json; exact-target-recheck.log:18,32",
+      "AC2 survived: prediction=Retained hosted runs begin with preview notice before fixture entry, use two independent contexts, read frozen README bytes, accept pointer/keyboard gateway changes and converge without reload; independent replay of every cited dump equals DOM offsets and digests; console/page/request error arrays are empty. observed=Two actual hosted runs each have ten scenes, fixture notice, frozen README, pointer/keyboard writes, isolated witness without reload, reconnect and logout/relogin. Seven chat checkpoints match independent Python and two CLI replays; file dumps match175 frozen bytes. Console/page/request error arrays empty; closing poll aborts are retained separately. citations=evidence/run-1/hosted-before/browser.json; hosted-after/browser.json; independent-replay.json; video-probes.json; browser-network-review.json",
+      "AC3 survived: prediction=Recorded health, readiness and DOM identify preview and full source aba2f41a; no secret field exists. Docker ingress listens on all interfaces and PORT; own missing-asset and malformed-config starts refuse, while startup/shutdown/restart measurements stay below 60000 ms. observed=Health/readiness/build/DOM report preview and full ABA revision, no credentials. Assigned ingress8080 succeeds; own true nonloopback ingress succeeds and loopback mutation fails. Missing assets/config/baked mismatch refuse. Own startup770ms, shutdown501ms, restart175ms; active-reader shutdown4489ms; Railway restart8680ms, all below 60000 ms. citations=evidence/run-1/hosted-supplement/supplement.json; railway/manifest.json; semantic-attacks/results.json; config-edge-review.json; sensitivity/complete.json",
+      "AC4 survived: prediction=Raw stream/admin/OIDC external probes in the hosted evidence reject access. Fresh synthetic production URL, credentials, harness, developer auth and integration env configurations are refused before service startup; dedicated canaries are absent from built assets/log/HTTP. observed=Hosted raw/admin/OIDC routes deny access; agent/token/device routes refuse. Fresh 18 forbidden credential/integration cases,11 malformed configs and14 raw GET/POST probes hold. Forged subject/origin/redirect and real-bin canary probes hold. Independent74-file committed-evidence scan empty; retained deployed bundle scan 555 files empty. citations=evidence/run-1/hosted-supplement/supplement.json; canary-scan.json; semantic-attacks/results.json; config-edge-review.json; environment-review.json",
+      "AC5 survived: prediction=Independent replay and raw line comparison show accepted pre-restart events as byte-identical prefix after restart, one welcome seed only, no silent reseed, explicit reset only, and separate local data roots yield isolated state. observed=Hosted five-event prefix is byte-identical in seven-event postrestart dump, one welcome seed. Own accepted writes and sessions survive same-dir restart, distinct directory excludes them. Initializing/corrupt/missing marker and ready-with-missing-stream refuse without reseed. Dedicated volume/public-disposable boundary is documented and logged. citations=independent-replay.json; evidence/run-1/persistence.json; railway/manifest.json; semantic-attacks/results.json; config-edge-review.json",
+      "AC6 survived: prediction=Manifest source, artifact, Railway project/environment/service/deployment/domain, OCI build and recovered-volume runtime evidence agree with retained actual HTTPS browser/HTTP observations at the deployed origin. observed=Railway project/environment/dedicated service/deployment/domain/source all bind ABA and OCI sha256:bb550117...515189.493 build records show frozen clean Linux/native/build/revision/image/health steps. Actual before/after deployed artifact manifests independently hash to4ad742a7...9685;176 backend hashes independently match compiled scratch, zero disagreements. citations=evidence/run-1/railway/manifest.json; railway/build.json entries483,492; hosted-before/deployment.json; hosted-after/deployment.json; deployment-review.json; runtime-artifact-comparison.json",
+      "AC7 survived: prediction=The precise Replay authentication failure and unchanged configured project are committed; no managed run is claimed. Explicit literal N/A plus retained Playwright videos/timeline/network and independently replayable streams satisfy the declared unavailable-service fallback. observed=Committed replayqa@0.2.4 authentication-required diagnostic and fixed proj-electric-forest-ms8w0nv1 agree. Literal Replay: N/A (...) + mitigation is explicit; no tunnel/journey/recording is claimed. Retained MP4/network/console plus independently replayed dumps meet the allowed unavailable-service fallback. This is not epic-close. citations=evidence/replay-availability.json; .replay/config.json; task claim; video-probes.json; independent-replay.json",
+      "AC8 survived: prediction=Two independent pre-implementation, candidate and submission snapshot receipts are byte-identical within each pair, project stays building, sole task status evolves only pending/in-progress/implemented, ledger is empty at run 0/10, and previous verdict/control digests stay unchanged. observed=Committed independent reader receipts name preimplementation/source pairs; parent reports current submission pair. Fresh trusted119 snapshot against ABA reproduces committed stdout byte-for-byte57710493...adec5b: run 0/10, empty ledger, control64cb3dd4...f7e967, building, sole E12-T00. Deferred tasks preserve old log prefixes; candidate-to-claim paths only evidence/current readme/queue. citations=evidence/lifecycle-readback.json; evidence/run-1/source-readers.json; source-readback.json; lifecycle-review.json; integrity.json"
+    ],
+    "hunks": [
+      "H01 .dockerignore:1 executed: Docker context exclusion rules ran in actual clean Railway Linux build; .git, node_modules, dist, work, evidence and credential homes are excluded, then runtime removes source/docs/tools. No ignored auth homes are in emitted runtime manifest.; citations=['railway/build.json entries 9-30', '../Dockerfile:4', 'canary-scan.json']",
+      "H02 Dockerfile:1 executed: Actual provider log runs pinned base, pnpm frozen install, native LMDB/esbuild check, full build, revision bake, runtime removal and image copy. Container startup and restart through exact CMD produce the recorded preview-ready line; shutdown delegates the independently exercised runtime.close. Error-only logging/exit wrappers are waived as reporting.; citations=['railway/build.json entries 18,62-64,473-483', 'railway/runtime.json entries 4,8', 'deployment-review.json']",
+      "H03 Makefile:788 needs-evidence: BLOCKED: exact target in fresh worktree lacks @eforest/web-hooks build. Platform/CLI compile then Vite cannot resolve web-hooks. Make target is not proven from cold state; required cold clone intentionally not spent after this blocker.; citations=['../work/critic-run-1/exact-target-recheck.log:18', '../work/critic-run-1/exact-target-recheck.log:32', 'Makefile:795']",
+      "H04 apps/web/src/components/shell/ForestShell.tsx:396 executed: Native logout form submission reaches route, ends old session (401), and allows fixture relogin; removing synchronous onClose is exercised at account menu submit.; citations=['hosted-before/browser.json timeline invalid-and-ended-session-refused', 'hosted-after/browser.json timeline invalid-and-ended-session-refused', 'hosted-before/ada.mp4 t~10.5-12.3s']",
+      "H05 apps/web/src/main.tsx:1 waived: Import wiring is type/build checked and consumed by the next render hunk; no standalone runtime behavior.; citations=['audit/final-aba2f41a/04-build.log']",
+      "H06 apps/web/src/main.tsx:9 executed: Flex root wrapper and PreviewNotice render on file/chat/members pages at the actual origin. Decorative classes are witnessed by screenshots; nonpreview null branch does not add a production claim.; citations=['hosted-before/seeded-file.png', 'hosted-after/live-convergence.png', 'hosted-supplement/human-only-members.png']",
+      "H07 apps/web/src/members/MembersPage.tsx:10 waived: New isPreview import is compile-time wiring for H08-H13, not an independent behavior.; citations=['audit/final-aba2f41a/04-build.log']",
+      "H08 apps/web/src/members/MembersPage.tsx:309 executed: Preview meta detection returns true in members page; all preview-only controls and text below execute.; citations=['hosted-supplement/supplement.json memberDialogHtml', 'hosted-supplement/human-only-members.png']",
+      "H09 apps/web/src/members/MembersPage.tsx:336 executed: Empty fixture roster has no seed-agents control; builder browser explicitly asserts count zero on actual origin.; citations=['hosted-before/browser.json timeline agent-execution-and-integrations-off', 'tools/verify/e12_t00_browser.mjs:272']",
+      "H10 apps/web/src/members/MembersPage.tsx:354 executed: Preview agents/integrations-off paragraph is visible in retained actual members view and awaited by driver.; citations=['hosted-supplement/human-only-members.png', 'hosted-before/agents-disabled.png']",
+      "H11 apps/web/src/members/MembersPage.tsx:434 executed: Empty-roster preview text appears after roster projection loads, saying agent execution is off. Unchanged nonpreview prose is waived as pre-existing behavior outside the fixture deployment claim.; citations=['hosted-supplement/human-only-members.png']",
+      "H12 apps/web/src/members/MembersPage.tsx:464 waived: Edit-agent control under nonempty agent roster is unreachable in this dedicated fresh fixture: zero agents seed, preview blocks every agent.* dispatch and raw streams are private. The !preview conjunct is defense for an unreachable persisted-agent state, not an exercised claim about migrating existing agent data.; citations=['hosted-supplement/supplement.json agent.register 403', 'hosted-supplement/human-only-members.png agents 0', 'packages/platform/src/preview.ts:383']",
+      "H13 apps/web/src/members/MembersPage.tsx:487 executed: Add member opens Human-only segmented selector; Agent option is absent from retained DOM and screenshot. Impossible crafted onChange id is waived as UI enum defense; preview server separately rejects agent events.; citations=['hosted-supplement/supplement.json memberDialogHtml', 'hosted-supplement/human-only-members.png']",
+      "H14 apps/web/src/preview.tsx:1 executed: Server-stamped mode/revision generates visible warning, full data build attribute and Try live chat navigation. Pure type annotations are waived; isPreview false has no effect in this preview-only deployment.; citations=['hosted-before/seeded-file.png', 'hosted-after/browser.json timeline seeded-file-browsed', 'hosted-before/network.json']",
+      "H15 apps/web/src/routes.tsx:4 waived: Import wiring covered by the app build and H16 execution.; citations=['audit/final-aba2f41a/04-build.log']",
+      "H16 apps/web/src/routes.tsx:41 executed: Preview short-circuits legacy proof receipt effect; retained three networks contain no /__proof/e3-t02 fetch. This prevents a legacy receipt from being shown as preview proof.; citations=['hosted-before/network.json', 'hosted-after/network.json', 'hosted-supplement/network.json']",
+      "H17 apps/web/src/site/site.test.ts:62 executed: Authorized roadmap board expectation freezes all sixteen actual epics rather than stale nine; root audit test log passes. This is assertion maintenance with a fixed independent list, not runtime behavior.; citations=['audit/final-aba2f41a/03-test.log', 'apps/web/src/site/site.test.ts:65']",
+      "H18 apps/web/src/site/site.test.ts:87 executed: Authorized hosting-first ladder order and terminal E11 are explicitly frozen; prior E8 mirror invariant retained by find. Root test audit passes both roadmap assertions.; citations=['audit/final-aba2f41a/03-test.log', 'apps/web/src/site/site.test.ts:88']",
+      "H19 docs/guides/railway-hosting.md:1 waived: Documentation/configuration examples reviewed against source, deployment manifest and dedicated data boundary; docs are not executable browser behavior. Production inputs remain separate and unclaimed.; citations=['railway/manifest.json', 'docs/guides/railway-hosting.md:1']",
+      "H20 package.json:16 waived: Package script alias only routes to the exact Docker-tested preview entrypoint, without adding behavior.; citations=['Dockerfile:20', 'package.json:19']",
+      "H21 packages/platform/fixtures/preview/README.md:1 executed: Frozen committed fixture README bytes equal base64-decoded write events at offset 2 and the UI file digest. It is not a golden generated at test time.; citations=['hosted-before/file.jsonl:3', 'hosted-after/file.jsonl:3', 'hosted-before/browser.json seeded-file-browsed']",
+      "H22 packages/platform/src/preview-artifact.ts:1 executed: Artifact walk, byte hashes and aggregate digest executed by deployed /api/deployment; both independent manifest checks match 4ad742a7...9685 and local HTTP verifies actual files. Type declarations and ENOENT optional-package branch are waived as type/config plumbing.; citations=['hosted-before/deployment.json', 'hosted-after/deployment.json', 'http/artifact.json', 'work/critic-run-1/integrity.json']",
+      "H23 packages/platform/src/preview-bin.ts:1 executed: Preview CLI calls runtime, binds assigned 8080 and prints explicitly public/disposable mode. Actual Railway restart and local runtime shutdown cover stop delegate; stderr-only failure reporting is waived, separately probed by invalid-config child starts.; citations=['railway/runtime.json entries 4,8', 'http/http.json', 'work/critic-run-1/config-edge-review.json']",
+      "H24 packages/platform/src/preview.ts:1 executed: Real runtime composition, fixture seeding/auth/routes/metadata/public bind/private streams/session revocation and persistence execute in retained hosted+HTTP records and independent semantic probes. See subranges for explicit exceptions.; citations=['hosted-before/browser.json', 'hosted-after/browser.json', 'hosted-supplement/supplement.json', 'http/http.json', 'work/critic-run-1/semantic-attacks/results.json']",
+      "H25 packages/platform/src/production.ts:125 executed: Production refuses preview mode/auth/data flags even with complete production fields. Mandatory deletion mutation is caught by builder unit and independent compiled-code assertion, then restored.; citations=['packages/platform/test/preview.test.ts:60', 'work/critic-run-1/sensitivity/guard-mutant-builder-tests.log', 'work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log']",
+      "H26 packages/platform/test/preview.test.ts:1 executed: Entire focused preview unit file passes unchanged baseline and restoration; all enumerated unsafe inputs/credential names and origins exercised. A targeted intentional guard deletion makes its claim test fail.; citations=['audit/final-aba2f41a/03-test.log', 'work/critic-run-1/sensitivity/baseline-config-tests.log', 'work/critic-run-1/sensitivity/guard-mutant-builder-tests.log']",
+      "H27 packages/platform/tsconfig.build.json:8 waived: TypeScript server reference is build graph configuration; clean platform build emitted and then actually loaded the private reference server.; citations=['work/critic-run-1/focus-build-1.log', 'railway/build.json entry 64', 'packages/platform/tsconfig.build.json:11']",
+      "H28 railway.toml:1 executed: Actual service configuration selects Dockerfile, readiness /readyz, 60-second timeout and retry limit 3; clean deployed build health check and retained endpoint observations succeed.; citations=['railway/manifest.json configuration.build/deploy', 'railway/build.json entry 492', 'hosted-supplement/supplement.json']",
+      "H29 tools/verify/cold_clone_targets.txt:74 waived: Exact registry line is inspected and Make dry-run schedules its marker, but AC1 target behavior remains blocked by H03. No arbitrary/unregistered target was substituted.; citations=['tools/verify/cold_clone_targets.txt:77', 'work/critic-run-1/target-blocker.json']",
+      "H30 tools/verify/e12_t00_browser.mjs:1 executed: Full driver executed twice at deployed origin: ten scenes each, videos/network/projection dumps; all dump digests independently replayed. Local sensitivity baseline/restoration exercise local branch, and frozen DOM digest causes the same builder browser assertion to fail after gateway acceptance. Error artifact handling also executes in that mutation.; citations=['hosted-before/browser.json', 'hosted-after/browser.json', 'work/critic-run-1/independent-replay.json', 'work/critic-run-1/sensitivity/browser-digest-mutant/failure.json']",
+      "H31 tools/verify/e12_t00_chat_reducer.mjs:1 executed: CLI replay reducer module used independently twice for every cited chat dump and one-byte mutated input; exact state digests match DOM and differ on mutation.; citations=['work/critic-run-1/independent-replay.json']",
+      "H32 tools/verify/e12_t00_preview.mjs:1 executed: Full real HTTP verifier ran in original committed evidence and critic sensitivity baseline: fixture reads/writes/second user/session expiry/restart/separate dirs/partial state/assets/config guard. Public bind sabotage makes corresponding assertion fail. Independent fresh semantic script adds distinct inputs and corruption/origin/malformed attacks.; citations=['http/http.json', 'work/critic-run-1/sensitivity/http-baseline/http.json', 'work/critic-run-1/sensitivity/bind-mutant-builder-http.log', 'work/critic-run-1/semantic-attacks/results.json']"
+    ],
+    "attacks": [
+      "A1 taskAttack=1 failed: prediction=Cold build/target works without local dist; actual HTTPS uses built app. observed=Exact fresh Make fails missing web-hooks dist. Actual retained Railway clean Linux build/HTTPS smoke survive. No cold clone after blocker. citations=exact-target-recheck.log:18,32; focus-builds.json; evidence/run-1/railway/build.json; hosted-before/browser.json",
+      "A2 taskAttack=2 survived: prediction=Production URL, harness or email config prevents preview startup. observed=18 fresh forbidden configs refuse before disk/socket; real-bin children reject provider/email/CODEX_HOME and print no canary value. citations=semantic-attacks/results.json unsafe-config-refused-before-disk-or-socket; config-edge-review.json",
+      "A3 taskAttack=3 survived: prediction=Raw/admin routes and injected canaries cannot bypass gateway or expose state. observed=Retained hosted raw/admin404; own 14 GET/POST raw/admin/env/git probes404; agent403/token/device403/OIDC404. Own response/log canaries absent; deployed bundle scan 555 files and independent74-file committed-evidence scan empty. citations=evidence/run-1/hosted-supplement/supplement.json; semantic-attacks/results.json; environment-review.json",
+      "A4 taskAttack=4 survived: prediction=Two fixture profiles accept each edit once, converge and reconnect without errors. observed=Actual retained network has two 202 writes/run and no Grace navigation between sign-in and initial convergence; dumps match exactly. Fresh local browser is used solely as sensitivity baseline/restoration. Separate fresh HTTP sessions/new IDs converge canonically and reconnect. citations=evidence/run-1/hosted-before/browser.json points7235ms,9358ms; hosted-after/browser.json points8223ms,10559ms; independent-replay.json; browser-network-review.json; semantic-attacks/results.json; sensitivity/baseline-browser.log; sensitivity/restored-browser.log",
+      "A5 taskAttack=5 survived: prediction=Restart preserves accepted bytes and does not reseed. observed=Five-event hosted prefix retained in seven events with one welcome; own fresh writes and session secret survive same dir, isolated dir does not contain them. Partial/corrupt/missing-stream cases refuse. citations=independent-replay.json; evidence/run-1/persistence.json; semantic-attacks/results.json; config-edge-review.json",
+      "A6 taskAttack=6 survived: prediction=Each required code sabotage fails its corresponding assertion. observed=All 3 detected: loopback bind makes real interface ECONNREFUSED and builder bind assertion fail; removed guard lets complete production shape through, caught by assert.throws and builder test; frozen digest receives gateway 202 then browser CLI/DOM comparison times out. Restored browser and all 18 units pass. citations=sensitivity/complete.json; sensitivity/bind-mutant-real-network.log; bind-mutant-builder-http.log; guard-mutant-complete-prod-fields.log; guard-mutant-builder-tests.log; browser-digest-mutant/failure.json",
+      "A7 taskAttack=novel survived: prediction=Malformed dispatches, forged identity/origin/redirect, baked revision mismatch, corrupt marker or missing stream fail closed. observed=Fresh malformed payloads400/400/400/400/403, no500; foreign origin403, forged subjects400, //next clamped. Baked mismatch and invalidJSON/version/shortsecret/missing-marker refuse; ready-with-deleted-stream refuses reseed. Active-reader shutdown4489ms. citations=semantic-attacks/results.json novel-malformed-dispatch-refuses-without-500,novel-ready-marker-with-missing-stream-refuses-reseed; config-edge-review.json"
+    ],
+    "sabotage": [
+      "S1 detected and restored: listenPlatformServer(server, config.port, \"0.0.0.0\") -> listenPlatformServer(server, config.port, \"127.0.0.1\"); builder assertion exit 1; /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log SHA256=cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392",
+      "S2 detected and restored: delete complete preview-refusal guard; builder assertion exit 1; /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log SHA256=556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17",
+      "S3 detected and restored: data-ef-digest={binding.projection.digest} -> data-ef-digest={\"0\".repeat(64)}; builder assertion exit 1; /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log SHA256=72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+    ],
+    "environment": "Fresh detached 49b worktree had no dist or node_modules. Offline frozen-lockfile hydration reused only the content-addressed pnpm store and created an independent scratch graph; no main node_modules symlink. Exact Make failed because web-hooks had not been built. Building that omitted package in scratch only enabled subsequent attacks; it did not repair or pass the committed recipe. Preview has no NODE_ENV semantic branch, starts only private reference streams, disables subprocesses/email/integrations, and real preview-bin children reject inherited provider/email/CODEX_HOME before startup without printing canary values. All 74 committed evidence files are independently canary-free. Frozen README is a committed 175-byte literal; both file dumps decode to those exact bytes. All seven chat digests were independently reconstructed in Python and replayed twice via scratch CLI; one-byte input mutation changes digest. 176 emitted backend files exactly match deployed hashes, zero mismatch; three unrelated root-build support modules were not built in focused scratch preparation. Native LMDB/esbuild execute in the actual Railway Linux build and scratch native runtime loads successfully. No hidden warm server, production credentials, root auth home, live hosted re-drive, full root gate rerun or cold clone was used.",
+    "coldClone": "not-run-blocked"
+  },
+  "criteria": [
+    {
+      "id": "AC1",
+      "prediction": "The final ordered audit records bind unchanged source to aba2f41a5141d0c26da5be613e9766078d839d35; every gate/log hash verifies and the registered task target passes exactly one fresh clone without warm servers or skipped assertions.",
+      "result": "failed",
+      "observed": "All ordered audit boundaries bind unchanged ABA; manifest and eight log hashes match,123 files / 924 tests pass. Exact fresh Make exits2 at missing web-hooks dist before assertions.",
+      "citations": "integrity.json; target-blocker.json; exact-target-recheck.log:18,32"
+    },
+    {
+      "id": "AC2",
+      "prediction": "Retained hosted runs begin with preview notice before fixture entry, use two independent contexts, read frozen README bytes, accept pointer/keyboard gateway changes and converge without reload; independent replay of every cited dump equals DOM offsets and digests; console/page/request error arrays are empty.",
+      "result": "survived",
+      "observed": "Two actual hosted runs each have ten scenes, fixture notice, frozen README, pointer/keyboard writes, isolated witness without reload, reconnect and logout/relogin. Seven chat checkpoints match independent Python and two CLI replays; file dumps match175 frozen bytes. Console/page/request error arrays empty; closing poll aborts are retained separately.",
+      "citations": "evidence/run-1/hosted-before/browser.json; hosted-after/browser.json; independent-replay.json; video-probes.json; browser-network-review.json"
+    },
+    {
+      "id": "AC3",
+      "prediction": "Recorded health, readiness and DOM identify preview and full source aba2f41a; no secret field exists. Docker ingress listens on all interfaces and PORT; own missing-asset and malformed-config starts refuse, while startup/shutdown/restart measurements stay below 60000 ms.",
+      "result": "survived",
+      "observed": "Health/readiness/build/DOM report preview and full ABA revision, no credentials. Assigned ingress8080 succeeds; own true nonloopback ingress succeeds and loopback mutation fails. Missing assets/config/baked mismatch refuse. Own startup770ms, shutdown501ms, restart175ms; active-reader shutdown4489ms; Railway restart8680ms, all below 60000 ms.",
+      "citations": "evidence/run-1/hosted-supplement/supplement.json; railway/manifest.json; semantic-attacks/results.json; config-edge-review.json; sensitivity/complete.json"
+    },
+    {
+      "id": "AC4",
+      "prediction": "Raw stream/admin/OIDC external probes in the hosted evidence reject access. Fresh synthetic production URL, credentials, harness, developer auth and integration env configurations are refused before service startup; dedicated canaries are absent from built assets/log/HTTP.",
+      "result": "survived",
+      "observed": "Hosted raw/admin/OIDC routes deny access; agent/token/device routes refuse. Fresh 18 forbidden credential/integration cases,11 malformed configs and14 raw GET/POST probes hold. Forged subject/origin/redirect and real-bin canary probes hold. Independent74-file committed-evidence scan empty; retained deployed bundle scan 555 files empty.",
+      "citations": "evidence/run-1/hosted-supplement/supplement.json; canary-scan.json; semantic-attacks/results.json; config-edge-review.json; environment-review.json"
+    },
+    {
+      "id": "AC5",
+      "prediction": "Independent replay and raw line comparison show accepted pre-restart events as byte-identical prefix after restart, one welcome seed only, no silent reseed, explicit reset only, and separate local data roots yield isolated state.",
+      "result": "survived",
+      "observed": "Hosted five-event prefix is byte-identical in seven-event postrestart dump, one welcome seed. Own accepted writes and sessions survive same-dir restart, distinct directory excludes them. Initializing/corrupt/missing marker and ready-with-missing-stream refuse without reseed. Dedicated volume/public-disposable boundary is documented and logged.",
+      "citations": "independent-replay.json; evidence/run-1/persistence.json; railway/manifest.json; semantic-attacks/results.json; config-edge-review.json"
+    },
+    {
+      "id": "AC6",
+      "prediction": "Manifest source, artifact, Railway project/environment/service/deployment/domain, OCI build and recovered-volume runtime evidence agree with retained actual HTTPS browser/HTTP observations at the deployed origin.",
+      "result": "survived",
+      "observed": "Railway project/environment/dedicated service/deployment/domain/source all bind ABA and OCI sha256:bb550117...515189.493 build records show frozen clean Linux/native/build/revision/image/health steps. Actual before/after deployed artifact manifests independently hash to4ad742a7...9685;176 backend hashes independently match compiled scratch, zero disagreements.",
+      "citations": "evidence/run-1/railway/manifest.json; railway/build.json entries483,492; hosted-before/deployment.json; hosted-after/deployment.json; deployment-review.json; runtime-artifact-comparison.json"
+    },
+    {
+      "id": "AC7",
+      "prediction": "The precise Replay authentication failure and unchanged configured project are committed; no managed run is claimed. Explicit literal N/A plus retained Playwright videos/timeline/network and independently replayable streams satisfy the declared unavailable-service fallback.",
+      "result": "survived",
+      "observed": "Committed replayqa@0.2.4 authentication-required diagnostic and fixed proj-electric-forest-ms8w0nv1 agree. Literal Replay: N/A (...) + mitigation is explicit; no tunnel/journey/recording is claimed. Retained MP4/network/console plus independently replayed dumps meet the allowed unavailable-service fallback. This is not epic-close.",
+      "citations": "evidence/replay-availability.json; .replay/config.json; task claim; video-probes.json; independent-replay.json"
+    },
+    {
+      "id": "AC8",
+      "prediction": "Two independent pre-implementation, candidate and submission snapshot receipts are byte-identical within each pair, project stays building, sole task status evolves only pending/in-progress/implemented, ledger is empty at run 0/10, and previous verdict/control digests stay unchanged.",
+      "result": "survived",
+      "observed": "Committed independent reader receipts name preimplementation/source pairs; parent reports current submission pair. Fresh trusted119 snapshot against ABA reproduces committed stdout byte-for-byte57710493...adec5b: run 0/10, empty ledger, control64cb3dd4...f7e967, building, sole E12-T00. Deferred tasks preserve old log prefixes; candidate-to-claim paths only evidence/current readme/queue.",
+      "citations": "evidence/lifecycle-readback.json; evidence/run-1/source-readers.json; source-readback.json; lifecycle-review.json; integrity.json"
+    }
+  ],
+  "hunks": [
+    {
+      "id": "H01",
+      "file": ".dockerignore",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 35,
+      "context": "",
+      "classification": "executed",
+      "reason": "Docker context exclusion rules ran in actual clean Railway Linux build; .git, node_modules, dist, work, evidence and credential homes are excluded, then runtime removes source/docs/tools. No ignored auth homes are in emitted runtime manifest.",
+      "citations": [
+        "railway/build.json entries 9-30",
+        "../Dockerfile:4",
+        "canary-scan.json"
+      ]
+    },
+    {
+      "id": "H02",
+      "file": "Dockerfile",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 20,
+      "context": "",
+      "classification": "executed",
+      "reason": "Actual provider log runs pinned base, pnpm frozen install, native LMDB/esbuild check, full build, revision bake, runtime removal and image copy. Container startup and restart through exact CMD produce the recorded preview-ready line; shutdown delegates the independently exercised runtime.close. Error-only logging/exit wrappers are waived as reporting.",
+      "citations": [
+        "railway/build.json entries 18,62-64,473-483",
+        "railway/runtime.json entries 4,8",
+        "deployment-review.json"
+      ]
+    },
+    {
+      "id": "H03",
+      "file": "Makefile",
+      "oldStart": 788,
+      "oldCount": 3,
+      "newStart": 788,
+      "newCount": 12,
+      "context": " verify-task-board:",
+      "classification": "needs-evidence",
+      "reason": "BLOCKED: exact target in fresh worktree lacks @eforest/web-hooks build. Platform/CLI compile then Vite cannot resolve web-hooks. Make target is not proven from cold state; required cold clone intentionally not spent after this blocker.",
+      "citations": [
+        "../work/critic-run-1/exact-target-recheck.log:18",
+        "../work/critic-run-1/exact-target-recheck.log:32",
+        "Makefile:795"
+      ]
+    },
+    {
+      "id": "H04",
+      "file": "apps/web/src/components/shell/ForestShell.tsx",
+      "oldStart": 396,
+      "oldCount": 7,
+      "newStart": 396,
+      "newCount": 7,
+      "context": " function AccountMenu(props: {",
+      "classification": "executed",
+      "reason": "Native logout form submission reaches route, ends old session (401), and allows fixture relogin; removing synchronous onClose is exercised at account menu submit.",
+      "citations": [
+        "hosted-before/browser.json timeline invalid-and-ended-session-refused",
+        "hosted-after/browser.json timeline invalid-and-ended-session-refused",
+        "hosted-before/ada.mp4 t~10.5-12.3s"
+      ]
+    },
+    {
+      "id": "H05",
+      "file": "apps/web/src/main.tsx",
+      "oldStart": 1,
+      "oldCount": 5,
+      "newStart": 1,
+      "newCount": 6,
+      "context": "",
+      "classification": "waived",
+      "reason": "Import wiring is type/build checked and consumed by the next render hunk; no standalone runtime behavior.",
+      "citations": [
+        "audit/final-aba2f41a/04-build.log"
+      ]
+    },
+    {
+      "id": "H06",
+      "file": "apps/web/src/main.tsx",
+      "oldStart": 8,
+      "oldCount": 4,
+      "newStart": 9,
+      "newCount": 11,
+      "context": " import \"./styles/app.css\";",
+      "classification": "executed",
+      "reason": "Flex root wrapper and PreviewNotice render on file/chat/members pages at the actual origin. Decorative classes are witnessed by screenshots; nonpreview null branch does not add a production claim.",
+      "citations": [
+        "hosted-before/seeded-file.png",
+        "hosted-after/live-convergence.png",
+        "hosted-supplement/human-only-members.png"
+      ]
+    },
+    {
+      "id": "H07",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 10,
+      "oldCount": 6,
+      "newStart": 10,
+      "newCount": 7,
+      "context": " import { ChatAvatar } from \"../blocks/chat/components/chat-avatar.js\";",
+      "classification": "waived",
+      "reason": "New isPreview import is compile-time wiring for H08-H13, not an independent behavior.",
+      "citations": [
+        "audit/final-aba2f41a/04-build.log"
+      ]
+    },
+    {
+      "id": "H08",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 308,
+      "oldCount": 6,
+      "newStart": 309,
+      "newCount": 7,
+      "context": " function InviteForm(props: {",
+      "classification": "executed",
+      "reason": "Preview meta detection returns true in members page; all preview-only controls and text below execute.",
+      "citations": [
+        "hosted-supplement/supplement.json memberDialogHtml",
+        "hosted-supplement/human-only-members.png"
+      ]
+    },
+    {
+      "id": "H09",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 334,
+      "oldCount": 7,
+      "newStart": 336,
+      "newCount": 7,
+      "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+      "classification": "executed",
+      "reason": "Empty fixture roster has no seed-agents control; builder browser explicitly asserts count zero on actual origin.",
+      "citations": [
+        "hosted-before/browser.json timeline agent-execution-and-integrations-off",
+        "tools/verify/e12_t00_browser.mjs:272"
+      ]
+    },
+    {
+      "id": "H10",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 352,
+      "oldCount": 6,
+      "newStart": 354,
+      "newCount": 12,
+      "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+      "classification": "executed",
+      "reason": "Preview agents/integrations-off paragraph is visible in retained actual members view and awaited by driver.",
+      "citations": [
+        "hosted-supplement/human-only-members.png",
+        "hosted-before/agents-disabled.png"
+      ]
+    },
+    {
+      "id": "H11",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 426,
+      "oldCount": 8,
+      "newStart": 434,
+      "newCount": 9,
+      "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+      "classification": "executed",
+      "reason": "Empty-roster preview text appears after roster projection loads, saying agent execution is off. Unchanged nonpreview prose is waived as pre-existing behavior outside the fixture deployment claim.",
+      "citations": [
+        "hosted-supplement/human-only-members.png"
+      ]
+    },
+    {
+      "id": "H12",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 455,
+      "oldCount": 7,
+      "newStart": 464,
+      "newCount": 7,
+      "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+      "classification": "waived",
+      "reason": "Edit-agent control under nonempty agent roster is unreachable in this dedicated fresh fixture: zero agents seed, preview blocks every agent.* dispatch and raw streams are private. The !preview conjunct is defense for an unreachable persisted-agent state, not an exercised claim about migrating existing agent data.",
+      "citations": [
+        "hosted-supplement/supplement.json agent.register 403",
+        "hosted-supplement/human-only-members.png agents 0",
+        "packages/platform/src/preview.ts:383"
+      ]
+    },
+    {
+      "id": "H13",
+      "file": "apps/web/src/members/MembersPage.tsx",
+      "oldStart": 478,
+      "oldCount": 10,
+      "newStart": 487,
+      "newCount": 10,
+      "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element",
+      "classification": "executed",
+      "reason": "Add member opens Human-only segmented selector; Agent option is absent from retained DOM and screenshot. Impossible crafted onChange id is waived as UI enum defense; preview server separately rejects agent events.",
+      "citations": [
+        "hosted-supplement/supplement.json memberDialogHtml",
+        "hosted-supplement/human-only-members.png"
+      ]
+    },
+    {
+      "id": "H14",
+      "file": "apps/web/src/preview.tsx",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 25,
+      "context": "",
+      "classification": "executed",
+      "reason": "Server-stamped mode/revision generates visible warning, full data build attribute and Try live chat navigation. Pure type annotations are waived; isPreview false has no effect in this preview-only deployment.",
+      "citations": [
+        "hosted-before/seeded-file.png",
+        "hosted-after/browser.json timeline seeded-file-browsed",
+        "hosted-before/network.json"
+      ]
+    },
+    {
+      "id": "H15",
+      "file": "apps/web/src/routes.tsx",
+      "oldStart": 4,
+      "oldCount": 6,
+      "newStart": 4,
+      "newCount": 7,
+      "context": " import { ForestShell } from \"./components/shell/ForestShell.js\";",
+      "classification": "waived",
+      "reason": "Import wiring covered by the app build and H16 execution.",
+      "citations": [
+        "audit/final-aba2f41a/04-build.log"
+      ]
+    },
+    {
+      "id": "H16",
+      "file": "apps/web/src/routes.tsx",
+      "oldStart": 40,
+      "oldCount": 6,
+      "newStart": 41,
+      "newCount": 7,
+      "context": " function isProofReceipt(value: unknown): value is ProofReceiptValue {",
+      "classification": "executed",
+      "reason": "Preview short-circuits legacy proof receipt effect; retained three networks contain no /__proof/e3-t02 fetch. This prevents a legacy receipt from being shown as preview proof.",
+      "citations": [
+        "hosted-before/network.json",
+        "hosted-after/network.json",
+        "hosted-supplement/network.json"
+      ]
+    },
+    {
+      "id": "H17",
+      "file": "apps/web/src/site/site.test.ts",
+      "oldStart": 62,
+      "oldCount": 7,
+      "newStart": 62,
+      "newCount": 9,
+      "context": " describe(\"public site: task board index\", () => {",
+      "classification": "executed",
+      "reason": "Authorized roadmap board expectation freezes all sixteen actual epics rather than stale nine; root audit test log passes. This is assertion maintenance with a fixed independent list, not runtime behavior.",
+      "citations": [
+        "audit/final-aba2f41a/03-test.log",
+        "apps/web/src/site/site.test.ts:65"
+      ]
+    },
+    {
+      "id": "H18",
+      "file": "apps/web/src/site/site.test.ts",
+      "oldStart": 85,
+      "oldCount": 12,
+      "newStart": 87,
+      "newCount": 20,
+      "context": " describe(\"public site: roadmap ladder\", () => {",
+      "classification": "executed",
+      "reason": "Authorized hosting-first ladder order and terminal E11 are explicitly frozen; prior E8 mirror invariant retained by find. Root test audit passes both roadmap assertions.",
+      "citations": [
+        "audit/final-aba2f41a/03-test.log",
+        "apps/web/src/site/site.test.ts:88"
+      ]
+    },
+    {
+      "id": "H19",
+      "file": "docs/guides/railway-hosting.md",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 96,
+      "context": "",
+      "classification": "waived",
+      "reason": "Documentation/configuration examples reviewed against source, deployment manifest and dedicated data boundary; docs are not executable browser behavior. Production inputs remain separate and unclaimed.",
+      "citations": [
+        "railway/manifest.json",
+        "docs/guides/railway-hosting.md:1"
+      ]
+    },
+    {
+      "id": "H20",
+      "file": "package.json",
+      "oldStart": 16,
+      "oldCount": 6,
+      "newStart": 16,
+      "newCount": 7,
+      "context": "",
+      "classification": "waived",
+      "reason": "Package script alias only routes to the exact Docker-tested preview entrypoint, without adding behavior.",
+      "citations": [
+        "Dockerfile:20",
+        "package.json:19"
+      ]
+    },
+    {
+      "id": "H21",
+      "file": "packages/platform/fixtures/preview/README.md",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 5,
+      "context": "",
+      "classification": "executed",
+      "reason": "Frozen committed fixture README bytes equal base64-decoded write events at offset 2 and the UI file digest. It is not a golden generated at test time.",
+      "citations": [
+        "hosted-before/file.jsonl:3",
+        "hosted-after/file.jsonl:3",
+        "hosted-before/browser.json seeded-file-browsed"
+      ]
+    },
+    {
+      "id": "H22",
+      "file": "packages/platform/src/preview-artifact.ts",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 44,
+      "context": "",
+      "classification": "executed",
+      "reason": "Artifact walk, byte hashes and aggregate digest executed by deployed /api/deployment; both independent manifest checks match 4ad742a7...9685 and local HTTP verifies actual files. Type declarations and ENOENT optional-package branch are waived as type/config plumbing.",
+      "citations": [
+        "hosted-before/deployment.json",
+        "hosted-after/deployment.json",
+        "http/artifact.json",
+        "work/critic-run-1/integrity.json"
+      ]
+    },
+    {
+      "id": "H23",
+      "file": "packages/platform/src/preview-bin.ts",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 23,
+      "context": "",
+      "classification": "executed",
+      "reason": "Preview CLI calls runtime, binds assigned 8080 and prints explicitly public/disposable mode. Actual Railway restart and local runtime shutdown cover stop delegate; stderr-only failure reporting is waived, separately probed by invalid-config child starts.",
+      "citations": [
+        "railway/runtime.json entries 4,8",
+        "http/http.json",
+        "work/critic-run-1/config-edge-review.json"
+      ]
+    },
+    {
+      "id": "H24",
+      "file": "packages/platform/src/preview.ts",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 430,
+      "context": "",
+      "classification": "executed",
+      "reason": "Real runtime composition, fixture seeding/auth/routes/metadata/public bind/private streams/session revocation and persistence execute in retained hosted+HTTP records and independent semantic probes. See subranges for explicit exceptions.",
+      "citations": [
+        "hosted-before/browser.json",
+        "hosted-after/browser.json",
+        "hosted-supplement/supplement.json",
+        "http/http.json",
+        "work/critic-run-1/semantic-attacks/results.json"
+      ],
+      "subranges": [
+        {
+          "lines": "1-29,101-107,186-194",
+          "classification": "waived",
+          "reason": "Imports/interface/type declarations; no runtime claim independent of typed build."
+        },
+        {
+          "lines": "31-97",
+          "classification": "executed",
+          "reason": "Own 18 forbidden integration/developer env cases, 11 malformed configs, full unit cases, local and actual deployed config exercise success/refusal paths."
+        },
+        {
+          "lines": "109-149",
+          "classification": "executed",
+          "reason": "Fresh state, same-directory ready restore, interrupted marker, missing marker/corruption edge probe and missing required stream refusal; none silently reseed."
+        },
+        {
+          "lines": "151-184",
+          "classification": "executed",
+          "reason": "Actual JSON health/readiness/denials, escaped constrained revision and safe next, fixture notice/form. Escaping branches for impossible chars are waived because revision is hex and next is strict whitelisted."
+        },
+        {
+          "lines": "196-231",
+          "classification": "executed",
+          "reason": "Docker baked revision, matching runtime, assets and own invalid mismatch/missing JS edge cases; unexpected non-ENOENT IO errors are error propagation, waived."
+        },
+        {
+          "lines": "232-330",
+          "classification": "executed",
+          "reason": "Fresh private reference server, official adapter, all fixture streams/users/orgs/repo/file/chat, then no reseed on ready restart. Bootstrap catch cleanup is exercised by missing required stream; exceptional dispatch failure text is reporting and waived."
+        },
+        {
+          "lines": "331-399",
+          "classification": "executed",
+          "reason": "Actual preview build/health/routes/login/logout/metadata injection, 14 raw route/method rejections, forged subjects/origin/redirect checks, integration/agent denial and malformed requests. Pure sanitizing type tests waived."
+        },
+        {
+          "lines": "400-430",
+          "classification": "executed",
+          "reason": "Public listener and private transport observed via true network connection, active wrapper and runtime.close through startup/shutdown/restart. Deadline/abort cleanup exercised by local and actual hosted active readers; impossible drain failure branch is error reporting and waived."
+        }
+      ]
+    },
+    {
+      "id": "H25",
+      "file": "packages/platform/src/production.ts",
+      "oldStart": 125,
+      "oldCount": 6,
+      "newStart": 125,
+      "newCount": 13,
+      "context": " function optionalAbsolutePath(value: string | undefined, name: string): string |",
+      "classification": "executed",
+      "reason": "Production refuses preview mode/auth/data flags even with complete production fields. Mandatory deletion mutation is caught by builder unit and independent compiled-code assertion, then restored.",
+      "citations": [
+        "packages/platform/test/preview.test.ts:60",
+        "work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+        "work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log"
+      ]
+    },
+    {
+      "id": "H26",
+      "file": "packages/platform/test/preview.test.ts",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 66,
+      "context": "",
+      "classification": "executed",
+      "reason": "Entire focused preview unit file passes unchanged baseline and restoration; all enumerated unsafe inputs/credential names and origins exercised. A targeted intentional guard deletion makes its claim test fail.",
+      "citations": [
+        "audit/final-aba2f41a/03-test.log",
+        "work/critic-run-1/sensitivity/baseline-config-tests.log",
+        "work/critic-run-1/sensitivity/guard-mutant-builder-tests.log"
+      ]
+    },
+    {
+      "id": "H27",
+      "file": "packages/platform/tsconfig.build.json",
+      "oldStart": 8,
+      "oldCount": 6,
+      "newStart": 8,
+      "newCount": 7,
+      "context": "",
+      "classification": "waived",
+      "reason": "TypeScript server reference is build graph configuration; clean platform build emitted and then actually loaded the private reference server.",
+      "citations": [
+        "work/critic-run-1/focus-build-1.log",
+        "railway/build.json entry 64",
+        "packages/platform/tsconfig.build.json:11"
+      ]
+    },
+    {
+      "id": "H28",
+      "file": "railway.toml",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 9,
+      "context": "",
+      "classification": "executed",
+      "reason": "Actual service configuration selects Dockerfile, readiness /readyz, 60-second timeout and retry limit 3; clean deployed build health check and retained endpoint observations succeed.",
+      "citations": [
+        "railway/manifest.json configuration.build/deploy",
+        "railway/build.json entry 492",
+        "hosted-supplement/supplement.json"
+      ]
+    },
+    {
+      "id": "H29",
+      "file": "tools/verify/cold_clone_targets.txt",
+      "oldStart": 74,
+      "oldCount": 3,
+      "newStart": 74,
+      "newCount": 4,
+      "context": " verify-E4-T12-browser",
+      "classification": "waived",
+      "reason": "Exact registry line is inspected and Make dry-run schedules its marker, but AC1 target behavior remains blocked by H03. No arbitrary/unregistered target was substituted.",
+      "citations": [
+        "tools/verify/cold_clone_targets.txt:77",
+        "work/critic-run-1/target-blocker.json"
+      ]
+    },
+    {
+      "id": "H30",
+      "file": "tools/verify/e12_t00_browser.mjs",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 369,
+      "context": "",
+      "classification": "executed",
+      "reason": "Full driver executed twice at deployed origin: ten scenes each, videos/network/projection dumps; all dump digests independently replayed. Local sensitivity baseline/restoration exercise local branch, and frozen DOM digest causes the same builder browser assertion to fail after gateway acceptance. Error artifact handling also executes in that mutation.",
+      "citations": [
+        "hosted-before/browser.json",
+        "hosted-after/browser.json",
+        "work/critic-run-1/independent-replay.json",
+        "work/critic-run-1/sensitivity/browser-digest-mutant/failure.json"
+      ]
+    },
+    {
+      "id": "H31",
+      "file": "tools/verify/e12_t00_chat_reducer.mjs",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 6,
+      "context": "",
+      "classification": "executed",
+      "reason": "CLI replay reducer module used independently twice for every cited chat dump and one-byte mutated input; exact state digests match DOM and differ on mutation.",
+      "citations": [
+        "work/critic-run-1/independent-replay.json"
+      ]
+    },
+    {
+      "id": "H32",
+      "file": "tools/verify/e12_t00_preview.mjs",
+      "oldStart": 0,
+      "oldCount": 0,
+      "newStart": 1,
+      "newCount": 281,
+      "context": "",
+      "classification": "executed",
+      "reason": "Full real HTTP verifier ran in original committed evidence and critic sensitivity baseline: fixture reads/writes/second user/session expiry/restart/separate dirs/partial state/assets/config guard. Public bind sabotage makes corresponding assertion fail. Independent fresh semantic script adds distinct inputs and corruption/origin/malformed attacks.",
+      "citations": [
+        "http/http.json",
+        "work/critic-run-1/sensitivity/http-baseline/http.json",
+        "work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+        "work/critic-run-1/semantic-attacks/results.json"
+      ]
+    }
+  ],
+  "attacks": [
+    {
+      "id": "A1",
+      "taskAttack": 1,
+      "result": "failed",
+      "prediction": "Cold build/target works without local dist; actual HTTPS uses built app.",
+      "observed": "Exact fresh Make fails missing web-hooks dist. Actual retained Railway clean Linux build/HTTPS smoke survive. No cold clone after blocker.",
+      "citations": "exact-target-recheck.log:18,32; focus-builds.json; evidence/run-1/railway/build.json; hosted-before/browser.json"
+    },
+    {
+      "id": "A2",
+      "taskAttack": 2,
+      "result": "survived",
+      "prediction": "Production URL, harness or email config prevents preview startup.",
+      "observed": "18 fresh forbidden configs refuse before disk/socket; real-bin children reject provider/email/CODEX_HOME and print no canary value.",
+      "citations": "semantic-attacks/results.json unsafe-config-refused-before-disk-or-socket; config-edge-review.json"
+    },
+    {
+      "id": "A3",
+      "taskAttack": 3,
+      "result": "survived",
+      "prediction": "Raw/admin routes and injected canaries cannot bypass gateway or expose state.",
+      "observed": "Retained hosted raw/admin404; own 14 GET/POST raw/admin/env/git probes404; agent403/token/device403/OIDC404. Own response/log canaries absent; deployed bundle scan 555 files and independent74-file committed-evidence scan empty.",
+      "citations": "evidence/run-1/hosted-supplement/supplement.json; semantic-attacks/results.json; environment-review.json"
+    },
+    {
+      "id": "A4",
+      "taskAttack": 4,
+      "result": "survived",
+      "prediction": "Two fixture profiles accept each edit once, converge and reconnect without errors.",
+      "observed": "Actual retained network has two 202 writes/run and no Grace navigation between sign-in and initial convergence; dumps match exactly. Fresh local browser is used solely as sensitivity baseline/restoration. Separate fresh HTTP sessions/new IDs converge canonically and reconnect.",
+      "citations": "evidence/run-1/hosted-before/browser.json points7235ms,9358ms; hosted-after/browser.json points8223ms,10559ms; independent-replay.json; browser-network-review.json; semantic-attacks/results.json; sensitivity/baseline-browser.log; sensitivity/restored-browser.log"
+    },
+    {
+      "id": "A5",
+      "taskAttack": 5,
+      "result": "survived",
+      "prediction": "Restart preserves accepted bytes and does not reseed.",
+      "observed": "Five-event hosted prefix retained in seven events with one welcome; own fresh writes and session secret survive same dir, isolated dir does not contain them. Partial/corrupt/missing-stream cases refuse.",
+      "citations": "independent-replay.json; evidence/run-1/persistence.json; semantic-attacks/results.json; config-edge-review.json"
+    },
+    {
+      "id": "A6",
+      "taskAttack": 6,
+      "result": "survived",
+      "prediction": "Each required code sabotage fails its corresponding assertion.",
+      "observed": "All 3 detected: loopback bind makes real interface ECONNREFUSED and builder bind assertion fail; removed guard lets complete production shape through, caught by assert.throws and builder test; frozen digest receives gateway 202 then browser CLI/DOM comparison times out. Restored browser and all 18 units pass.",
+      "citations": "sensitivity/complete.json; sensitivity/bind-mutant-real-network.log; bind-mutant-builder-http.log; guard-mutant-complete-prod-fields.log; guard-mutant-builder-tests.log; browser-digest-mutant/failure.json"
+    },
+    {
+      "id": "A7",
+      "taskAttack": "novel",
+      "result": "survived",
+      "prediction": "Malformed dispatches, forged identity/origin/redirect, baked revision mismatch, corrupt marker or missing stream fail closed.",
+      "observed": "Fresh malformed payloads400/400/400/400/403, no500; foreign origin403, forged subjects400, //next clamped. Baked mismatch and invalidJSON/version/shortsecret/missing-marker refuse; ready-with-deleted-stream refuses reseed. Active-reader shutdown4489ms.",
+      "citations": "semantic-attacks/results.json novel-malformed-dispatch-refuses-without-500,novel-ready-marker-with-missing-stream-refuses-reseed; config-edge-review.json"
+    }
+  ],
+  "sabotages": [
+    {
+      "id": "S1",
+      "behavior": "public listener binding",
+      "source": "packages/platform/src/preview.ts",
+      "mutation": "listenPlatformServer(server, config.port, \"0.0.0.0\") -> listenPlatformServer(server, config.port, \"127.0.0.1\")",
+      "sourceBaselineSha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125",
+      "realNetworkAssertion": {
+        "name": "bind-mutant-real-network",
+        "command": [
+          "node",
+          "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+          "network"
+        ],
+        "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+        "exitCode": 1,
+        "expected": "nonzero",
+        "seconds": 1.872,
+        "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+        "bytes": 586,
+        "sha256": "117d4d5ab7377399d64371ea9d3b299b4582bf10a9bfc304dde53d81c6f45646"
+      },
+      "builderAssertion": {
+        "name": "bind-mutant-builder-http",
+        "command": [
+          "node",
+          "tools/verify/e12_t00_preview.mjs",
+          "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-bind-mutant"
+        ],
+        "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+        "exitCode": 1,
+        "expected": "nonzero",
+        "seconds": 1.608,
+        "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+        "bytes": 752,
+        "sha256": "cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392"
+      },
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "behavior": "production preview-identity guard",
+      "source": "packages/platform/src/production.ts",
+      "mutation": "delete complete preview-refusal guard",
+      "sourceBaselineSha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+      "completeProductionShapeSensor": {
+        "name": "guard-mutant-complete-prod-fields",
+        "command": [
+          "node",
+          "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+          "config"
+        ],
+        "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+        "exitCode": 1,
+        "expected": "nonzero",
+        "seconds": 0.178,
+        "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+        "bytes": 751,
+        "sha256": "73b2020fc635ebcdca3e79dac67e402248cb7886ddaeb43327c7732a99f59e2a"
+      },
+      "builderAssertion": {
+        "name": "guard-mutant-builder-tests",
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "--maxWorkers=1",
+          "packages/platform/test/preview.test.ts",
+          "-t",
+          "keeps production entrypoint closed to preview identity"
+        ],
+        "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+        "exitCode": 1,
+        "expected": "nonzero",
+        "seconds": 1.773,
+        "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+        "bytes": 1410,
+        "sha256": "556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17"
+      },
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "behavior": "DOM digest agrees with independent replay",
+      "source": "apps/web/src/chat/ChatChannelPage.tsx:108",
+      "mutation": "data-ef-digest={binding.projection.digest} -> data-ef-digest={\"0\".repeat(64)}",
+      "sourceBaselineSha256": "7c0845334a3a6d0b1de57bd980c71fd49d8c782b4fb4ebad0bb77a4afeccbfce",
+      "builderAssertion": {
+        "name": "digest-mutant-builder-browser",
+        "command": [
+          "node",
+          "tools/verify/e12_t00_browser.mjs",
+          "local",
+          "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant"
+        ],
+        "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+        "exitCode": 1,
+        "expected": "nonzero",
+        "seconds": 46.385,
+        "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+        "bytes": 688,
+        "sha256": "72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+      },
+      "failurePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+      "failure": "page.waitForFunction: Timeout 30000ms exceeded.",
+      "gatewayAcceptedBeforeDetection": true,
+      "detected": true
+    }
+  ],
+  "commands": [
+    {
+      "command": "git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8..aba2f41a5141d0c26da5be613e9766078d839d35",
+      "result": "32 hunks, no added skip/todo/lint disabling; no persistent diff file",
+      "artifact": "cheap-sweep.json,hunk-inventory.json"
+    },
+    {
+      "command": "CI=true pnpm install --offline --frozen-lockfile --store-dir /Users/blamy/Library/pnpm/store/v10",
+      "result": "exit 0, independent scratch graph",
+      "artifact": "hydrate.log"
+    },
+    {
+      "command": "make verify-E12-T00",
+      "result": "exit 2 before assertions; exact recheck",
+      "artifact": "exact-target-recheck.log",
+      "sha256": "68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4"
+    },
+    {
+      "command": "pnpm --filter @eforest/web-hooks build then pnpm --filter @eforest/web build (scratch preparation only)",
+      "result": "both exit 0; original Makefile unchanged",
+      "artifact": "scratch-browser-preparation.json"
+    },
+    {
+      "command": "CLI replay seven committed dumps twice, independent Python reducer/hash and base64 file comparison",
+      "result": "all match; one-byte mutation differs",
+      "artifact": "independent-replay.json"
+    },
+    {
+      "command": "node semantic-attacks.mjs",
+      "result": "exit 0,14 groups",
+      "artifact": "semantic-attacks/results.json"
+    },
+    {
+      "command": "python3 sabotage-driver.py",
+      "result": "exit 0,3 detected/restored",
+      "artifact": "sensitivity/complete.json"
+    },
+    {
+      "command": "node config-edge-probes.mjs",
+      "result": "exit 0,7 edge groups",
+      "artifact": "config-edge-review.json"
+    },
+    {
+      "command": "tools/verify/cold_clone.sh verify-E12-T00",
+      "result": "NOT RUN, F1 blocks before cold stage",
+      "artifact": "target-blocker.json"
+    },
+    {
+      "name": "baseline-http",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_preview.mjs",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-baseline"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 4.291,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-http.log",
+      "bytes": 1204,
+      "sha256": "a67772e688a6f17a608f8941fdb88b074673d4fd8605fd782027be52591bdb53"
+    },
+    {
+      "name": "baseline-config-tests",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=1",
+        "packages/platform/test/preview.test.ts"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 2.561,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-tests.log",
+      "bytes": 311,
+      "sha256": "e74249ce7b7ef12e8462cf44b07ba460fe4a61f327a50a0e282f190143e7fc13"
+    },
+    {
+      "name": "baseline-config-sensor",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "config"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 0.185,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-config-sensor.log",
+      "bytes": 23,
+      "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+    },
+    {
+      "name": "baseline-network-sensor",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "network"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.299,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-network-sensor.log",
+      "bytes": 250,
+      "sha256": "f779d604738b217e50f8e13118570abddfde62d696e92fc941638c81188fe22d"
+    },
+    {
+      "name": "baseline-browser",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_browser.mjs",
+        "local",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-baseline"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 15.863,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/baseline-browser.log",
+      "bytes": 310,
+      "sha256": "2be8cb79639a0374f6846b416b34719406785c191f7d6119d7b6dfab576558cf"
+    },
+    {
+      "name": "bind-mutated-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/platform",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.672,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutated-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "name": "bind-mutant-real-network",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "network"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.872,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "bytes": 586,
+      "sha256": "117d4d5ab7377399d64371ea9d3b299b4582bf10a9bfc304dde53d81c6f45646"
+    },
+    {
+      "name": "bind-mutant-builder-http",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_preview.mjs",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-bind-mutant"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.608,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "bytes": 752,
+      "sha256": "cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392"
+    },
+    {
+      "name": "bind-restored-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/platform",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 0.772,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "name": "bind-restored-real-network",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "network"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.36,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-restored-real-network.log",
+      "bytes": 250,
+      "sha256": "54ff13fc4742eeb387a01f7a89f0405bcd5256ad840e10034e9ec62f9b8b84cb"
+    },
+    {
+      "name": "guard-mutated-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/platform",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.087,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutated-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "name": "guard-mutant-complete-prod-fields",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "config"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 0.178,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "bytes": 751,
+      "sha256": "73b2020fc635ebcdca3e79dac67e402248cb7886ddaeb43327c7732a99f59e2a"
+    },
+    {
+      "name": "guard-mutant-builder-tests",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=1",
+        "packages/platform/test/preview.test.ts",
+        "-t",
+        "keeps production entrypoint closed to preview identity"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.773,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "bytes": 1410,
+      "sha256": "556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17"
+    },
+    {
+      "name": "guard-restored-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/platform",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.148,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-build.log",
+      "bytes": 208,
+      "sha256": "21207c81b64b5e2070f4e05bcd3c48cf79e82838b3b6af196675c1f793931724"
+    },
+    {
+      "name": "guard-restored-complete-prod-fields",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "config"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 0.133,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log",
+      "bytes": 23,
+      "sha256": "1e8a50a79cab0d8cf19cdc466d6d3125c29f59e8e743073197e495b48108fd98"
+    },
+    {
+      "name": "digest-mutated-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/web",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 16.769,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutated-build.log",
+      "bytes": 105748,
+      "sha256": "fd762bde35d4bda580c1acf7717d93ce55cbbb1403bd9a2fc530f104bbfbe975"
+    },
+    {
+      "name": "digest-mutant-builder-browser",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_browser.mjs",
+        "local",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 46.385,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "bytes": 688,
+      "sha256": "72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+    },
+    {
+      "name": "digest-restored-build",
+      "command": [
+        "pnpm",
+        "--filter",
+        "@eforest/web",
+        "build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 16.419,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-restored-build.log",
+      "bytes": 105748,
+      "sha256": "025df3b0667a6c827c79b9081fdc3428eed6376c3c26c1511f0c47b47fe2704c"
+    },
+    {
+      "name": "restored-browser",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_browser.mjs",
+        "local",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-restored"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 13.516,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-browser.log",
+      "bytes": 510,
+      "sha256": "54466fbada5611fb12912b8a882ddd3f86a4c99afcf40a7c8a9a8068e8318af8"
+    },
+    {
+      "name": "restored-config-tests",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=1",
+        "packages/platform/test/preview.test.ts"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 0,
+      "expected": 0,
+      "seconds": 1.239,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/restored-config-tests.log",
+      "bytes": 311,
+      "sha256": "8be1c402dacd68768947b3f6714c7b71ba6631e36cd633d32dadd751f22dc7b5"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/two-profile-accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "bd4d34c203722f950b8743f93ea1ce3a07079151b8ab8d27c68300f62089d67b",
+      "independentPythonDigest": "bd4d34c203722f950b8743f93ea1ce3a07079151b8ab8d27c68300f62089d67b",
+      "inputSha256": "c7c321eddd305127078662fc015acb5585df541facc59f640897050c3cc3b212"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/witness-reconnected.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "independentPythonDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "inputSha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin-preserves-writes.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "independentPythonDigest": "b78d5d224b9ab379bd3855d6b232d7bb99032b714fb107af1ae445281aea7a36",
+      "inputSha256": "e9da7e3185118e0115a50572cd5c976c6f0c11828cf55af8dd9a767a38ec86ab"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/two-profile-accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "d805dd016f99b6473e1b6e7ebee6f8ef526a649c18945f6ca487b4d045942220",
+      "independentPythonDigest": "d805dd016f99b6473e1b6e7ebee6f8ef526a649c18945f6ca487b4d045942220",
+      "inputSha256": "5705029bc091657b2a665b147e6e41e1719b7574d34d4e7cc46279e3e6eca35d"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/witness-reconnected.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "independentPythonDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "inputSha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin-preserves-writes.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "independentPythonDigest": "f337f782530e983a9461e10b4ea20dc5ef2dd6ace6339a78c1ea667d36b2e270",
+      "inputSha256": "605e63da86158664ea44d1326aef9f55737dca4960c1520145d9b4bf97f9ef2a"
+    },
+    {
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/tools/verify/e12_t00_chat_reducer.mjs"
+      ],
+      "repetitions": 2,
+      "resultDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+      "independentPythonDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+      "inputSha256": "401042b8bb2093f4bba5dcbb15ac6eb8f0e2879885c06d47394d7f36193300b2"
+    }
+  ],
+  "notes": "All browser claims were inspected against retained hosted artifacts, never a hosted re-drive. Root gates were verified by exact hashes and not rerun. All mandatory sensitivity mutations detected; source restored and scratch git status empty, main HEAD 49b unchanged. Sole blocker is explicit cold-target workspace dependency omission.32 hunk classifications include 23 exercised, 8 explicit type/import/config/inactive-path waivers and 1 blocked Make hunk. Agent edit under nonempty agent roster is waived as unreachable for zero-agent dedicated fixture with server agent dispatch refusal; no existing agent data migration is claimed. Pre-existing member-dialog BODY focus is recorded but outside T00 claim and not raised. No style/performance/out-of-scope findings, official lifecycle edits or commits. Suite promotion deferred until correctness/coverage hold."
+}

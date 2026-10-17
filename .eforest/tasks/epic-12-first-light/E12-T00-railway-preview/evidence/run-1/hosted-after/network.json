@@ -1,0 +1,1348 @@
+[
+  {
+    "role": "ada",
+    "ms": 860,
+    "method": "GET",
+    "path": "/preview/forest/blob/main/README.md",
+    "status": 302
+  },
+  {
+    "role": "ada",
+    "ms": 952,
+    "method": "GET",
+    "path": "/auth/login?next=%2Fpreview%2Fforest%2Fblob%2Fmain%2FREADME.md",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 1331,
+    "method": "POST",
+    "path": "/auth/preview",
+    "status": 303
+  },
+  {
+    "role": "ada",
+    "ms": 1440,
+    "method": "GET",
+    "path": "/preview/forest/blob/main/README.md",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 1639,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2348,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2636,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2636,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2659,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2697,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2702,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2756,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2830,
+    "method": "GET",
+    "path": "/assets/pull-request-BxU7NUzj.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2836,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2929,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 2973,
+    "method": "GET",
+    "path": "/api/repos/preview/forest/home/namespace?projection=1&reducer=repo-namespace",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3053,
+    "method": "GET",
+    "path": "/api/repos/preview/forest/main/blob/README.md?projection=1&reducer=file-content",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3159,
+    "method": "GET",
+    "path": "/assets/pierre-dark-CyvmCCZW.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3161,
+    "method": "GET",
+    "path": "/assets/markdown-Cvjx9yec.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3162,
+    "method": "GET",
+    "path": "/assets/tsx-COt5Ahok.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3162,
+    "method": "GET",
+    "path": "/assets/json-Cp-IABpG.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3162,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3163,
+    "method": "GET",
+    "path": "/assets/pierre-light-480U9XYS.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3163,
+    "method": "GET",
+    "path": "/assets/typescript-BPQ3VLAy.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3175,
+    "method": "GET",
+    "path": "/api/repos/preview/forest/home/branches?projection=1&reducer=repo-branches",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3190,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 3201,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 4064,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 302
+  },
+  {
+    "role": "grace",
+    "ms": 4205,
+    "method": "GET",
+    "path": "/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 4380,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 4543,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 4555,
+    "method": "POST",
+    "path": "/auth/preview",
+    "status": 303
+  },
+  {
+    "role": "ada",
+    "ms": 4751,
+    "method": "GET",
+    "path": "/api/repos/preview/forest/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 4756,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 4888,
+    "method": "GET",
+    "path": "/api/repos/preview/forest/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 4914,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5614,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5951,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5952,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5961,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5978,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 5979,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6005,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6009,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6103,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6146,
+    "method": "GET",
+    "path": "/assets/ChatChannelPage-CITunl6T.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6208,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6306,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6306,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6311,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6311,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6337,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6339,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6340,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6343,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6394,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6394,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6410,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6470,
+    "method": "GET",
+    "path": "/api/orgs/preview/members",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6515,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6515,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6537,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6545,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6587,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6587,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6620,
+    "method": "GET",
+    "path": "/assets/ChatChannelPage-CITunl6T.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6620,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6625,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6668,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6689,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 6736,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6887,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6895,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6973,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6985,
+    "method": "GET",
+    "path": "/api/orgs/preview/members",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 6991,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7000,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7139,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7516,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000004&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7519,
+    "method": "POST",
+    "path": "/api/dispatch",
+    "status": 202,
+    "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvb9vion_98ofuw\",\"body\":\"Railway preview live acceptance 1792173577499\"},\"ts\":1792173577559}}"
+  },
+  {
+    "role": "grace",
+    "ms": 7520,
+    "method": "GET",
+    "path": "/assets/pull-request-BxU7NUzj.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7523,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000004&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7670,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7701,
+    "method": "GET",
+    "path": "/assets/json-Cp-IABpG.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7709,
+    "method": "GET",
+    "path": "/assets/tsx-COt5Ahok.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7716,
+    "method": "GET",
+    "path": "/assets/markdown-Cvjx9yec.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7720,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7723,
+    "method": "GET",
+    "path": "/assets/pierre-dark-CyvmCCZW.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7733,
+    "method": "GET",
+    "path": "/assets/typescript-BPQ3VLAy.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 7740,
+    "method": "GET",
+    "path": "/assets/pierre-light-480U9XYS.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7838,
+    "method": "GET",
+    "path": "/assets/pull-request-BxU7NUzj.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/typescript-BPQ3VLAy.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/tsx-COt5Ahok.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/markdown-Cvjx9yec.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/json-Cp-IABpG.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/pierre-dark-CyvmCCZW.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 7841,
+    "method": "GET",
+    "path": "/assets/pierre-light-480U9XYS.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 8294,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 8410,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 8475,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 8581,
+    "method": "POST",
+    "path": "/api/dispatch",
+    "status": 202,
+    "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvb9vjpc_pnxd8y\",\"body\":\"Railway preview live acceptance 1792173577499 while witness disconnected\"},\"ts\":1792173578880}}"
+  },
+  {
+    "role": "ada",
+    "ms": 8582,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 8626,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 8937,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 8947,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 8991,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9082,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9082,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9083,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9090,
+    "method": "GET",
+    "path": "/assets/ChatChannelPage-CITunl6T.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9110,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9161,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9161,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9294,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9294,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9320,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9453,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9543,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9569,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9583,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9595,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9595,
+    "method": "GET",
+    "path": "/api/orgs/preview/members",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9616,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 9743,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10144,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10207,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10519,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10519,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10585,
+    "method": "GET",
+    "path": "/assets/pull-request-BxU7NUzj.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10591,
+    "method": "GET",
+    "path": "/assets/typescript-BPQ3VLAy.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10591,
+    "method": "GET",
+    "path": "/assets/tsx-COt5Ahok.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10591,
+    "method": "GET",
+    "path": "/assets/json-Cp-IABpG.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10591,
+    "method": "GET",
+    "path": "/assets/markdown-Cvjx9yec.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10592,
+    "method": "GET",
+    "path": "/assets/pierre-dark-CyvmCCZW.js",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 10592,
+    "method": "GET",
+    "path": "/assets/pierre-light-480U9XYS.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10685,
+    "method": "GET",
+    "path": "/members/preview",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10702,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10702,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10704,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10704,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10705,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10705,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10741,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10741,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10890,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10900,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 10922,
+    "method": "GET",
+    "path": "/assets/MembersPage-H7eq0lyT.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11033,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 11033,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11033,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 11096,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 11206,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11208,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11216,
+    "method": "GET",
+    "path": "/api/orgs/preview/members",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11243,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 11277,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11589,
+    "method": "POST",
+    "path": "/auth/logout",
+    "status": 302
+  },
+  {
+    "role": "ada",
+    "ms": 11722,
+    "method": "GET",
+    "path": "/",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11728,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11729,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11851,
+    "method": "GET",
+    "path": "/assets/PublicSite-BZPKuWxP.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 11851,
+    "method": "GET",
+    "path": "/assets/PublicSite-CEe8FKn_.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12073,
+    "method": "GET",
+    "path": "/assets/Landing-BDZGxgGe.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12074,
+    "method": "GET",
+    "path": "/assets/SiteShell-CCsqU7g0.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12352,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 302
+  },
+  {
+    "role": "ada",
+    "ms": 12464,
+    "method": "GET",
+    "path": "/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 12718,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12784,
+    "method": "POST",
+    "path": "/auth/preview",
+    "status": 303
+  },
+  {
+    "role": "grace",
+    "ms": 12844,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12916,
+    "method": "GET",
+    "path": "/chat/preview/welcome",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12919,
+    "method": "GET",
+    "path": "/assets/index-C4lEhpk1.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12920,
+    "method": "GET",
+    "path": "/assets/index-Cde4F5DK.css",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12929,
+    "method": "GET",
+    "path": "/assets/route-pages-DVzrj5W6.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12929,
+    "method": "GET",
+    "path": "/assets/usePrs-CxGyGPCs.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12930,
+    "method": "GET",
+    "path": "/assets/RVI7YCPX-DDcoj7co.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12932,
+    "method": "GET",
+    "path": "/assets/3GWKGGQS-DLRLDo1o.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12932,
+    "method": "GET",
+    "path": "/assets/ChatChannelPage-CITunl6T.js",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12966,
+    "method": "GET",
+    "path": "/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 12966,
+    "method": "GET",
+    "path": "/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 12989,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "grace",
+    "ms": 13017,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13121,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13121,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13121,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13444,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13445,
+    "method": "GET",
+    "path": "/registry/me?projection=1&reducer=registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13479,
+    "method": "GET",
+    "path": "/api/orgs/preview/members",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13480,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13494,
+    "method": "GET",
+    "path": "/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13501,
+    "method": "GET",
+    "path": "/api/agents/preview?projection=1&reducer=agent-registry",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13548,
+    "method": "GET",
+    "path": "/api/whoami",
+    "status": 200
+  },
+  {
+    "role": "ada",
+    "ms": 13645,
+    "method": "GET",
+    "path": "/api/chat/preview?projection=1&reducer=chat-catalog",
+    "status": 200
+  }
+]

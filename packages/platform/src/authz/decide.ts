@@ -50,6 +50,19 @@ export type AuthzPrincipal =
        * owners and admins may write through this browser credential.
        */
       readonly session?: true;
+      /**
+       * A workspace agent acting for itself (`agent:<handle>`). Only the in-process
+       * AgentResponder constructs this; no HTTP credential can produce it. It confers
+       * exactly one capability: reading and posting in that org's chat channels.
+       */
+      readonly agentOf?: string;
+      /**
+       * The one branch an agent run may write (`fs:` streams of any repo in `agentOf`).
+       * Absent: the agent may only read repositories. Never `main`.
+       */
+      readonly agentBranch?: string;
+      /** A single pull request stream (`pr:<org>/<repo>/<id>`) the agent may write. */
+      readonly agentPullRequest?: string;
     };
 
 export type AuthzTarget =
@@ -88,7 +101,8 @@ export type AuthzBasis =
   | "grant:read"
   | "grant:write"
   | "control"
-  | "sandbox";
+  | "sandbox"
+  | "agent";
 
 export interface AuthzInput {
   readonly operation: AuthzOperation;
@@ -239,6 +253,11 @@ export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKi
     if (match === null || !isAuthzName(match[1]!)) return { kind: "malformed", input: streamId };
     return { kind: "org", org: match[1]!, streamId };
   }
+  if (streamId.startsWith("agent-run:")) {
+    const match = /^agent-run:([^/]+)\/([a-z0-9][a-z0-9-]{0,79})$/.exec(streamId);
+    if (match === null || !isAuthzName(match[1]!)) return { kind: "malformed", input: streamId };
+    return { kind: "org", org: match[1]!, streamId };
+  }
   if (streamId.startsWith("chat:")) {
     const match = /^chat:([^/]+)(?:\/([^/]+))?$/.exec(streamId);
     if (match === null) return { kind: "malformed", input: streamId };
@@ -334,6 +353,14 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
   if (target.kind === "org") {
     const orgView = ownEntry(namespace.orgs, target.org);
     if (orgView === undefined) return refuse("authz/not-found");
+    if (principal.kind === "identified" && principal.agentOf !== undefined) {
+      // Chat channels to converse in; run logs (`agent-run:`) to record itself in.
+      const agentStream =
+        principal.agentOf === target.org &&
+        (target.streamId.startsWith(`chat:${target.org}/`) ||
+          target.streamId.startsWith(`agent-run:${target.org}/`));
+      return agentStream ? allow("agent", target.streamId) : refuse("authz/not-found");
+    }
     const orgSub = principal.kind === "identified" ? principal.sub : undefined;
     const orgRole = orgSub === undefined ? null : roleOf(identity, target.org, orgSub);
     const orgBasis: AuthzBasis | undefined =
@@ -357,6 +384,20 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
   const org = ownEntry(namespace.orgs, target.org);
   const repo = org === undefined ? undefined : ownEntry(org.repos, target.repo);
   if (org === undefined || repo === undefined) return refuse("authz/not-found");
+
+  // 5a. A workspace agent run (in-process capability, E6-T07-style): read every repo
+  //     in its own org; write only the `fs:` streams of its single run branch.
+  if (principal.kind === "identified" && principal.agentOf !== undefined) {
+    if (principal.agentOf !== target.org) return refuse("authz/not-found");
+    if (operation !== "dispatch") return allow("agent", target.streamId);
+    const writable =
+      (principal.agentBranch !== undefined &&
+        principal.agentBranch !== "main" &&
+        target.branch === principal.agentBranch &&
+        target.streamId.startsWith("fs:")) ||
+      (principal.agentPullRequest !== undefined && target.streamId === principal.agentPullRequest);
+    return writable ? allow("agent", target.streamId) : refuse("authz/write-grant-required");
+  }
 
   const sub = principal.kind === "identified" ? principal.sub : undefined;
   const role = sub === undefined ? null : roleOf(identity, target.org, sub);

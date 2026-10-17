@@ -9,7 +9,7 @@ import {
 import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { fsInitialState, type FastForwardMergeReceipt } from "@eforest/streamfs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import { PlatformGateway, type AuthorizationVerifier, type StreamAdapter } from "../src/index.js";
 import type { AuthzInput } from "../src/authz/decide.js";
 
@@ -157,7 +157,7 @@ interface HarnessState {
   readonly streams: HostileMemoryStreams;
   readonly target: MemoryBranch;
   readonly source: MemoryBranch;
-  readonly mergeFastForward: ReturnType<typeof vi.fn>;
+  readonly mergeFastForward: Mock<(branch: MergeBranch) => Promise<FastForwardMergeReceipt>>;
 }
 
 function evidenceStreamFor(prStream: string): string {
@@ -344,7 +344,7 @@ describe("E5-T07 hostile cross-entity recovery", () => {
     await expectAtomicRefusal({
       ...unknownKind,
       payload: {
-        ...unknownKind.payload,
+        ...(unknownKind.payload as Record<string, unknown>),
         closes: [{ entity: "wiki", stream: ISSUE_A }],
       },
     });

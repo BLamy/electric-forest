@@ -1,0 +1,53 @@
+{
+  "scope": "deployment",
+  "deploymentId": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+  "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "status": "SUCCESS",
+  "deploy": [
+    {
+      "timestamp": "2026-10-16T18:53:04.799948124Z",
+      "severity": "info",
+      "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9262aec6-2ccc-4243-8747-5c9a7f3eebf2/vol_a8p48m2jtp5oohy5",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:53:12.844952138Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Starting recovery...",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:53:12.844955608Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Recovery complete: 14 streams, 0 reconciled, 0 errors",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:53:12.844959718Z",
+      "severity": "info",
+      "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=1f9e06b87109a93c75107842d4c8aa65902f8622 port=8080 agents=off integrations=off",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+expected=6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670 actual=09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3
+Traceback (most recent call last):
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/frozen-digest-check.py", line 7, in <module>
+    assert actual==expected,'one-byte mutation must be rejected against frozen committed expected digest'
+AssertionError: one-byte mutation must be rejected against frozen committed expected digest

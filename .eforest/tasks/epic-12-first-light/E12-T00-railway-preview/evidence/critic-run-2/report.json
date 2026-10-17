@@ -1,0 +1,672 @@
+{
+  "schemaVersion": 1,
+  "role": "fresh independent lead critic; not builder or final judge",
+  "task": "E12-T00",
+  "officialVerificationRun": 2,
+  "submissionCommit": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "auditedAndActuallyDeployedSource": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "baseline": "59aefbe244e57ce096ea05b94ad462d97d8831a8",
+  "createdUTC": "2026-10-16T19:12:38.476518+00:00",
+  "recommendation": "No blocking finding survived. The fresh judge must independently cross-examine and issue the official verdict.",
+  "findings": [],
+  "blockingFindings": [],
+  "followUpFindings": [],
+  "completion": {
+    "criteria": [
+      "AC1: Survived. Immutable 1f9 source audit is clean at every ordered gate boundary and exits 0: format/lint 12.859s, typecheck 8.148s, test 618.162s (123 files/924 tests), build 17.827s. The one late official cold clone at submission a7e861 passes exact registered make target in 109.248s, including all 18 config tests, HTTP assertions, ten browser scenes, success marker and dependency-integrity comparison. All 16 selected packages have build scripts and include web-hooks before Vite. Source since 1f9 changes only task/queue metadata and receipts. No passing root gate was rerun. Citation: integrity.json; cold-clone.log; cold-clone-receipt.json; environment-review.json",
+      "AC2: Survived. All seven actual-origin MP4s were inspected via sampled frame sheets alongside direct notice/chat/Members screenshots, timelines, network and original recording script. Both hosted runs have ten scenes, two POST 202 writes, no witness reload during acceptance, disconnect/reconnect, invalid/ended-session 401 and relogin. Both have zero console/page/request errors and 11 separately declared aborted navigation long-polls. All six hosted chat DOM comparisons match double scratch CLI and independent Python reduction. The file DOM digest is independently decoded README byte SHA b8092b31\u2026; the full file-state CLI digest is deliberately a different representation. No hosted browser was redriven. Citation: browser-network-review.json; video-inspection/video-review.json; independent-replay.json; ../../evidence/run-2/hosted-before/browser.json; ../../evidence/run-2/hosted-after/browser.json",
+      "AC3: Survived. Actual build/health/ready responses and visible label identify preview and full deployed revision 1f9, agents/integrations off and artifact bb7762d2\u2026. Actual ingress is 8080; fresh local real-nonloopback-interface request reaches 0.0.0.0. Builder final HTTP startup/shutdown/restart are 640/501/119ms; official cold clone records 822/502/175ms. Actual restart reaches a newly logged process in 10975.959ms. Invalid config, malformed marker, absent asset and baked-revision mismatch refuse. Binding-only mutation makes both actual-interface and original HTTP sensor red, then restored green. Citation: browser-network-review.json; ../../evidence/run-2/railway/manifest.json; ../../evidence/run-2/http/http.json; cold-evidence/http/http.json; sensitivity/complete.json; config-edges/results.json",
+      "AC4: Survived. Own fresh secret-canary configuration probes refuse 25 provider/auth/developer/outbound key names and five agent-mode alternatives, without echoing the canary; invalid config leaves its data directory empty. Real external-facing GET/POST/DELETE raw/admin/.env/.git routes return 404; encoded variants reveal no stream or session secret. Agent dispatch and CLI/device integrations return 403, actual hosted supplement agrees. Actual-origin scanner binds all 555 declared web responses (33,937,112 bytes) to baked hashes with exactly declared HTML stamp normalization and zero findings. Own 616-file scratch web scan includes source maps and has zero known-canary/private-key findings. Production guard removal with a complete control config genuinely defeats the refusal sensor, then restoration passes. Citation: semantic/results.json; semantic-attacks.log; browser-network-review.json; environment-review.json; sensitivity/guard-mutant-complete-shape.log; sensitivity/guard-restored-complete-shape.log",
+      "AC5: Survived. Independent byte comparison proves nine pre-restart events remain an exact prefix of eleven final events, with one welcome seed. Final offset \u20260010/digest 6780c443\u2026 matches every recorded DOM state and CLI/Python replay. Own random-seed accepted gateway write, session secret and complete event list survive close/rebootstrap, while a second dedicated directory lacks the write. Orphan/corrupt/incomplete markers refuse without modification. Novel deletion of a required stream in a ready disposable volume refuses restart and preserves the marker instead of reseeding. Citation: independent-replay.json; semantic/results.json; semantic/accepted.jsonl; config-edges/results.json; ../../evidence/run-2/final/persistence.json",
+      "AC6: Survived. Manifest binds project e0864588-a320-4ba3-96df-95ad0a07ee81, environment c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448, dedicated service 160db4ed-ee0c-4d40-941c-65015a2071bf, deployment 3a846a49-8b7b-4299-b10c-ecee7d755fa8 and exact HTTPS origin to source 1f9e06b8, OCI image c694eed5\u2026 and 734-file artifact bb7762d2\u2026. Source/config/mount/build/native-check/startup/restart records and real hosted HTTP/browser smoke agree. Image descriptor base64 independently decodes to its claimed digest/platform. Local/deployed full artifact equality is explicitly not claimed; the retained comparator has 734 shared exact matches and 41 warm local extras. Citation: ../../evidence/run-2/railway/manifest.json; ../../evidence/run-2/railway/logs-early.json; ../../evidence/run-2/railway/logs-export-and-startup.json; browser-network-review.json; integrity.json",
+      "AC7: Survived using explicitly permitted fallback. Current committed npx replayqa@0.2.4 diagnostic exits 1 with authentication required for proj-electric-forest-ms8w0nv1. Builder claim uses the literal Replay: N/A (<reason>) + mitigation form and retains actual-origin Playwright videos, console/network/timeline and independently replayed dumps. No managed journey/tunnel/exploration or Replay recording URL is invented. Citation: ../../evidence/run-2/replay-availability.json; ../../readme.md#builder-rework; browser-network-review.json; independent-replay.json",
+      "AC8: Survived. Five existing independent reader pairs are byte-identical. I reran each deterministic snapshot using its exact trusted pre-write attester/parser and committed source/base: post-judge, resume, candidate, implemented and logs-retained. All independently recompute exactly, preserve run1 entry 040be5e6\u2026, ledger 9f0aa988\u2026, control 64cb3dd4\u2026, ordinary ceiling 10, runCount 1 and no progress audits. Current status remains implemented and HEAD a7e861. This fresh lead writes no official verdict/status/source; a distinct fresh judge is required. Citation: lifecycle-review.json; snapshot-post-judge.json; snapshot-resume.json; snapshot-candidate.json; snapshot-implemented.json; snapshot-logs-retained.json"
+    ],
+    "hunks": [
+      "H01 .dockerignore:-0,0 +1,35 \u2014 executed. Docker build excludes development trees, workshops/auth/evidence and packages/tests; source recipe checked against actual cold Linux build and retained variable inventory. No forbidden input is required by scratch install. Citation: ../../evidence/run-2/railway/logs-early.json; environment-review.json",
+      "H02 Dockerfile:-0,0 +1,20 \u2014 executed. Actual Linux amd64 deployment build executes pinned Node/pnpm/frozen lockfile/native LMDB+esbuild checks and pnpm build; runtime entrypoint starts at full 1f9 revision and actual-origin smoke passes. ARG/full OID validation is configuration, fixed by manifest. Citation: ../../evidence/run-2/railway/logs-early.json; ../../evidence/run-2/railway/logs-export-and-startup.json; ../../evidence/run-2/railway/manifest.json",
+      "H03 Makefile:-790,0 +791,7 \u2014 executed. Full web+CLI dependency closure builds 16 packages including web-hooks. Exact unchanged config, HTTP, browser checks and registered marker are exercised by the single official cold clone. Citation: cold-clone.log; cold-clone-receipt.json; environment-review.json",
+      "H04 apps/web/src/components/shell/ForestShell.tsx:-399 +399 \u2014 executed. Removing early onSubmit-close allows actual hosted account-menu form logout and old-session refusal, then fresh relogin with preserved state. Citation: ../../evidence/run-2/hosted-before/browser.json#invalid-and-ended-session-refused; ../../evidence/run-2/hosted-after/browser.json; baseline-browser.log",
+      "H05 apps/web/src/main.tsx:-2,0 +3 \u2014 executed. PreviewNotice import is bundled and rendered in the actual hosted preview shell. Citation: ../../evidence/run-2/hosted-after/seeded-file.png",
+      "H06 apps/web/src/main.tsx:-11 +12,8 \u2014 executed. Preview banner wrapper renders above repository/file/chat/Members; actual screenshots and both ten-scene runs exercise those routes. Citation: ../../evidence/run-2/hosted-before/browser.json; ../../evidence/run-2/hosted-supplement/human-only-members.png",
+      "H07 apps/web/src/members/MembersPage.tsx:-12,0 +13 \u2014 executed. Members isPreview import called by visible disabled-feature flow. Citation: ../../evidence/run-2/hosted-supplement/supplement.json",
+      "H08 apps/web/src/members/MembersPage.tsx:-310,0 +312 \u2014 executed. Members preview state derives from stamped metadata and renders preview restrictions. Citation: ../../evidence/run-2/hosted-supplement/supplement.json",
+      "H09 apps/web/src/members/MembersPage.tsx:-337 +339 \u2014 executed. With live empty agent roster, seed button is absent in recorded run and its source assertion; real agent.register gateway probe returns 403. Citation: ../../evidence/run-2/hosted-before/agents-disabled.png; ../../evidence/run-2/hosted-supplement/supplement.json",
+      "H10 apps/web/src/members/MembersPage.tsx:-354,0 +357,6 \u2014 executed. Disabled-agent/external-integration notice is visible in actual Members screenshot. Citation: ../../evidence/run-2/hosted-supplement/human-only-members.png",
+      "H11 apps/web/src/members/MembersPage.tsx:-429,2 +437,3 \u2014 executed. Empty agent roster displays preview-specific execution-off copy. Preserved nonpreview alternative is pre-existing text, covered by unchanged root gates. Citation: ../../evidence/run-2/hosted-supplement/human-only-members.png",
+      "H12 apps/web/src/members/MembersPage.tsx:-458 +467 \u2014 waived. Defensive edit-agent suppression under canManage && !preview cannot be reached with a nonempty legitimate preview roster: fixture bootstrap creates none and all agent.* dispatches are refused. Source predicate only removes this already-disabled action; no seeded-agent edit claim is made. Citation: packages/platform/src/preview.ts:377; ../../evidence/run-2/hosted-supplement/supplement.json#/api/dispatch",
+      "H13 apps/web/src/members/MembersPage.tsx:-481 +490 \u2014 executed. Add member dialog contains exactly one Human radio and no Agent option/form in actual hosted supplement. Citation: ../../evidence/run-2/hosted-supplement/supplement.json#memberDialogHtml; ../../evidence/run-2/hosted-supplement/human-only-members.png",
+      "H14 apps/web/src/members/MembersPage.tsx:-484 +493 \u2014 waived. Defensive selection callback cannot receive agent from the preview radio group because the Agent option is absent. The human dialog is exercised; callback retains prior normal behavior outside preview. Citation: ../../evidence/run-2/hosted-supplement/supplement.json#memberDialogHtml",
+      "H15 apps/web/src/preview.tsx:-0,0 +1,25 \u2014 executed. isPreview metadata and banner copy/build/live-chat link execute in actual origin; Try live chat navigates from seeded file to chat. Nonpreview null is a preservation guard, not new product behavior. Citation: ../../evidence/run-2/hosted-before/browser.json#seeded-file-browsed; ../../evidence/run-2/hosted-before/seeded-file.png",
+      "H16 apps/web/src/routes.tsx:-6,0 +7 \u2014 executed. Routes import used by ProofReceipt preview guard, loaded by recorded web routes. Citation: browser-network-review.json#proofPollingRequests",
+      "H17 apps/web/src/routes.tsx:-42,0 +44 \u2014 executed. ProofReceipt returns for preview and produces no /proof network request in both hosted final runs. Citation: browser-network-review.json",
+      "H18 apps/web/src/site/site.test.ts:-65 +65,3 \u2014 executed. Ordered immutable root audit executes fixed task-board-index assertion for all 16 authorized epics. No expectation is removed. Citation: ../../evidence/run-2/audit/03-test.log:45; ../../evidence/run-2/audit/manifest.json",
+      "H19 apps/web/src/site/site.test.ts:-87,0 +90,4 \u2014 executed. Ordered immutable root audit executes exact hosting-first roadmap-ladder assertion including new epic order. Citation: ../../evidence/run-2/audit/03-test.log:45",
+      "H20 apps/web/src/site/site.test.ts:-90,0 +97,3 \u2014 executed. Exact roadmap ladder now includes E9/E10/E11 rather than omitting authorized later epics; root test gate is green. Citation: ../../evidence/run-2/audit/03-test.log:45",
+      "H21 apps/web/src/site/site.test.ts:-93 +102,2 \u2014 executed. Test now still asserts E8 mirror by identity and final E11 wildwood; immutable test gate executes assertion. Citation: ../../evidence/run-2/audit/03-test.log:45",
+      "H22 docs/guides/railway-hosting.md:-0,0 +1,96 \u2014 waived. Operator documentation has no executable runtime behavior. Its pinned build, preview notice, configuration, binding and later production prerequisites were checked against actual manifests/source; it explicitly avoids production qualification. Citation: ../../evidence/run-2/railway/manifest.json; docs/guides/railway-hosting.md",
+      "H23 package.json:-18,0 +19 \u2014 waived. Package script is a declarative alias to preview-bin.js, whose exact entrypoint ran in the actual deployment. It introduces no independent branch. Citation: ../../evidence/run-2/railway/logs-export-and-startup.json",
+      "H24 packages/platform/fixtures/preview/README.md:-0,0 +1,5 \u2014 executed. Frozen README bytes equal decoded committed file-write dump and visible repository/file; exact SHA b8092b31\u2026 is independently verified. Citation: independent-replay.json",
+      "H25 packages/platform/src/preview-artifact.ts:-0,0 +1,44 \u2014 executed. Artifact manifest enumerates built runtime and web bytes; both hosted inventories rehash independently to bb7762d2\u2026 with 734 unique paths, and actual 555 web responses match baked hashes. Missing absent package dist ENOENT also exercised by closure-only clone. Type declarations and unexpected filesystem-error propagation are waived environmental plumbing. Citation: integrity.json; browser-network-review.json; baseline-http/artifact.json",
+      "H26 packages/platform/src/preview-bin.ts:-0,0 +1,23 \u2014 executed. Actual container runs preview-bin, logs PUBLIC DISPOSABLE and pinned revision; restart yields a distinct logged ready process. Signal/shutdown registration delegates to runtime.close exercised by HTTP/browser lifecycle; catastrophic shutdown failure logging is waived non-claim error reporting. Citation: ../../evidence/run-2/railway/logs-export-and-startup.json; ../../evidence/run-2/railway/logs-restart.json; baseline-http/http.json",
+      "H27 packages/platform/src/preview.ts:-0,0 +1,430 \u2014 executed. Config/fixture/bootstrap/gateway/private-store/session/origin/agent/integration/build/stamp/shutdown behavior is exercised by actual hosted runs, focused HTTP and independent semantic probes. Types/comments and unreachable defensive cleanup/exception propagation are explicitly waived by region below, not claimed as source-line instrumentation. Citation: semantic/results.json; config-edges/results.json; baseline-http/http.json; ../../evidence/run-2/hosted-before/browser.json; sensitivity/complete.json",
+      "H28 packages/platform/src/production.ts:-127,0 +128,7 \u2014 executed. Complete ordinary production config passes without preview flags and fails for each preview flag. Removing the new guard makes both sensor and original focused tests red; restoration green. Citation: sensor-config.log; sensitivity/guard-mutant-complete-shape.log; sensitivity/guard-restored-complete-shape.log",
+      "H29 packages/platform/test/preview.test.ts:-0,0 +1,66 \u2014 executed. All 18 focused preview config tests execute green at baseline/restored/cold clone, including unsafe origin and forbidden key table; guard mutant fails its exact refusal assertion. Citation: baseline-config.log; sensitivity/guard-mutant-builder-config.log; cold-clone.log",
+      "H30 packages/platform/tsconfig.build.json:-10,0 +11 \u2014 waived. TypeScript project reference is configuration. Platform build in fresh installed output-free clone resolves and emits the server dependency. Citation: focus-build.log; cold-clone.log",
+      "H31 railway.toml:-0,0 +1,9 \u2014 waived. Railway build/deploy declarations are configuration applied to actual dedicated preview service. Actual build, readyz health, restart and one running replica retained. Citation: ../../evidence/run-2/railway/manifest.json",
+      "H32 tools/verify/cold_clone_targets.txt:-76,0 +77 \u2014 executed. Registered target is selected/validated by the one official cold-clone harness and exact success marker. Citation: cold-clone.log",
+      "H33 tools/verify/e12_t00_browser.mjs:-0,0 +1,369 \u2014 executed. Original complete browser verifier ran green locally from fresh installed clone, in actual hosted before/after evidence, and restored after authentic frozen-DOM mutant red; dumped event/DOM comparisons independently checked. Instrumentation/failure serialization is evidence machinery; no source-coverage upload is claimed. Citation: baseline-browser.log; sensitivity/digest-mutant-builder-browser.log; sensitivity/digest-restored-builder-browser.log; independent-replay.json",
+      "H34 tools/verify/e12_t00_chat_reducer.mjs:-0,0 +1,6 \u2014 executed. Reducer adapter imports real compiled reducer in original builder replay proof; independent scratch CLI built-in chat-channel plus Python reduction agrees. Citation: ../../evidence/run-2/hosted-before/browser.json; independent-replay.json",
+      "H35 tools/verify/e12_t00_preview.mjs:-0,0 +1,281 \u2014 executed. Original HTTP verifier runs in fresh scratch baseline/restoration/cold clone, exercises real gateway/private store/artifact/config/bootstrap/restart/session isolation and refuses bind mutant at assertion. Citation: baseline-http.log; sensitivity/bind-mutant-builder-http.log; sensitivity/bind-restored-builder-http.log; cold-clone.log",
+      "M001 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/browser-network-review.json:-0,0 +1,14 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M002 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/cheap-sweep.json:-0,0 +1,6 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M003 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.log:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M004 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-probes.mjs:-0,0 +1,37 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M005 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/config-edge-review.json:-0,0 +1,60 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M006 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/coverage.json:-0,0 +1,542 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M007 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/deployment-review.json:-0,0 +1,139 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M008 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/environment-review.json:-0,0 +1,21 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M009 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/exact-target-recheck.log:-0,0 +1,32 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M010 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-1.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M011 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-2.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M012 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-build-3.log:-0,0 +1,23 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M013 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/focus-builds.json:-0,0 +1,35 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M014 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hunk-inventory.json:-0,0 +1,290 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M015 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate-pid.json:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M016 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/hydrate.log:-0,0 +1,56 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M017 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/independent-replay.json:-0,0 +1,88 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M018 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/integrity.json:-0,0 +1,460 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M019 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/judge-cross-examination.json:-0,0 +1,108 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M020 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/lifecycle-review.json:-0,0 +1,22 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M021 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/one-byte-mutation.jsonl:-0,0 +1,7 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M022 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/portable-artifact-index.json:-0,0 +1,1591 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M023 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.json:-0,0 +1,34 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M024 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/predictions.md:-0,0 +1,19 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M025 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.json:-0,0 +1,1326 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M026 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/report.md:-0,0 +1,59 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M027 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/review-artifact-index.json:-0,0 +1,566 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M028 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/runtime-artifact-comparison.json:-0,0 +1,186 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M029 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sabotage-driver.py:-0,0 +1,71 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M030 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-1.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M031 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation-2.log:-0,0 +1,720 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M032 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/scratch-browser-preparation.json:-0,0 +1,24 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M033 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.log:-0,0 +1,9 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M034 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks.mjs:-0,0 +1,70 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M035 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/fresh-accepted.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M036 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/html-without-js/index.html:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M037 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/semantic-attacks/results.json:-0,0 +1,192 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M038 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-driver.log:-0,0 +1,21 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M039 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity-sensor.mjs:-0,0 +1,23 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M040 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-browser.log:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M041 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-sensor.log:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M042 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-config-tests.log:-0,0 +1,9 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M043 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-http.log:-0,0 +1,7 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M044 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/baseline-network-sensor.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M045 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-builder-http.log:-0,0 +1,23 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M046 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutant-real-network.log:-0,0 +1,19 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M047 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-mutated-build.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M048 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-build.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M049 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/bind-restored-real-network.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M050 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/browser.json:-0,0 +1,208 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M051 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/deployment.json:-0,0 +1,3669 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M052 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/file.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M053 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/network.json:-0,0 +1,1292 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M054 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin-preserves-writes.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M055 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/two-profile-accepted.jsonl:-0,0 +1,2 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M056 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/witness-reconnected.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M057 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/deployment.json:-0,0 +1,3669 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M058 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/failure.json:-0,0 +1,1725 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M059 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/file.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M060 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/two-profile-accepted.jsonl:-0,0 +1,2 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M061 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/browser.json:-0,0 +1,213 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M062 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/deployment.json:-0,0 +1,3669 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M063 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/file.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M064 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/network.json:-0,0 +1,1243 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M065 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin-preserves-writes.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M066 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/two-profile-accepted.jsonl:-0,0 +1,2 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M067 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/witness-reconnected.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M068 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/commands.json:-0,0 +1,322 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M069 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/complete.json:-0,0 +1,436 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M070 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutant-builder-browser.log:-0,0 +1,14 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M071 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-mutated-build.log:-0,0 +1,720 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M072 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/digest-restored-build.log:-0,0 +1,720 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M073 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-builder-tests.log:-0,0 +1,30 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M074 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log:-0,0 +1,18 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M075 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-mutated-build.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M076 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-build.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M077 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/guard-restored-complete-prod-fields.log:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M078 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted-state.json:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M079 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/accepted.jsonl:-0,0 +1,2 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M080 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/artifact.json:-0,0 +1,3669 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M081 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/http-baseline/http.json:-0,0 +1,36 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M082 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-browser.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M083 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/restored-config-tests.log:-0,0 +1,9 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M084 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/sabotages.json:-0,0 +1,110 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M085 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/snapshot-aba.json:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M086 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/target-blocker.json:-0,0 +1,10 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M087 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-probes.json:-0,0 +1,114 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M088 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/artifact-index.json:-0,0 +1,345 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M089 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.log:-0,0 +1,10 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M090 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/01-format-lint.raw.log:-0,0 +1,10 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M091 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M092 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/02-typecheck.raw.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M093 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.log:-0,0 +1,777 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M094 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/03-test.raw.log:-0,0 +1,777 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M095 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.log:-0,0 +1,728 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M096 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/04-build.raw.log:-0,0 +1,728 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M097 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/manifest.json:-0,0 +1,225 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M098 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/final-aba2f41a/portable-index.json:-0,0 +1,62 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M099 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.log:-0,0 +1,10 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M100 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/01-format-lint.raw.log:-0,0 +1,10 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M101 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M102 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/02-typecheck.raw.log:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M103 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.log:-0,0 +1,121 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M104 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/03-test.raw.log:-0,0 +1,121 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M105 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/audit.json:-0,0 +1,250 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M106 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/audit/initial-11931416/portable-index.json:-0,0 +1,48 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M107 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/canary-scan.json:-0,0 +1,12 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M108 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/browser.json:-0,0 +1,208 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M109 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/deployment.json:-0,0 +1,3684 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M110 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/file.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M111 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/network.json:-0,0 +1,1348 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M112 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin-preserves-writes.jsonl:-0,0 +1,7 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M113 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/two-profile-accepted.jsonl:-0,0 +1,6 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M114 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/witness-reconnected.jsonl:-0,0 +1,7 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M115 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/browser.json:-0,0 +1,213 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M116 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/deployment.json:-0,0 +1,3684 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M117 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/file.jsonl:-0,0 +1,3 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M118 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/network.json:-0,0 +1,1327 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M119 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin-preserves-writes.jsonl:-0,0 +1,5 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M120 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/two-profile-accepted.jsonl:-0,0 +1,4 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M121 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/witness-reconnected.jsonl:-0,0 +1,5 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M122 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mjs:-0,0 +1,95 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M123 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/network.json:-0,0 +1,162 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M124 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/supplement.json:-0,0 +1,123 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M125 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted-state.json:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M126 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/accepted.jsonl:-0,0 +1,2 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M127 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/artifact.json:-0,0 +1,3889 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M128 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/http/http.json:-0,0 +1,36 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M129 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence-check.mjs:-0,0 +1,29 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M130 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/persistence.json:-0,0 +1,16 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M131 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/build.json:-0,0 +1,2467 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M132 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/manifest.json:-0,0 +1,191 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M133 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/railway/runtime.json:-0,0 +1,47 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M134 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/restart-ready.json:-0,0 +1,13 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M135 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readback.json:-0,0 +1 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M136 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/source-readers.json:-0,0 +1,18 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M137 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md:-109,0 +110,139 \u2014 waived. Passive immutable task spec/lifecycle/history/evidence artifact, excluded from runtime image. No executable product behavior is added by retaining it. Historical verdict bytes and committed evidence integrity are independently reviewed. Citation: integrity.json; lifecycle-review.json",
+      "M138 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M139 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/ada.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M140 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/agents-disabled.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M141 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-after-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M142 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-before-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M143 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/grace-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M144 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/live-convergence.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M145 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/relogin.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M146 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-baseline/seeded-file.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M147 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/ada-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M148 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/grace-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M149 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-digest-mutant/seeded-file.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M150 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M151 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/ada.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M152 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/agents-disabled.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M153 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-after-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M154 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-before-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M155 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/grace-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M156 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/live-convergence.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M157 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/relogin.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M158 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/sensitivity/browser-restored/seeded-file.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M159 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-ada-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M160 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-after-reconnect-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M161 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-after-grace-before-reconnect-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M162 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-ada-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M163 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-after-reconnect-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M164 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-before-grace-before-reconnect-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M165 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/critic-run-1/video-inspection/hosted-supplement-hosted-supplement-sheet.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M166 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M167 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/ada.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M168 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/agents-disabled.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M169 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-after-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M170 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-before-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M171 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/grace-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M172 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/live-convergence.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M173 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/relogin.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M174 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-after/seeded-file.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M175 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M176 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/ada.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M177 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/agents-disabled.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M178 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-after-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M179 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-before-reconnect.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M180 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/grace-notice.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M181 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/live-convergence.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M182 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/relogin.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M183 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-before/seeded-file.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M184 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/hosted-supplement.mp4:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json",
+      "M185 .eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-1/hosted-supplement/human-only-members.png:binary artifact \u2014 waived. Passive retained historical pixels/video, excluded from runtime image. No executable source behavior is added; prior verdict/history retained unchanged. Citation: lifecycle-review.json"
+    ],
+    "attacks": [
+      "A1: Survived. Independently installed initially dist/node_modules-free --no-local scratch clone built all 16 web+CLI dependencies. Original local verifier and later the one registered cold clone pass; retained hosted videos/network/assets and actual cold Linux build prove the real origin was not replaced by a dev/static mock. Citation: scratch-environment.json; focus-build.json; cold-clone.log; browser-network-review.json; ../../evidence/run-2/railway/logs-early.json",
+      "A2: Survived. Own canary values under production stream/identity/provider/email/model/developer env names and agent harness alternatives are rejected before storage/listen; no value echo. Complete-shaped production preview guard is independently attacked by deletion. Citation: semantic/results.json; config-edges/results.json; sensitivity/complete.json",
+      "A3: Survived. Own GET/POST/DELETE raw/admin/.env/.git probes and encoded path variants cannot read or mutate raw streams; before/after gateway dump is unchanged. All public response bodies avoid the unique canary and private session secret. The actual hosted supplement and served-byte scanner corroborate private route/integration isolation. Citation: semantic/results.json; browser-network-review.json",
+      "A4: Survived. Own two isolated local contexts use fresh random seed e1e9c3fe1c2e8d65 and pointer/keyboard, one accepted write and second witness without reload, close/reopen witness, another accepted write and exact canonical digest equality. Hosted final evidence independently exercises the same flow twice with its own committed dumps. Citation: sensor-baseline-browser/results.json; sensor-baseline-browser/accepted.jsonl; sensor-baseline-browser/reconnected.jsonl; independent-replay.json; browser-network-review.json",
+      "A5: Survived. Own seed 275bac33508fe5ad survives session-preserving restart at digest d0259b37\u2026, offset \u20260001, and a separate data directory excludes it. Independent committed hosted 9\u219211 byte prefix and single-seed checks agree; ready-volume damage refuses rather than reseeds. Citation: semantic/results.json; semantic/accepted.jsonl; independent-replay.json",
+      "A6: Survived. Exactly three materially distinct isolated source mutations (public loopback bind, removed production preview guard, DOM digest frozen at true initial value) each turn original builder checker and my stronger matching sensor red; after restoration/rebuild each goes green. Full source bytes and tracked status restore after every mutation. Citation: sensitivity/complete.json; sensitivity/commands.json; sabotage-driver.py; sabotage-driver.log",
+      "novel: Survived. Removed ns:org:preview using the private disposable server after a real accepted write and closed it; rebootstrap refuses incomplete ready volume and leaves marker bytes unchanged. Extra independent attacks cover invalid fixture subjects, external/ambiguous next redirects, unsafe origins/ports/revisions, corrupt bootstrap markers and missing assets. Citation: semantic/results.json#missing-required-ready-stream; semantic-attacks.mjs; config-edges/results.json"
+    ],
+    "sabotage": [
+      "bind: independent and original builder sensors red; restored green, identical source hash and tracked clean. Citations: sensitivity/complete.json and each raw log recorded therein.",
+      "guard: independent and original builder sensors red; restored green, identical source hash and tracked clean. Citations: sensitivity/complete.json and each raw log recorded therein.",
+      "digest: independent and original builder sensors red; restored green, identical source hash and tracked clean. Citations: sensitivity/complete.json and each raw log recorded therein."
+    ],
+    "environment": "Fresh --no-local initially output-free clone, own frozen-lockfile install, workspace symlinks inside clone, synthetic explicit env/new directories, no network mocks/root artifacts copied, frozen README + independent Python/double CLI replay. environment-review.json records Node v24.20.0, pnpm 10.15.0, real Chrome and ffmpeg toolchain; one official scrubbed cold clone dependency integrity passes.",
+    "coldClone": "passed"
+  },
+  "criteria": [
+    {
+      "id": "AC1",
+      "prediction": "Before evidence inspection: fresh audit manifests identify full candidate 1f9e06b87109a93c75107842d4c8aa65902f8622, ordered gates all exit 0 with 123 files/924 tests; the exact registered target independently builds web+CLI closures and executes every unchanged config/HTTP/browser assertion in one late official cold clone.",
+      "result": "Survived. Immutable 1f9 source audit is clean at every ordered gate boundary and exits 0: format/lint 12.859s, typecheck 8.148s, test 618.162s (123 files/924 tests), build 17.827s. The one late official cold clone at submission a7e861 passes exact registered make target in 109.248s, including all 18 config tests, HTTP assertions, ten browser scenes, success marker and dependency-integrity comparison. All 16 selected packages have build scripts and include web-hooks before Vite. Source since 1f9 changes only task/queue metadata and receipts. No passing root gate was rerun.",
+      "citation": "integrity.json; cold-clone.log; cold-clone-receipt.json; environment-review.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC2",
+      "prediction": "The retained actual-origin recordings show fixture warning before data, Ada/Grace separate sign-in, frozen README, real POST 202 chat writes and second-profile convergence without reload, disconnect/reconnect and logout; each DOM offset/digest equals my independent replay, with no console/page errors.",
+      "result": "Survived. All seven actual-origin MP4s were inspected via sampled frame sheets alongside direct notice/chat/Members screenshots, timelines, network and original recording script. Both hosted runs have ten scenes, two POST 202 writes, no witness reload during acceptance, disconnect/reconnect, invalid/ended-session 401 and relogin. Both have zero console/page/request errors and 11 separately declared aborted navigation long-polls. All six hosted chat DOM comparisons match double scratch CLI and independent Python reduction. The file DOM digest is independently decoded README byte SHA b8092b31\u2026; the full file-state CLI digest is deliberately a different representation. No hosted browser was redriven.",
+      "citation": "browser-network-review.json; video-inspection/video-review.json; independent-replay.json; ../../evidence/run-2/hosted-before/browser.json; ../../evidence/run-2/hosted-after/browser.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC3",
+      "prediction": "The actual deployment/HTTP receipts bind preview/revision/artifact, all-interface assigned port; bad assets/config refuse before listen, startup/shutdown/restart each <60000 ms; current source cannot relabel a different deployment.",
+      "result": "Survived. Actual build/health/ready responses and visible label identify preview and full deployed revision 1f9, agents/integrations off and artifact bb7762d2\u2026. Actual ingress is 8080; fresh local real-nonloopback-interface request reaches 0.0.0.0. Builder final HTTP startup/shutdown/restart are 640/501/119ms; official cold clone records 822/502/175ms. Actual restart reaches a newly logged process in 10975.959ms. Invalid config, malformed marker, absent asset and baked-revision mismatch refuse. Binding-only mutation makes both actual-interface and original HTTP sensor red, then restored green.",
+      "citation": "browser-network-review.json; ../../evidence/run-2/railway/manifest.json; ../../evidence/run-2/http/http.json; cold-evidence/http/http.json; sensitivity/complete.json; config-edges/results.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC4",
+      "prediction": "Raw/admin endpoints return non-access/non-mutation responses. Independent complete-shaped config probes reject production/provider/auth/harness/developer/outbound settings without canary leakage. Built bytes/retained evidence contain no declared synthetic secret.",
+      "result": "Survived. Own fresh secret-canary configuration probes refuse 25 provider/auth/developer/outbound key names and five agent-mode alternatives, without echoing the canary; invalid config leaves its data directory empty. Real external-facing GET/POST/DELETE raw/admin/.env/.git routes return 404; encoded variants reveal no stream or session secret. Agent dispatch and CLI/device integrations return 403, actual hosted supplement agrees. Actual-origin scanner binds all 555 declared web responses (33,937,112 bytes) to baked hashes with exactly declared HTML stamp normalization and zero findings. Own 616-file scratch web scan includes source maps and has zero known-canary/private-key findings. Production guard removal with a complete control config genuinely defeats the refusal sensor, then restoration passes.",
+      "citation": "semantic/results.json; semantic-attacks.log; browser-network-review.json; environment-review.json; sensitivity/guard-mutant-complete-shape.log; sensitivity/guard-restored-complete-shape.log",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC5",
+      "prediction": "Nine pre-restart events are byte-identical prefix of eleven final events with one seed. Independent new local write survives bootstrap/restart and sessions persist; another directory excludes it. Partial/nonempty invalid volumes refuse without reseeding.",
+      "result": "Survived. Independent byte comparison proves nine pre-restart events remain an exact prefix of eleven final events, with one welcome seed. Final offset \u20260010/digest 6780c443\u2026 matches every recorded DOM state and CLI/Python replay. Own random-seed accepted gateway write, session secret and complete event list survive close/rebootstrap, while a second dedicated directory lacks the write. Orphan/corrupt/incomplete markers refuse without modification. Novel deletion of a required stream in a ready disposable volume refuses restart and preserves the marker instead of reseeding.",
+      "citation": "independent-replay.json; semantic/results.json; semantic/accepted.jsonl; config-edges/results.json; ../../evidence/run-2/final/persistence.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC6",
+      "prediction": "Manifest binds full source 1f9e06b8 to exact Railway project/environment/service/deployment/URL and image/artifact file inventory. Retained browser/HTTP evidence is actual HTTPS, and every deployed path matches its declared file SHA.",
+      "result": "Survived. Manifest binds project e0864588-a320-4ba3-96df-95ad0a07ee81, environment c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448, dedicated service 160db4ed-ee0c-4d40-941c-65015a2071bf, deployment 3a846a49-8b7b-4299-b10c-ecee7d755fa8 and exact HTTPS origin to source 1f9e06b8, OCI image c694eed5\u2026 and 734-file artifact bb7762d2\u2026. Source/config/mount/build/native-check/startup/restart records and real hosted HTTP/browser smoke agree. Image descriptor base64 independently decodes to its claimed digest/platform. Local/deployed full artifact equality is explicitly not claimed; the retained comparator has 734 shared exact matches and 41 warm local extras.",
+      "citation": "../../evidence/run-2/railway/manifest.json; ../../evidence/run-2/railway/logs-early.json; ../../evidence/run-2/railway/logs-export-and-startup.json; browser-network-review.json; integrity.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC7",
+      "prediction": "Current Replay availability diagnostic really reports auth unavailable, and claim explicitly declares Replay: N/A + Playwright console/network/video plus independent replay mitigation; no fake managed journey/recording identifiers.",
+      "result": "Survived using explicitly permitted fallback. Current committed npx replayqa@0.2.4 diagnostic exits 1 with authentication required for proj-electric-forest-ms8w0nv1. Builder claim uses the literal Replay: N/A (<reason>) + mitigation form and retains actual-origin Playwright videos, console/network/timeline and independently replayed dumps. No managed journey/tunnel/exploration or Replay recording URL is invented.",
+      "citation": "../../evidence/run-2/replay-availability.json; ../../readme.md#builder-rework; browser-network-review.json; independent-replay.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "AC8",
+      "prediction": "Committed reader pairs agree at lifecycle boundaries; run1 verdict bytes/ledger/ceiling and trusted control digest persist; status is implemented and run2 does not reset accounting.",
+      "result": "Survived. Five existing independent reader pairs are byte-identical. I reran each deterministic snapshot using its exact trusted pre-write attester/parser and committed source/base: post-judge, resume, candidate, implemented and logs-retained. All independently recompute exactly, preserve run1 entry 040be5e6\u2026, ledger 9f0aa988\u2026, control 64cb3dd4\u2026, ordinary ceiling 10, runCount 1 and no progress audits. Current status remains implemented and HEAD a7e861. This fresh lead writes no official verdict/status/source; a distinct fresh judge is required.",
+      "citation": "lifecycle-review.json; snapshot-post-judge.json; snapshot-resume.json; snapshot-candidate.json; snapshot-implemented.json; snapshot-logs-retained.json",
+      "outcome": "survived"
+    }
+  ],
+  "hunkCoverage": {
+    "total": 220,
+    "behaviorHunks": 35,
+    "passiveHistoryMetadataOrBinaryArtifacts": 185,
+    "report": "coverage.json",
+    "uncoveredRequiredBehavior": [],
+    "deadRequiredBehavior": [],
+    "explicitWaivers": "H12/H14 unreachable preview-agent edit/selection under enforced empty-roster/no-agent-dispatch invariant; H22 docs, H23 package alias, H30 TypeScript config, H31 Railway config; interfaces/comments and defensive non-claim exception plumbing by region. No source-execution instrumentation is claimed."
+  },
+  "attacks": [
+    {
+      "id": "A1",
+      "prediction": "A new independently installed initially dist-free clone can build usable assets without inherited auth/output; hosted evidence requests built hashed assets and real gateway endpoints.",
+      "result": "Survived. Independently installed initially dist/node_modules-free --no-local scratch clone built all 16 web+CLI dependencies. Original local verifier and later the one registered cold clone pass; retained hosted videos/network/assets and actual cold Linux build prove the real origin was not replaced by a dev/static mock.",
+      "citation": "scratch-environment.json; focus-build.json; cold-clone.log; browser-network-review.json; ../../evidence/run-2/railway/logs-early.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "A2",
+      "prediction": "Production URL, local agent harness, email config and real login settings fail before runtime listen with own unique canary values.",
+      "result": "Survived. Own canary values under production stream/identity/provider/email/model/developer env names and agent harness alternatives are rejected before storage/listen; no value echo. Complete-shaped production preview guard is independently attacked by deletion.",
+      "citation": "semantic/results.json; config-edges/results.json; sensitivity/complete.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "A3",
+      "prediction": "Own encoded path/raw method probes cannot reach reference streams or admin mutation; canaries are absent from public response bodies and error logs.",
+      "result": "Survived. Own GET/POST/DELETE raw/admin/.env/.git probes and encoded path variants cannot read or mutate raw streams; before/after gateway dump is unchanged. All public response bodies avoid the unique canary and private session secret. The actual hosted supplement and served-byte scanner corroborate private route/integration isolation.",
+      "citation": "semantic/results.json; browser-network-review.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "A4",
+      "prediction": "Own two isolated local contexts accept exactly one fresh pointer/keyboard message, converge canonically; retained hosted before/after evidence demonstrates same without redriving it.",
+      "result": "Survived. Own two isolated local contexts use fresh random seed e1e9c3fe1c2e8d65 and pointer/keyboard, one accepted write and second witness without reload, close/reopen witness, another accepted write and exact canonical digest equality. Hosted final evidence independently exercises the same flow twice with its own committed dumps.",
+      "citation": "sensor-baseline-browser/results.json; sensor-baseline-browser/accepted.jsonl; sensor-baseline-browser/reconnected.jsonl; independent-replay.json; browser-network-review.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "A5",
+      "prediction": "Own accepted message, digest and session survive runtime restart; separate data directory starts from one seed; incomplete/corrupt volume refuses.",
+      "result": "Survived. Own seed 275bac33508fe5ad survives session-preserving restart at digest d0259b37\u2026, offset \u20260001, and a separate data directory excludes it. Independent committed hosted 9\u219211 byte prefix and single-seed checks agree; ready-volume damage refuses rather than reseeds.",
+      "citation": "semantic/results.json; semantic/accepted.jsonl; independent-replay.json",
+      "outcome": "survived"
+    },
+    {
+      "id": "A6",
+      "prediction": "Malformed/repeated preview fixture inputs and encoded redirects cannot escape fixture-only identity; missing required stream on an apparently ready volume must refuse rather than reseed.",
+      "result": "Survived. Exactly three materially distinct isolated source mutations (public loopback bind, removed production preview guard, DOM digest frozen at true initial value) each turn original builder checker and my stronger matching sensor red; after restoration/rebuild each goes green. Full source bytes and tracked status restore after every mutation.",
+      "citation": "sensitivity/complete.json; sensitivity/commands.json; sabotage-driver.py; sabotage-driver.log",
+      "outcome": "survived"
+    },
+    {
+      "id": "novel",
+      "prediction": "Malformed/repeated preview fixture inputs and encoded redirects cannot escape fixture-only identity; missing required stream on an apparently ready volume must refuse rather than reseed.",
+      "result": "Survived. Removed ns:org:preview using the private disposable server after a real accepted write and closed it; rebootstrap refuses incomplete ready volume and leaves marker bytes unchanged. Extra independent attacks cover invalid fixture subjects, external/ambiguous next redirects, unsafe origins/ports/revisions, corrupt bootstrap markers and missing assets.",
+      "citation": "semantic/results.json#missing-required-ready-stream; semantic-attacks.mjs; config-edges/results.json",
+      "outcome": "survived"
+    }
+  ],
+  "sabotage": [
+    {
+      "id": "bind",
+      "file": "packages/platform/src/preview.ts",
+      "prediction": "Changing only public listen host 0.0.0.0 to 127.0.0.1 makes real nonloopback network assertion and builder HTTP checker red; restoration green.",
+      "originalSha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125",
+      "mutatedSha256": "4a3fb7533e3b6514a8da978c0213f7e0dfd99dd3c447159f5da3f156903a7047",
+      "restoredSha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125",
+      "red": [
+        {
+          "name": "bind-mutant-real-ingress",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+            "network"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 1.504,
+          "log": "bind-mutant-real-ingress.log",
+          "logSha256": "bee8397c1963256581672d29379da8be7c9bbb3ec73ba4eb32f6fde8122eaeba"
+        },
+        {
+          "name": "bind-mutant-builder-http",
+          "command": [
+            "node",
+            "tools/verify/e12_t00_preview.mjs",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/bind-builder-http-output"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 1.491,
+          "log": "bind-mutant-builder-http.log",
+          "logSha256": "d38cd31f6a8874fd496c1feeadb58da245d7986f09affafdc2c033bfea5febad"
+        }
+      ],
+      "restoredGreen": [
+        {
+          "name": "bind-restored-real-ingress",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+            "network"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 1.701,
+          "log": "bind-restored-real-ingress.log",
+          "logSha256": "5203215991c7e839344df518e0bdebc3ede16889469baa4e318b11f81edc144c"
+        },
+        {
+          "name": "bind-restored-builder-http",
+          "command": [
+            "node",
+            "tools/verify/e12_t00_preview.mjs",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/bind-builder-http-output"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 4.232,
+          "log": "bind-restored-builder-http.log",
+          "logSha256": "bd93caf1944a5ecc7b98ba44815a2859d00f1326be26205f9ee6b9ef1d17e11d"
+        }
+      ],
+      "trackedClean": true
+    },
+    {
+      "id": "guard",
+      "file": "packages/platform/src/production.ts",
+      "prediction": "Removing explicit production preview guard with otherwise complete-shaped production settings makes dedicated refusal assertion and focused test red; restoration green.",
+      "originalSha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+      "mutatedSha256": "a80fb1457a011ba08be3a70b6e305070f2ab9742bc061f76c1c3dcea8f307d44",
+      "restoredSha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+      "red": [
+        {
+          "name": "guard-mutant-complete-shape",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+            "config"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 0.184,
+          "log": "guard-mutant-complete-shape.log",
+          "logSha256": "05f9fa0dcd06f8d2c5a3292237b69441b46d35aa9cfada0d8bb413bf1f227792"
+        },
+        {
+          "name": "guard-mutant-builder-config",
+          "command": [
+            "pnpm",
+            "exec",
+            "vitest",
+            "run",
+            "--maxWorkers=1",
+            "packages/platform/test/preview.test.ts"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 2.071,
+          "log": "guard-mutant-builder-config.log",
+          "logSha256": "10cb72849a3f04a088f348af77d86b71163dc5ce215df628377d2f0556bd069c"
+        }
+      ],
+      "restoredGreen": [
+        {
+          "name": "guard-restored-complete-shape",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/network-config-sensor.mjs",
+            "config"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 0.125,
+          "log": "guard-restored-complete-shape.log",
+          "logSha256": "4d435f07cc13a48643bbc3d884ce8dbd6572a8150285b42654a5cbf57b08c9c1"
+        },
+        {
+          "name": "guard-restored-builder-config",
+          "command": [
+            "pnpm",
+            "exec",
+            "vitest",
+            "run",
+            "--maxWorkers=1",
+            "packages/platform/test/preview.test.ts"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 1.647,
+          "log": "guard-restored-builder-config.log",
+          "logSha256": "0137b4a3a8b1c7f12cf7380a207b5606ff353cdf85f4d04f9155b43b0c4d4014"
+        }
+      ],
+      "trackedClean": true
+    },
+    {
+      "id": "digest",
+      "file": "apps/web/src/chat/ChatChannelPage.tsx",
+      "prediction": "Freezing DOM digest at its initial live value leaves accepted gateway write visible but makes independent replay equality sensor/builder browser checker red; restoration green.",
+      "originalSha256": "7c0845334a3a6d0b1de57bd980c71fd49d8c782b4fb4ebad0bb77a4afeccbfce",
+      "mutatedSha256": "a13e44cec0e8c8811db8de0fb0cb8fb5aff549ce13a0e76f9f03bdeb16e0d3df",
+      "restoredSha256": "7c0845334a3a6d0b1de57bd980c71fd49d8c782b4fb4ebad0bb77a4afeccbfce",
+      "red": [
+        {
+          "name": "digest-mutant-accepted-write-browser",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/fresh-browser-sensor.mjs",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/digest-mutant-own-browser"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 17.582,
+          "log": "digest-mutant-accepted-write-browser.log",
+          "logSha256": "8d4a01314c0ad3ebfa0e27ec34da602dda7f2c015662410076d9d3358b8d0516"
+        },
+        {
+          "name": "digest-mutant-builder-browser",
+          "command": [
+            "node",
+            "tools/verify/e12_t00_browser.mjs",
+            "local",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/digest-mutant-builder-browser"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 1,
+          "seconds": 44.945,
+          "log": "digest-mutant-builder-browser.log",
+          "logSha256": "4fe8c739b29daf4efe94045e4499faff7256118147bfe75d4a5e2cf80a166b3c"
+        }
+      ],
+      "restoredGreen": [
+        {
+          "name": "digest-restored-accepted-write-browser",
+          "command": [
+            "node",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/fresh-browser-sensor.mjs",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/digest-restored-own-browser"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 11.928,
+          "log": "digest-restored-accepted-write-browser.log",
+          "logSha256": "c58faf6692d901e676f1655b2a8e4ff47677138e7750c34bf03687da6eb883a4"
+        },
+        {
+          "name": "digest-restored-builder-browser",
+          "command": [
+            "node",
+            "tools/verify/e12_t00_browser.mjs",
+            "local",
+            "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/sensitivity/digest-restored-builder-browser"
+          ],
+          "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo",
+          "exit": 0,
+          "seconds": 18.683,
+          "log": "digest-restored-builder-browser.log",
+          "logSha256": "c310b66098efe567331b0cfcbfb0de1434b8394a2be8e8e3128c94bd07991515"
+        }
+      ],
+      "trackedClean": true
+    }
+  ],
+  "oneByteSensitivity": {
+    "prediction": "One ASCII byte changed inside a valid chat body changes independent canonical reducer digest and makes frozen expected-digest check fail; original unchanged dump passes.",
+    "result": {
+      "path": "one-byte-mutation.jsonl",
+      "byteChanges": 1,
+      "changedFrom": "W",
+      "changedTo": "w",
+      "baselineDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+      "mutatedDigest": "09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3",
+      "frozenComparison": "red: mutated != frozen original; original == frozen original",
+      "cliCommand": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/one-byte-mutation.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ]
+    },
+    "actualExitSequence": [
+      0,
+      1,
+      0
+    ],
+    "receipts": "sensor-baselines.json",
+    "rawLogs": [
+      "sensor-byte-original.log",
+      "sensor-byte-mutated.log",
+      "sensor-byte-restored.log"
+    ],
+    "sensor": "frozen-digest-check.py"
+  },
+  "environmentReview": "environment-review.json",
+  "coldClone": {
+    "attempts": 1,
+    "command": [
+      "bash",
+      "tools/verify/cold_clone.sh",
+      "--keep",
+      "verify-E12-T00"
+    ],
+    "head": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+    "TMPDIR": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/official-cold-tmp/",
+    "startedUTC": "2026-10-16T19:07:01.918621+00:00",
+    "cheapBlockingFindings": [],
+    "allThreeSabotagesRestoredGreen": true,
+    "status": "passed",
+    "exit": 0,
+    "seconds": 109.248,
+    "endedUTC": "2026-10-16T19:08:51.173140+00:00",
+    "originalCloneDirectory": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz",
+    "retainedCloneDirectory": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/official-cold-tmp/registered-clone",
+    "cloneHeadAfterRelocation": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+    "trackedStatusAfterRelocation": "",
+    "dependencyIntegrity": "DEPENDENCY_INTEGRITY_OK",
+    "registeredMarker": "verify-E12-T00: OK",
+    "originalTMPDIRHonored": false,
+    "tempPlacementNote": "Caller explicitly supplied the task-owned TMPDIR shown above. The unchanged harness mktemp selected the system temp directory. One and only one attempt was made; after completion, the kept clone was relocated into the authorized task-owned TMPDIR without rerunning any command or modifying source.",
+    "relocatedUTC": "2026-10-16T19:09:45.217311+00:00",
+    "logSha256": "f647963c7f5e8322f4df618c22efd0f8f84c196bcb8e2c4b75b3a8a2dc991263"
+  },
+  "lifecycleReview": "lifecycle-review.json",
+  "evidenceIntegrity": "integrity.json",
+  "independentReplay": "independent-replay.json",
+  "recordedBrowserReview": "browser-network-review.json",
+  "artifactIndex": "portable-artifact-index.json",
+  "commands": [
+    "git diff 59aefbe244e57ce096ea05b94ad462d97d8831a8 1f9e06b87109a93c75107842d4c8aa65902f8622 (tool output only; no generated diff body persisted)",
+    "git clone --no-local, own CI=true pnpm install --frozen-lockfile (scratch-environment.json/clone-install.log)",
+    "CI=true pnpm -r --filter @eforest/web... --filter @eforest/cli... run build (focus-build.json/log)",
+    "Original sequential focused config/HTTP/browser baseline commands in baseline-commands.json",
+    "node semantic-attacks.mjs; node config-edge-probes.mjs; node fresh-browser-sensor.mjs <output>",
+    "python3 independent-replay.py; python3 browser-evidence-review.py; python3 lifecycle-review.py; python3 environment-review.py",
+    "python3 sabotage-driver.py; all 18 mutation/build/check/restoration commands and their authentic raw logs are in sensitivity/commands.json",
+    "Exactly once: bash tools/verify/cold_clone.sh --keep verify-E12-T00; supplied task-owned TMPDIR recorded verbatim in cold-clone-receipt.json"
+  ],
+  "limitsAndNotes": [
+    "Caller explicitly supplied the task-owned TMPDIR shown above. The unchanged harness mktemp selected the system temp directory. One and only one attempt was made; after completion, the kept clone was relocated into the authorized task-owned TMPDIR without rerunning any command or modifying source.",
+    "Actual deployed source is 1f9 and its immutable full root audit is retained; cold clone submission a7 adds task/queue metadata, which can change generated browser asset inventory. Full warm/deployed artifact equality is not claimed.",
+    "Replay: N/A (current committed Replay QA diagnostic requires unavailable authentication for proj-electric-forest-ms8w0nv1) + mitigation: actual Railway Playwright MP4/screenshot/timeline/console/network evidence, original final stream dumps, independent double CLI and Python replay, exact prefix comparison and sensitive local config/network/browser attacks. No managed QA journey/tunnel/exploration/recording URL is claimed.",
+    "Existing Members dialog focus returning BODY is explicitly pre-existing and not a task claim; it is not raised as a finding.",
+    "No product source changes, official status/verdict write, root gate rerun, production Auth0 operation, hosted browser re-drive or extra cold attempt was made. Both scratch source and root tracked source are clean."
+  ],
+  "notes": "All eight criteria, all 35 source/config hunks and 185 passive metadata/binary hunks were held against evidence. All six task attacks plus a fresh novel attack survived. Three authentic source sabotages and a one-byte input mutation prove sensor sensitivity; restored source is clean. The one late official cold clone passes exact target and dependency integrity. Run1 F1 is closed by general workspace closure without deleting any original assertion. The report is a lead review only; fresh judge authority remains required."
+}

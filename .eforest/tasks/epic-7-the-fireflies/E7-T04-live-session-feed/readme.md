@@ -14,7 +14,7 @@ capstone: false
 `@eforest/webapp` adds `/orgs/:org/repos/:repo/activity` and an embeddable
 `LiveSessionFeed` on the project page. It hydrates and tails the branch activity stream
 through `useStreamReducer`, groups items by agent session, and renders lifecycle,
-tool-call status, file patch summaries, and task transitions. Each row exposes its
+tool-call status, file-version summaries, and task transitions. Each row exposes its
 activity offset, source stream/offset, session sequence, and source digest in stable
 DOM attributes; selecting a file row navigates to the live file view at that source
 event. New rows appear without reload and connection loss resumes from the last cursor.
@@ -28,11 +28,11 @@ tailed, and switching branches tears down the old tail before hydrating the new 
 
 ## Deliverables
 
-- `packages/webapp/src/activity/LiveSessionFeed.tsx`, row renderers, source resolver,
+- `apps/web/src/activity/LiveSessionFeed.tsx`, row renderers, source resolver,
   and branch-aware `useActivityFeed` binding.
 - Activity route and project-page panel with loading, live, reconnecting, ended, empty,
   denied-source, and malformed-reference states.
-- `packages/webapp/test/activity-feed.spec.ts` using two browser contexts and a foreign
+- `apps/web/test/activity-feed.spec.ts` using two browser contexts and a foreign
   writer, asserting DOM/source parity, navigation, reconnect, and zero console errors.
 - `make verify-E7-T04` and Replay recording support with DOM snapshots and network logs
   committed under the task's evidence folder.
@@ -72,5 +72,24 @@ tailed, and switching branches tears down the old tail before hydrating the new 
 6. Interrogate the Replay recording's network and console timelines. A missing claimed
    scene, polling loop, console exception, or source tuple inconsistent with the point
    refutes browser evidence.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

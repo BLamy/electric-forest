@@ -1,0 +1,152 @@
+{
+  "recordedAt": "2026-10-17T00:01:00.475287+00:00",
+  "pullRequest": 78,
+  "ciRunId": 38984310568,
+  "event": "pull_request",
+  "candidateHead": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "syntheticMergeRef": "refs/pull/78/merge",
+  "syntheticMergeSha": "02bce2f8d280f33cda03a2c69184746c3a909fbf",
+  "syntheticMergeParents": [
+    "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+    "c1213495044f6fdc2b858592681b9061f149abd4"
+  ],
+  "candidateTree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+  "syntheticMergeTree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+  "treeIdentical": true,
+  "actualCheckoutCommitConfirmedInCompleteJobLog": true,
+  "qualification": "Completed Linux CI passed; full job log confirms the actual synthetic merge checkout; its tree is byte-identical to the candidate tree.",
+  "readerPair": {
+    "bytes": 1176,
+    "sha256": "a3c97cbb1619e6872b7e49bbeebfc34eee71095b85240b2fc7bc4aa233915a43"
+  },
+  "identityFieldsRetained": false,
+  "result": "success",
+  "completeJobLog": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-38984310568.log",
+    "bytes": 549757,
+    "sha256": "a90a8e96048c895ccd05aeaba8c308cff75edeadf3f08b9370eb4fa45b317a07"
+  },
+  "run": {
+    "conclusion": "success",
+    "headSha": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "jobs": [
+      {
+        "completedAt": "2026-10-17T00:16:29Z",
+        "conclusion": "success",
+        "databaseId": 117252098070,
+        "name": "Ordered root gates",
+        "startedAt": "2026-10-17T00:00:32Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-17T00:00:34Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-17T00:00:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:00:38Z",
+            "conclusion": "success",
+            "name": "Check out source and pinned emulators",
+            "number": 2,
+            "startedAt": "2026-10-17T00:00:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:00:39Z",
+            "conclusion": "success",
+            "name": "Install pnpm",
+            "number": 3,
+            "startedAt": "2026-10-17T00:00:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:00:45Z",
+            "conclusion": "success",
+            "name": "Install Node.js",
+            "number": 4,
+            "startedAt": "2026-10-17T00:00:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:00:56Z",
+            "conclusion": "success",
+            "name": "Install frozen dependencies",
+            "number": 5,
+            "startedAt": "2026-10-17T00:00:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:01:20Z",
+            "conclusion": "success",
+            "name": "Check formatting and lint",
+            "number": 6,
+            "startedAt": "2026-10-17T00:00:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:01:36Z",
+            "conclusion": "success",
+            "name": "Typecheck",
+            "number": 7,
+            "startedAt": "2026-10-17T00:01:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:15:51Z",
+            "conclusion": "success",
+            "name": "Test",
+            "number": 8,
+            "startedAt": "2026-10-17T00:01:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:16:18Z",
+            "conclusion": "success",
+            "name": "Build",
+            "number": 9,
+            "startedAt": "2026-10-17T00:15:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:16:25Z",
+            "conclusion": "success",
+            "name": "Post Install Node.js",
+            "number": 16,
+            "startedAt": "2026-10-17T00:16:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:16:25Z",
+            "conclusion": "success",
+            "name": "Post Install pnpm",
+            "number": 17,
+            "startedAt": "2026-10-17T00:16:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:16:26Z",
+            "conclusion": "success",
+            "name": "Post Check out source and pinned emulators",
+            "number": 18,
+            "startedAt": "2026-10-17T00:16:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-17T00:16:26Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-10-17T00:16:26Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/BLamy/electric-forest/actions/runs/38984310568/job/117252098070"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/BLamy/electric-forest/actions/runs/38984310568"
+  }
+}

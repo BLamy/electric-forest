@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-16T21:01:47.719596+00:00",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "issuer": "https://dev-8qqftel4x1s5wed3.us.auth0.com/",
+  "publicClientId": "H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk",
+  "files": [
+    {
+      "path": "discovery.json",
+      "url": "https://dev-8qqftel4x1s5wed3.us.auth0.com/.well-known/openid-configuration",
+      "status": 200,
+      "bytes": 2966,
+      "sha256": "a883851727df082ea3ad65668de42de13d06154ad48ccf5d29f266d2e9bbc408"
+    },
+    {
+      "path": "jwks.json",
+      "url": "https://dev-8qqftel4x1s5wed3.us.auth0.com/.well-known/jwks.json",
+      "status": 200,
+      "bytes": 3100,
+      "sha256": "a57f01bbd7735adce782d670a8b22ccff33381d956c996912fdf893e00a15d47"
+    }
+  ],
+  "registrationChanged": false,
+  "operatorLoginProven": false,
+  "clientSecretRead": false,
+  "discoverySupports": {
+    "authorizationCode": true,
+    "S256": true,
+    "RS256": true,
+    "publicClientTokenAuthNone": true
+  }
+}

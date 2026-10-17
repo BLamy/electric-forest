@@ -1,0 +1,4 @@
+
+> electric-forest@0.0.0 lint /Users/blamy/Documents/Codex/electric-forest
+> eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
+

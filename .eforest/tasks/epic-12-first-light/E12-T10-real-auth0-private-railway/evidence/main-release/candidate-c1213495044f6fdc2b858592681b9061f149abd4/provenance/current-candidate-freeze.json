@@ -1,0 +1,20 @@
+{
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "sourceTree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+  "soleParent": [
+    "1eda083c1ab66bb89125734610063e14cdd448e8"
+  ],
+  "integrationCommit": "06e18df04f9db6112a425f050587c6d61588347c",
+  "frozenHostingTip": "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+  "frozenMainTip": "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3",
+  "ciSourceMappingCorrections": [
+    "1eda083c1ab66bb89125734610063e14cdd448e8",
+    "c1213495044f6fdc2b858592681b9061f149abd4"
+  ],
+  "rootGateAudit": "audit-c1213495/audit-report.json",
+  "earlierCandidateFreeze": "candidate-freeze.json (historical 56fb7b0b only)",
+  "fixtureProof": "final-c1213495",
+  "taskState": "in-progress; run 0/10; no verification verdict",
+  "runtimeSourceFrozen": true,
+  "sourceHistoryLocation": "Git commit and blob IDs; no textual patch files"
+}

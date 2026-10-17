@@ -1,0 +1,108 @@
+{
+  "recordedAt": "2026-10-16 22:51:50 UTC",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "service": {
+    "id": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+    "name": "electric-forest",
+    "state": "live"
+  },
+  "environment": {
+    "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "name": "production"
+  },
+  "staged": null,
+  "config": {
+    "source": {
+      "repo": "BLamy/electric-forest",
+      "branch": "codex/railway-hosting",
+      "commitSha": "9a5861e82ec99ab2f275181a527aab5c2bfb0622"
+    },
+    "networking": {
+      "serviceDomains": {
+        "electric-forest-production.up.railway.app": {
+          "port": 8080
+        }
+      }
+    },
+    "build": {
+      "builder": "DOCKERFILE",
+      "buildEnvironment": "V3",
+      "dockerfilePath": "Dockerfile.production"
+    },
+    "deploy": {
+      "startCommand": "node packages/platform/dist/src/hosted-bin.js",
+      "healthcheckPath": "/readyz",
+      "limitOverride": {
+        "containers": {
+          "cpu": 1,
+          "memoryBytes": 2000000000
+        }
+      },
+      "healthcheckTimeout": 60,
+      "restartPolicyMaxRetries": 3,
+      "useLegacyStacker": false,
+      "ipv6EgressEnabled": false,
+      "runtime": "V2",
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "drainingSeconds": 15,
+      "overlapSeconds": 0
+    },
+    "configFile": "",
+    "volumeMounts": {
+      "10dc46b1-5ea6-43e7-b847-dffb238a003e": {
+        "mountPath": "/data"
+      }
+    }
+  },
+  "stagedChanges": [],
+  "variableNames": [
+    "EF_AGENT_RESPONDER",
+    "EF_BUILD_REVISION",
+    "EF_DATA_DIR",
+    "EF_DEPLOYMENT_MODE",
+    "EF_OIDC_CLIENT_ID",
+    "EF_OIDC_ISSUER",
+    "EF_PUBLIC_ORIGIN",
+    "EF_SESSION_TTL",
+    "EF_WEB_ROOT",
+    "NODE_ENV",
+    "PORT",
+    "RAILWAY_DOCKERFILE_PATH"
+  ],
+  "volumes": [
+    {
+      "id": "10dc46b1-5ea6-43e7-b847-dffb238a003e",
+      "name": "forest-private-data",
+      "mountPath": "/data",
+      "sizeMB": 1024,
+      "region": "us-west2",
+      "state": "live"
+    }
+  ],
+  "domains": {
+    "serviceDomains": [
+      {
+        "id": "5745878a-9220-44bd-83bc-44508c006b25",
+        "domain": "electric-forest-production.up.railway.app",
+        "targetPort": 8080
+      }
+    ],
+    "customDomains": []
+  },
+  "tcpProxies": [],
+  "latestDeployment": {
+    "id": "2a57586c-4613-4fed-b538-09ca3adc0145",
+    "status": "SUCCESS",
+    "createdAt": "2026-10-16T21:02:53.265Z",
+    "url": null
+  },
+  "tracing": {
+    "tracingEnabled": false,
+    "autoInstrumentationEnabled": false,
+    "autoInstrumentationActive": false
+  }
+}

@@ -25,32 +25,57 @@ export interface OidcTransaction {
   readonly state: string;
   readonly nonce: string;
   readonly verifier: string;
+  readonly next?: string;
 }
 
-type ConsumedTransaction = OidcTransaction & { readonly used: boolean };
+type ConsumedTransaction = OidcTransaction & {
+  readonly used: boolean;
+  readonly createdAt: number;
+  readonly bindingHash?: string;
+};
 
 export class OidcTransactions {
   private readonly entries = new Map<string, ConsumedTransaction>();
   private readonly random: (size: number) => Uint8Array;
 
-  constructor(random: (size: number) => Uint8Array = (size) => randomBytes(size)) {
+  constructor(
+    random: (size: number) => Uint8Array = (size) => randomBytes(size),
+    private readonly policy?: { readonly now: () => number; readonly ttlMs: number },
+  ) {
     this.random = random;
   }
 
-  create(): OidcTransaction {
+  create(
+    context: { readonly binding: string; readonly next?: string } | undefined = undefined,
+  ): OidcTransaction {
     const transaction = {
       state: Buffer.from(this.random(24)).toString("base64url"),
       nonce: Buffer.from(this.random(24)).toString("base64url"),
       verifier: Buffer.from(this.random(48)).toString("base64url"),
+      ...(context?.next === undefined ? {} : { next: context.next }),
     };
-    this.entries.set(transaction.state, { ...transaction, used: false });
+    this.entries.set(transaction.state, {
+      ...transaction,
+      used: false,
+      createdAt: this.policy?.now() ?? Date.now(),
+      ...(context === undefined ? {} : { bindingHash: pkceChallenge(context.binding) }),
+    });
     if (this.entries.size > 1_024) this.entries.delete(this.entries.keys().next().value as string);
     return transaction;
   }
 
-  consume(state: string): OidcTransaction {
+  consume(state: string, binding?: string): OidcTransaction {
     const transaction = this.entries.get(state);
     if (transaction === undefined) throw new AuthRefusedError("bad-state");
+    if (
+      (this.policy !== undefined &&
+        (this.policy.now() < transaction.createdAt ||
+          this.policy.now() - transaction.createdAt >= this.policy.ttlMs)) ||
+      (transaction.bindingHash !== undefined &&
+        (binding === undefined || pkceChallenge(binding) !== transaction.bindingHash))
+    ) {
+      throw new AuthRefusedError("bad-state");
+    }
     if (transaction.used) throw new AuthRefusedError("reused-code");
     this.entries.set(state, { ...transaction, used: true });
     return transaction;
@@ -62,6 +87,8 @@ export interface OidcClientOptions {
   readonly clientId: string;
   readonly fetch?: typeof fetch;
   readonly now?: () => number;
+  /** Hosted invitations use email as identity only after the issuer verified it. */
+  readonly requireVerifiedEmail?: boolean;
 }
 
 export interface OidcClaims {
@@ -105,6 +132,7 @@ export class OidcClient {
   readonly clientId: string;
   private readonly fetcher: typeof fetch;
   private readonly now: () => number;
+  private readonly requireVerifiedEmail: boolean;
   private discoveryValue: OidcDiscovery | undefined;
   private verifierValue: BearerVerifier | undefined;
 
@@ -113,6 +141,7 @@ export class OidcClient {
     this.clientId = options.clientId;
     this.fetcher = options.fetch ?? fetch;
     this.now = options.now ?? Date.now;
+    this.requireVerifiedEmail = options.requireVerifiedEmail ?? false;
     if (this.clientId.length === 0) throw new TypeError("clientId must not be empty");
   }
 
@@ -187,6 +216,9 @@ export class OidcClient {
     const claims = decodeClaims(body.id_token);
     if (claims.nonce !== transaction.nonce) throw new AuthRefusedError("bad-nonce");
     if (typeof claims.email !== "string" || claims.email.length === 0) {
+      throw new AuthRefusedError("bad-token");
+    }
+    if (this.requireVerifiedEmail && claims.email_verified !== true) {
       throw new AuthRefusedError("bad-token");
     }
     return { sub: identity.sub, email: claims.email };

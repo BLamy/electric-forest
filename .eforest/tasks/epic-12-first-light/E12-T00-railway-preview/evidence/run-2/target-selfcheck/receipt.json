@@ -1,0 +1,47 @@
+{
+  "kind": "builder pristine target-only self-validation; not registered critic cold clone",
+  "source": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "startedAt": "2026-10-16T18:38:42.862344+00:00",
+  "commands": [
+    {
+      "name": "install",
+      "argv": [
+        "pnpm",
+        "install",
+        "--frozen-lockfile",
+        "--store-dir",
+        "/Users/blamy/Library/pnpm/store/v10"
+      ],
+      "startedAt": "2026-10-16T18:38:44.341306+00:00",
+      "log": "install.log",
+      "exitCode": 0,
+      "elapsedSeconds": 11.752,
+      "sha256": "eaf0e2f598b516dda009ee9d1ffb5158a250dc6eac2f9d324d8e78425fecd45c",
+      "bytes": 4870,
+      "endedAt": "2026-10-16T18:38:56.094729+00:00"
+    },
+    {
+      "name": "target",
+      "argv": [
+        "make",
+        "--",
+        "verify-E12-T00"
+      ],
+      "startedAt": "2026-10-16T18:38:56.095335+00:00",
+      "log": "target.log",
+      "exitCode": 0,
+      "elapsedSeconds": 44.378,
+      "sha256": "368c74c9fcedb5dec921204ef6d2f7ac1dd164b118fdba98d2f47a9bf57c5bfb",
+      "bytes": 120362,
+      "endedAt": "2026-10-16T18:39:40.474376+00:00"
+    }
+  ],
+  "initialWorkspaceOutputs": [],
+  "initialTrackedStatus": "",
+  "scrubbedVariableNames": [],
+  "storeReuse": "content-addressed pnpm files/index only; independent frozen installation",
+  "finalSource": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "finalTrackedStatus": "",
+  "status": "passed",
+  "endedAt": "2026-10-16T18:39:40.525182+00:00"
+}

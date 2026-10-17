@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-16T17:20:01.377640+00:00",
+  "command": [
+    "npx",
+    "--yes",
+    "replayqa@0.2.4",
+    "project",
+    "--ignore-config",
+    "--project",
+    "proj-electric-forest-ms8w0nv1"
+  ],
+  "exitCode": 1,
+  "project": {
+    "diagnostic": "Error: Replay QA authentication is required. Run replayqa login or replayio login and try again.\n    at getRequiredAccessToken (/Users/blamy/.npm/_npx/46202911d2179d1f/node_modules/replayqa/dist/utils/api.js:20:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async apiRequest (/Users/blamy/.npm/_npx/46202911d2179d1f/node_modules/replayqa/dist/utils/api.js:36:43)\n    at async Command.<anonymous> (/Users/blamy/.npm/_npx/46202911d2179d1f/node_modules/replayqa/dist/commands/api.js:90:33)\n    at async Command.parseAsync (/Users/blamy/.npm/_npx/46202911d2179d1f/node_modules/commander/lib/command.js:1092:5)\n    at async main (/Users/blamy/.npm/_npx/46202911d2179d1f/node_modules/replayqa/dist/bin.js:31:5)\n"
+  }
+}

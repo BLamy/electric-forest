@@ -21,6 +21,7 @@ import {
   listenPlatformServer,
   OfficialStreamAdapter,
   PlatformGateway,
+  RepositoryHomeStore,
   UnauthorizedError,
   type AuthorizationVerifier,
 } from "@eforest/platform";
@@ -151,6 +152,13 @@ function repoMetadataId(repo: string): string {
 async function makeRepo(repo: string): Promise<StreamFsRepo> {
   const metadataStreamId = repoMetadataId(repo);
   await createDurableJsonStream({ url: streamUrl(metadataStreamId) });
+  // A repository created through the platform also registers `main` in its repo-home branch
+  // catalog (RepositoryHomeStore.ensureRepository); native forks are validated against it.
+  await new RepositoryHomeStore(new OfficialStreamAdapter({ baseUrl }), Date.now).ensureRepository(
+    "acme",
+    repo,
+    "branch-checkout",
+  );
   return new StreamFsRepo(baseUrl, fetch, `acme/${repo}`);
 }
 

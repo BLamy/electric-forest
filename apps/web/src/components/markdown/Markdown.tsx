@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { GitbookStreamdown } from "@brett_lamy/docstream/streamdown";
 
 const DANGEROUS_PROTOCOL = /^(?:javascript|data|vbscript):/i;
@@ -49,10 +49,30 @@ export interface MarkdownProps {
 
 export function Markdown(props: MarkdownProps): React.JSX.Element {
   const markdown = useMemo(() => sanitizeMarkdownForRender(props.source), [props.source]);
-  const className = props.className ? `wiki-markdown ${props.className}` : "wiki-markdown";
+  const containerRef = useRef<HTMLDivElement>(null);
+  // `wb-md` is the package's Markdown typography (styling only): Docstream still renders the
+  // sanitized source below, so every Markdown surface keeps this adapter's URL policy.
+  const className = props.className ? `wb-md min-w-0 ${props.className}` : "wb-md min-w-0";
+
+  useLayoutEffect(() => {
+    const root = containerRef.current;
+    if (root === null) return;
+    const checkboxes = root.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]:not([aria-label]):not([aria-labelledby])',
+    );
+    checkboxes.forEach((checkbox, index) => {
+      const item = checkbox.closest("li");
+      const text = item?.textContent?.replace(/\s+/g, " ").trim();
+      checkbox.setAttribute(
+        "aria-label",
+        text === undefined || text === "" ? `Checklist item ${String(index + 1)}` : text,
+      );
+    });
+  }, [markdown]);
 
   return (
     <div
+      ref={containerRef}
       className={className}
       data-testid={props["data-testid"] ?? "markdown"}
       data-markdown-renderer="docstream"

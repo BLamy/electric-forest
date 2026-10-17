@@ -1,0 +1,14 @@
+[
+  {
+    "run": "hosted-before",
+    "responseCount": 189,
+    "legacyProofRequests": 0,
+    "dispatchCount": 2
+  },
+  {
+    "run": "hosted-after",
+    "responseCount": 192,
+    "legacyProofRequests": 0,
+    "dispatchCount": 2
+  }
+]

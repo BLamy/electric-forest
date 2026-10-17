@@ -652,10 +652,14 @@ function currentHeadWithCleanProductSources(): string {
     encoding: "utf8",
   });
   assert.equal(head.status, 0, `${head.stdout}${head.stderr}`);
-  const productDiff = spawnSync("git", ["diff", "--name-only", "HEAD", "--", ...materialBrowserSources], {
-    cwd: root,
-    encoding: "utf8",
-  });
+  const productDiff = spawnSync(
+    "git",
+    ["diff", "--name-only", "HEAD", "--", ...materialBrowserSources],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
+  );
   assert.equal(productDiff.status, 0, `${productDiff.stdout}${productDiff.stderr}`);
   assert.equal(productDiff.stdout.trim(), "", "material E5-T05 browser sources differ from HEAD");
   const taskDiff = spawnSync(
@@ -800,7 +804,9 @@ function containsOffset(
   return false;
 }
 
-function materialSourceFor(sourceMapName: string): (typeof materialBrowserSources)[number] | undefined {
+function materialSourceFor(
+  sourceMapName: string,
+): (typeof materialBrowserSources)[number] | undefined {
   const normalized = sourceMapName.replaceAll("\\", "/");
   return materialBrowserSources.find((file) =>
     normalized.endsWith(file.replace(/^apps\/web\//, "")),
@@ -957,7 +963,9 @@ function cssHits(entries: readonly CssCoverageEntry[]): {
 } {
   const selectors = new Set(
     coverageRequirements
-      .filter((requirement): requirement is CssCoverageRequirement => requirement.kind === "css-rule")
+      .filter(
+        (requirement): requirement is CssCoverageRequirement => requirement.kind === "css-rule",
+      )
       .map((requirement) => requirement.selector),
   );
   const hitSelectors = new Set<string>();
@@ -970,9 +978,7 @@ function cssHits(entries: readonly CssCoverageEntry[]): {
       let index = entry.text.indexOf(selector);
       while (index >= 0) {
         if (
-          entry.ranges.some(
-            (range) => index < range.end && index + selector.length > range.start,
-          )
+          entry.ranges.some((range) => index < range.end && index + selector.length > range.start)
         ) {
           hitSelectors.add(selector);
           break;
@@ -1037,7 +1043,11 @@ async function coverageManifest(recordedHead: string, coverageRuns: readonly Cov
       );
       assert.ok(source.requirementIds.length > 0, `missing browser requirements: ${source.path}`);
     } else {
-      assert.deepEqual(source.requirementIds, [], `server source has browser requirements: ${source.path}`);
+      assert.deepEqual(
+        source.requirementIds,
+        [],
+        `server source has browser requirements: ${source.path}`,
+      );
     }
   }
   return {
@@ -1598,7 +1608,11 @@ try {
           entry.method === failure.method &&
           entry.url === failure.url,
       );
-    assert.notEqual(request, undefined, `unaccounted requestfailed: ${failure.actor} ${failure.url}`);
+    assert.notEqual(
+      request,
+      undefined,
+      `unaccounted requestfailed: ${failure.actor} ${failure.url}`,
+    );
     return { ...failure, requestSequence: request!.sequence };
   });
   const transcriptTerminalLongPolls = terminalLongPollRequests.map((terminal) => {
@@ -1640,9 +1654,7 @@ try {
       entry.direction === "response" &&
       entry.url === "/api/dispatch" &&
       entry.status === 200 &&
-      entry.headers.some(
-        ([name, value]) => name === "x-eforest-refusal-status" && value === "409",
-      ),
+      entry.headers.some(([name, value]) => name === "x-eforest-refusal-status" && value === "409"),
   );
   assert.equal(refusalResponses.length, 1, "session-envelope refusal contract");
   const browserTranscript = {
@@ -1668,17 +1680,13 @@ try {
         (entry) => entry.classification === "expected-terminal-long-poll",
       ).length,
       terminalLongPollsAccounted: transcriptTerminalLongPolls.length,
-      unexpected: transcriptRequestFailures.filter(
-        (entry) => entry.classification === "unexpected",
-      ).length,
+      unexpected: transcriptRequestFailures.filter((entry) => entry.classification === "unexpected")
+        .length,
     },
     console: diagnostics.flatMap((entry) => entry.console),
     pageErrors: diagnostics.flatMap((entry) => entry.pageErrors),
   };
-  assert.equal(
-    browserTranscript.console.filter((entry) => entry.type === "error").length,
-    0,
-  );
+  assert.equal(browserTranscript.console.filter((entry) => entry.type === "error").length, 0);
   assert.equal(browserTranscript.pageErrors.length, 0);
   assert.equal(browserTranscript.requestFailureSummary.unexpected, 0);
   const sourceCoverage = await coverageManifest(recordedHead, coverageRuns);

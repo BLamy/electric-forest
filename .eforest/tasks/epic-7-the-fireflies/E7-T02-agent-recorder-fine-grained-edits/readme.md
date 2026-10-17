@@ -1,7 +1,7 @@
 ---
 id: E7-T02
 epic: 7
-title: "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
+title: "Agent recorder: durable tool logs and bounded complete-version changeset checkpoints"
 priority: 702
 status: pending
 depends_on: [E7-T01]
@@ -11,81 +11,86 @@ capstone: false
 
 ## Goal
 
-The Epic 6 hosted-agent runtime uses `AgentSessionRecorder` from
-`@eforest/agent-session` for every run. It emits lifecycle/tool events and attaches
-`AgentOrigin` to actual stream-fs and task dispatches as they occur. Text-edit callbacks
-become ordered stream-fs patch events without waiting for tool completion: a chunk is
-at most 256 Unicode scalar values and flushes within 100 ms, chunks never coalesce
-across paths or tool calls, and no end-of-tool whole-file snapshot substitutes for the
-fine-grained trail. A resumed runner continues from the durable session sequence and
-does not duplicate accepted edits.
+The real Epic 6 hosted runners use `AgentSessionRecorder` for lifecycle, tool, task and
+source provenance. Fine-grained edit deltas remain in redacted agent logs. Logical file
+saves/checkpoints publish complete immutable E14 versions linked to changesets through
+authenticated dispatch. The recorder links each accepted publication to its exact branch
+offset, changeset ID and file/content hashes, and resumes without duplicate publication.
 
 ## Context
 
-This closes the Nut gap at the write source. The recorder is not a logger beside the
-mutation path: its file callbacks dispatch through stream-fs, its task callbacks
-dispatch through the task reducer, and the returned source offsets are the proof the
-later activity timeline cites. E7-T01 froze provenance and ordering. This task adapts
-the real Epic 6 builder and critic runners; a toy standalone emitter is insufficient.
-
-The 100 ms/256-scalar bounds define "keystroke-granular" for this product. Deletes and
-replacements are emitted immediately as patch operations; binary writes remain one
-content event and are explicitly labeled `binary`, not falsely split into text.
+E14 is the source-history authority. This task closes the Nut gap without restoring a
+patch-based source format: viewers follow accepted versions while agent logs explain
+intermediate editing activity. A logical save groups complete file bytes from one
+explicit checkpoint; it never spans unrelated tool calls. Under the fixed fixture of
+files at most 256 KiB each, active editing flushes a checkpoint at most every 1000 ms
+of recorder receipt and flushes at tool completion. Use a deterministic scheduler for
+checkpoint bounds and a host clock for actual browser observation latency in E7-T08.
+Token deltas need not trigger full-file uploads individually.
 
 ## Deliverables
 
-- `packages/agent-session/src/recorder.ts` implementing lifecycle, tool, text-edit,
-  binary-write, source-reference acknowledgement, and task-activity methods with
-  durable sequence recovery.
-- Epic 6 runner adapters that route real builder/critic file and task callbacks through
-  the recorder and forbid direct unproven writes during an active session.
-- `packages/agent-session/test/recorder.integration.test.ts` against a real platform
-  server, including crash/restart, unicode, concurrent paths, deletes, and errors.
-- `tools/verify/agent_recorder.sh` and `make verify-E7-T02`, producing a session dump,
-  branch/content dumps, a provenance bijection, and digest parity transcript.
-- Evidence fixtures proving chunk sizes, flush latency, source offsets, recovery, and
-  the final materialized tree digest.
+- `packages/agent-session/src/recorder.ts` with lifecycle/tool logging, explicit save
+  checkpoints, complete object upload, changeset publication and source-reference recovery.
+- Adapters for the real E6 runners and E14 writer; no alternate filesystem mutation door.
+- Integration fixtures for Unicode, CRLF, binary, add/delete/rename, two paths, task
+  changes, tool failure/cancellation and lost-response recovery.
+- `make verify-E7-T02` and `tools/verify/agent_recorder.sh` producing agent/branch logs,
+  complete content objects, version manifests, provenance bijection and tree digests.
 
 ## Acceptance criteria
 
-- [ ] `make verify-E7-T02` exits 0 from a cold clone with a fresh server data dir and
-      zero skips; all root gates pass.
-- [ ] A real hosted-agent fixture performs at least 20 incremental text callbacks on
-      two files plus a delete and task-status change; every callback is represented by
-      exactly one accepted source event or a documented split into chunks of at most
-      256 scalars, and every event carries the correct contiguous session origin.
-- [ ] Each text callback is appended within 100 ms of recorder receipt under the
-      committed deterministic test clock; no patch spans two paths or tool calls, and
-      no full-file replacement appears where incremental patches were supplied.
-- [ ] Replaying the branch/content dumps yields a tree byte-identical to the runner's
-      final files, and every session-origin source offset resolves to exactly one real
-      event; results are committed under `evidence/`.
-- [ ] Killing the runner after source append but before `agent/source-ref` or its local
-      checkpoint and then resuming resolves the origin-bearing source event, appends
-      exactly one missing reference without repeating the mutation, produces no skipped
-      `sessionSeq`, and reaches the same final tree digest as an uninterrupted run.
-- [ ] Tool failure, cancellation, and runner crash all end in replayable terminal or
-      recoverable session state; no tool remains falsely `running` after recovery.
-- [ ] Browser evidence is declared `N/A` because this task changes the agent runtime,
-      with stream dumps, source-offset bijection, and tree digest as mitigation.
+- [ ] The verify target exits 0 cold with fresh provider state, zero skips and ordered
+      root gates green; every source dump replays independently twice to the frozen digest.
+- [ ] A real runner performs at least 20 logical saves across two files, a binary write,
+      rename/delete and task transition. Each save publishes exactly one accepted
+      changeset with complete file-version references and contiguous session provenance.
+- [ ] Checkpoints obey the 1000 ms bound for the frozen fixture and flush on tool
+      completion. Full-byte content hashes match independently captured intended files;
+      no source record, projection or evidence object contains textual patch bodies.
+- [ ] Remove all agent transcripts from a copy of the fixture. Source replay and full
+      content objects still reconstruct the same tree and every historical saved version.
+- [ ] Kill after object upload, publication acceptance, and before `agent/source-ref`
+      acknowledgement in separate cases. Resume discovers the original operation,
+      publishes/references it once, and reaches the uninterrupted run's tree digest.
+- [ ] Failure/cancellation/revocation produces a terminal or explicitly recoverable run;
+      there are no false running tools, unauthorized publications or leaked secret canaries.
+- [ ] Named Replay QA journeys in the configured managed-tunnel project exercise the
+      real runner's existing live file/history surfaces after checkpoints, reconnect and
+      failure. Record journey/test-run IDs and zero console errors plus matching source
+      offsets/digests; use AGENTS.md's literal fallback if the service is unavailable.
 
 ## Adversarial verification
 
-1. Supply your own unicode edit stream with combining marks, emoji, CRLF, empty inserts,
-   overlapping deletes, and rapid path switches. Any wrong bytes or chunk crossing a
-   boundary refutes fine-grained capture.
-2. SIGKILL at every recorder boundary: before source dispatch, after its append response,
-   before `agent/source-ref`, after the ref, before checkpoint, and during tool failure.
-   Any duplicate mutation/ref, gap, or unrecoverable open tool refutes crash recovery.
-3. Inspect the runner diff and block every write path except authenticated dispatch.
-   If the run still changes a file by direct filesystem/server mutation, the one-door
-   claim is refuted.
-4. Compare source events to recorder callbacks as a bijection and resolve every offset
-   independently from fresh dumps. A decorative activity entry without a real mutation,
-   or an unreported mutation, refutes provenance.
-5. Sabotage chunk flushing to buffer until tool completion and to emit whole-file
-   snapshots; `verify-E7-T02` must fail both variants.
-6. Cold-start twice with identical scripted callbacks and compare normalized event
-   shapes and final digests. Nondeterministic order or warm-state dependence refutes.
+1. Use independently seeded Unicode/CRLF/binary edits and rapid path/tool changes. Any
+   wrong bytes, crossed checkpoint boundary or missing save refutes capture.
+2. Kill at every object/publication/reference boundary, including lost responses. Any
+   duplicate logical changeset or unresolved accepted publication refutes recovery.
+3. Search source/content/projection/evidence records outside agent logs for patch bodies;
+   then remove the logs and reconstruct the tree. Either patch persistence or log-dependent
+   source reconstruction refutes the model.
+4. Sabotage the recorder to buffer beyond 1000 ms, omit one version, double-publish one
+   checkpoint and write outside dispatch. Each mutation must fail its named assertion.
+5. Revoke access between staged upload and publication. A later branch mutation refutes
+   authorization even if the staged bytes already exist.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

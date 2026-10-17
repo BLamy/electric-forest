@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "trustedAttesterCommit": "806936c25570d81bbf60020c99bd58b92faa6779",
+  "observedLifecycleCommit": "2b22ae7da26fead21004d6f9f45d353efebcbe2d",
+  "independentReaderSessions": [
+    "preview_lifecycle_reader_a",
+    "preview_lifecycle_reader_b"
+  ],
+  "agreedSourceCommit": "2b22ae7da26fead21004d6f9f45d353efebcbe2d",
+  "agreedCurrentGate": "E12-T00",
+  "agreedTaskStatus": "in-progress",
+  "agreedRunCount": 0,
+  "agreedRunCeiling": 10,
+  "agreedControlDigest": "64cb3dd424a3f70c1b084f2c56db51c3ab935d1d1b3fd78e93e071e819f7e967",
+  "observedChangedPaths": [
+    ".eforest/project.json",
+    ".eforest/tasks/QUEUE.md",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/lifecycle-authorization.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md",
+    ".eforest/tasks/epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md",
+    ".eforest/tasks/epic-6-the-loop/E6-T12-live-loop-ui/readme.md"
+  ],
+  "preservedHistoricalLogPrefixes": [
+    {
+      "path": ".eforest/tasks/epic-5-the-meadow/E5-T15-bl-ui-2-rebuild/readme.md",
+      "priorLogSha256": "80e74bdf508ab0b4288408a3b97791d4a0e997d6579e636c6c169ffdebc9f2eb",
+      "preservedPrefixSha256": "80e74bdf508ab0b4288408a3b97791d4a0e997d6579e636c6c169ffdebc9f2eb",
+      "priorByteLength": 9216
+    },
+    {
+      "path": ".eforest/tasks/epic-6-the-loop/E6-T12-live-loop-ui/readme.md",
+      "priorLogSha256": "4c194fea9d88e7259d846c88bde351e4774f6434a6ce1e6360ff96ef3cb440ab",
+      "preservedPrefixSha256": "4c194fea9d88e7259d846c88bde351e4774f6434a6ce1e6360ff96ef3cb440ab",
+      "priorByteLength": 2760
+    }
+  ],
+  "note": "Full byte-identical reader outputs are in the agent logs. This manifest records their committed observation and independently checked old-log prefixes; it grants no product verification."
+}

@@ -41,7 +41,11 @@ export default tseslint.config(
   {
     files: ["packages/**/*.ts", "vitest.config.ts"],
     rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      // `const { omitted: _omitted, ...rest } = value` is how the reducers drop fields.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
     },
   },
 );

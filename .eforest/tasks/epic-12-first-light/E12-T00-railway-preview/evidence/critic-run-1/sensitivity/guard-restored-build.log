@@ -1,0 +1,4 @@
+
+> @eforest/platform@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo/packages/platform
+> tsc -b tsconfig.build.json
+

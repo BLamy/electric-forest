@@ -1,0 +1,5 @@
+{
+  "firstCheckpointUtc": "2026-10-17T00:03:03.085930+00:00",
+  "reason": "First process checkpoint compared monotonic clocks across Python processes, so its elapsedSeconds is invalid. Its UTC timestamps, ps elapsed values and raw log sizes remain direct observations. Future checkpoint elapsedSeconds uses UTC timestamp subtraction.",
+  "scope": "process monitor only; gate runner and gate timing unchanged"
+}

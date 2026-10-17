@@ -1,0 +1,1834 @@
+{
+  "scope": "deployment",
+  "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+  "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "status": "BUILDING",
+  "build": [
+    {
+      "timestamp": "2026-10-16T21:02:56.124110899Z",
+      "severity": "info",
+      "message": "scheduling build on Metal builder \"builder-nzbzcd\"",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.132861558Z",
+      "severity": "info",
+      "message": "unpacking archive",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"railway.progress\""
+        },
+        {
+          "key": "status",
+          "value": "\"complete\""
+        },
+        {
+          "key": "size",
+          "value": "60702720"
+        },
+        {
+          "key": "duration_ms",
+          "value": "225"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.368079898Z",
+      "severity": "info",
+      "message": "[internal] load build definition from Dockerfile.production",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:5d59a436b9fc993b8e772032b0853d33b7b40f17579da30b9baf3daa2de69e6d\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.368213388Z",
+      "severity": "info",
+      "message": "[internal] load build definition from Dockerfile.production",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:5d59a436b9fc993b8e772032b0853d33b7b40f17579da30b9baf3daa2de69e6d\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.367866077Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:02:59.367910343Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.368234039Z",
+      "severity": "info",
+      "message": "[internal] load build definition from Dockerfile.production",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:5d59a436b9fc993b8e772032b0853d33b7b40f17579da30b9baf3daa2de69e6d\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.368077414Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.562686086Z",
+      "severity": "info",
+      "message": "[internal] load build definition from Dockerfile.production",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:5d59a436b9fc993b8e772032b0853d33b7b40f17579da30b9baf3daa2de69e6d\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.368077414Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:02:59.562292966Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.631189061Z",
+      "severity": "info",
+      "message": "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:38e92d1396bd639f338d00c3bb7d20d3904f53aea8af935d748d315522eaccc6\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.630341188Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.787029810Z",
+      "severity": "info",
+      "message": "uploading snapshot",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"railway.progress\""
+        },
+        {
+          "key": "status",
+          "value": "\"complete\""
+        },
+        {
+          "key": "size",
+          "value": "29682933"
+        },
+        {
+          "key": "duration_ms",
+          "value": "803"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.845617339Z",
+      "severity": "info",
+      "message": "[internal] load metadata for docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:38e92d1396bd639f338d00c3bb7d20d3904f53aea8af935d748d315522eaccc6\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.630341188Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:02:59.845213192Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.846656419Z",
+      "severity": "info",
+      "message": "[internal] load .dockerignore",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:ad6f35c55ca9fa335634a27a6e062f026e0eaa8c30cb2a72409f44d115417c6c\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.846670630Z",
+      "severity": "info",
+      "message": "[internal] load .dockerignore",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:ad6f35c55ca9fa335634a27a6e062f026e0eaa8c30cb2a72409f44d115417c6c\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.846445051Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:02:59.84649092Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:02:59.846775788Z",
+      "severity": "info",
+      "message": "[internal] load .dockerignore",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:ad6f35c55ca9fa335634a27a6e062f026e0eaa8c30cb2a72409f44d115417c6c\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.846627205Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.036222670Z",
+      "severity": "info",
+      "message": "[internal] load .dockerignore",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:ad6f35c55ca9fa335634a27a6e062f026e0eaa8c30cb2a72409f44d115417c6c\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:02:59.846627205Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.035678263Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096878154Z",
+      "severity": "info",
+      "message": "[production 3/3] COPY --from=build /app /app",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:176a696363c0d0121e3ac3c06a888d3c6c96e0dd09c1df446e76d35ee5df69e7\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\",\"sha256:a3c31ec454ec1dbcd51abde5afac93e0bdb0882c89bec206c732e40704b1d170\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096879596Z",
+      "severity": "info",
+      "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:a3c31ec454ec1dbcd51abde5afac93e0bdb0882c89bec206c732e40704b1d170\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096880758Z",
+      "severity": "info",
+      "message": "[build 8/9] RUN node tools/build_hosted_artifact.mjs \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\" && node -e 'require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\"",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096881309Z",
+      "severity": "info",
+      "message": "[build 7/9] RUN pnpm build",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096881609Z",
+      "severity": "info",
+      "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\",import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/forest-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096881860Z",
+      "severity": "info",
+      "message": "[build 5/9] RUN pnpm install --frozen-lockfile",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096882130Z",
+      "severity": "info",
+      "message": "[build 4/9] COPY . .",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\",\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096882391Z",
+      "severity": "info",
+      "message": "[internal] load build context",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096882981Z",
+      "severity": "info",
+      "message": "[build 3/9] RUN npm install --global pnpm@10.15.0",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096886126Z",
+      "severity": "info",
+      "message": "[build 2/9] WORKDIR /app",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\"]"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.096886426Z",
+      "severity": "info",
+      "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.097238775Z",
+      "severity": "info",
+      "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.096889962Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.097239727Z",
+      "severity": "info",
+      "message": "[internal] load build context",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.096934358Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.097031534Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.233286007Z",
+      "severity": "info",
+      "message": "[build 1/9] FROM docker.io/library/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.096889962Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.232907068Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.234114481Z",
+      "severity": "info",
+      "message": "[internal] load build context",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.233802503Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.571699728Z",
+      "severity": "info",
+      "message": "[internal] load build context",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.233802503Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.571293858Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.628612272Z",
+      "severity": "info",
+      "message": "[build 2/9] WORKDIR /app",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.628086392Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.628086392Z\""
+        },
+        {
+          "key": "cached",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.628615046Z",
+      "severity": "info",
+      "message": "[build 3/9] RUN npm install --global pnpm@10.15.0",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.628086392Z\""
+        },
+        {
+          "key": "cached",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.628627405Z",
+      "severity": "info",
+      "message": "[build 3/9] RUN npm install --global pnpm@10.15.0",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.628086392Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:00.628225942Z\""
+        },
+        {
+          "key": "cached",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:00.628649889Z",
+      "severity": "info",
+      "message": "[build 4/9] COPY . .",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\",\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.628376849Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:01.297586723Z",
+      "severity": "info",
+      "message": "[build 4/9] COPY . .",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:74da2273c4218ae1146ce58ecf593fa4647454311c59f45b9193c0e9b35eaa0b\",\"sha256:eb2de32a5e364d3a181416593755d71e7c2f2213a06858e693ef43e6bdff2b92\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:00.628376849Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:01.297034474Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:01.333747743Z",
+      "severity": "info",
+      "message": "[build 5/9] RUN pnpm install --frozen-lockfile",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:01.333352469Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:02.314409569Z",
+      "severity": "info",
+      "message": "Scope: all 19 workspace projects\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"U2NvcGU6IGFsbCAxOSB3b3Jrc3BhY2UgcHJvamVjdHMK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:02.313800395Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:02.409002855Z",
+      "severity": "info",
+      "message": "Lockfile is up to date, resolution step is skipped\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"TG9ja2ZpbGUgaXMgdXAgdG8gZGF0ZSwgcmVzb2x1dGlvbiBzdGVwIGlzIHNraXBwZWQK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:02.408481612Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:02.501337159Z",
+      "severity": "info",
+      "message": "Progress: resolved 1, reused 0, downloaded 0, added 0\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEsIHJldXNlZCAwLCBkb3dubG9hZGVkIDAsIGFkZGVkIDAK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:02.500857859Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:02.649432729Z",
+      "severity": "info",
+      "message": "Packages: +1086\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UGFja2FnZXM6ICsxMDg2CisrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:02.642743937Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:03.513560330Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 375, added 360\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDM3NSwgYWRkZWQgMzYwCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:03.513022202Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:03.973871818Z",
+      "severity": "info",
+      "message": "\n   ╭──────────────────────────────────────────╮\n   │                                          │\n   │   Update available! 10.15.0 → 12.14.0.   │\n   │   Changelog: https://pnpm.io/v/12.14.0   │\n   │     To update, run: pnpm add -g pnpm     │\n   │                                          │\n   ╰──────────────────────────────────────────╯\n\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"CiAgIOKVreKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKVrgogICDilIIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICDilIIKICAg4pSCICAgVXBkYXRlIGF2YWlsYWJsZSEgMTAuMTUuMCDihpIgMTIuMTQuMC4gICDilIIKICAg4pSCICAgQ2hhbmdlbG9nOiBodHRwczovL3BucG0uaW8vdi8xMi4xNC4wICAg4pSCCiAgIOKUgiAgICAgVG8gdXBkYXRlLCBydW46IHBucG0gYWRkIC1nIHBucG0gICAgIOKUggogICDilIIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICDilIIKICAg4pWw4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pWvCgo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:03.973367121Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:04.513690745Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 675, added 672\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDY3NSwgYWRkZWQgNjcyCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:04.51317474Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:05.513446297Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 1083, added 1083\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDEwODMsIGFkZGVkIDEwODMK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:05.512953978Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:06.513628269Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 1085, added 1085\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDEwODUsIGFkZGVkIDEwODUK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:06.51313573Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:10.742178476Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 1086, added 1085\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDEwODYsIGFkZGVkIDEwODUK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:10.741676202Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:10.752060312Z",
+      "severity": "info",
+      "message": "Progress: resolved 1086, reused 0, downloaded 1086, added 1086, done\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"UHJvZ3Jlc3M6IHJlc29sdmVkIDEwODYsIHJldXNlZCAwLCBkb3dubG9hZGVkIDEwODYsIGFkZGVkIDEwODYsIGRvbmUK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:10.751685079Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.184133807Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL2FwcHMvd2ViL25vZGVfbW9kdWxlcy8uYmluL2Vmb3Jlc3QtcGxhdGZvcm0uIEVOT0VOVDogbm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSwgb3BlbiAnL2FwcC9wYWNrYWdlcy9wbGF0Zm9ybS9kaXN0L3NyYy9iaW4uanMnCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.183617281Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.184139295Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL3BhY2thZ2VzL2Jyb3dzZXItdmVyaWZ5L25vZGVfbW9kdWxlcy8uYmluL2Vmb3Jlc3QtcGxhdGZvcm0uIEVOT0VOVDogbm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSwgb3BlbiAnL2FwcC9wYWNrYWdlcy9wbGF0Zm9ybS9kaXN0L3NyYy9iaW4uanMnCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.183654437Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.184436171Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL3BhY2thZ2VzL2NsaS9ub2RlX21vZHVsZXMvLmJpbi9lZm9yZXN0LXBsYXRmb3JtLiBFTk9FTlQ6IG5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnksIG9wZW4gJy9hcHAvcGFja2FnZXMvcGxhdGZvcm0vZGlzdC9zcmMvYmluLmpzJwo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.183824122Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.287361706Z",
+      "severity": "info",
+      "message": "\ndevDependencies:\n+ @eslint/js 10.0.1\n+ @types/node 26.1.1\n+ chokidar 4.0.3\n+ eslint 10.6.0\n+ playwright-core 1.61.1\n+ prettier 3.9.4\n+ replayio 1.8.2\n+ typescript 6.0.3\n+ typescript-eslint 8.63.0\n+ undici 7.16.0\n+ vitest 4.1.10\n\n╭ Warning ─────────────────────────────────────────────────────────────────────╮\n│                                                                              │\n│   Ignored build scripts: @mongodb-js/zstd, @swc/core, esbuild, lmdb,         │\n│   msgpackr-extract, node-liblzma, protobufjs.                                │\n│   Run \"pnpm approve-builds\" to pick which dependencies should be allowed     │\n│   to run scripts.                                                            │\n│                                                                              │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"CmRldkRlcGVuZGVuY2llczoKKyBAZXNsaW50L2pzIDEwLjAuMQorIEB0eXBlcy9ub2RlIDI2LjEuMQorIGNob2tpZGFyIDQuMC4zCisgZXNsaW50IDEwLjYuMAorIHBsYXl3cmlnaHQtY29yZSAxLjYxLjEKKyBwcmV0dGllciAzLjkuNAorIHJlcGxheWlvIDEuOC4yCisgdHlwZXNjcmlwdCA2LjAuMworIHR5cGVzY3JpcHQtZXNsaW50IDguNjMuMAorIHVuZGljaSA3LjE2LjAKKyB2aXRlc3QgNC4xLjEwCgrila0gV2FybmluZyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDila4K4pSCICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg4pSCCuKUgiAgIElnbm9yZWQgYnVpbGQgc2NyaXB0czogQG1vbmdvZGItanMvenN0ZCwgQHN3Yy9jb3JlLCBlc2J1aWxkLCBsbWRiLCAgICAgICAgIOKUggrilIIgICBtc2dwYWNrci1leHRyYWN0LCBub2RlLWxpYmx6bWEsIHByb3RvYnVmanMuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICDilIIK4pSCICAgUnVuICJwbnBtIGFwcHJvdmUtYnVpbGRzIiB0byBwaWNrIHdoaWNoIGRlcGVuZGVuY2llcyBzaG91bGQgYmUgYWxsb3dlZCAgICAg4pSCCuKUgiAgIHRvIHJ1biBzY3JpcHRzLiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIOKUggrilIIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICDilIIK4pWw4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pWvCgo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.286992372Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.303665433Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL3BhY2thZ2VzL2Jyb3dzZXItdmVyaWZ5L25vZGVfbW9kdWxlcy8uYmluL2Vmb3Jlc3QtcGxhdGZvcm0uIEVOT0VOVDogbm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSwgb3BlbiAnL2FwcC9wYWNrYWdlcy9icm93c2VyLXZlcmlmeS9ub2RlX21vZHVsZXMvQGVmb3Jlc3QvcGxhdGZvcm0vZGlzdC9zcmMvYmluLmpzJwo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.303371011Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.303759905Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL3BhY2thZ2VzL2NsaS9ub2RlX21vZHVsZXMvLmJpbi9lZm9yZXN0LXBsYXRmb3JtLiBFTk9FTlQ6IG5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnksIG9wZW4gJy9hcHAvcGFja2FnZXMvY2xpL25vZGVfbW9kdWxlcy9AZWZvcmVzdC9wbGF0Zm9ybS9kaXN0L3NyYy9iaW4uanMnCg==\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.303523119Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.310631471Z",
+      "severity": "info",
+      "message": " WARN  Failed to create bin at /app/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/app/apps/web/node_modules/@eforest/platform/dist/src/bin.js'\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"4oCJV0FSTuKAiSBGYWlsZWQgdG8gY3JlYXRlIGJpbiBhdCAvYXBwL2FwcHMvd2ViL25vZGVfbW9kdWxlcy8uYmluL2Vmb3Jlc3QtcGxhdGZvcm0uIEVOT0VOVDogbm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSwgb3BlbiAnL2FwcC9hcHBzL3dlYi9ub2RlX21vZHVsZXMvQGVmb3Jlc3QvcGxhdGZvcm0vZGlzdC9zcmMvYmluLmpzJwo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.310222658Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:11.413934523Z",
+      "severity": "info",
+      "message": "Done in 9.5s using pnpm v10.15.0\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"RG9uZSBpbiA5LjVzIHVzaW5nIHBucG0gdjEwLjE1LjAK\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:11.413386551Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:13.628954168Z",
+      "severity": "info",
+      "message": "[build 5/9] RUN pnpm install --frozen-lockfile",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:826670eb69fce3641d0c9bd475b9b6afa705ea4015c48446b73e75ab0ca07225\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:01.333352469Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:13.628484352Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:13.672299643Z",
+      "severity": "info",
+      "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\",import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/forest-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:13.671685732Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:15.094330360Z",
+      "severity": "info",
+      "message": "[build 6/9] RUN node --input-type=module -e 'import {createRequire} from \"node:module\"; const serverRequire=createRequire(new URL(\"./packages/server/package.json\",import.meta.url)); const lmdb=createRequire(serverRequire.resolve(\"@durable-streams/server\"))(\"lmdb\"); const db=lmdb.open({path:\"/tmp/forest-native-check\"}); db.putSync(\"native\",\"linux\"); if(db.get(\"native\")!==\"linux\") process.exit(1); db.close(); const webRequire=createRequire(new URL(\"./apps/web/package.json\",import.meta.url)); const esbuild=createRequire(webRequire.resolve(\"vite\"))(\"esbuild\"); esbuild.transformSync(\"const value: number = 1\",{loader:\"ts\"});'",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:1844b2c3b3e2883997acda11b05af86f0d15fabcf80ccadb24e86fe62f74c42e\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:13.671685732Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T21:03:15.093836819Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:15.165818347Z",
+      "severity": "info",
+      "message": "[build 7/9] RUN pnpm build",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T21:03:15.165285817Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T21:03:16.014163653Z",
+      "severity": "info",
+      "message": "\n> electric-forest@0.0.0 build /app\n> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build\n\n",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"log\""
+        },
+        {
+          "key": "vertex",
+          "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+        },
+        {
+          "key": "stream",
+          "value": "1"
+        },
+        {
+          "key": "data",
+          "value": "\"Cj4gZWxlY3RyaWMtZm9yZXN0QDAuMC4wIGJ1aWxkIC9hcHAKPiB0c2MgLWIgdHNjb25maWcuYnVpbGQuanNvbiAmJiBwbnBtIC0tZmlsdGVyIEBlZm9yZXN0L2lkZW50aXR5IGJ1aWxkICYmIHBucG0gLS1maWx0ZXIgQGVmb3Jlc3Qvd2ViIGJ1aWxkCgo=\""
+        },
+        {
+          "key": "timestamp",
+          "value": "\"2026-10-16T21:03:16.013547688Z\""
+        }
+      ]
+    }
+  ]
+}

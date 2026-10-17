@@ -1,0 +1,2027 @@
+{
+  "freeze": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v4.json",
+    "sha256": "42a8a214ba962ce73aa38fb4455a3915045e046e3bd740171d17c737a1e45f7c",
+    "bytes": 17056
+  },
+  "checks": [
+    {
+      "collection": "changedFilesFromParent",
+      "path": "docs/examples/railway-preview-config.toml",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184
+      },
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "changedFilesFromParent",
+      "path": "docs/guides/railway-hosting.md",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "358cd1f149934dea7870f83e9cf799168f3c17dbee4802af5ac0718ada2fd408",
+        "bytes": 12281
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140
+      },
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "358cd1f149934dea7870f83e9cf799168f3c17dbee4802af5ac0718ada2fd408",
+        "bytes": 12281,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "changedFilesFromParent",
+      "path": "railway.production.toml",
+      "status": "D",
+      "before": {
+        "exists": true,
+        "sha256": "7119a5c194ad2aad6b2d080b3a63de4f3876dd08c513645ee8484fb41b84083e",
+        "bytes": 314
+      },
+      "after": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "7119a5c194ad2aad6b2d080b3a63de4f3876dd08c513645ee8484fb41b84083e",
+        "bytes": 314,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "changedFilesFromParent",
+      "path": "railway.toml",
+      "status": "D",
+      "before": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184
+      },
+      "after": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "Dockerfile.production",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "Makefile",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "028ff3b190541aa232d5335a24592b89dee9eb0c64bf768c3c868981903ee03b",
+        "bytes": 45264
+      },
+      "after": {
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "028ff3b190541aa232d5335a24592b89dee9eb0c64bf768c3c868981903ee03b",
+        "bytes": 45264,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "b0c98b773ef90553619ec603ce2cefa8f7c47655c8edcedddf345469a0b372a8",
+        "bytes": 28860
+      },
+      "after": {
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "b0c98b773ef90553619ec603ce2cefa8f7c47655c8edcedddf345469a0b372a8",
+        "bytes": 28860,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "apps/web/src/main.tsx",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "3bf6664e858564336e92556e62642a4a4451ef9965783c435a02fd59fc451030",
+        "bytes": 669
+      },
+      "after": {
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "3bf6664e858564336e92556e62642a4a4451ef9965783c435a02fd59fc451030",
+        "bytes": 669,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "56554f98653b08c4ded293e31a38b410ea4d86433c99e47f0dc2b5a590cbfc7a",
+        "bytes": 19904
+      },
+      "after": {
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "56554f98653b08c4ded293e31a38b410ea4d86433c99e47f0dc2b5a590cbfc7a",
+        "bytes": 19904,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "apps/web/src/preview.tsx",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "d638f4806da65c81d808e2b64548fe36c7824b4c3fe11e9d94e2c04b1d0893b7",
+        "bytes": 1101
+      },
+      "after": {
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "d638f4806da65c81d808e2b64548fe36c7824b4c3fe11e9d94e2c04b1d0893b7",
+        "bytes": 1101,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "apps/web/src/routes.tsx",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "ac853603a60634412d188a604653affb3db811c2e1e3f333216658abe0e69dcb",
+        "bytes": 5949
+      },
+      "after": {
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "ac853603a60634412d188a604653affb3db811c2e1e3f333216658abe0e69dcb",
+        "bytes": 5949,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "docs/examples/railway-preview-config.toml",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "docs/guides/railway-hosting.md",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "a475e216494dac1deca7ff41149b3cfd3b426b7e2b42681dbf9e9124531237d6",
+        "bytes": 6751
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "a475e216494dac1deca7ff41149b3cfd3b426b7e2b42681dbf9e9124531237d6",
+        "bytes": 6751,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0551d7c8e41dd75d19db9ac0e33a2f995f43285bc16f504fd5ff7dbd4e54a1ac",
+        "bytes": 13140,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/auth/grants.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "a5f1df4ae2626a6a58760f3415b2a4af1176135bbaba548ff16945332ac79f53",
+        "bytes": 8823
+      },
+      "after": {
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "a5f1df4ae2626a6a58760f3415b2a4af1176135bbaba548ff16945332ac79f53",
+        "bytes": 8823,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/auth/oidc.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "53e8a4b83fc95de80b7a1f22439f5f9dd97060c9d1c157703fec3e6471b09ebd",
+        "bytes": 7543
+      },
+      "after": {
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "53e8a4b83fc95de80b7a1f22439f5f9dd97060c9d1c157703fec3e6471b09ebd",
+        "bytes": 7543,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/auth/routes.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "66046baacee7973b3bd2d6e17180eb1260444fa0861f633eac432de80177370d",
+        "bytes": 33024
+      },
+      "after": {
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "66046baacee7973b3bd2d6e17180eb1260444fa0861f633eac432de80177370d",
+        "bytes": 33024,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/auth/session.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "5b2b16276add7120449dc61c6446a1bd5edd5fc5f34e3f5cd2e940f7d034a6c9",
+        "bytes": 2212
+      },
+      "after": {
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "5b2b16276add7120449dc61c6446a1bd5edd5fc5f34e3f5cd2e940f7d034a6c9",
+        "bytes": 2212,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/hosted-artifact.ts",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/hosted-bin.ts",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/hosted-storage.ts",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/hosted.ts",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/production.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+        "bytes": 12181
+      },
+      "after": {
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+        "bytes": 12181,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/server.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "cdb038b9791867ba8770f4e474bd7580721f3d9c42feeeaf39505a20dc256a13",
+        "bytes": 3776
+      },
+      "after": {
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "cdb038b9791867ba8770f4e474bd7580721f3d9c42feeeaf39505a20dc256a13",
+        "bytes": 3776,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/src/web/spa.ts",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "7ae4a4bd0bfec0d578eae5d7182c4a0d4fd0df21ee08736a1a9b8b72ffb6388b",
+        "bytes": 5017
+      },
+      "after": {
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "7ae4a4bd0bfec0d578eae5d7182c4a0d4fd0df21ee08736a1a9b8b72ffb6388b",
+        "bytes": 5017,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "packages/platform/test/hosted.test.ts",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "railway.toml",
+      "status": "D",
+      "before": {
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184
+      },
+      "after": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+        "bytes": 184,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/build_hosted_artifact.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/cold_clone_targets.txt",
+      "status": "M",
+      "before": {
+        "exists": true,
+        "sha256": "c8616af4659f2680e1eaa0d31497d69c9d69ea58220502d7fd52816f1b143bc8",
+        "bytes": 1399
+      },
+      "after": {
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": true,
+        "sha256": "c8616af4659f2680e1eaa0d31497d69c9d69ea58220502d7fd52816f1b143bc8",
+        "bytes": 1399,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/e12_t10_browser.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/e12_t10_fixture.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "cumulativeImplementationFiles",
+      "path": "tools/verify/e12_t10_identity_reducer.mjs",
+      "status": "A",
+      "before": {
+        "exists": false,
+        "sha256": null,
+        "bytes": 0
+      },
+      "after": {
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268
+      },
+      "beforeCheck": {
+        "revision": "66e6a5ee6dd8d74ed81ebfd97ccb9faf4c65ff20",
+        "exists": false,
+        "sha256": null,
+        "bytes": 0,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "previousFreezesPreservedByteForByte",
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze.json",
+      "exists": true,
+      "sha256": "3fd839a2b85439e16042615f19b3d6dfe4c7e03e099563be6dad430f0d07c6e6",
+      "bytes": 5643,
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "3fd839a2b85439e16042615f19b3d6dfe4c7e03e099563be6dad430f0d07c6e6",
+        "bytes": 5643,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "previousFreezesPreservedByteForByte",
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v2.json",
+      "exists": true,
+      "sha256": "0783a1a803f846cf9a02e304169c4dabe110adb4ce8806e132b0c9fec122adf0",
+      "bytes": 11077,
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0783a1a803f846cf9a02e304169c4dabe110adb4ce8806e132b0c9fec122adf0",
+        "bytes": 11077,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "previousFreezesPreservedByteForByte",
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/builder-freeze-v3.json",
+      "exists": true,
+      "sha256": "f60fb7c323357145671246dcd2101b20e20f3191ef4cc99910756943817f410c",
+      "bytes": 9055,
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "f60fb7c323357145671246dcd2101b20e20f3191ef4cc99910756943817f410c",
+        "bytes": 9055,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "Dockerfile",
+      "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09",
+      "bytes": 1734,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09",
+        "bytes": 1734,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09",
+        "bytes": 1734,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09",
+        "bytes": 1734,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "Dockerfile.production",
+      "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+      "bytes": 1596,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+        "bytes": 1596,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "Makefile",
+      "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+      "bytes": 45771,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+        "bytes": 45771,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+      "bytes": 28851,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+        "bytes": 28851,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "apps/web/src/main.tsx",
+      "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+      "bytes": 704,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+        "bytes": 704,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+      "bytes": 20049,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+        "bytes": 20049,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "apps/web/src/preview.tsx",
+      "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+      "bytes": 2367,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+        "bytes": 2367,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "apps/web/src/routes.tsx",
+      "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+      "bytes": 5947,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+        "bytes": 5947,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/auth/grants.ts",
+      "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+      "bytes": 9201,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+        "bytes": 9201,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/auth/oidc.ts",
+      "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+      "bytes": 8815,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+        "bytes": 8815,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/auth/routes.ts",
+      "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+      "bytes": 36841,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+        "bytes": 36841,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/auth/session.ts",
+      "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+      "bytes": 2307,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+        "bytes": 2307,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/hosted-artifact.ts",
+      "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+      "bytes": 1338,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+        "bytes": 1338,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/hosted-bin.ts",
+      "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+      "bytes": 1268,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+        "bytes": 1268,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/hosted-storage.ts",
+      "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+      "bytes": 6266,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+        "bytes": 6266,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/hosted.ts",
+      "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+      "bytes": 13429,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+        "bytes": 13429,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/production.ts",
+      "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+      "bytes": 12775,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+        "bytes": 12775,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/server.ts",
+      "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+      "bytes": 9414,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+        "bytes": 9414,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/src/web/spa.ts",
+      "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+      "bytes": 5337,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+        "bytes": 5337,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "packages/platform/test/hosted.test.ts",
+      "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+      "bytes": 17156,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+        "bytes": 17156,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/build_hosted_artifact.mjs",
+      "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+      "bytes": 637,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+        "bytes": 637,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/cold_clone_targets.txt",
+      "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+      "bytes": 1414,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+        "bytes": 1414,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/e12_t10_browser.mjs",
+      "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+      "bytes": 17743,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+        "bytes": 17743,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+      "bytes": 8273,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+        "bytes": 8273,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/e12_t10_fixture.mjs",
+      "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+      "bytes": 14762,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+        "bytes": 14762,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+      "bytes": 24433,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+        "bytes": 24433,
+        "matches": true
+      },
+      "passed": true
+    },
+    {
+      "collection": "sourcePreservedByteForByte",
+      "path": "tools/verify/e12_t10_identity_reducer.mjs",
+      "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+      "bytes": 268,
+      "beforeCheck": {
+        "revision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268,
+        "matches": true
+      },
+      "afterCheck": {
+        "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268,
+        "matches": true
+      },
+      "worktreeCheck": {
+        "exists": true,
+        "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+        "bytes": 268,
+        "matches": true
+      },
+      "passed": true
+    }
+  ],
+  "actualDirectPathsNoRenames": [
+    "docs/examples/railway-preview-config.toml",
+    "docs/guides/railway-hosting.md",
+    "railway.production.toml",
+    "railway.toml"
+  ],
+  "actualCumulativePathsNoRenames": [
+    "Dockerfile.production",
+    "Makefile",
+    "apps/web/src/components/shell/ForestShell.tsx",
+    "apps/web/src/main.tsx",
+    "apps/web/src/members/MembersPage.tsx",
+    "apps/web/src/preview.tsx",
+    "apps/web/src/routes.tsx",
+    "docs/examples/railway-preview-config.toml",
+    "docs/guides/railway-hosting.md",
+    "packages/platform/src/auth/grants.ts",
+    "packages/platform/src/auth/oidc.ts",
+    "packages/platform/src/auth/routes.ts",
+    "packages/platform/src/auth/session.ts",
+    "packages/platform/src/hosted-artifact.ts",
+    "packages/platform/src/hosted-bin.ts",
+    "packages/platform/src/hosted-storage.ts",
+    "packages/platform/src/hosted.ts",
+    "packages/platform/src/production.ts",
+    "packages/platform/src/server.ts",
+    "packages/platform/src/web/spa.ts",
+    "packages/platform/test/hosted.test.ts",
+    "railway.toml",
+    "tools/build_hosted_artifact.mjs",
+    "tools/verify/cold_clone_targets.txt",
+    "tools/verify/e12_t10_browser.mjs",
+    "tools/verify/e12_t10_deadlines.mjs",
+    "tools/verify/e12_t10_fixture.mjs",
+    "tools/verify/e12_t10_hosted.mjs",
+    "tools/verify/e12_t10_identity_reducer.mjs"
+  ],
+  "directPathsMatch": true,
+  "cumulativePathsMatch": true,
+  "directFiles": 4,
+  "cumulativeFiles": 29,
+  "freshReaderReceipts": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/source-v4-a.json",
+      "sha256": "3ac5b2e15abdb105d982e5ddd9b8cd7136b9c9d07f1de8ec3f6a7855434af1f1",
+      "bytes": 1260
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/ledger/source-v4-b.json",
+      "sha256": "3ac5b2e15abdb105d982e5ddd9b8cd7136b9c9d07f1de8ec3f6a7855434af1f1",
+      "bytes": 1260
+    }
+  ],
+  "sourcePreservationReceipt": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/config-diagnosis-v4/validation.json",
+    "sha256": "691a4c93f86aa27460bff2a2b4b0dedbff12bf54731eba06d43de55470677902",
+    "bytes": 5477
+  },
+  "renamePolicy": "Full before/after path manifests use --no-renames; Git default reader path list may collapse preview TOML D/A into one rename."
+}

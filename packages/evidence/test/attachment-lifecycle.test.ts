@@ -108,7 +108,6 @@ describe("attachment lifecycle", () => {
   });
 
   it("is a total no-op for malformed attachment events and duplicate ids", () => {
-    const streamId = evidenceStreamId(entityRef);
     const initial = {
       v: 1 as const,
       entityRef: entityStreamId(entityRef),

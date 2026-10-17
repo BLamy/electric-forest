@@ -12,6 +12,7 @@ import {
   type IssueState,
   type IssueStateName,
 } from "@eforest/reducers";
+import { LIVE_FOLLOW } from "../live.js";
 
 export interface RenderedIssueError {
   readonly code: string;
@@ -89,7 +90,7 @@ export function useIssueBoard(org: string, repo: string): IssueBoardBinding {
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/board`,
     streamId,
     reducerId: BOARD_REDUCER,
-    followWaitMs: 500,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 100,
   });
   return { streamId, reducerId: BOARD_REDUCER, projection };
@@ -105,7 +106,7 @@ export function useIssue(org: string, repo: string, issueId: string): IssueBindi
     apiPath: `/api/repos/${encoded(org)}/${encoded(repo)}/main/events?stream=issue&issueId=${encoded(issueId)}`,
     streamId,
     reducerId: "issue",
-    followWaitMs: 500,
+    ...LIVE_FOLLOW,
     reconnectDelayMs: 100,
   });
   const dispatch = useDispatch(streamId, { replayedOffset: projection.checkpoint });

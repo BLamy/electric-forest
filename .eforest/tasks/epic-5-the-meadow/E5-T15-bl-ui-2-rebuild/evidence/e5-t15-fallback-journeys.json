@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "browser": {
+    "executablePath": "/Users/blamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
+    "version": "108.0.5359.0"
+  },
+  "base": "http://127.0.0.1:60244",
+  "steps": [
+    {
+      "journey": "J1",
+      "name": "repo list + filter",
+      "ok": true,
+      "ms": 904,
+      "detail": {
+        "streamLabVisibleWhileFiltered": 0
+      }
+    },
+    {
+      "journey": "J1",
+      "name": "repo home via link",
+      "ok": true,
+      "ms": 277,
+      "detail": {
+        "url": "http://127.0.0.1:60244/maple/reading-room"
+      }
+    },
+    {
+      "journey": "J1",
+      "name": "tree, blob, history",
+      "ok": true,
+      "ms": 1185,
+      "detail": null
+    },
+    {
+      "journey": "J1",
+      "name": "issues list + detail",
+      "ok": true,
+      "ms": 622,
+      "detail": null
+    },
+    {
+      "journey": "J1",
+      "name": "PR list, PR tabs by keyboard, Changes diff",
+      "ok": true,
+      "ms": 988,
+      "detail": {
+        "arrowFocus": [
+          "Commits",
+          "Checks",
+          "Changes0",
+          "Activity0"
+        ]
+      }
+    },
+    {
+      "journey": "J1",
+      "name": "merge refused without evidence, attach Replay, merge seen live in tab B",
+      "ok": true,
+      "ms": 3910,
+      "detail": {
+        "convergedMs": 182,
+        "linkLiveInB": true,
+        "bNavigations": 1,
+        "list": "Labels\nNew pull request\n3 Open\n2 Closed\nE5-T13: prove issue-to-merge convergence\n#59 opened by Electric Forest · Approve"
+      }
+    },
+    {
+      "journey": "J1",
+      "name": "chat: agent run accordion, message live in second tab both ways",
+      "ok": true,
+      "ms": 1663,
+      "detail": null
+    },
+    {
+      "journey": "J2",
+      "name": "1440 -> 390 resize keeps the PR without reload",
+      "ok": true,
+      "ms": 289,
+      "detail": null
+    },
+    {
+      "journey": "J2",
+      "name": "push via taps, pop via package back and history",
+      "ok": true,
+      "ms": 3312,
+      "detail": {
+        "atRoot": 2,
+        "pushed": 3
+      }
+    },
+    {
+      "journey": "J2",
+      "name": "deep links at 390 scroll code/diff internally",
+      "ok": true,
+      "ms": 1327,
+      "detail": null
+    },
+    {
+      "journey": "J2",
+      "name": "every repo surface reachable at 390",
+      "ok": true,
+      "ms": 3027,
+      "detail": [
+        "/orgs/maple/repos/reading-room/issues",
+        "/orgs/maple/repos/reading-room/issues/visual-capstone",
+        "/orgs/maple/repos/reading-room/pulls",
+        "/orgs/maple/repos/reading-room/wiki/home",
+        "/orgs/maple/repos/reading-room/labels",
+        "/orgs/maple/repos/reading-room/settings"
+      ]
+    },
+    {
+      "journey": "J2",
+      "name": "chat drawer by pointer and keyboard",
+      "ok": true,
+      "ms": 2294,
+      "detail": {
+        "focusInside": true,
+        "focusBack": true
+      }
+    },
+    {
+      "journey": "J2",
+      "name": "public site pages at 390 and 1440",
+      "ok": true,
+      "ms": 3683,
+      "detail": null
+    },
+    {
+      "journey": "J3",
+      "name": "label create, rename, recolor; converges in tab B",
+      "ok": true,
+      "ms": 3353,
+      "detail": {
+        "colorBefore": "#0969da",
+        "colorB": "#3366ff",
+        "counters": {
+          "dispatches-sent": "3",
+          "dispatches-confirmed": "3",
+          "dispatches-reconciled": "3",
+          "dispatches-refused": "0"
+        }
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "issue create, add + remove label, close",
+      "ok": true,
+      "ms": 3665,
+      "detail": {
+        "types": [
+          "issue.opened",
+          "issue.labeled",
+          "issue.unlabeled",
+          "issue.closed"
+        ]
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "wiki create + save through the editor",
+      "ok": true,
+      "ms": 1867,
+      "detail": null
+    },
+    {
+      "journey": "J3",
+      "name": "stale-edit refusal from a second tab",
+      "ok": true,
+      "ms": 5438,
+      "detail": {
+        "refusalRendered": true,
+        "refusalText": "This page changed while you were editing.\n\nYour draft was not applied and the branch was not changed.\n\nLoad latest",
+        "pageKeepsA": true
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "wiki rename then delete",
+      "ok": true,
+      "ms": 2909,
+      "detail": {
+        "url": "http://127.0.0.1:60244/orgs/maple/repos/reading-room/wiki"
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "members roster + invite",
+      "ok": true,
+      "ms": 875,
+      "detail": {
+        "result": "result"
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "CLI token mint + revoke",
+      "ok": true,
+      "ms": 2186,
+      "detail": {
+        "before": 1,
+        "after": 0
+      }
+    },
+    {
+      "journey": "J3",
+      "name": "negative routes",
+      "ok": true,
+      "ms": 9339,
+      "detail": {
+        "/maple/unknown-repo": "B M maple Search Codebase 5 Members New channel CODEBASE reading-room stream-lab docstream-demo forest-cli mobile-kit CHANNELS general E Electric Forest ● brett",
+        "/lost/deep/trail": "B M maple Search Codebase 5 Members New channel CODEBASE reading-room stream-lab docstream-demo forest-cli mobile-kit CHANNELS general E Electric Forest ● brett",
+        "/maple/mobile-kit": "B M maple Search Codebase 5 Members New channel CODEBASE reading-room stream-lab docstream-demo forest-cli mobile-kit CHANNELS general E Electric Forest ● brett"
+      }
+    },
+    {
+      "journey": "J4",
+      "name": "issue body",
+      "ok": true,
+      "ms": 2192,
+      "detail": {
+        "found": true,
+        "unsafe": [],
+        "imgs": 0,
+        "iframes": 0,
+        "scripts": 0,
+        "bold": true,
+        "pwned": null
+      }
+    },
+    {
+      "journey": "J4",
+      "name": "PR comment",
+      "ok": true,
+      "ms": 578,
+      "detail": {
+        "found": true,
+        "unsafe": [],
+        "iframes": 0,
+        "scripts": 0,
+        "pwned": null
+      }
+    },
+    {
+      "journey": "J4",
+      "name": "wiki page saved from the editor",
+      "ok": true,
+      "ms": 2336,
+      "detail": {
+        "found": true,
+        "unsafe": [],
+        "imgs": 0,
+        "iframes": 0,
+        "scripts": 0,
+        "bold": true,
+        "pwned": null
+      }
+    },
+    {
+      "journey": "J4",
+      "name": "chat message typed into the composer",
+      "ok": true,
+      "ms": 631,
+      "detail": {
+        "found": true,
+        "unsafe": [],
+        "iframes": 0,
+        "scripts": 0,
+        "pwned": null
+      }
+    }
+  ],
+  "passed": 25,
+  "failed": 0,
+  "unexpectedProblems": [],
+  "expectedNegativeProblems": [
+    {
+      "step": "J3 stale-edit refusal from a second tab",
+      "tag": "B",
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    },
+    {
+      "step": "J3 negative routes",
+      "tag": "A",
+      "kind": "404-url",
+      "text": "GET http://127.0.0.1:60244/api/repos/maple/unknown-repo/home/namespace?projection=1&reducer=repo-namespace"
+    },
+    {
+      "step": "J3 negative routes",
+      "tag": "A",
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "step": "J3 negative routes",
+      "tag": "A",
+      "kind": "404-url",
+      "text": "GET http://127.0.0.1:60244/api/repos/maple/unknown-repo/home/branches?projection=1&reducer=repo-branches"
+    },
+    {
+      "step": "J3 negative routes",
+      "tag": "A",
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "dialogs": [
+    {
+      "tag": "A",
+      "type": "confirm",
+      "message": "Revoke qa-journey-token?"
+    }
+  ],
+  "observation": {
+    "name": "chat composer bulk insertText (TipTap markInputRule)",
+    "pageErrors": [
+      "RangeError: Position 213 out of range"
+    ]
+  }
+}

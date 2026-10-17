@@ -1,0 +1,248 @@
+{
+  "candidate": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "parent": "1eda083c1ab66bb89125734610063e14cdd448e8",
+  "changedPaths": [
+    "vitest.config.ts"
+  ],
+  "sourceVersions": {
+    "vitest.config.ts": {
+      "beforeGitBlob": "a324f5e9a221d25ee6fe360772464b7ca07399b5",
+      "afterGitBlob": "dc2d445035c1dcb2515684726d7cc463670e5082",
+      "sha256": "d8664585362a9ba5a2e719043edc39fe66278fcb1d6ba4c062fc8afd70c557a5"
+    }
+  },
+  "actualColdLinuxFailure": {
+    "run": "38982575450",
+    "failedSuites": 6,
+    "passedSuites": 135,
+    "passedTests": 1125,
+    "failure": "@eforest/web-hooks runtime entry cannot resolve because generated dist does not yet exist",
+    "matchingSource": "1eda083c1ab66bb89125734610063e14cdd448e8"
+  },
+  "cause": "Vitest explicit source aliases omitted web-hooks, meadow, and loop. Pretest builds happen to emit meadow/loop, and warm local full builds additionally hid web-hooks omission.",
+  "fix": {
+    "@eforest/loop": "packages/loop/src/index.ts",
+    "@eforest/meadow": "packages/meadow/src/index.ts",
+    "@eforest/web-hooks": "packages/web-hooks/src/index.ts"
+  },
+  "ciWorkflowChanged": false,
+  "testScriptsChanged": false,
+  "fullDefaultDynamicCollectionBefore": {
+    "exitCode": 1,
+    "elapsedSeconds": 40.599963042000006,
+    "unresolvedPackages": [
+      "@eforest/loop",
+      "@eforest/meadow",
+      "@eforest/web-hooks"
+    ]
+  },
+  "orderedNewCandidateChecks": [
+    {
+      "gate": "format",
+      "command": [
+        "pnpm",
+        "format:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.122371292,
+      "stdoutSha256": "0f00790fce2d9eeafd9ed321c254c81b998209b46288909109d32582754a0dd0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gate": "lint",
+      "command": [
+        "pnpm",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 10.130103624999999,
+      "stdoutSha256": "ad5f1a564b0c097a301d1b6e86b593e123afc2619dfcefdc52970e93067b8084",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gate": "typecheck-after",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 13.533019916999999,
+      "all20WorkspaceDistDirectoriesHidden": true,
+      "generatedOutputDirectories": []
+    },
+    {
+      "gate": "collection-after",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "list",
+        "--json=.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-after-tests.json",
+        "--no-color"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 52.958348457999996,
+      "all20WorkspaceDistDirectoriesHidden": true,
+      "generatedOutputDirectories": []
+    },
+    {
+      "gate": "suites-after",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web/src/chat/referenceSources.test.ts",
+        "apps/web/src/prs/usePrs.test.ts",
+        "apps/web/src/wiki/WikiEditor.test.ts",
+        "apps/web/src/wiki/useWiki.test.ts",
+        "apps/web/src/components/markdown/surfaces.test.ts",
+        "apps/web/src/components/shell/forest-shell.test.ts",
+        "--no-color"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 8.581199042,
+      "all20WorkspaceDistDirectoriesHidden": true,
+      "generatedOutputDirectories": []
+    }
+  ],
+  "collectionAfter": {
+    "tests": 1144,
+    "files": 141,
+    "stderrBytes": 0,
+    "dynamic": true,
+    "testBodiesExecuted": false
+  },
+  "focusedSuitesAfter": {
+    "passedSuites": 6,
+    "passedTests": 19,
+    "stderrBytes": 0,
+    "testBodiesExecuted": true
+  },
+  "allMaskedBuildOutputsRestoredByteExact": true,
+  "allRunsGeneratedNoWorkspaceBuildOutputs": true,
+  "allWarmBuildOutputsSameBeforeAndAfterEveryRun": true,
+  "remainingUnmappedSpecifier": {
+    "specifier": "@eforest/browser-verify",
+    "reason": "Only referenced by seventeen separate apps/web/test/*.pw.ts files outside default Vitest include; not part of affected test graph."
+  },
+  "trackedStatusAfterCommit": "",
+  "notClaimed": [
+    "New-candidate full root tests",
+    "New-candidate full root build",
+    "Fresh auditor success",
+    "Cold Ubuntu CI success after fix",
+    "Browser evidence",
+    "Task verification",
+    "Production deployment"
+  ],
+  "lifecycleAndControlsChanged": false,
+  "pushed": false,
+  "diagnosticFiles": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/alias-audit-after.json",
+      "bytes": 4974,
+      "sha256": "ecdc870f57d3256ee99edc83596607ec0da48f6e588d14bd90f258e41c3810e1"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/alias-audit-before.json",
+      "bytes": 40678,
+      "sha256": "449437c3cf218cf5a9e1a8797a01df63d33c52f19149d1f4070bb197c8557b94"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/cheap-gates.json",
+      "bytes": 868,
+      "sha256": "d88a9621b9cbc7ef9b3e6720c2a29adb643a0943d9846b0a8e9f55ea099378c1"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-after-tests.json",
+      "bytes": 258115,
+      "sha256": "8dd9b406a403962faf49a62a57bc2c9c7f10918dfa4bed40c12b28e513fa432f"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-after.json",
+      "bytes": 6718,
+      "sha256": "9afd963dcb8fb15653a28b74792fe9864f825bfe492d92f3cbe2e2835ad0a750"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-after.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-before.json",
+      "bytes": 6720,
+      "sha256": "b27aef694204d4c9d03ca1c846b842864ac4f80c6d1f8c0d74ab8994d75adcc7"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-before.stderr.log",
+      "bytes": 26712,
+      "sha256": "97d07a3ae88d44337a69066f7f927eb5c94edc5dc70555949c8c8b4a9f6206f5"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-before.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/format.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/format.stdout.log",
+      "bytes": 344,
+      "sha256": "0f00790fce2d9eeafd9ed321c254c81b998209b46288909109d32582754a0dd0"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/lint.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/lint.stdout.log",
+      "bytes": 167,
+      "sha256": "ad5f1a564b0c097a301d1b6e86b593e123afc2619dfcefdc52970e93067b8084"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/mask_dist_run.py",
+      "bytes": 3548,
+      "sha256": "39c15f3954806d342a555da2b5731860863408deb46b2246dbf0a3c0ec35ffd5"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/suites-after.json",
+      "bytes": 6854,
+      "sha256": "8fbcef42427e12e961667d56c04cbf63efabfeff21029ec36e9f53c2a80d29c0"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/suites-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/suites-after.stdout.log",
+      "bytes": 230,
+      "sha256": "1f5d420a1ed2cdd4e9573e4daadbf62ac7937f91dd04d4a96c982f393a136291"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/typecheck-after.json",
+      "bytes": 6537,
+      "sha256": "ee050150731870c89380f7b1991585b8860182dd14b702d3ebbec7b870f0c172"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/typecheck-after.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/typecheck-after.stdout.log",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    }
+  ]
+}

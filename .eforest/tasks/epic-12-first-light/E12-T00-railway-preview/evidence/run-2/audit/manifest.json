@@ -1,0 +1,265 @@
+{
+  "after": {
+    "branch": "codex/railway-hosting",
+    "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+    "time": {
+      "local": "2026-10-16T14:51:22.317711-04:00",
+      "utc": "2026-10-16T18:51:22.317711+00:00"
+    },
+    "tracked_status_porcelain_v1": "",
+    "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+  },
+  "audit_directory": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit",
+  "audit_script": {
+    "bytes": 6008,
+    "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/audit.py",
+    "sha256": "49701438fdb29d4b96f07ae6132423875e6a149a895e630bae1caed4a77fe4c0"
+  },
+  "before": {
+    "branch": "codex/railway-hosting",
+    "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+    "time": {
+      "local": "2026-10-16T14:40:24.485216-04:00",
+      "utc": "2026-10-16T18:40:24.485216+00:00"
+    },
+    "tracked_status_porcelain_v1": "",
+    "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+  },
+  "candidate_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "command_sequence": [
+    "pnpm format:check && pnpm lint",
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm build"
+  ],
+  "ended_at": {
+    "local": "2026-10-16T14:51:22.317686-04:00",
+    "utc": "2026-10-16T18:51:22.317686+00:00"
+  },
+  "execution": {
+    "environment": "Inherited; no environment values recorded.",
+    "retries": 0,
+    "sequential": true,
+    "shell": "/bin/zsh -c",
+    "stop_on_first_failure": true,
+    "timeouts": "None imposed on gates.",
+    "tracked_source_required_clean_before_and_after_every_gate": true
+  },
+  "gates": [
+    {
+      "after": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:40:37.491832-04:00",
+          "utc": "2026-10-16T18:40:37.491832+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "before": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:40:24.571163-04:00",
+          "utc": "2026-10-16T18:40:24.571163+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "command": "pnpm format:check && pnpm lint",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 12.859,
+      "ended_at": {
+        "local": "2026-10-16T14:40:37.491609-04:00",
+        "utc": "2026-10-16T18:40:37.491609+00:00"
+      },
+      "exit_code": 0,
+      "name": "01-format-lint",
+      "normalized_log": {
+        "bytes": 511,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/01-format-lint.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "output_tail": "\n> electric-forest@0.0.0 format:check /Users/blamy/Documents/Codex/electric-forest\n> prettier --check \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"apps/**/*.{ts,tsx,json,md,html,css}\" \"packages/**/*.{ts,tsx,json,md,yml,yaml}\" \"packages/identity/**/*.mjs\" \"tools/**/*.mjs\"\n\nChecking formatting...\nAll matched files use Prettier code style!\n\n> electric-forest@0.0.0 lint /Users/blamy/Documents/Codex/electric-forest\n> eslint \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"tools/**/*.mjs\" \"vitest.config.ts\"\n",
+      "process_id": 1756,
+      "raw_log": {
+        "bytes": 511,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/01-format-lint.raw.log",
+        "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427"
+      },
+      "started_at": {
+        "local": "2026-10-16T14:40:24.632009-04:00",
+        "utc": "2026-10-16T18:40:24.632009+00:00"
+      },
+      "status": "passed"
+    },
+    {
+      "after": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:40:45.773586-04:00",
+          "utc": "2026-10-16T18:40:45.773586+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "before": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:40:37.559871-04:00",
+          "utc": "2026-10-16T18:40:37.559871+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "command": "pnpm typecheck",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 8.148,
+      "ended_at": {
+        "local": "2026-10-16T14:40:45.773194-04:00",
+        "utc": "2026-10-16T18:40:45.773194+00:00"
+      },
+      "exit_code": 0,
+      "name": "02-typecheck",
+      "normalized_log": {
+        "bytes": 161,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/02-typecheck.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "output_tail": "\n> electric-forest@0.0.0 typecheck /Users/blamy/Documents/Codex/electric-forest\n> tsc -p tsconfig.check.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit\n",
+      "process_id": 1841,
+      "raw_log": {
+        "bytes": 161,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/02-typecheck.raw.log",
+        "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+      },
+      "started_at": {
+        "local": "2026-10-16T14:40:37.625036-04:00",
+        "utc": "2026-10-16T18:40:37.625036+00:00"
+      },
+      "status": "passed"
+    },
+    {
+      "after": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:51:04.148748-04:00",
+          "utc": "2026-10-16T18:51:04.148748+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "before": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:40:45.886065-04:00",
+          "utc": "2026-10-16T18:40:45.886065+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "command": "pnpm test",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 618.162,
+      "ended_at": {
+        "local": "2026-10-16T14:51:04.148286-04:00",
+        "utc": "2026-10-16T18:51:04.148286+00:00"
+      },
+      "exit_code": 0,
+      "name": "03-test",
+      "normalized_log": {
+        "bytes": 107139,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/03-test.log",
+        "sha256": "f2387bb95cc633e24157d07b0f27c71a12f72fc95a9a81bbe3927fbef05a4131"
+      },
+      "output_tail": "dist/assets/readme-CYAAx66Y.js                                  180.69 kB \u2502 gzip:    49.83 kB \u2502 map:     0.19 kB\ndist/assets/typescript-BPQ3VLAy.js                              181.55 kB \u2502 gzip:    16.52 kB \u2502 map:     0.31 kB\ndist/assets/angular-ts-BrjP3tb8.js                              185.13 kB \u2502 gzip:    17.52 kB \u2502 map:     0.94 kB\ndist/assets/vue-vine-BoDAl6tE.js                                190.67 kB \u2502 gzip:    18.54 kB \u2502 map:     0.42 kB\ndist/assets/readme-Df3b-W_W.js                                  197.57 kB \u2502 gzip:    48.43 kB \u2502 map:    12.49 kB\ndist/assets/SiteShell-Cd4kpkcx.js                               213.77 kB \u2502 gzip:    62.81 kB \u2502 map:    18.35 kB\ndist/assets/ganttDiagram-EL5Y4UJY-D9mSziy1.js                   216.51 kB \u2502 gzip:    62.75 kB \u2502 map:   110.06 kB\ndist/assets/cose-bilkent-JH36ORCC-DkZDga2U.js                   226.88 kB \u2502 gzip:    66.49 kB \u2502 map:   108.84 kB\ndist/assets/wolfram-lXgVvXCa.js                                 262.85 kB \u2502 gzip:    77.51 kB \u2502 map:     0.30 kB\ndist/assets/sequenceDiagram-WJ2MYXX4-J6KANOpY.js                302.99 kB \u2502 gzip:    75.68 kB \u2502 map:   139.47 kB\ndist/assets/swimlanes-42K2YHIH-tibBN-EX.js                      429.01 kB \u2502 gzip:   140.73 kB \u2502 map:   234.86 kB\ndist/assets/architectureDiagram-5GKGNRK7-C4_MTqRq.js            437.35 kB \u2502 gzip:   128.54 kB \u2502 map:   214.10 kB\ndist/assets/3GWKGGQS-Cvl7Vxrw.js                                481.17 kB \u2502 gzip:   138.01 kB \u2502 map:   212.22 kB\ndist/assets/NativeReplay-siaD5eJn.js                            546.94 kB \u2502 gzip:   170.67 kB \u2502 map:   264.21 kB\ndist/assets/wasm-CG6Dc4jp.js                                    623.01 kB \u2502 gzip:   230.80 kB \u2502 map:     0.46 kB\ndist/assets/katex-HP8lGamR.js                                   706.01 kB \u2502 gzip:   174.82 kB \u2502 map:   333.47 kB\ndist/assets/math-QFVGd67x.js                                    706.21 kB \u2502 gzip:   175.58 kB \u2502 map:   333.84 kB\ndist/assets/cpp-BMRokrvK.js                                     786.28 kB \u2502 gzip:    53.84 kB \u2502 map:     0.55 kB\ndist/assets/emacs-lisp-C_m_b--Z.js                              790.48 kB \u2502 gzip:   199.29 kB \u2502 map:     0.31 kB\ndist/assets/pull-request-CTThquMQ.js                          1,347.35 kB \u2502 gzip:   386.08 kB \u2502 map:   613.27 kB\ndist/assets/cytoscape.esm-DzSz-X2X.js                         1,406.04 kB \u2502 gzip:   435.26 kB \u2502 map:   722.20 kB\ndist/assets/cynefin-OW5HDTMX-ZpYOn31l.js                      1,672.88 kB \u2502 gzip:   437.71 kB \u2502 map:   738.68 kB\ndist/assets/mermaid.core-DesQNlRF.js                          1,930.69 kB \u2502 gzip:   472.62 kB \u2502 map:   935.97 kB\ndist/assets/index-B59FC-2i.js                                 5,717.22 kB \u2502 gzip: 1,772.10 kB \u2502 map: 2,821.38 kB\n\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n\u2713 built in 15.98s",
+      "process_id": 1896,
+      "raw_log": {
+        "bytes": 107139,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/03-test.raw.log",
+        "sha256": "f2387bb95cc633e24157d07b0f27c71a12f72fc95a9a81bbe3927fbef05a4131"
+      },
+      "started_at": {
+        "local": "2026-10-16T14:40:45.980658-04:00",
+        "utc": "2026-10-16T18:40:45.980658+00:00"
+      },
+      "status": "passed",
+      "test_summary_lines": [
+        "Test Files  123 passed (123)",
+        "Tests  924 passed (924)",
+        "Start at  14:40:48",
+        "Duration  598.01s (transform 2.49s, setup 0ms, import 16.61s, tests 568.61s, environment 6ms)"
+      ],
+      "test_totals": {
+        "files_passed": 123,
+        "files_total": 123,
+        "tests_passed": 924,
+        "tests_total": 924
+      }
+    },
+    {
+      "after": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:51:22.217325-04:00",
+          "utc": "2026-10-16T18:51:22.217325+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "before": {
+        "branch": "codex/railway-hosting",
+        "head_oid": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "time": {
+          "local": "2026-10-16T14:51:04.303119-04:00",
+          "utc": "2026-10-16T18:51:04.303119+00:00"
+        },
+        "tracked_status_porcelain_v1": "",
+        "tree_oid": "36916979dfacd4ec576b6a3c5eff6afbf0070215"
+      },
+      "command": "pnpm build",
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "duration_seconds": 17.827,
+      "ended_at": {
+        "local": "2026-10-16T14:51:22.216841-04:00",
+        "utc": "2026-10-16T18:51:22.216841+00:00"
+      },
+      "exit_code": 0,
+      "name": "04-build",
+      "normalized_log": {
+        "bytes": 105647,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/04-build.log",
+        "sha256": "9bf1629a0cfdc595d418988d1d28416c07f7fa84eb041477f22afda50b5976ad"
+      },
+      "output_tail": "dist/assets/readme-CYAAx66Y.js                                  180.69 kB \u2502 gzip:    49.83 kB \u2502 map:     0.19 kB\ndist/assets/typescript-BPQ3VLAy.js                              181.55 kB \u2502 gzip:    16.52 kB \u2502 map:     0.31 kB\ndist/assets/angular-ts-BrjP3tb8.js                              185.13 kB \u2502 gzip:    17.52 kB \u2502 map:     0.94 kB\ndist/assets/vue-vine-BoDAl6tE.js                                190.67 kB \u2502 gzip:    18.54 kB \u2502 map:     0.42 kB\ndist/assets/readme-Df3b-W_W.js                                  197.57 kB \u2502 gzip:    48.43 kB \u2502 map:    12.49 kB\ndist/assets/SiteShell-Cd4kpkcx.js                               213.77 kB \u2502 gzip:    62.81 kB \u2502 map:    18.35 kB\ndist/assets/ganttDiagram-EL5Y4UJY-D9mSziy1.js                   216.51 kB \u2502 gzip:    62.75 kB \u2502 map:   110.06 kB\ndist/assets/cose-bilkent-JH36ORCC-DkZDga2U.js                   226.88 kB \u2502 gzip:    66.49 kB \u2502 map:   108.84 kB\ndist/assets/wolfram-lXgVvXCa.js                                 262.85 kB \u2502 gzip:    77.51 kB \u2502 map:     0.30 kB\ndist/assets/sequenceDiagram-WJ2MYXX4-J6KANOpY.js                302.99 kB \u2502 gzip:    75.68 kB \u2502 map:   139.47 kB\ndist/assets/swimlanes-42K2YHIH-tibBN-EX.js                      429.01 kB \u2502 gzip:   140.73 kB \u2502 map:   234.86 kB\ndist/assets/architectureDiagram-5GKGNRK7-C4_MTqRq.js            437.35 kB \u2502 gzip:   128.54 kB \u2502 map:   214.10 kB\ndist/assets/3GWKGGQS-Cvl7Vxrw.js                                481.17 kB \u2502 gzip:   138.01 kB \u2502 map:   212.22 kB\ndist/assets/NativeReplay-siaD5eJn.js                            546.94 kB \u2502 gzip:   170.67 kB \u2502 map:   264.21 kB\ndist/assets/wasm-CG6Dc4jp.js                                    623.01 kB \u2502 gzip:   230.80 kB \u2502 map:     0.46 kB\ndist/assets/katex-HP8lGamR.js                                   706.01 kB \u2502 gzip:   174.82 kB \u2502 map:   333.47 kB\ndist/assets/math-QFVGd67x.js                                    706.21 kB \u2502 gzip:   175.58 kB \u2502 map:   333.84 kB\ndist/assets/cpp-BMRokrvK.js                                     786.28 kB \u2502 gzip:    53.84 kB \u2502 map:     0.55 kB\ndist/assets/emacs-lisp-C_m_b--Z.js                              790.48 kB \u2502 gzip:   199.29 kB \u2502 map:     0.31 kB\ndist/assets/pull-request-CTThquMQ.js                          1,347.35 kB \u2502 gzip:   386.08 kB \u2502 map:   613.27 kB\ndist/assets/cytoscape.esm-DzSz-X2X.js                         1,406.04 kB \u2502 gzip:   435.26 kB \u2502 map:   722.20 kB\ndist/assets/cynefin-OW5HDTMX-ZpYOn31l.js                      1,672.88 kB \u2502 gzip:   437.71 kB \u2502 map:   738.68 kB\ndist/assets/mermaid.core-DesQNlRF.js                          1,930.69 kB \u2502 gzip:   472.62 kB \u2502 map:   935.97 kB\ndist/assets/index-B59FC-2i.js                                 5,717.22 kB \u2502 gzip: 1,772.10 kB \u2502 map: 2,821.38 kB\n\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n\u2713 built in 16.14s",
+      "process_id": 6586,
+      "raw_log": {
+        "bytes": 105647,
+        "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/run-2-gate-audit/04-build.raw.log",
+        "sha256": "9bf1629a0cfdc595d418988d1d28416c07f7fa84eb041477f22afda50b5976ad"
+      },
+      "started_at": {
+        "local": "2026-10-16T14:51:04.388933-04:00",
+        "utc": "2026-10-16T18:51:04.388933+00:00"
+      },
+      "status": "passed"
+    }
+  ],
+  "normalization": "UTF-8 replacement decoding; strip ANSI OSC/CSI; CRLF/CR to LF; raw bytes retained.",
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "role": "fresh-read-only-gate-auditor",
+  "schema": "eforest-fresh-gate-audit-v2",
+  "started_at": {
+    "local": "2026-10-16T14:40:24.485117-04:00",
+    "utc": "2026-10-16T18:40:24.485117+00:00"
+  },
+  "status": "passed",
+  "task": "E12-T00",
+  "verification_run": 2
+}

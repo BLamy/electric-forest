@@ -1,0 +1,175 @@
+{
+  "hosted": [
+    {
+      "stage": "hosted-before",
+      "timelineScenes": 10,
+      "posts": [
+        {
+          "role": "ada",
+          "ms": 8536,
+          "method": "POST",
+          "path": "/api/dispatch",
+          "status": 202,
+          "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbbr08w_zcfdb4\",\"body\":\"Railway preview live acceptance 1792176726205\"},\"ts\":1792176726272}}"
+        },
+        {
+          "role": "ada",
+          "ms": 9930,
+          "method": "POST",
+          "path": "/api/dispatch",
+          "status": 202,
+          "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbbr1f5_c2wqhy\",\"body\":\"Railway preview live acceptance 1792176726205 while witness disconnected\"},\"ts\":1792176727793}}"
+        }
+      ],
+      "isolatedWitnessNavigationCount": 3,
+      "noWitnessReloadDuringLiveMutation": true,
+      "assetResponseCount": 87,
+      "allAssetStatuses200": true,
+      "proofPollingRequests": 0,
+      "consolePageRequestErrors": 0,
+      "terminalLongPolls": 11,
+      "unauthenticated401Count": 0
+    },
+    {
+      "stage": "hosted-after",
+      "timelineScenes": 10,
+      "posts": [
+        {
+          "role": "ada",
+          "ms": 6923,
+          "method": "POST",
+          "path": "/api/dispatch",
+          "status": 202,
+          "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbbt50m_rj00ro\",\"body\":\"Railway preview live acceptance 1792176825685\"},\"ts\":1792176825766}}"
+        },
+        {
+          "role": "ada",
+          "ms": 7790,
+          "method": "POST",
+          "path": "/api/dispatch",
+          "status": 202,
+          "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbbt5or_57jnom\",\"body\":\"Railway preview live acceptance 1792176825685 while witness disconnected\"},\"ts\":1792176826635}}"
+        }
+      ],
+      "isolatedWitnessNavigationCount": 3,
+      "noWitnessReloadDuringLiveMutation": true,
+      "assetResponseCount": 81,
+      "allAssetStatuses200": true,
+      "proofPollingRequests": 0,
+      "consolePageRequestErrors": 0,
+      "terminalLongPolls": 11,
+      "unauthenticated401Count": 0
+    }
+  ],
+  "supplementEndpoints": [
+    {
+      "path": "/api/build",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e"
+      }
+    },
+    {
+      "path": "/healthz",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "path": "/readyz",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "path": "/settings/cli-tokens",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/cli-tokens",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/device-grants",
+      "status": 403,
+      "body": {
+        "error": "preview-external-integrations-disabled"
+      }
+    },
+    {
+      "path": "/api/dispatch",
+      "action": "agent.register",
+      "status": 403,
+      "body": {
+        "error": "preview-agent-execution-disabled"
+      }
+    },
+    {
+      "path": "/auth/callback?state=fixture&code=fixture",
+      "status": 404,
+      "body": {
+        "error": "preview-oidc-disabled"
+      }
+    },
+    {
+      "path": "/streams/__identity__",
+      "status": 404,
+      "body": {
+        "error": "not-found"
+      }
+    },
+    {
+      "path": "/admin",
+      "status": 404,
+      "body": {
+        "error": "not-found"
+      }
+    }
+  ],
+  "memberDialogHumanOnly": true,
+  "preexistingFocusObservationExcluded": {
+    "restoredToTrigger": false,
+    "activeTag": "BODY"
+  },
+  "scan": {
+    "origin": "https://electric-forest-preview-production.up.railway.app",
+    "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+    "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+    "checkedAt": "2026-10-16T18:54:33.170Z",
+    "webFiles": 555,
+    "downloadedBytes": 33937112,
+    "canarySha256": "1e6dd643dae6e2098ac89ec83f6049d661c29a278a82907c17f04bcea35a8a1a",
+    "findings": []
+  },
+  "imageDescriptorMatches": true,
+  "restartRequestToNewProcessReadyMs": 10975.958999999999,
+  "notes": "No hosted browser was driven. Seven MP4 contact sheets and notice/chat/human-only screenshot pixels were inspected, with source/timeline/network cross checks and independent replay."
+}

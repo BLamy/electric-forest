@@ -8,7 +8,7 @@ import { computeSinceForkDiff, prDiffDigest } from "@eforest/pr";
 import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 import { digestBytes, sortedTree, withContentMap, type FsTree } from "@eforest/streamfs";
 import type { ApplicationRecord } from "@eforest/web-hooks";
-import { ConflictPanel } from "./PrDetail.js";
+import { ConflictPanel } from "../blocks/github/pull-request.js";
 import { branchNameFromStream, openedEvent } from "./model.js";
 import { threadPrTimeline } from "./timeline.js";
 import { computePrDetailDiff } from "./usePrs.js";

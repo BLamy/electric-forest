@@ -1,0 +1,231 @@
+{
+  "freshInstallReceipt": "scratch-environment.json",
+  "packageClosure": [
+    {
+      "name": "@eforest/web",
+      "path": "apps/web",
+      "build": "vite build"
+    },
+    {
+      "name": "@eforest/browser-verify",
+      "path": "packages/browser-verify",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/server",
+      "path": "packages/server",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/client",
+      "path": "packages/client",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/protocol",
+      "path": "packages/protocol",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/identity",
+      "path": "packages/identity",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/platform",
+      "path": "packages/platform",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/evidence",
+      "path": "packages/evidence",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/issues",
+      "path": "packages/issues",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/meadow",
+      "path": "packages/meadow",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/pr",
+      "path": "packages/pr",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/streamfs",
+      "path": "packages/streamfs",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/reducers",
+      "path": "packages/reducers",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/web-hooks",
+      "path": "packages/web-hooks",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/cli",
+      "path": "packages/cli",
+      "build": "tsc -b tsconfig.build.json"
+    },
+    {
+      "name": "@eforest/workspace",
+      "path": "packages/workspace",
+      "build": "tsc -b tsconfig.build.json"
+    }
+  ],
+  "packagesBuiltFromNoInitialDist": 16,
+  "workspaceLinksStayWithinClone": [
+    {
+      "path": "packages/platform/node_modules/@eforest/server",
+      "target": "packages/server"
+    },
+    {
+      "path": "packages/platform/node_modules/@eforest/client",
+      "target": "packages/client"
+    },
+    {
+      "path": "apps/web/node_modules/@eforest/web-hooks",
+      "target": "packages/web-hooks"
+    }
+  ],
+  "toolPaths": {
+    "node": "/Users/blamy/.nvm/versions/node/v24.20.0/bin/node",
+    "pnpm": "/Users/blamy/.nvm/versions/node/v24.20.0/bin/pnpm",
+    "ffmpeg": "/opt/homebrew/bin/ffmpeg",
+    "ffprobe": "/opt/homebrew/bin/ffprobe",
+    "make": "/usr/bin/make"
+  },
+  "browserExecutable": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "credentialEnvironmentNamesPresent": [
+    "CODEX_APP_TOOLS_PIPE_PATH",
+    "CODEX_CI",
+    "CODEX_CLI_PATH",
+    "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+    "CODEX_MCP_NODE_PATH",
+    "CODEX_PERMISSION_PROFILE",
+    "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE",
+    "CODEX_SESSION_ID",
+    "CODEX_SHELL",
+    "CODEX_TASK_WORKSPACE_VERIFYING_IDENTITY",
+    "CODEX_TECTONIC_PATH",
+    "CODEX_THREAD_ID",
+    "CODEX_VERSION"
+  ],
+  "credentialValuesNeverRecorded": true,
+  "dataBoundary": "Every local test runtime receives an explicit synthetic environment object and new task-work directory; no inherited auth file is read. Deployed process variable names are the nine declared fixture/public/build fields in railway/manifest.json. Real platform gateway and pinned official server/reducers are used, not network mocks.",
+  "goldenBoundary": "README is frozen committed bytes; chat digests verified via independent Python reducer and double CLI replay, plus one-byte red sensor. Runtime-generated message IDs/timestamps are input variation, never blessed expected goldens.",
+  "sourceChangesSinceAuditedCandidate": [
+    ".eforest/tasks/QUEUE.md",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/artifacts.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/01-format-lint.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/01-format-lint.raw.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/02-typecheck.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/02-typecheck.raw.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/03-test.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/03-test.raw.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/04-build.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/04-build.raw.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/audit.py",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/manifest.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/audit/manifest.sha256",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/artifact-comparison.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/canary-scan.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/cli-replay.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/hosted-after.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/hosted-before.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/hosted-supplement.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/http.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/persistence-check.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/persistence.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/receipt.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/record.py",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/final/scan.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/ada-notice.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/ada.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/agents-disabled.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/browser.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/deployment.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/file.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/grace-after-reconnect.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/grace-before-reconnect.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/grace-notice.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/live-convergence.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/network.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/relogin-preserves-writes.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/relogin.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/seeded-file.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/two-profile-accepted.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/ada-notice.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/ada.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/agents-disabled.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/browser.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/deployment.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/file.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/grace-after-reconnect.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/grace-before-reconnect.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/grace-notice.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/live-convergence.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/network.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/relogin-preserves-writes.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/relogin.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/seeded-file.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/two-profile-accepted.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/witness-reconnected.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-supplement/hosted-supplement.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-supplement/hosted-supplement.mp4",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-supplement/human-only-members.png",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-supplement/network.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-supplement/supplement.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/http/accepted-state.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/http/accepted.jsonl",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/http/artifact.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/http/http.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/candidate-a.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/candidate-b.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/post-judge-a.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/post-judge-b.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/resume-a.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/ledger/resume-b.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/precritic.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/build-and-deploy-initial.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/config-update.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/deployed-startup-http.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/deployment-metadata.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/logs-early.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/logs-export-and-startup.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/logs-late.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/logs-middle.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/logs-restart.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/manifest.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/restart-http-poll.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/restart-operation.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/service-final.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/railway/state-final.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/replay-availability.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/retained-evidence-scan.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/target-selfcheck/check.py",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/target-selfcheck/dependency-closure.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/target-selfcheck/install.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/target-selfcheck/receipt.json",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/target-selfcheck/target.log",
+    ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/readme.md"
+  ],
+  "localWebFilesScannedIncludingSourceMaps": 616,
+  "knownCanaryFindings": [],
+  "archiveEvidenceCanaryScan": {
+    "filesScanned": 91,
+    "canarySha256": "1e6dd643dae6e2098ac89ec83f6049d661c29a278a82907c17f04bcea35a8a1a",
+    "findings": []
+  },
+  "artifactInventoryDifference": "Scratch/a7 task metadata causes different browser asset hashes; full root deployed artifact inventory equality is not claimed. Hosted 1f9 source and independently replayed byte streams are the authority."
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "56fb7b0b3b9398c39c9baf8e93142fae7df74810",
+  "candidateParents": [
+    "06e18df04f9db6112a425f050587c6d61588347c"
+  ],
+  "integrationCommit": "06e18df04f9db6112a425f050587c6d61588347c",
+  "integrationParents": [
+    "d35834a0a677ba3b5c0ecc96f1e034035807afa8",
+    "bd56c79feb8ada96736e7b6d2e79eb71738ea3a3"
+  ],
+  "bothFrozenTipsAreAncestors": true,
+  "sourceEditsFrozen": true,
+  "trackedWorktreeAndIndexClean": true,
+  "remainingUntracked": "critic-work/ (untouched)",
+  "selfValidation": {
+    "formatLint": "pnpm format:check && pnpm lint (passed)",
+    "typecheck": "pnpm typecheck (passed)",
+    "focusedBuilds": [
+      "pnpm --filter @eforest/platform build",
+      "pnpm --filter @eforest/cli build"
+    ],
+    "focusedTests": {
+      "initial": "21 files,236 tests;235 passed; single own-readme parsing failure from adminmetadata",
+      "corrected": "No product/control parser changes; notes use allowed eight frontmatter keys and six H2 sections. Final folder-sync rerun66/66 passed; other20files170tests passed against unchanged implementation.",
+      "fullRootAudit": "Not run by builder; fresh auditor must run immutable candidate once in required order.",
+      "browserAndColdClone": "Not run by builder; fresh final evidence remains with root."
+    },
+    "workflowAndGuide": "pnpm exec prettier --check .github/workflows/ci.yml docs/guides/railway-hosting.md (passed)"
+  },
+  "taskState": {
+    "project": "building",
+    "task": "E12-T10",
+    "status": "in-progress",
+    "runs": 0,
+    "ceiling": 10,
+    "mainVerifiedImports": [
+      "E6-T01",
+      "E6-T02",
+      "E6-T03",
+      "E6-T04"
+    ],
+    "unfinishedDeferredFromImplemented": [
+      "E6-T05",
+      "E6-T07"
+    ],
+    "legacyImportActivationBlockedPendingExactDigestMigration": true
+  },
+  "receipts": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/candidate-files.json",
+      "bytes": 670409,
+      "sha256": "b47273af09adb0204353e5993dfb1214d8e423cde2778e92db51af5c1ff18260"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/source-changesets.json",
+      "bytes": 503407,
+      "sha256": "b40f3f6c8dd0cde8f2a663ef6644c82708ace87695dfdfb263fc667d4baa11cf"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/merge-resolution-matrix.json",
+      "bytes": 13419,
+      "sha256": "7831963c6f4a37496b4a4a48164be63ec625a03d02933016b51b42548c8a8049"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/imported-log-checks.json",
+      "bytes": 1778,
+      "sha256": "bd265f9538ecf9e89df85cd7f6938b8ded70f13f43936315e0c3d34e95921699"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/history-conservation.json",
+      "bytes": 999248,
+      "sha256": "e1fd6f15d34e1cebc4960cf037b5d6a194b6b16cf85d66e6eb32950f9883fe45"
+    }
+  ]
+}

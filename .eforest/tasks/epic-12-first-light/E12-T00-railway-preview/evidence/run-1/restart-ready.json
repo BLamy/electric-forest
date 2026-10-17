@@ -1,0 +1,13 @@
+{
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "revision": "aba2f41a5141d0c26da5be613e9766078d839d35",
+  "observations": [
+    {
+      "at": "2026-10-16T17:59:27.196Z",
+      "status": 200,
+      "mode": "preview",
+      "revision": "aba2f41a5141d0c26da5be613e9766078d839d35",
+      "ready": true
+    }
+  ]
+}

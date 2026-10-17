@@ -1,0 +1,219 @@
+{
+  "predictionFile": "predictions.json",
+  "records": [
+    {
+      "path": "hosted-after/file.jsonl",
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926",
+      "eventCount": 3,
+      "offset": "0000000000000000_0000000000000002",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/file.jsonl",
+        "--digest",
+        "--reducer",
+        "file-content"
+      ],
+      "cliDigests": [
+        "9da44d4b768a40c6702578e577a4d02036da4d06e1bfd08c48f823b62d7d05fe",
+        "9da44d4b768a40c6702578e577a4d02036da4d06e1bfd08c48f823b62d7d05fe"
+      ],
+      "independentBytesDigest": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5",
+      "fullStateCliDigestDistinctFromDOM": true
+    },
+    {
+      "path": "hosted-after/relogin-preserves-writes.jsonl",
+      "sha256": "42efd9c81759f43d818e5c4d5d6fe1b554677b744f44131396ed6fe4a91210ba",
+      "eventCount": 11,
+      "offset": "0000000000000000_0000000000000010",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/relogin-preserves-writes.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+      ],
+      "independentPythonDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "hosted-after/two-profile-accepted.jsonl",
+      "sha256": "42f98bd85674a032decf08fa858909fa5fcebc43c0fee9f5d2fc91cab8929866",
+      "eventCount": 10,
+      "offset": "0000000000000000_0000000000000009",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/two-profile-accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "3fad969f4f7a8166a8cdfa0f4a3c81f58edcdd9b9427cc9eeece1b868236a76a",
+        "3fad969f4f7a8166a8cdfa0f4a3c81f58edcdd9b9427cc9eeece1b868236a76a"
+      ],
+      "independentPythonDigest": "3fad969f4f7a8166a8cdfa0f4a3c81f58edcdd9b9427cc9eeece1b868236a76a",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "hosted-after/witness-reconnected.jsonl",
+      "sha256": "42efd9c81759f43d818e5c4d5d6fe1b554677b744f44131396ed6fe4a91210ba",
+      "eventCount": 11,
+      "offset": "0000000000000000_0000000000000010",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-after/witness-reconnected.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+        "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+      ],
+      "independentPythonDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "hosted-before/file.jsonl",
+      "sha256": "c912439f2e94360e5e2193f60f5ec7ff92a8e58d1277c6ec675c2fc2ce281926",
+      "eventCount": 3,
+      "offset": "0000000000000000_0000000000000002",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/file.jsonl",
+        "--digest",
+        "--reducer",
+        "file-content"
+      ],
+      "cliDigests": [
+        "9da44d4b768a40c6702578e577a4d02036da4d06e1bfd08c48f823b62d7d05fe",
+        "9da44d4b768a40c6702578e577a4d02036da4d06e1bfd08c48f823b62d7d05fe"
+      ],
+      "independentBytesDigest": "b8092b3115e9e787dc5b1d5b984ad16d2d638611e90402ecd4fdf0000650d5e5",
+      "fullStateCliDigestDistinctFromDOM": true
+    },
+    {
+      "path": "hosted-before/relogin-preserves-writes.jsonl",
+      "sha256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0",
+      "eventCount": 9,
+      "offset": "0000000000000000_0000000000000008",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/relogin-preserves-writes.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+        "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+      ],
+      "independentPythonDigest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "hosted-before/two-profile-accepted.jsonl",
+      "sha256": "7377e6272991563ae3e0ef7d7a54f5e1ca949b70c16a09b0986487cfa204d265",
+      "eventCount": 8,
+      "offset": "0000000000000000_0000000000000007",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/two-profile-accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12",
+        "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12"
+      ],
+      "independentPythonDigest": "16a810e5b072e99fb678193ccf7315ab06325513f62929c07a6182166c4b4e12",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "hosted-before/witness-reconnected.jsonl",
+      "sha256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0",
+      "eventCount": 9,
+      "offset": "0000000000000000_0000000000000008",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/hosted-before/witness-reconnected.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+        "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47"
+      ],
+      "independentPythonDigest": "84e4145773befab031fe00686d3d74c068f983c7d212d6c95339867ae023db47",
+      "recordedDOMMatches": true
+    },
+    {
+      "path": "http/accepted.jsonl",
+      "sha256": "401042b8bb2093f4bba5dcbb15ac6eb8f0e2879885c06d47394d7f36193300b2",
+      "eventCount": 2,
+      "offset": "0000000000000000_0000000000000001",
+      "command": [
+        "node",
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/evidence/run-2/http/accepted.jsonl",
+        "--digest",
+        "--reducer",
+        "chat-channel"
+      ],
+      "cliDigests": [
+        "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70",
+        "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70"
+      ],
+      "independentPythonDigest": "a428babe519ad97f4ea6732cf1a41c252df7c1c918c06476464da74e85b92e70"
+    }
+  ],
+  "persistence": {
+    "prefixByteIdentical": true,
+    "beforeEvents": 9,
+    "afterEvents": 11,
+    "prefixSHA256": "98fe6e0c59b78cd9ab926f3f15f1bb130df1213e5d0c257229674f58f5cf0fc0",
+    "welcomeSeeds": 1,
+    "finalDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670"
+  },
+  "oneByteSensitivity": {
+    "path": "one-byte-mutation.jsonl",
+    "byteChanges": 1,
+    "changedFrom": "W",
+    "changedTo": "w",
+    "baselineDigest": "6780c44343b29371bb7a82a012461772a665a49f977daa0fe14ba29fcdef3670",
+    "mutatedDigest": "09f46aad5e3bddfb7efe6a0748da07068a7625e5c975de2430d1a7cf9abc35a3",
+    "frozenComparison": "red: mutated != frozen original; original == frozen original",
+    "cliCommand": [
+      "node",
+      "packages/cli/dist/src/bin.js",
+      "replay",
+      "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/one-byte-mutation.jsonl",
+      "--digest",
+      "--reducer",
+      "chat-channel"
+    ]
+  }
+}

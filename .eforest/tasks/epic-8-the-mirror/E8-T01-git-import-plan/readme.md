@@ -15,11 +15,11 @@ capstone: false
 pure, canonical `ImportPlanV1` before it performs any network mutation. The source
 selector is an explicit ref or object id (`--ref`, default `HEAD`); the destination is
 one new electric-forest `main` branch. The plan contains the source commit id, every
-accepted path's bytes/mode/content SHA-256, the exact ordered stream-fs actions needed
-to reproduce the tree, the expected E4 canonical tree digest, and a SHA-256 over the
+accepted path's bytes/mode/content SHA-256, the ordered complete-object uploads/seals
+and one baseline changeset publication needed to reproduce the tree, the expected E4 canonical tree digest, and a SHA-256 over the
 canonical plan itself. `.git/` is never content, while `.eforest/` is ordinary source
 and must be present. Running the planner twice against unchanged input emits
-byte-identical JSON and plan digest; replaying its actions through the E1 reducer
+byte-identical JSON and plan digest; replaying its publications through the E14-compatible StreamFS reducer
 produces a tree digest byte-equal to the selected Git tree projected through E4-T01's
 frozen path/mode rules.
 
@@ -34,8 +34,8 @@ in the manifest, not synthetic stream history. After E8-T03 cutover, new history
 only as stream events.
 
 The planner reuses E4-T01's canonical enumeration, path normalization, executable-mode
-mapping, and tree-digest implementation and E1's stream-fs action schemas; it must not
-fork either contract. Git access is isolated in `packages/import-git/src/git-source.ts`.
+mapping and tree-digest rules, plus E14's content/version/changeset schemas; it must not
+fork those contracts or emit new legacy patch history. Git access is isolated in `packages/import-git/src/git-source.ts`.
 All other modules consume a `SourceTree` interface so fixtures and future import sources
 do not need Git. Unsupported Git entries produce one typed planning failure before any
 writer is called. This task depends on E7 because the imported repository includes the
@@ -50,7 +50,8 @@ complete, already-verified product and its `.eforest` loop.
   to an immutable object id and read the selected tree's blobs and modes without using
   the mutable working tree.
 - `packages/import-git/src/plan.ts` — `planGitImport(source, destination)` producing the
-  ordered stream-fs genesis/create/write actions, expected tree digest, per-entry hashes,
+  ordered namespace/genesis setup, complete object uploads/seals and baseline changeset
+  publication, expected tree digest, per-entry hashes,
   source object id, and canonical plan digest.
 - `packages/import-git/src/verify-plan.ts` — replay the plan in memory and assert action
   schema validity, content-hash parity, and final tree-digest parity before returning it.
@@ -121,5 +122,24 @@ complete, already-verified product and its `.eforest` loop.
 6. Replay the golden plan with the registered E1 reducer in two fresh processes and
    independently materialize it through stream-fs. Digest equality without byte/mode
    parity is insufficient; either disagreement is a finding anchored to the plan entry.
+
+## Roadmap alignment — 2026-10-16
+
+Public deployment is delivered earlier by E12; this epic concerns source and build-loop
+self-hosting. Import plans and new source writes publish complete immutable content objects
+linked to baseline or successor changesets. Retain source/changeset/content manifests and
+endpoint hashes as durable evidence; compute comparisons in memory and retain textual patches
+only in redacted agent tool logs. Legacy verified evidence remains append-only and the
+one-time Git retirement contract is unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

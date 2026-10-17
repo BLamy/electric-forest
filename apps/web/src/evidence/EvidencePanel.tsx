@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Icon, List, ListRow, ListSection } from "@brett_lamy/ui";
+import { Badge, Icon, List, ListRow, ListSection, cn } from "@brett_lamy/ui";
 import {
   CONTENT_EVIDENCE_KINDS,
   contentBytes,
@@ -19,10 +19,8 @@ import {
   ShieldCheck,
   Upload,
 } from "lucide-react";
-import { Badge } from "../components/ui/badge.js";
-import { Button } from "../components/ui/button.js";
-import { Card, CardContent, CardHeader } from "../components/ui/card.js";
 import { Markdown } from "../components/markdown/Markdown.js";
+import { ghButton, ghField, githubMarkdown } from "../blocks/github/parts.js";
 import {
   browserSha256,
   byteExactBlob,
@@ -153,10 +151,13 @@ function ContentAttachmentCard(props: {
   );
 
   return (
-    <Card
+    <div
       id={attachmentElementId(props.attachment.attachmentId)}
       tabIndex={-1}
-      className={`attachment-row evidence-attachment-card${hashMismatch ? " evidence-hash-mismatch" : ""}`}
+      className={cn(
+        "overflow-hidden rounded-md border bg-background",
+        hashMismatch ? "border-destructive" : "border-border",
+      )}
       data-testid="attachment-row"
       data-attachment-id={props.attachment.attachmentId}
       data-content-stream={binding.streamId}
@@ -165,81 +166,85 @@ function ContentAttachmentCard(props: {
       data-content-reducer={binding.reducerId}
       data-ef-hash-verified={hashVerified ? "true" : "false"}
     >
-      <CardHeader className="evidence-card-heading">
+      <div className="flex items-center gap-2 border-b border-border bg-muted px-4 py-2 text-[14px]">
         <FileCheck2 size={19} aria-hidden="true" />
-        <div>
-          <strong>{props.attachment.name}</strong>
-          <span>
+        <div className="grid min-w-0 flex-1">
+          <strong className="truncate">{props.attachment.name}</strong>
+          <span className="text-[12px] text-muted-foreground">
             {props.attachment.kind} · {formatEvidenceSize(props.attachment.size)}
           </span>
         </div>
-        <Badge>{state.sealed ? "sealed" : "loading"}</Badge>
-      </CardHeader>
-      <CardContent>
-        <dl className="evidence-file-facts">
-          <dt>Media type</dt>
-          <dd>{props.attachment.mediaType}</dd>
-          <dt>Recorded SHA-256</dt>
-          <dd>
-            <code className="attachment-sha256" data-testid="attachment-sha256">
+        <Badge variant="outline">{state.sealed ? "sealed" : "loading"}</Badge>
+      </div>
+      <div className="grid gap-3 px-4 py-3 text-[13px]">
+        <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-[12px]">
+          <dt className="text-muted-foreground">Media type</dt>
+          <dd className="m-0">{props.attachment.mediaType}</dd>
+          <dt className="text-muted-foreground">Recorded SHA-256</dt>
+          <dd className="m-0 min-w-0 break-all">
+            <code className="font-mono" data-testid="attachment-sha256">
               {props.attachment.sha256}
             </code>
           </dd>
-          <dt>Web Crypto SHA-256</dt>
-          <dd>
+          <dt className="text-muted-foreground">Web Crypto SHA-256</dt>
+          <dd className="m-0 min-w-0 break-all">
             <code>{webHash ?? "Computing…"}</code>
           </dd>
         </dl>
 
         {hashVerified ? (
-          <p className="evidence-integrity evidence-integrity-ok" role="status">
+          <p className="m-0 flex items-center gap-1.5 text-success" role="status">
             <ShieldCheck size={17} aria-hidden="true" /> Hash verified from replayed bytes
           </p>
         ) : hashMismatch ? (
-          <p className="evidence-integrity evidence-integrity-bad" role="alert">
+          <p className="m-0 flex items-center gap-1.5 text-destructive" role="alert">
             <FileWarning size={17} aria-hidden="true" /> SHA-256 mismatch — do not trust this
             attachment
           </p>
         ) : hashError !== undefined ? (
-          <p className="evidence-integrity evidence-integrity-bad" role="alert">
+          <p className="m-0 flex items-center gap-1.5 text-destructive" role="alert">
             <FileWarning size={17} aria-hidden="true" /> Hash verification unavailable: {hashError}
           </p>
         ) : binding.projection.status.startsWith("error:") ? (
-          <p className="evidence-integrity evidence-integrity-bad" role="alert">
+          <p className="m-0 flex items-center gap-1.5 text-destructive" role="alert">
             Content projection refused: {binding.projection.status.slice("error:".length)}
           </p>
         ) : state.sealed ? (
-          <p className="evidence-integrity" role="status">
+          <p className="m-0 text-muted-foreground" role="status">
             Recomputing SHA-256 with Web Crypto…
           </p>
         ) : (
-          <p className="evidence-integrity" role="status">
+          <p className="m-0 text-muted-foreground" role="status">
             Waiting for validly sealed content…
           </p>
         )}
 
         {preview === undefined ? null : (
-          <div className="evidence-preview">
-            <div>
+          <div className="grid gap-2 rounded-md border border-border p-3">
+            <div className="flex items-center gap-2 text-[12px]">
               <strong>
                 {isMarkdownAttachment(props.attachment) ? "Markdown preview" : "Text preview"}
               </strong>
               {preview.truncated ? <span>First 64 KB</span> : <span>Complete file</span>}
             </div>
             {isMarkdownAttachment(props.attachment) ? (
-              <Markdown source={preview.text} data-testid="evidence-markdown-preview" />
+              <Markdown
+                source={preview.text}
+                data-testid="evidence-markdown-preview"
+                className={githubMarkdown}
+              />
             ) : (
-              <pre>{preview.text}</pre>
+              <pre className="m-0 max-h-72 overflow-auto font-mono text-[12px]">{preview.text}</pre>
             )}
           </div>
         )}
 
-        <div className="evidence-card-actions">
+        <div className="flex items-center gap-2">
           {downloadUrl === undefined ? (
-            <span className="evidence-download-disabled">Download available after sealing</span>
+            <span className="text-muted-foreground">Download available after sealing</span>
           ) : (
             <a
-              className="evidence-download"
+              className={cn(ghButton(), "text-foreground")}
               href={downloadUrl}
               download={props.attachment.name}
               data-testid="attachment-download"
@@ -249,8 +254,8 @@ function ContentAttachmentCard(props: {
             </a>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -259,26 +264,26 @@ function ReferenceAttachmentCard(props: {
 }): React.JSX.Element {
   const href = safeHttpsHref(props.attachment.url);
   return (
-    <Card
+    <div
       id={attachmentElementId(props.attachment.attachmentId)}
       tabIndex={-1}
-      className="attachment-row evidence-attachment-card evidence-reference-card"
+      className="overflow-hidden rounded-md border border-border bg-background"
       data-testid="attachment-row"
       data-attachment-id={props.attachment.attachmentId}
       data-recorded-href={props.attachment.url}
     >
-      <CardHeader className="evidence-card-heading">
+      <div className="flex items-center gap-2 border-b border-border bg-muted px-4 py-2 text-[14px]">
         <Link2 size={19} aria-hidden="true" />
-        <div>
-          <strong>{props.attachment.title ?? "Replay recording"}</strong>
-          <span>{props.attachment.kind}</span>
+        <div className="grid min-w-0 flex-1">
+          <strong className="truncate">{props.attachment.title ?? "Replay recording"}</strong>
+          <span className="text-[12px] text-muted-foreground">{props.attachment.kind}</span>
         </div>
-        <Badge>reference</Badge>
-      </CardHeader>
-      <CardContent>
+        <Badge variant="outline">reference</Badge>
+      </div>
+      <div className="grid gap-3 px-4 py-3 text-[13px]">
         {href === undefined ? (
           <p
-            className="attachment-link evidence-integrity evidence-integrity-bad"
+            className="m-0 flex items-center gap-1.5 text-destructive"
             role="alert"
             data-testid="attachment-link"
           >
@@ -286,7 +291,7 @@ function ReferenceAttachmentCard(props: {
           </p>
         ) : (
           <a
-            className="attachment-link evidence-reference-link"
+            className="flex min-w-0 items-center gap-1.5 break-all text-link"
             href={href}
             target="_blank"
             rel="noreferrer"
@@ -296,8 +301,8 @@ function ReferenceAttachmentCard(props: {
             <span>{props.attachment.url}</span>
           </a>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -320,7 +325,7 @@ function UploadEvidenceForm(props: { readonly binding: EvidenceBinding }): React
   return (
     <form
       ref={formRef}
-      className="evidence-form"
+      className="grid gap-2 rounded-md border border-border p-3 text-[13px]"
       aria-label="Upload evidence"
       data-testid="attachment-upload-form"
       onSubmit={(event) => {
@@ -360,16 +365,19 @@ function UploadEvidenceForm(props: { readonly binding: EvidenceBinding }): React
           .finally(() => setBusy(false));
       }}
     >
-      <div className="evidence-form-title">
+      <div className="flex items-center gap-2">
         <Upload size={18} aria-hidden="true" />
-        <div>
+        <div className="grid">
           <strong>Upload stream evidence</strong>
-          <span>Chunks are appended and sealed before the attachment event.</span>
+          <span className="text-[12px] text-muted-foreground">
+            Chunks are appended and sealed before the attachment event.
+          </span>
         </div>
       </div>
-      <label>
+      <label className="grid gap-1 font-semibold">
         Kind
         <select
+          className={ghField}
           name="evidence-kind"
           defaultValue={CONTENT_EVIDENCE_KINDS[0]}
           data-testid="attachment-kind"
@@ -381,20 +389,31 @@ function UploadEvidenceForm(props: { readonly binding: EvidenceBinding }): React
           ))}
         </select>
       </label>
-      <label className="evidence-file-input">
+      <label className="grid gap-1 font-semibold">
         File
-        <input name="evidence-file" type="file" required data-testid="attachment-file" />
+        <input
+          name="evidence-file"
+          type="file"
+          required
+          data-testid="attachment-file"
+          className="text-[12px] font-normal"
+        />
       </label>
-      <Button type="submit" disabled={busy} data-testid="attachment-upload-submit">
+      <button
+        type="submit"
+        disabled={busy}
+        data-testid="attachment-upload-submit"
+        className={ghButton()}
+      >
         {busy ? "Uploading…" : "Upload evidence"}
-      </Button>
+      </button>
       {error === undefined ? null : (
-        <p className="evidence-form-message evidence-form-error" role="alert">
+        <p className="m-0 text-destructive" role="alert">
           {error}
         </p>
       )}
       {message === undefined ? null : (
-        <p className="evidence-form-message" role="status">
+        <p className="m-0 text-muted-foreground" role="status">
           {message}
         </p>
       )}
@@ -410,7 +429,7 @@ function ReplayReferenceForm(props: { readonly binding: EvidenceBinding }): Reac
   return (
     <form
       ref={formRef}
-      className="evidence-form"
+      className="grid gap-2 rounded-md border border-border p-3 text-[13px]"
       aria-label="Attach Replay recording"
       data-testid="attachment-replay-form"
       onSubmit={(event) => {
@@ -445,16 +464,19 @@ function ReplayReferenceForm(props: { readonly binding: EvidenceBinding }): Reac
         );
       }}
     >
-      <div className="evidence-form-title">
+      <div className="flex items-center gap-2">
         <Link2 size={18} aria-hidden="true" />
-        <div>
+        <div className="grid">
           <strong>Attach Replay recording</strong>
-          <span>Only canonical HTTPS Replay links are accepted.</span>
+          <span className="text-[12px] text-muted-foreground">
+            Only canonical HTTPS Replay links are accepted.
+          </span>
         </div>
       </div>
-      <label className="evidence-wide-field">
+      <label className="grid gap-1 font-semibold">
         Replay URL
         <input
+          className={ghField}
           name="replay-url"
           type="url"
           inputMode="url"
@@ -463,24 +485,30 @@ function ReplayReferenceForm(props: { readonly binding: EvidenceBinding }): Reac
           data-testid="attachment-replay-url"
         />
       </label>
-      <label>
+      <label className="grid gap-1 font-semibold">
         Title
         <input
+          className={ghField}
           name="replay-title"
           placeholder="Optional label"
           data-testid="attachment-replay-title"
         />
       </label>
-      <Button type="submit" disabled={busy} data-testid="attachment-replay-submit">
+      <button
+        type="submit"
+        disabled={busy}
+        data-testid="attachment-replay-submit"
+        className={ghButton()}
+      >
         {busy ? "Attaching…" : "Attach Replay"}
-      </Button>
+      </button>
       {error === undefined ? null : (
-        <p className="evidence-form-message evidence-form-error" role="alert">
+        <p className="m-0 text-destructive" role="alert">
           {error}
         </p>
       )}
       {message === undefined ? null : (
-        <p className="evidence-form-message" role="status">
+        <p className="m-0 text-muted-foreground" role="status">
           {message}
         </p>
       )}
@@ -492,8 +520,8 @@ function MobileAttachmentIndex(props: {
   readonly attachments: readonly Attachment[];
 }): React.JSX.Element {
   return (
-    <div className="evidence-mobile-index">
-      <List inset>
+    <div>
+      <List className="overflow-hidden rounded-xl border border-border">
         <ListSection title="Attachment index">
           {props.attachments.map((attachment) => (
             <ListRow
@@ -522,7 +550,7 @@ export function EvidencePanel(props: EvidencePanelProps): React.JSX.Element {
   const attachments = binding.projection.state.attachments;
   return (
     <section
-      className="evidence-region selectable-content"
+      className="overflow-hidden rounded-md border border-border bg-background"
       aria-labelledby={`evidence-heading-${props.entityType}-${props.entityId}`}
       data-testid="evidence-region"
       data-ef-stream={binding.streamId}
@@ -531,32 +559,33 @@ export function EvidencePanel(props: EvidencePanelProps): React.JSX.Element {
       data-ef-reducer={binding.reducerId}
       data-stream-status={binding.projection.status}
     >
-      <div className="evidence-heading">
-        <div>
-          <p className="eyebrow">Durable verification artifacts</p>
-          <h2 id={`evidence-heading-${props.entityType}-${props.entityId}`}>
-            <Paperclip size={20} aria-hidden="true" /> Evidence
-          </h2>
-        </div>
-        <Badge>{attachments.length} attached</Badge>
+      <div className="flex items-center gap-2 border-b border-border bg-muted px-4 py-2">
+        <h2
+          id={`evidence-heading-${props.entityType}-${props.entityId}`}
+          className="m-0 flex flex-1 items-center gap-2 text-[14px] font-semibold"
+        >
+          <Paperclip size={16} aria-hidden="true" /> Evidence
+          <span className="font-normal text-muted-foreground">Durable verification artifacts</span>
+        </h2>
+        <Badge variant="outline">{attachments.length} attached</Badge>
       </div>
 
       {attachments.length === 0 ? null : <MobileAttachmentIndex attachments={attachments} />}
 
-      <div className="evidence-list" aria-live="polite">
+      <div className="grid gap-3 px-4 py-3" aria-live="polite">
         {binding.projection.status === "loading" ? (
-          <p className="evidence-empty">Loading evidence attachments…</p>
+          <p className="m-0 text-muted-foreground">Loading evidence attachments…</p>
         ) : binding.projection.status.startsWith("error:") ? (
-          <p className="evidence-integrity evidence-integrity-bad" role="alert">
+          <p className="m-0 flex items-center gap-1.5 text-destructive" role="alert">
             Evidence projection refused: {binding.projection.status.slice("error:".length)}
           </p>
         ) : attachments.length === 0 ? (
-          <p className="evidence-empty">No evidence has been attached yet.</p>
+          <p className="m-0 text-muted-foreground">No evidence has been attached yet.</p>
         ) : (
           attachments.map((attachment) => (
             <div
               key={attachment.attachmentId}
-              className={attachment.detachedAtOffset === undefined ? "" : "evidence-detached"}
+              className={attachment.detachedAtOffset === undefined ? "" : "opacity-60"}
               data-detached-offset={attachment.detachedAtOffset}
             >
               <AttachmentCard org={props.org} repo={props.repo} attachment={attachment} />
@@ -565,7 +594,7 @@ export function EvidencePanel(props: EvidencePanelProps): React.JSX.Element {
         )}
       </div>
 
-      <div className="evidence-forms">
+      <div className="grid gap-3 border-t border-border px-4 py-3 md:grid-cols-2">
         <UploadEvidenceForm binding={binding} />
         <ReplayReferenceForm binding={binding} />
       </div>

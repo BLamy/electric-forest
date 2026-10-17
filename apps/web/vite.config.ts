@@ -1,40 +1,22 @@
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 import { eforestContent } from "./eforest-content.plugin.js";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 export default defineConfig({
-  // Published source packages such as Docstream ship TSX directly. Compile
-  // those dependencies with the same automatic JSX runtime as this app so a
-  // route chunk never depends on an ambient global `React` binding.
+  // Docstream and the editor ship compiled ESM from 1.5.0 on; keep the automatic JSX
+  // runtime for any dependency that still ships TSX so no chunk needs a global `React`.
   esbuild: { jsx: "automatic" },
-  plugins: [eforestContent({ root: repoRoot })],
+  // Tailwind v4 compiles `src/styles/app.css`: the owned registry blocks and every app
+  // surface are listed there with explicit `@source` roots (the entry uses source(none)).
+  plugins: [tailwindcss(), eforestContent({ root: repoRoot })],
   resolve: {
-    alias: [
-      { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
-      // Only the editor component: the package root also re-exports demo editors
-      // that pull Docstream's playground (and its @agent-wasm worker) into the
-      // bundle. Exact match so `@brett_lamy/docstream-editor/styles.css` still resolves.
-      {
-        find: /^@brett_lamy\/docstream-editor\/convert$/,
-        replacement: fileURLToPath(
-          new URL(
-            "./node_modules/@brett_lamy/docstream-editor/src/editor/convert.ts",
-            import.meta.url,
-          ),
-        ),
-      },
-      {
-        find: /^@brett_lamy\/docstream-editor$/,
-        replacement: fileURLToPath(
-          new URL(
-            "./node_modules/@brett_lamy/docstream-editor/src/editor/Editor.tsx",
-            import.meta.url,
-          ),
-        ),
-      },
-    ],
+    // No package aliases: the app and @brett_lamy/ui@2.0.0 import the same single
+    // @brett_lamy/docstream@1.5.0 / @brett_lamy/docstream-editor@1.5.0 copies through
+    // their published `exports` (`/editor`, `/convert`, `/streamdown`, `/gitbook`).
+    alias: [{ find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) }],
   },
   server: {
     // The public site renders the repository's own markdown (`docs/`, `ROADMAP.md`,
@@ -48,6 +30,10 @@ export default defineConfig({
     // an otherwise clean session into requestfailed telemetry.
     sourcemap: "inline",
     rollupOptions: {
+      // Docstream's playground imports @agent-wasm/core lazily; its worker asset does not
+      // bundle. Leave it external — the app never renders live previews, and if one is
+      // attempted Docstream reports the missing runtime instead of breaking the page.
+      external: ["@agent-wasm/core"],
       output: {
         // Keep source locations in the inline map without embedding every
         // dependency's full source text in the eagerly loaded shell asset.

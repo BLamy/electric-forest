@@ -1,0 +1,621 @@
+{
+  "message": "page.waitForFunction: Timeout 5000ms exceeded.",
+  "records": [
+    {
+      "name": "initial-frozen-value-valid",
+      "digest": "c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19",
+      "eventCount": 1
+    },
+    {
+      "name": "real-write-accepted-and-witness-visible",
+      "seed": "13d7ecbe468704ce",
+      "acceptedDigest": "3f20648b7e04ce97b3dc5bd66fa9a24af11e427f96062765e8adee847eafa634",
+      "offset": "0000000000000000_0000000000000001",
+      "dispatchStatuses": [
+        202
+      ],
+      "domDigests": [
+        "c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19",
+        "c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19"
+      ]
+    }
+  ],
+  "network": [
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/chat/preview/welcome",
+      "status": 302,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/auth/preview",
+      "status": 303,
+      "method": "POST"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/chat/preview/welcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/index-oN5lDf-1.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/route-pages-B_MX_P4f.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/usePrs-BSM1aImC.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/RVI7YCPX-DwdGw5hn.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/ChatChannelPage-Dqq4dtr2.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/3GWKGGQS-DR6t6OCV.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/orgs/preview/members",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/chat/preview/welcome",
+      "status": 302,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/auth/login?next=%2Fchat%2Fpreview%2Fwelcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/auth/preview",
+      "status": 303,
+      "method": "POST"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/chat/preview/welcome",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/index-Cde4F5DK.css",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/index-oN5lDf-1.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/route-pages-B_MX_P4f.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/usePrs-BSM1aImC.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/pull-request-BGl-9VE8.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/RVI7YCPX-DwdGw5hn.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/ChatChannelPage-Dqq4dtr2.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/3GWKGGQS-DR6t6OCV.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/orgs/preview/members",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/BricolageGrotesque-Bold-BIJrwikb-BIJrwikb.ttf",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/whoami",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/Inter-latin-BwkfbSeq-BwkfbSeq.woff2",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/pull-request-BGl-9VE8.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/typescript-BPQ3VLAy.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/tsx-COt5Ahok.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/json-Cp-IABpG.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/markdown-Cvjx9yec.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/pierre-dark-CyvmCCZW.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/assets/pierre-light-480U9XYS.js",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/dispatch",
+      "status": 202,
+      "method": "POST",
+      "body": "{\"streamId\":\"chat:preview/welcome\",\"event\":{\"type\":\"chat.message.post\",\"payload\":{\"v\":1,\"id\":\"msg_mvbc6z43_pzil2b\",\"body\":\"Critic own pointer keyboard seed 13d7ecbe468704ce\"},\"ts\":1792177471299}}"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview/welcome?projection=1&reducer=chat-channel&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/agents/preview?projection=1&reducer=agent-registry&live=1&checkpoint=-1&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 1,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "profile": 0,
+      "url": "http://127.0.0.1:55236/api/chat/preview?projection=1&reducer=chat-catalog&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=1500",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "errors": []
+}

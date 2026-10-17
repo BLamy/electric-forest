@@ -12,7 +12,6 @@ import {
   isPrLinkNoopEvent,
   type MeadowPrMergeOutcomeEvent,
   type MeadowPrOpenedEvent,
-  type PrLinkEvent,
 } from "./events.js";
 
 export const PR_MERGE_REFUSAL_REASONS = [

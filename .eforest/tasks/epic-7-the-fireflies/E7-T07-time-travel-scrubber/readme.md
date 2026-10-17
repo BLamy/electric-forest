@@ -29,7 +29,7 @@ commit. Historical URLs are reloadable and shareable subject to normal authoriza
 
 ## Deliverables
 
-- `packages/webapp/src/time-travel/TimeTravelScrubber.tsx`, projection context, request
+- `apps/web/src/time-travel/TimeTravelScrubber.tsx`, projection context, request
   cancellation, historical-mode banner, and live-return control.
 - Integration of tree/file/issues/PRs/tasks/project status/activity panels with the
   immutable historical projection and disabled mutation controls.
@@ -73,5 +73,24 @@ commit. Historical URLs are reloadable and shareable subject to normal authoriza
    The verification target must detect both mutations.
 6. Interrogate Replay at each named cursor, matching DOM tuples to committed evidence and
    checking network/console. Missing points or inconsistent values refute the recording.
+
+## Roadmap alignment — 2026-10-16
+
+This task runs after the hosted loop and E14 source transition. Accepted source changes are
+complete immutable versions linked to changesets; fine-grained edit/patch text belongs only in
+redacted agent logs. Activity and historical views reference actual changeset, version and
+source-offset identities; transient highlights are computed from full versions. No new
+branch/content/projection/evidence artifact may persist textual patch bodies. Legacy verified
+streams/evidence remain unchanged.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

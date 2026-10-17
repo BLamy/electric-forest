@@ -13,7 +13,12 @@ import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
 import { RegistryProjector } from "./registry/projector.js";
+import { AgentResponder, type AgentReplyGenerator } from "./agents/responder.js";
+import { createHarnessReplyGenerator } from "./agents/harness.js";
+import { AgentCapabilities, withAgentCapabilities } from "./agents/capabilities.js";
+import type { AgentWorkspaceOptions } from "./agents/workspace.js";
 import { createPlatformServer } from "./server.js";
+import type { PlatformWebAppOptions } from "./auth/routes.js";
 import {
   DEFAULT_PLATFORM_RATE_LIMIT,
   FixedWindowRateLimiter,
@@ -47,6 +52,8 @@ export interface PlatformProductionRuntime {
   readonly rateLimiter: FixedWindowRateLimiter;
   readonly app: PlatformWebApp;
   readonly server: Server;
+  /** Present only when agent replies are enabled (EF_AGENT_RESPONDER or the option). */
+  readonly agentResponder?: AgentResponder;
 }
 
 /**
@@ -66,6 +73,24 @@ export interface PlatformProductionRuntimeOptions {
   readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
   /** Test-only namespace view seam for focused browser oracles outside the authz capstone. */
   readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
+  /** Answer @mentions of registered agents with this generator (overrides the env switch). */
+  readonly agentReplyGenerator?: AgentReplyGenerator;
+  /** Dedicated hosted composition; local emulator/device contracts remain defaults. */
+  readonly hosted?: PlatformWebAppOptions["hosted"];
+}
+
+/**
+ * Agent replies are opt-in: `EF_AGENT_RESPONDER=harness` answers @mentions by running each
+ * agent's harness CLI (`claude -p` / `codex exec`) with the machine's own logins.
+ */
+function agentReplyGeneratorFor(
+  environment: NodeJS.ProcessEnv,
+  workspace: AgentWorkspaceOptions,
+): AgentReplyGenerator | undefined {
+  const mode = environment.EF_AGENT_RESPONDER;
+  if (mode === undefined || mode === "" || mode === "off") return undefined;
+  if (mode !== "harness") throw new Error("EF_AGENT_RESPONDER must be harness or off");
+  return createHarnessReplyGenerator(workspace);
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -107,6 +132,13 @@ function optionalAbsolutePath(value: string | undefined, name: string): string |
 export function readPlatformEnvironment(
   environment: NodeJS.ProcessEnv = process.env,
 ): PlatformEnvironment {
+  if (
+    environment.EF_DEPLOYMENT_MODE === "preview" ||
+    environment.EF_PREVIEW_AUTH !== undefined ||
+    environment.EF_PREVIEW_DATA_DIR !== undefined
+  ) {
+    throw new Error("preview configuration requires the explicit preview entrypoint");
+  }
   const webRoot = optionalAbsolutePath(environment.EF_WEB_ROOT, "EF_WEB_ROOT");
   const boardCacheDir = optionalAbsolutePath(environment.EF_BOARD_CACHE_DIR, "EF_BOARD_CACHE_DIR");
   return {
@@ -154,8 +186,17 @@ export async function createPlatformProductionRuntime(
     clientId: config.EF_OIDC_CLIENT_ID,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.oidcFetch === undefined ? {} : { fetch: options.oidcFetch }),
+    ...(options.hosted === undefined ? {} : { requireVerifiedEmail: true }),
   });
-  const transactions = new OidcTransactions(options.random);
+  const transactions = new OidcTransactions(
+    options.random,
+    options.hosted === undefined
+      ? undefined
+      : {
+          now: options.now ?? Date.now,
+          ttlMs: options.hosted.transactionTtlMs,
+        },
+  );
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
@@ -164,7 +205,6 @@ export async function createPlatformProductionRuntime(
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
   });
-  let gateway!: PlatformGateway;
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     ...(options.now === undefined ? {} : { now: options.now }),
@@ -201,14 +241,19 @@ export async function createPlatformProductionRuntime(
     ...(options.rateLimit ?? DEFAULT_PLATFORM_RATE_LIMIT),
     ...(options.now === undefined ? {} : { now: options.now }),
   });
-  gateway = new PlatformGateway({
-    verifier:
+  // Agent runs authenticate with in-memory, per-run branch capabilities (agents/).
+  const agentCapabilities = new AgentCapabilities();
+  const gateway = new PlatformGateway({
+    verifier: withAgentCapabilities(
       options.gatewayVerifier ??
-      new GrantAwareVerifier({
-        bearer,
-        identity,
-        ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
-      }),
+        new GrantAwareVerifier({
+          bearer,
+          identity,
+          ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
+          ...(options.hosted === undefined ? {} : { opaqueOnly: true }),
+        }),
+      agentCapabilities,
+    ),
     streams,
     namespaces,
     registry,
@@ -246,7 +291,7 @@ export async function createPlatformProductionRuntime(
     sessionSecret: config.EF_SESSION_SECRET,
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
     gateway,
-    deviceVerifier: bearer,
+    ...(options.hosted === undefined ? { deviceVerifier: bearer } : { hosted: options.hosted }),
     rateLimiter,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
@@ -266,6 +311,22 @@ export async function createPlatformProductionRuntime(
         }),
   });
   const server = createPlatformServer((request) => app.handle(request));
+  const generate =
+    options.agentReplyGenerator ??
+    agentReplyGeneratorFor(environment, {
+      capabilities: agentCapabilities,
+      streamUrl: config.EFOREST_SERVER_URL,
+      platformUrl: () => {
+        const address = server.address();
+        return address !== null && typeof address === "object"
+          ? `http://127.0.0.1:${String(address.port)}`
+          : undefined;
+      },
+    });
+  const agentResponder =
+    generate === undefined ? undefined : new AgentResponder({ gateway, generate });
+  agentResponder?.start();
+  server.once("close", () => agentResponder?.stop());
   return {
     oidc,
     transactions,
@@ -278,5 +339,6 @@ export async function createPlatformProductionRuntime(
     rateLimiter,
     app,
     server,
+    ...(agentResponder === undefined ? {} : { agentResponder }),
   };
 }

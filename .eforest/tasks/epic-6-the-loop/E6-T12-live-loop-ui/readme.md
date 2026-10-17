@@ -4,6 +4,8 @@ epic: 6
 title: "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
 priority: 612
 status: pending
+deferred_from: in-progress
+human_deferred_on: 2026-10-16
 depends_on: [E6-T06, E6-T11]
 estimate: L
 capstone: false
@@ -83,3 +85,49 @@ the rework starts.
    the exact replay parity check; green refutes the browser evidence apparatus.
 
 ## Verification log
+
+### 2026-09-01 — independent critic — VERDICT: needs-evidence
+
+- P1/COVERAGE projection replay parity - INSUFFICIENT. Predicted each captured DOM
+  transition would be independently reproducible from a committed server/event-log
+  replay; observed only the browser transcript/DOM/network artifacts, with
+  `e6_t12_evidence.mjs` checking the final DOM against `offsetForOrdinal(7)` and
+  digest shape, not replaying any event log (`tools/verify/e6_t12_evidence.mjs:24-72`).
+  The browser oracle itself manufactures `projectionAt()` and computes its digests in
+  the same test process (`apps/web/test/loop-session.pw.ts:90-215`), so the asserted
+  `a07da20b...`/`aaaa...`/`bbbb...` values are circular rather than independent
+  server evidence. Add a committed projection/event-log dump and an independent
+  replay comparison for every transition, or provide equivalent deterministic
+  stream-layer evidence.
+- P1/ERROR zero browser console errors - FAILED. Predicted the verify target would
+  finish with zero browser console errors; observed the candidate test explicitly
+  requires `actorConsoleErrors.length === 2` and `unauthorizedConsoleErrors.length ===
+  2`, while accepting those messages only because they mention expected 409/403/404
+  responses (`apps/web/test/loop-session.pw.ts:473-500`). This contradicts the stated
+  acceptance criterion and the transcript verifier only searches the transcript text,
+  not the captured console stream (`tools/verify/e6_t12_evidence.mjs:38-46`). Remove
+  the console errors from the browser path or capture and prove a genuinely zero-error
+  run under the literal criterion.
+- P2/COVERAGE keyboard journey - INSUFFICIENT. Predicted keyboard-only actions would
+  activate launch, timeline/finding/evidence navigation, stop, and resume; observed
+  only a 45-Tab name scan and a presence check for `loop-stop`/`loop-resume`, followed
+  by mouse clicks for launch, stop, and resume (`apps/web/test/loop-session.pw.ts:412-418`).
+  No keyboard activation, finding/evidence opening, or serious/critical accessibility
+  result is recorded. Add executable keyboard assertions and an accessibility result
+  covering the complete criterion.
+- P3/COVERAGE sensitivity attack - INSUFFICIENT. Predicted freezing the task digest
+  while statuses advance would make the Playwright parity check fail; observed the
+  sensitivity script merely replaces the literal DOM attribute name in source text
+  and checks that the marker disappears (`tools/verify/e6_t12_sensitivity.mjs:51-59`).
+  It never mutates a runtime projection or runs the browser oracle against a frozen
+  digest, so it cannot validate the required measuring-apparatus sensitivity. Add a
+  runtime negative test with a one-byte digest mutation that must fail.
+
+### 2026-10-16 — human-directed hosting reprioritization
+
+The human explicitly authorized updating the lifecycle to begin Railway hosting and
+stubbed first deployments. Administratively defer this task to pending; its existing
+implementation, claims, findings, evidence and verification-run history remain intact.
+This is not a verification verdict, a finding closure, or a reset of any run/checkpoint.
+E12-T00 executes the separate disposable preview scope first. All unearned acceptance
+criteria still require their original independent proof before this task can verify.

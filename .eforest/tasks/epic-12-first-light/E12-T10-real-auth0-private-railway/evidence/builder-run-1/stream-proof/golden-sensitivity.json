@@ -1,0 +1,13 @@
+{
+  "independentModel": "identity.py",
+  "usesProductImports": false,
+  "sourceGolden": ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-identity-golden.jsonl",
+  "sourceGoldenBytesSha256": "ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa",
+  "frozenExpectedDigest": "eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7",
+  "sourceModelSha256": "5b81c89b8e4ddcb4b32973b3a9729f45c5342397ddaed790344e0c75ee40696d",
+  "baselineExit": 0,
+  "oneByteMutationExit": 1,
+  "restoredExit": 0,
+  "oneByteChanges": 1,
+  "noProductionIdentityDataUsed": true
+}

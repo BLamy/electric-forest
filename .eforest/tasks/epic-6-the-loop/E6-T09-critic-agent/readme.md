@@ -14,14 +14,14 @@ capstone: false
 `packages/loop` provides a runnable `CriticAgent` that starts in a fresh isolated session,
 orients on the task/claim/diff/evidence, writes falsifiable predictions before probes,
 executes the task's attacks with independent inputs, audits changed-hunk evidence
-coverage, and appends exactly one `task/refuted` or `task/verified` verdict with point,
+coverage from transient endpoint comparisons, and appends exactly one `task/refuted` or `task/verified` verdict with point,
 offset, digest, or diff citations. It cannot alter implementation code or verify its own
 builder run.
 
 ## Context
 
 This task productizes the critic charter, not a second test runner. E6-T08 freezes the
-claim/diff/evidence manifest; E6-T07 guarantees the fresh process and critic capability.
+claim/changeset/version/evidence manifest; E6-T07 guarantees the fresh process and critic capability.
 The verdict schema comes from E6-T01. A verified verdict means all acceptance predictions
 survived and every changed hunk is executed, waived with a reason, or removed. One real
 finding means refuted; `needs-evidence` is represented as a refutation finding and returns
@@ -78,5 +78,25 @@ stream evidence is independently replayed, never trusted from builder output.
 5. Disable the defective behavior in the attack harness rather than the implementation.
    The sensitivity run must detect that the critic no longer refutes the known-bad
    fixture; green refutes the apparatus.
+
+## Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
 
 ## Verification log

@@ -26,7 +26,10 @@ const mutations = [
     label: "forced-full-write",
     expected: "canonical patch chooser assertion",
     sensor: /canonical-patch-chooser/,
-    command: ["pnpm", ["exec", "vitest", "run", "--maxWorkers=1", "apps/web/src/wiki/useWiki.test.ts"]],
+    command: [
+      "pnpm",
+      ["exec", "vitest", "run", "--maxWorkers=1", "apps/web/src/wiki/useWiki.test.ts"],
+    ],
     builds: [],
     edits: [
       {
@@ -55,20 +58,19 @@ const mutations = [
         before: "  const [refusal, setRefusal] = useState<string>();",
         after: [
           "  const [refusal, setRefusal] = useState<string>();",
-          "  const [optimisticAppliedText, setOptimisticAppliedText] = useState(\"\");",
+          '  const [optimisticAppliedText, setOptimisticAppliedText] = useState("");',
         ].join("\n"),
       },
       {
         file: "apps/web/src/wiki/WikiEditor.tsx",
         before: "    setRefusal(undefined);\n    try {",
-        after:
-          "    setRefusal(undefined);\n    setOptimisticAppliedText(draft);\n    try {",
+        after: "    setRefusal(undefined);\n    setOptimisticAppliedText(draft);\n    try {",
       },
       {
         file: "apps/web/src/wiki/WikiEditor.tsx",
         before: "      {missing ? (",
         after: [
-          "      <article data-testid=\"wiki-optimistic-page\">{optimisticAppliedText}</article>",
+          '      <article data-testid="wiki-optimistic-page">{optimisticAppliedText}</article>',
           "",
           "      {missing ? (",
         ].join("\n"),
@@ -79,15 +81,16 @@ const mutations = [
     label: "stripped-base",
     expected: "caller base revision assertion",
     sensor: /caller-base-revision/,
-    command: ["pnpm", ["exec", "vitest", "run", "--maxWorkers=1", "apps/web/src/wiki/useWiki.test.ts"]],
+    command: [
+      "pnpm",
+      ["exec", "vitest", "run", "--maxWorkers=1", "apps/web/src/wiki/useWiki.test.ts"],
+    ],
     builds: [],
     edits: [
       {
         file: "apps/web/src/wiki/useWiki.ts",
-        before:
-          "    encoder.encode(targetText),\n    path,\n    base,\n    now(),\n  );",
-        after:
-          "    encoder.encode(targetText),\n    path,\n    BASE_NONE,\n    now(),\n  );",
+        before: "    encoder.encode(targetText),\n    path,\n    base,\n    now(),\n  );",
+        after: "    encoder.encode(targetText),\n    path,\n    BASE_NONE,\n    now(),\n  );",
       },
     ],
   },
@@ -103,7 +106,8 @@ const mutations = [
     edits: [
       {
         file: "apps/web/src/wiki/renderMarkdown.tsx",
-        before: "export function sanitizeMarkdownForRender(markdown: string): string {\n  return markdown",
+        before:
+          "export function sanitizeMarkdownForRender(markdown: string): string {\n  return markdown",
         after:
           "export function sanitizeMarkdownForRender(markdown: string): string {\n  if (markdown.length >= 0) return markdown;\n  return markdown",
       },
@@ -117,11 +121,7 @@ const selectedMutations =
     ? mutations
     : mutations.filter((mutation) => mutation.label === selectedLabel);
 if (selectedLabel !== undefined) {
-  assert.equal(
-    selectedMutations.length,
-    1,
-    `unknown E5_T08_SENSITIVITY_CASE: ${selectedLabel}`,
-  );
+  assert.equal(selectedMutations.length, 1, `unknown E5_T08_SENSITIVITY_CASE: ${selectedLabel}`);
 }
 
 function copyDependencies(worktree) {
@@ -287,7 +287,7 @@ try {
       `## mutation=${entry.label} expected=${entry.expected}`,
       "",
       `- command: \`${markdownSafe(entry.command)}\``,
-      `- exit: \`${String(entry.exit)}\` (precisely expected: nonzero)` ,
+      `- exit: \`${String(entry.exit)}\` (precisely expected: nonzero)`,
       `- observed assertion: \`${markdownSafe(entry.observed)}\``,
       `- mutation=${entry.label} expected=${entry.expected} EXPECTED-FAIL OK`,
       "",

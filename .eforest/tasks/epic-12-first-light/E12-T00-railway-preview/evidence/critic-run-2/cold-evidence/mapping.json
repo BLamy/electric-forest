@@ -1,0 +1,78 @@
+{
+  "files": [
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/http/http.json",
+      "retained": "cold-evidence/http/http.json"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/http/accepted.jsonl",
+      "retained": "cold-evidence/http/accepted.jsonl"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/http/accepted-state.json",
+      "retained": "cold-evidence/http/accepted-state.json"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/browser.json",
+      "retained": "cold-evidence/browser/browser.json"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/network.json",
+      "retained": "cold-evidence/browser/network.json"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/file.jsonl",
+      "retained": "cold-evidence/browser/file.jsonl"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/two-profile-accepted.jsonl",
+      "retained": "cold-evidence/browser/two-profile-accepted.jsonl"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/witness-reconnected.jsonl",
+      "retained": "cold-evidence/browser/witness-reconnected.jsonl"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/relogin-preserves-writes.jsonl",
+      "retained": "cold-evidence/browser/relogin-preserves-writes.jsonl"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/ada-notice.png",
+      "retained": "cold-evidence/browser/ada-notice.png"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/ada.mp4",
+      "retained": "cold-evidence/browser/ada.mp4"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/agents-disabled.png",
+      "retained": "cold-evidence/browser/agents-disabled.png"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/grace-after-reconnect.mp4",
+      "retained": "cold-evidence/browser/grace-after-reconnect.mp4"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/grace-before-reconnect.mp4",
+      "retained": "cold-evidence/browser/grace-before-reconnect.mp4"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/grace-notice.png",
+      "retained": "cold-evidence/browser/grace-notice.png"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/live-convergence.png",
+      "retained": "cold-evidence/browser/live-convergence.png"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/relogin.png",
+      "retained": "cold-evidence/browser/relogin.png"
+    },
+    {
+      "original": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz/repo/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/browser/seeded-file.png",
+      "retained": "cold-evidence/browser/seeded-file.png"
+    }
+  ],
+  "wholeCloneExcluded": true,
+  "unchangedTargetRanExactlyOnce": true
+}

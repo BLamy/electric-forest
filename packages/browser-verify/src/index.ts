@@ -254,6 +254,43 @@ async function stopChild(child: ChildProcess): Promise<void> {
   });
 }
 
+/** Longest a platform follow handler may hold (the gateway's MAX_FOLLOW_WAIT_MS) plus margin. */
+const PLATFORM_HANDLER_DRAIN_MS = 25_000;
+
+/**
+ * Counts platform request handlers that have not yet ended their response. The returned
+ * drain resolves once every handler started so far has ended (or after
+ * PLATFORM_HANDLER_DRAIN_MS), so teardown can stop the stream server only after nothing
+ * inside the platform still reads it.
+ */
+function trackPlatformHandlers(server: import("node:http").Server): () => Promise<void> {
+  let inFlight = 0;
+  let idle: (() => void) | undefined;
+  server.on("request", (_request, response: import("node:http").ServerResponse) => {
+    inFlight += 1;
+    const end = response.end.bind(response) as (...args: unknown[]) => unknown;
+    let ended = false;
+    (response as unknown as { end: (...args: unknown[]) => unknown }).end = (...args) => {
+      if (!ended) {
+        ended = true;
+        inFlight -= 1;
+        if (inFlight === 0) idle?.();
+      }
+      return end(...args);
+    };
+  });
+  return async () => {
+    if (inFlight === 0) return;
+    await new Promise<void>((resolveDrain) => {
+      const timer = setTimeout(resolveDrain, PLATFORM_HANDLER_DRAIN_MS);
+      idle = () => {
+        clearTimeout(timer);
+        resolveDrain();
+      };
+    });
+  };
+}
+
 async function closeServer(server: import("node:http").Server): Promise<void> {
   server.closeIdleConnections();
   server.closeAllConnections();
@@ -279,7 +316,44 @@ function forwardedHeaders(headers: IncomingHttpHeaders): Headers {
   return result;
 }
 
-function fixtureLoginHtml(html: string): string {
+function fixtureLoginHtml(html: string, primaryEmail?: string): string {
+  const latestForm = '<form class="user-form" method="post" action="/authorize/callback">';
+  if (html.includes(latestForm)) {
+    const transformed = html
+      .replaceAll(
+        latestForm,
+        '<form class="user-form" method="post" action="/__fixture/authorize" data-testid="auth0-fixture-login-form">',
+      )
+      .replaceAll(
+        '<button type="submit" class="user-btn">',
+        '<button type="submit" class="user-btn" data-testid="auth0-fixture-login-submit">',
+      );
+    assert.notEqual(transformed, html, "emulator account picker form was not transformed");
+    assert.match(transformed, /data-testid="auth0-fixture-login-form"/);
+    assert.match(transformed, /data-testid="auth0-fixture-login-submit"/);
+    let withPrimary = transformed;
+    if (primaryEmail !== undefined) {
+      const loginMarker = `<span class="user-login">${primaryEmail}</span>`;
+      const loginIndex = withPrimary.indexOf(loginMarker);
+      if (loginIndex >= 0) {
+        const formStart = withPrimary.lastIndexOf("<form ", loginIndex);
+        const formEnd = withPrimary.indexOf(">", formStart);
+        if (formStart >= 0 && formEnd > formStart) {
+          withPrimary =
+            withPrimary.slice(0, formEnd) +
+            ' data-auth0-fixture-primary="true"' +
+            withPrimary.slice(formEnd);
+        }
+      }
+    }
+    return withPrimary.replace(
+      '<main class="card-page">',
+      '<main class="card-page"><p data-testid="auth0-fixture-notice">Test fixture identity — choose a preselected account; no password is sent by this browser.</p>',
+    );
+  }
+
+  // Keep compatibility with older emulate snapshots while the fixture proxy is
+  // migrated to the current button-only account picker.
   const fieldsStart = html.indexOf('<label for="auth0-email">');
   const submitStart = html.indexOf('<button class="checkout-pay-btn"', fieldsStart);
   assert.ok(fieldsStart >= 0 && submitStart > fieldsStart, "emulator login form shape changed");
@@ -300,7 +374,7 @@ async function startFixtureLoginProxy(
   port: number,
   upstreamUrl: string,
   subject: BrowserSubject,
-  extraSubjects: readonly BrowserSubject[] = [],
+  _extraSubjects: readonly BrowserSubject[] = [],
 ): Promise<FixtureLoginProxy> {
   const url = `http://127.0.0.1:${String(port)}`;
   const server = createHttpServer((request, response) => {
@@ -317,18 +391,18 @@ async function startFixtureLoginProxy(
         const form = new globalThis.URLSearchParams(body.toString("utf8"));
         assert.equal(form.has("email"), false);
         assert.equal(form.has("password"), false);
-        // The fixture may name which seeded subject signs in (an invited second
-        // person, for example); credentials still never leave this proxy.
-        const as = form.get("as");
-        form.delete("as");
-        const chosen =
-          as === null
-            ? subject
-            : ([subject, ...extraSubjects].find((candidate) => candidate.email === as) ?? subject);
-        form.set("email", chosen.email);
-        form.set("password", chosen.password);
+        if (form.has("user_id")) {
+          // Current emulate exposes a preselected account picker. Preserve its
+          // signed OAuth request and let Auth0 resolve the selected user.
+          targetPath = "/authorize/callback";
+        } else {
+          // Older emulate snapshots posted the fixture form to /authorize and
+          // needed the test identity injected by this local-only adapter.
+          form.set("email", subject.email);
+          form.set("password", subject.password);
+          targetPath = "/authorize";
+        }
         body = Buffer.from(form.toString());
-        targetPath = "/authorize";
         headers.set("content-type", "application/x-www-form-urlencoded");
       }
       const upstream = await fetch(new URL(targetPath, upstreamUrl), {
@@ -343,7 +417,7 @@ async function startFixtureLoginProxy(
         requestUrl.pathname === "/authorize" &&
         upstream.status === 200
       ) {
-        output = Buffer.from(fixtureLoginHtml(output.toString("utf8")));
+        output = Buffer.from(fixtureLoginHtml(output.toString("utf8"), subject.email));
       }
       response.statusCode = upstream.status;
       for (const [name, value] of upstream.headers) {
@@ -888,6 +962,11 @@ export async function bootWorld(
       EF_RESEND_URL: resend.url,
       EF_RESEND_API_KEY: "re_test_admin",
       EF_RESEND_FROM: "Electric Forest <invites@electric-forest.test>",
+      // Agent replies stay off unless the developer opts in from their own shell; the
+      // harness CLIs authenticate from the machine's own Claude Code / Codex logins.
+      ...(process.env.EF_AGENT_RESPONDER === undefined
+        ? {}
+        : { EF_AGENT_RESPONDER: process.env.EF_AGENT_RESPONDER }),
     },
     {
       now: () => nowSeconds * 1_000,
@@ -966,6 +1045,7 @@ export async function bootWorld(
   const identity = runtime.identity;
   const platformServer = runtime.server;
   capturePlatformWire(platformServer, serverNetwork);
+  const drainHandlers = trackPlatformHandlers(platformServer);
   await listenPlatformServer(platformServer, platformPort);
   let closed = false;
   let authenticatedSessionOrdinal = 0;
@@ -1051,6 +1131,11 @@ export async function bootWorld(
       if (closed) return;
       closed = true;
       await closeServer(platformServer);
+      // Closing the server drops its sockets, not its handlers: a follow still inside the
+      // platform reads Durable Streams until its hold ends. Stopping the stream server under
+      // it would leave the Durable Streams client retrying forever and the process alive.
+      await drainHandlers();
+      runtime.agentResponder?.stop();
       await runtime.registry.stop();
       runtime.gateway.terminate();
       runtime.namespaces.terminate();
@@ -1170,23 +1255,47 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
   await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
-export async function loginWithFixture(page: Page, as?: string): Promise<void> {
-  await page.getByTestId("auth0-fixture-login-form").waitFor();
+export async function loginWithFixture(
+  page: Page,
+  subjectOrEmail?: Pick<BrowserSubject, "email"> | string,
+): Promise<void> {
+  const forms = page.getByTestId("auth0-fixture-login-form");
+  await forms.first().waitFor();
   assert.equal(await page.locator('input[type="password"]').count(), 0);
   assert.equal(await page.locator('input[name="email"], input[name="password"]').count(), 0);
-  if (as !== undefined) {
-    // Name a seeded subject; the proxy swaps in its credentials server-side.
-    await page.getByTestId("auth0-fixture-login-form").evaluate((form, email) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "as";
-      input.value = email;
-      form.appendChild(input);
-    }, as);
+  const requestedEmail =
+    typeof subjectOrEmail === "string" ? subjectOrEmail : subjectOrEmail?.email;
+  let form = forms.last();
+  if (requestedEmail === undefined) {
+    const primary = page.locator(
+      'form[data-testid="auth0-fixture-login-form"][data-auth0-fixture-primary="true"]',
+    );
+    if ((await primary.count()) === 1) form = primary;
+  } else {
+    const matching = forms.filter({ hasText: requestedEmail });
+    if ((await matching.count()) === 1) {
+      form = matching;
+    } else {
+      // Older emulate snapshots expose one transformed form instead of an
+      // account picker; retain the explicit subject-selection bridge there.
+      assert.equal(
+        await forms.count(),
+        1,
+        "fixture account picker did not expose the requested account",
+      );
+      form = forms.first();
+      await form.evaluate((element, email) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "as";
+        input.value = email;
+        element.appendChild(input);
+      }, requestedEmail);
+    }
   }
   await Promise.all([
-    page.waitForURL((url) => url.origin === new URL(page.url()).origin || true),
-    page.getByTestId("auth0-fixture-login-submit").click(),
+    page.waitForURL((url) => url.pathname === "/"),
+    form.getByTestId("auth0-fixture-login-submit").click(),
   ]);
   await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }

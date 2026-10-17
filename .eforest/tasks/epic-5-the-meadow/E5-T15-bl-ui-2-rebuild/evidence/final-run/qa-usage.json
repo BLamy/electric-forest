@@ -1,0 +1,18 @@
+{
+  "project_id": "proj-electric-forest-ms8w0nv1",
+  "gross_credits": 215,
+  "refunded_credits": 115,
+  "net_credits": 100,
+  "qa_costs_refunded": false,
+  "budget": 100,
+  "period": {
+    "from": "2026-07-31T12:00:11.642Z",
+    "to": "2026-09-30T23:13:05.499Z"
+  },
+  "counts": {
+    "exploration_debits": 8,
+    "test_run_debits": 414,
+    "refunds": 229,
+    "no_debit_test_runs": 378
+  }
+}

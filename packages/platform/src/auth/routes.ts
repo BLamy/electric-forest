@@ -42,6 +42,8 @@ export interface PlatformWebAppOptions {
   readonly testProofReceipt?: () => Promise<unknown | undefined>;
   /** Outbound email (invites). Omitted → invites are recorded but never emailed. */
   readonly resend?: ResendConfig;
+  /** Explicit hosted policy; legacy local emulators retain their existing contract. */
+  readonly hosted?: { readonly origin: string; readonly transactionTtlMs: number };
   /** Optional same-origin bridge for a local OIDC emulator behind a managed tunnel. */
   readonly oidcProxyTarget?: string;
   /** Public origin to use when an upstream wrapper terminates or rewrites Host. */
@@ -101,13 +103,14 @@ function refusal(reason: AuthRefusalReason, request?: Request): Response {
   return json(status, { error: { class: "auth-refused", reason } });
 }
 
-function redirect(location: string, cookie?: string): Response {
+function redirect(location: string, cookie?: string | readonly string[]): Response {
+  const headers = new Headers({ location, "cache-control": "no-store" });
+  for (const value of typeof cookie === "string" ? [cookie] : (cookie ?? [])) {
+    headers.append("set-cookie", value);
+  }
   return new Response(null, {
     status: 302,
-    headers: {
-      location,
-      ...(cookie === undefined ? {} : { "set-cookie": cookie }),
-    },
+    headers,
   });
 }
 
@@ -146,6 +149,52 @@ const OIDC_PROXY_ROOT_PATHS = [
   "/api/v2/",
 ] as const;
 const HOP_BY_HOP_HEADERS = ["connection", "content-length", "host", "transfer-encoding"] as const;
+
+/** A return target remains a local path through URL parsing and repeated decoding. */
+export function safeLocalReturn(value: string | null): string | undefined {
+  if (value === null || value.length > 2_048) return undefined;
+  let decoded = value;
+  for (let count = 0; count < 4; count += 1) {
+    if (
+      !decoded.startsWith("/") ||
+      decoded.startsWith("//") ||
+      /[\\\s#]/.test(decoded) ||
+      [...decoded].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
+    )
+      return undefined;
+    if (/%(?:2f|5c|00|0a|0d)/i.test(decoded)) return undefined;
+    let next: string;
+    try {
+      next = decodeURIComponent(decoded);
+    } catch {
+      return undefined;
+    }
+    if (next === decoded) {
+      const url = new URL(value, "https://local.invalid");
+      return url.origin === "https://local.invalid" && !url.pathname.startsWith("//")
+        ? value
+        : undefined;
+    }
+    decoded = next;
+  }
+  return undefined;
+}
+
+const LOGIN_COOKIE = "ef_login";
+function loginBinding(cookie: string | null): string | undefined {
+  const values =
+    cookie
+      ?.split(";")
+      .map((part) => part.trim())
+      .filter((part) => part.startsWith(`${LOGIN_COOKIE}=`)) ?? [];
+  if (values.length !== 1) return undefined;
+  const value = values[0]!.slice(LOGIN_COOKIE.length + 1);
+  return /^[A-Za-z0-9_-]{43}$/.test(value) ? value : undefined;
+}
+
+function loginCookie(value: string, maxAge: number): string {
+  return `${LOGIN_COOKIE}=${value}; Path=/auth; HttpOnly; SameSite=Lax; Secure; Max-Age=${String(maxAge)}`;
+}
 
 function nextPathFromCookie(cookie: string | null): string | undefined {
   if (cookie === null) return undefined;
@@ -204,6 +253,7 @@ export class PlatformWebApp {
   private readonly oidcProxyTarget: URL | undefined;
   private readonly publicOrigin: string | undefined;
   private testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
+  private readonly hosted: PlatformWebAppOptions["hosted"];
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -256,6 +306,7 @@ export class PlatformWebApp {
       this.publicOrigin = origin.origin;
     }
     this.testProofReceipt = options.testProofReceipt;
+    this.hosted = options.hosted;
   }
 
   installTestProofReceiptForHarness(receipt: () => Promise<unknown | undefined>): void {
@@ -266,7 +317,21 @@ export class PlatformWebApp {
   }
 
   async handle(request: Request): Promise<Response> {
-    const url = new URL(request.url);
+    let url = new URL(request.url);
+    if (this.hosted !== undefined) {
+      url = new URL(`${this.hosted.origin}${url.pathname}${url.search}`);
+      request = new Request(url, request);
+      if (!["GET", "HEAD"].includes(request.method)) {
+        const bearerDispatch =
+          url.pathname === "/api/dispatch" && request.headers.has("authorization");
+        if (!bearerDispatch && request.headers.get("origin") !== this.hosted.origin) {
+          return json(403, { error: { class: "origin-refused" } });
+        }
+        if (!bearerDispatch && request.headers.has("authorization")) {
+          return json(401, { error: { class: "web-session-required" } });
+        }
+      }
+    }
     try {
       const proxySuffix = oidcProxySuffix(url.pathname);
       if (this.oidcProxyTarget !== undefined && proxySuffix !== undefined) {
@@ -291,7 +356,8 @@ export class PlatformWebApp {
               url.pathname.startsWith("/api/repos/") ||
               url.pathname.startsWith("/api/chat/") ||
               url.pathname.startsWith("/api/members/") ||
-              url.pathname.startsWith("/api/agents/")) &&
+              url.pathname.startsWith("/api/agents/") ||
+              url.pathname.startsWith("/api/agent-runs/")) &&
             !request.headers.has("authorization")
           ) {
             const identity = await resolveSessionBackedIdentity(request, {
@@ -319,7 +385,8 @@ export class PlatformWebApp {
               if (
                 url.pathname.startsWith("/api/chat/") ||
                 url.pathname.startsWith("/api/members/") ||
-                url.pathname.startsWith("/api/agents/")
+                url.pathname.startsWith("/api/agents/") ||
+                url.pathname.startsWith("/api/agent-runs/")
               ) {
                 return this.gateway.handleSessionChat(
                   request,
@@ -439,11 +506,27 @@ export class PlatformWebApp {
       sessionSecret: this.sessionSecret,
       sessionTtlMs: this.sessionTtlMs,
       now: this.now,
+      ...(this.hosted === undefined ? {} : { retainLoginTarget: true }),
     });
   }
 
   private async login(request: Request, url: URL): Promise<Response> {
     if (request.method !== "GET") return refusal("bad-state", request);
+    if (this.hosted !== undefined) {
+      const binding = Buffer.from(this.random(32)).toString("base64url");
+      const next = safeLocalReturn(url.searchParams.get("next"));
+      const transaction = this.transactions.create({
+        binding,
+        ...(next === undefined ? {} : { next }),
+      });
+      return redirect(
+        await this.oidc.authorizationUrl(`${this.hosted.origin}/auth/callback`, transaction),
+        [
+          loginCookie(binding, Math.floor(this.hosted.transactionTtlMs / 1_000)),
+          "ef_next=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+        ],
+      );
+    }
     const transaction = this.transactions.create();
     const callback = `${this.publicOrigin ?? url.origin}/auth/callback`;
     const next = url.searchParams.get("next");
@@ -467,7 +550,10 @@ export class PlatformWebApp {
     const state = url.searchParams.get("state");
     const code = url.searchParams.get("code");
     if (!validQueryValue(state)) throw new AuthRefusedError("bad-state");
-    const transaction = this.transactions.consume(state);
+    const transaction = this.transactions.consume(
+      state,
+      this.hosted === undefined ? undefined : loginBinding(request.headers.get("cookie")),
+    );
     if (!validQueryValue(code)) throw new AuthRefusedError("bad-token");
     const claims = await this.oidc.exchangeCode(
       code,
@@ -476,9 +562,13 @@ export class PlatformWebApp {
     );
     const sessionId = Buffer.from(this.random(24)).toString("base64url");
     await this.identity.login(claims.sub, claims.email, sessionId);
-    // One Set-Cookie per response: the session cookie must never share a header with
-    // another cookie (the HTTP layer joins them). `ef_next` is consumed here and
-    // cleared by the next plain /auth/login; it expires on its own within ten minutes.
+    if (this.hosted !== undefined) {
+      return redirect(transaction.next ?? "/", [
+        signedSessionCookie(this.sessionSecret, sessionId, this.sessionTtlMs / 1_000, true),
+        loginCookie("", 0),
+        "ef_next=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+      ]);
+    }
     const next = nextPathFromCookie(request.headers.get("cookie"));
     return redirect(
       next ?? "/",
@@ -623,6 +713,9 @@ export class PlatformWebApp {
 
   private async logout(request: Request): Promise<Response> {
     if (request.method !== "POST") return refusal("bad-state", request);
+    if (this.hosted !== undefined && request.headers.has("authorization")) {
+      return json(401, { error: { class: "web-session-required" } });
+    }
     const parsed = parseSessionCookie(request.headers.get("cookie"), this.sessionSecret);
     if (parsed.kind === "malformed") return refusal("bad-token", request);
     if (parsed.kind === "valid") {
@@ -631,7 +724,12 @@ export class PlatformWebApp {
         await this.identity.endSession(parsed.sessionId);
       }
     }
-    return redirect("/", clearedSessionCookie());
+    return redirect(
+      "/",
+      this.hosted === undefined
+        ? clearedSessionCookie()
+        : [clearedSessionCookie(true), loginCookie("", 0)],
+    );
   }
 
   private async home(request: Request): Promise<Response> {
@@ -855,15 +953,18 @@ export class PlatformWebApp {
   private async cliTokensPage(request: Request): Promise<Response> {
     if (request.method !== "GET") return refusal("bad-state", request);
     const session = await this.webSession(request);
-    if (session instanceof Response) return session;
+    if (session instanceof Response)
+      return this.hosted === undefined
+        ? session
+        : redirect("/auth/login?next=%2Fsettings%2Fcli-tokens");
     const initial = this.cliTokenList(session.snapshot, session.sub);
     return html(
       shell(`<main data-auth-state="logged-in" data-identity-offset="${escape(session.snapshot.offset)}" data-identity-digest="${session.snapshot.digest}">
 <h1>CLI tokens</h1><p><a href="/">Back</a></p>
 <form data-testid="cli-token-mint"><label>Name <input name="name" required></label><label>Scopes <input name="scopes" value="repo:write" required></label><button type="submit">Mint token</button></form>
-<p class="secret" data-testid="cli-token-secret" hidden></p><ul data-testid="cli-token-list"></ul>
+<p class="secret" data-testid="cli-token-secret" hidden></p><p role="alert" data-testid="cli-token-error" hidden></p><ul data-testid="cli-token-list"></ul>
 <script type="application/json" id="cli-token-initial">${scriptJson(initial)}</script>
-<script>(function(){const main=document.querySelector('main');const list=document.querySelector('[data-testid="cli-token-list"]');const secret=document.querySelector('[data-testid="cli-token-secret"]');function render(data){main.dataset.identityOffset=data.offset;main.dataset.identityDigest=data.digest;list.replaceChildren(...data.tokens.map(function(token){const li=document.createElement('li');li.dataset.grantId=token.grantId;li.append(document.createTextNode((token.name||'unnamed')+' · '+token.tokenKind+' · '+token.scopes.join(', ')));const button=document.createElement('button');button.type='button';button.textContent='Revoke';button.addEventListener('click',async function(){const response=await fetch('/api/cli-tokens/'+encodeURIComponent(token.grantId),{method:'DELETE'});if(!response.ok)throw new Error('revoke failed');await refresh();});li.append(' ',button);return li;}));}async function refresh(){const response=await fetch('/api/cli-tokens');if(!response.ok)throw new Error('list failed');render(await response.json());}render(JSON.parse(document.getElementById('cli-token-initial').textContent));document.querySelector('[data-testid="cli-token-mint"]').addEventListener('submit',async function(event){event.preventDefault();const form=new FormData(event.currentTarget);const scopes=String(form.get('scopes')).split(',').map(function(value){return value.trim();}).filter(Boolean).sort();const response=await fetch('/api/cli-tokens',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:String(form.get('name')),scopes:scopes})});if(!response.ok)throw new Error('mint failed');const result=await response.json();secret.textContent=result.token;secret.hidden=false;await refresh();});})();</script>
+<script>(function(){const main=document.querySelector('main');const list=document.querySelector('[data-testid="cli-token-list"]');const secret=document.querySelector('[data-testid="cli-token-secret"]');const errorNode=document.querySelector('[data-testid="cli-token-error"]');function showError(message){errorNode.textContent=message;errorNode.hidden=false;}function clearError(){errorNode.textContent='';errorNode.hidden=true;}function render(data){main.dataset.identityOffset=data.offset;main.dataset.identityDigest=data.digest;list.replaceChildren(...data.tokens.map(function(token){const li=document.createElement('li');li.dataset.grantId=token.grantId;li.append(document.createTextNode((token.name||'unnamed')+' · '+token.tokenKind+' · '+token.scopes.join(', ')));const button=document.createElement('button');button.type='button';button.textContent='Revoke';button.addEventListener('click',async function(){if(!window.confirm('Revoke '+(token.name||'this token')+'?'))return;clearError();button.disabled=true;try{const response=await fetch('/api/cli-tokens/'+encodeURIComponent(token.grantId),{method:'DELETE'});if(!response.ok)throw new Error('revoke failed');await refresh();}catch(_error){showError('The token could not be revoked. Try again.');}finally{button.disabled=false;}});li.append(' ',button);return li;}));}async function refresh(){const response=await fetch('/api/cli-tokens');if(!response.ok)throw new Error('list failed');render(await response.json());}render(JSON.parse(document.getElementById('cli-token-initial').textContent));document.querySelector('[data-testid="cli-token-mint"]').addEventListener('submit',async function(event){event.preventDefault();clearError();const form=new FormData(event.currentTarget);const scopes=String(form.get('scopes')).split(',').map(function(value){return value.trim();}).filter(Boolean).sort();try{const response=await fetch('/api/cli-tokens',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:String(form.get('name')),scopes:scopes})});if(!response.ok)throw new Error('mint failed');const result=await response.json();secret.textContent=result.token;secret.hidden=false;await refresh();}catch(_error){showError('The token could not be minted. Try again.');}});})();</script>
 </main>`),
     );
   }

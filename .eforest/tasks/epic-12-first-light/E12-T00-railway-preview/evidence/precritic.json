@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "role": "fresh-read-only-precritic",
+  "session": "preview_precritic",
+  "frozenBeforeBuilderSession": "railway_preview_builder",
+  "scope": "Public disposable fixture-only preview on real platform/gateway/reference streams; no production provider/auth qualification.",
+  "predictions": {
+    "coldBuild": "A pristine Linux image runs without warm dist/node_modules/home credentials.",
+    "hostedBrowser": "HTTPS fresh profiles see notice/sign-in/read/mutate/live-reconnect; no console/page errors and DOM digests equal independent replay.",
+    "runtime": "Ready implies assets/bootstrap/provider initialized; ingress uses PORT; startup/shutdown/restart each at most 60 seconds.",
+    "isolation": "External provider, real OIDC, harness and outbound credential config refused before listening; raw transport inaccessible and canaries absent outputs.",
+    "persistence": "Same volume preserves accepted fixture mutation and no duplicate seed; interrupted bootstrap finishes idempotently or stops explicitly; no silent reset.",
+    "deployment": "Actual origin source/build identity equals tested artifact and Railway deployment metadata.",
+    "evidence": "Managed Replay QA run, or explicit service-unavailable N/A with independent Playwright/console/network/stream mitigation.",
+    "lifecycle": "Independent committed readers agree; earlier claims/findings/run ceilings unchanged; only fresh critic verifies."
+  },
+  "requiredSensitivity": [
+    "restore loopback public bind",
+    "freeze DOM digest",
+    "remove preview config guard"
+  ],
+  "additionalAttack": "Interrupt partial bootstrap and restart same directory.",
+  "integrationRisks": [
+    "bootWorld temporary store/deletion and production guard",
+    "HTTP origin reconstruction and secure session cookie",
+    "developer authenticated agent harness",
+    "draining live readers/background projectors before streams",
+    "root pnpm10.15 vs vendor pnpm11.2.2 if emulator reused",
+    "Linux native lmdb/esbuild frozen install",
+    "exclude home credentials/workshops and tests from runtime artifact"
+  ]
+}

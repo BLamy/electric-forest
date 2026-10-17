@@ -1,0 +1,6 @@
+
+> electric-forest@0.0.0 format:check /Users/blamy/Documents/Codex/electric-forest
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+
+Checking formatting...
+All matched files use Prettier code style!

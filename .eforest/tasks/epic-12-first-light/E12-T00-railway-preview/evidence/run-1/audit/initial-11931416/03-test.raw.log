@@ -1,0 +1,121 @@
+
+> electric-forest@0.0.0 pretest /Users/blamy/Documents/Codex/electric-forest
+> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
+
+
+> @eforest/identity@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/identity
+> tsc -b tsconfig.build.json
+
+
+> @eforest/platform@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/platform
+> tsc -b tsconfig.build.json
+
+
+> electric-forest@0.0.0 test /Users/blamy/Documents/Codex/electric-forest
+> node tools/test.mjs
+
+
+> @eforest/protocol@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/protocol
+> tsc -b tsconfig.build.json
+
+
+> @eforest/client@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/client
+> tsc -b tsconfig.build.json
+
+
+> @eforest/streamfs@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/streamfs
+> tsc -b tsconfig.build.json
+
+
+> @eforest/server@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/server
+> tsc -b tsconfig.build.json
+
+
+> @eforest/cli@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/cli
+> tsc -b tsconfig.build.json
+
+
+> @eforest/workspace@0.0.0 build /Users/blamy/Documents/Codex/electric-forest/packages/workspace
+> tsc -b tsconfig.build.json
+
+
+ RUN  v4.1.10 /Users/blamy/Documents/Codex/electric-forest
+
+ ❯ apps/web/src/site/site.test.ts (6 tests | 2 failed) 133ms
+     × indexes every task folder under .eforest/tasks exactly once, in queue order 88ms
+     × reads the milestone ladder from ROADMAP.md 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/src/site/site.test.ts > public site: task board index > indexes every task folder under .eforest/tasks exactly once, in queue order
+AssertionError: expected [ +0, 1, 2, 3, 4, 5, 6, 7, 8, 9, …(6) ] to deeply equal [ +0, 1, 2, 3, 4, 5, 6, 7, 8 ]
+
+- Expected
++ Received
+
+@@ -6,6 +6,13 @@
+    4,
+    5,
+    6,
+    7,
+    8,
++   9,
++   10,
++   11,
++   12,
++   13,
++   14,
++   15,
+  ]
+
+ ❯ apps/web/src/site/site.test.ts:65:52
+     63|     const priorities = index.tasks.map((task) => task.priority);
+     64|     expect(priorities).toEqual([...priorities].sort((left, right) => l…
+     65|     expect(index.epics.map((epic) => epic.number)).toEqual([0, 1, 2, 3…
+       |                                                    ^
+     66|   });
+     67|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  apps/web/src/site/site.test.ts > public site: roadmap ladder > reads the milestone ladder from ROADMAP.md
+AssertionError: expected [ 'E0', 'E1', 'E2', 'E3', 'E4', …(11) ] to deeply equal [ 'E0', 'E1', 'E2', 'E3', 'E4', …(4) ]
+
+- Expected
++ Received
+
+@@ -3,9 +3,16 @@
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
++   "E12",
++   "E13",
++   "E15",
++   "E14",
+    "E6",
+    "E7",
+    "E8",
++   "E9",
++   "E10",
++   "E11",
+  ]
+
+ ❯ apps/web/src/site/site.test.ts:81:43
+     79|   it("reads the milestone ladder from ROADMAP.md", async () => {
+     80|     const ladder = milestoneLadder(await readFile(resolve(root, "ROADM…
+     81|     expect(ladder.map((row) => row.epic)).toEqual([
+       |                                           ^
+     82|       "E0",
+     83|       "E1",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 122 passed (123)
+      Tests  2 failed | 922 passed (924)
+   Start at  13:33:49
+   Duration  597.48s (transform 2.35s, setup 0ms, import 16.54s, tests 567.55s, environment 7ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

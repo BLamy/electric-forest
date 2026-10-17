@@ -1,0 +1,15 @@
+{
+  "baseCommit": "75faffee26b9f8e791fea38cf30ef41120df457e",
+  "taskId": "E12-T10",
+  "from": "pending",
+  "to": "in-progress",
+  "verificationRunCount": 0,
+  "verificationRunCeiling": 10,
+  "humanAuthority": "Existing explicit real production Auth0 login, CLI setup and self-hosted Railway direction; no new authority inferred",
+  "precriticRole": "/root/real_auth_precritic",
+  "precriticMarkdownSha256": "14253dee7eb1a6106b76c51bccaeb1e2d158fa09a2bd7e297f175ebb4c2cb1ad",
+  "precriticJsonSha256": "0415a3e374a9fda80e91d81ed4aa825ef6f8197052e80e015fc591cd4541267f",
+  "plannedReaderPairSha256": "e2296180e93da6d99432cc6aa7508d34964c4b1fc57f3b9c64da858c231e146e",
+  "priorControlsUnchanged": true,
+  "noProductCodeChangedInActivation": true
+}

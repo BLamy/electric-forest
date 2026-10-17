@@ -12,6 +12,9 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".svg": "image/svg+xml",
 };
 
+const FAVICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f1010"/><path d="M16 6c-4.5 0-8 3.8-8 8.5 0 4.1 2.5 7.3 6 8.2V27h4v-4.3c3.5-.9 6-4.1 6-8.2C24 9.8 20.5 6 16 6Z" fill="#48b979"/><circle cx="13" cy="14" r="1.5" fill="#0f1010"/><circle cx="19" cy="14" r="1.5" fill="#0f1010"/></svg>';
+
 function redirectToLogin(): Response {
   return new Response(null, { status: 302, headers: { location: "/auth/login" } });
 }
@@ -72,6 +75,7 @@ async function fileResponse(
 
 export interface SpaHandlerOptions extends WhoamiOptions {
   readonly webRoot: string;
+  readonly retainLoginTarget?: boolean;
   /** Test-only marker for the browser-verify proof receipt endpoint. */
   readonly proofReceiptAvailable?: boolean;
 }
@@ -86,10 +90,28 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
   const url = new URL(request.url);
   const identity = await resolveSessionBackedIdentity(request, options);
   const emittedAsset = url.pathname.startsWith("/assets/") && extname(url.pathname) !== "";
+  const favicon = url.pathname === "/favicon.ico";
   // Emitted bundles are public because the public site is built from the same bundle;
   // they never carry a secret. Application routes remain behind the session gate.
-  if (identity === null && !emittedAsset && !isPublicSiteRoute(url.pathname)) {
+  if (identity === null && !emittedAsset && !favicon && !isPublicSiteRoute(url.pathname)) {
+    if (options.retainLoginTarget === true) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: `/auth/login?next=${encodeURIComponent(`${url.pathname}${url.search}`)}`,
+          "cache-control": "no-store",
+        },
+      });
+    }
     return redirectToLogin();
+  }
+  if (favicon) {
+    return new Response(FAVICON_SVG, {
+      headers: {
+        "cache-control": "public, max-age=86400",
+        "content-type": "image/svg+xml",
+      },
+    });
   }
   const assetPath = safeAssetPath(options.webRoot, url.pathname);
   if (assetPath === null) return notFound();

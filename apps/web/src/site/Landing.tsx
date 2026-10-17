@@ -163,7 +163,10 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
             {props.session ? (
               <RouteLink href="/">
                 <span className="site-btn site-btn-lg">
-                  Open the forest <span className="site-arrow">→</span>
+                  Open the forest{" "}
+                  <span className="site-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </span>
               </RouteLink>
             ) : (
@@ -173,7 +176,10 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
                 data-testid="hero-login"
                 aria-label="Log in"
               >
-                Log in <span className="site-arrow">→</span>
+                Log in{" "}
+                <span className="site-arrow" aria-hidden="true">
+                  →
+                </span>
               </a>
             )}
             <RouteLink href="/docs">
@@ -375,12 +381,18 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
               {props.session ? (
                 <RouteLink href="/">
                   <span className="site-btn site-btn-lg">
-                    Open the forest <span className="site-arrow">→</span>
+                    Open the forest{" "}
+                    <span className="site-arrow" aria-hidden="true">
+                      →
+                    </span>
                   </span>
                 </RouteLink>
               ) : (
                 <a className="site-btn site-btn-lg" href="/auth/login" aria-label="Log in">
-                  Log in <span className="site-arrow">→</span>
+                  Log in{" "}
+                  <span className="site-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </a>
               )}
               <a
@@ -389,7 +401,7 @@ export function Landing(props: { readonly session: boolean }): React.JSX.Element
                 target="_blank"
                 rel="noopener"
               >
-                Star on GitHub
+                GitHub
               </a>
             </div>
           </div>

@@ -9,7 +9,7 @@ import {
   type PrIndexInput,
   type PrIndexState,
 } from "@eforest/pr";
-import { canonicalJson, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
+import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "../official.js";
 

@@ -1,7 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { IdentityRegion } from "./identity.js";
+import { ForestShell } from "./components/shell/ForestShell.js";
 import { repositoryRoute } from "./components/shell/repository-route.js";
+import { preloadPrDetail, preloadPrDetailWhenIdle } from "./prs/preload.js";
 import { hasProofReceipt, hasReplayedSession, publicSitePage } from "./site/session.js";
+import { isHosted } from "./preview.js";
 
 interface ProofReceiptValue {
   readonly identityStream: string;
@@ -38,6 +41,7 @@ function isProofReceipt(value: unknown): value is ProofReceiptValue {
 function ProofReceipt(): React.JSX.Element | null {
   const [receipt, setReceipt] = useState<ProofReceiptValue>();
   useEffect(() => {
+    if (isHosted()) return;
     const controller = new AbortController();
     let retry: ReturnType<typeof setTimeout> | undefined;
     const load = async (): Promise<void> => {
@@ -66,9 +70,9 @@ function ProofReceipt(): React.JSX.Element | null {
   }, []);
   if (receipt === undefined) return null;
   return (
-    <section className="proof-receipt" data-testid="proof-receipt">
+    <section className="grid gap-2 text-[12px]" data-testid="proof-receipt">
       <div>
-        <p className="eyebrow">Recorded proof receipt</p>
+        <p className="m-0 text-muted-foreground">Recorded proof receipt</p>
         <h2>PKCE and stream replay agree</h2>
       </div>
       <dl>
@@ -77,7 +81,7 @@ function ProofReceipt(): React.JSX.Element | null {
         <dt>Challenge</dt>
         <dd data-testid="proof-pkce-challenge">{receipt.pkce.challenge}</dd>
         <dt>Authorization code</dt>
-        <dd data-testid="proof-code-redeemed" className="proof-success">
+        <dd data-testid="proof-code-redeemed" className="text-success">
           redeemed
         </dd>
         <dt>Verifier in browser</dt>
@@ -91,7 +95,7 @@ function ProofReceipt(): React.JSX.Element | null {
         <dt>DOM state digest</dt>
         <dd data-testid="proof-dom-digest">{receipt.digest}</dd>
         <dt>Literal equality</dt>
-        <dd data-testid="proof-digest-match" className="proof-success">
+        <dd data-testid="proof-digest-match" className="text-success">
           {receipt.cliDigestMatches ? "equal" : "different"}
         </dd>
       </dl>
@@ -109,17 +113,6 @@ function usePathname(): string {
   return pathname;
 }
 
-function useCompactProductShell(): boolean {
-  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 899px)").matches);
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 899px)");
-    const update = (): void => setCompact(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  return compact;
-}
-
 const PageRouter = lazy(async () => {
   const module = await import("./route-pages.js");
   return { default: module.PageRouter };
@@ -130,18 +123,12 @@ const PublicSite = lazy(async () => {
   return { default: module.PublicSite };
 });
 
-const DesktopProductShell = lazy(async () => {
-  const module = await import("./components/shell/ProductShell.js");
-  return { default: module.DesktopProductShell };
-});
-
-const MobileRepositoryRoute = lazy(async () => {
-  const module = await import("./MobileRepositoryRoute.js");
-  return { default: module.MobileRepositoryRoute };
-});
-
 function RouteFallback(): React.JSX.Element {
-  return <p data-testid="route-loading">Loading route…</p>;
+  return (
+    <p data-testid="route-loading" role="status" className="m-0 p-4 text-muted-foreground">
+      Loading route…
+    </p>
+  );
 }
 
 function Route(props: { readonly pathname: string }): React.JSX.Element {
@@ -154,10 +141,20 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
 
 export function AppRoutes(): React.JSX.Element {
   const pathname = usePathname();
-  const compact = useCompactProductShell();
   const session = hasReplayedSession();
   const proofReceipt = hasProofReceipt();
   const site = publicSitePage(pathname, session);
+  const inRepository = site === undefined && repositoryRoute(pathname) !== undefined;
+  // Optimistically load the PR detail chunk (@pierre/diffs + Shiki): right away inside a
+  // repository, where a PR is one click off, otherwise once the app goes idle.
+  useEffect(() => {
+    if (site !== undefined) return undefined;
+    if (inRepository) {
+      preloadPrDetail();
+      return undefined;
+    }
+    return preloadPrDetailWhenIdle();
+  }, [inRepository, site]);
   if (site !== undefined) {
     return (
       <Suspense fallback={<RouteFallback />}>
@@ -165,38 +162,18 @@ export function AppRoutes(): React.JSX.Element {
       </Suspense>
     );
   }
-  const repository = repositoryRoute(pathname);
-  const mobileRepository = compact && repository !== undefined && repository.active !== "pulls";
   return (
-    <main className="app-shell-repository" data-testid="app-shell">
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
-      {mobileRepository ? (
-        <Suspense fallback={<RouteFallback />}>
-          <MobileRepositoryRoute
-            pathname={pathname}
-            org={repository.org}
-            repo={repository.repo}
-            active={repository.active}
-            detail={<Route pathname={pathname} />}
-          />
-        </Suspense>
-      ) : (
-        <DesktopProductShell
-          pathname={pathname}
-          diagnostics={
-            <>
-              <IdentityRegion />
-              {proofReceipt ? <ProofReceipt /> : null}
-            </>
-          }
-        >
-          <article id="main-content" tabIndex={-1}>
-            <Route pathname={pathname} />
-          </article>
-        </DesktopProductShell>
-      )}
-    </main>
+    <div className="h-full" data-testid="app-shell">
+      <ForestShell
+        pathname={pathname}
+        render={(path) => <Route pathname={path} />}
+        diagnostics={
+          <>
+            <IdentityRegion />
+            {proofReceipt ? <ProofReceipt /> : null}
+          </>
+        }
+      />
+    </div>
   );
 }

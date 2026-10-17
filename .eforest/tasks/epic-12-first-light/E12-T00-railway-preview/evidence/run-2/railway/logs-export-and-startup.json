@@ -1,0 +1,320 @@
+{
+  "scope": "deployment",
+  "deploymentId": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+  "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "status": "SUCCESS",
+  "build": [
+    {
+      "timestamp": "2026-10-16T18:41:17.666913044Z",
+      "severity": "info",
+      "message": "[preview 3/3] COPY --from=build /app /app",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:b621ceb763aebf5afa16c408194d3bc61f99ce88053d08ab13de5c8855d10b29\""
+        },
+        {
+          "key": "inputs",
+          "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\",\"sha256:a6b80e48412b76f7e0e34f472f1b950ebcc721d83c26f097e8ac8f98e6f8c9c5\"]"
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:01.934048778Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T18:41:17.666433124Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:17.777212106Z",
+      "severity": "info",
+      "message": "exporting to docker image format",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:22e68a7bdb14a03452cdd1577d672dac27ef61b931aa0d0576d5a7b6192dc6b8\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:17.776547669Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:33.024679196Z",
+      "severity": "info",
+      "message": "exporting to docker image format",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"buildkit\""
+        },
+        {
+          "key": "type",
+          "value": "\"vertex\""
+        },
+        {
+          "key": "digest",
+          "value": "\"sha256:22e68a7bdb14a03452cdd1577d672dac27ef61b931aa0d0576d5a7b6192dc6b8\""
+        },
+        {
+          "key": "started",
+          "value": "\"2026-10-16T18:41:17.776547669Z\""
+        },
+        {
+          "key": "completed",
+          "value": "\"2026-10-16T18:41:33.024277343Z\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672645283Z",
+      "severity": "info",
+      "message": "containerimage.digest: sha256:c694eed5e2d59f9b48dc3d89a6d5a79562fdc81ac89c9819fcc75039b480bf47",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672649800Z",
+      "severity": "info",
+      "message": "containerimage.descriptor: eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6YzY5NGVlZDVlMmQ1OWY5YjQ4ZGMzZDg5YTZkNWE3OTU2MmZkYzgxYWM4OWM5ODE5ZmNjNzUwMzliNDgwYmY0NyIsInNpemUiOjE2MjUsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0xMC0xNlQxODo0MTozMVoifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:34.672650982Z",
+      "severity": "info",
+      "message": "containerimage.config.digest: sha256:2ec6a536f14120dd9f93f1ba038010c41c13cc87f132fe8d93083a92b13c36ce",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:47.048921317Z",
+      "severity": "info",
+      "message": "image push",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"railway.progress\""
+        },
+        {
+          "key": "status",
+          "value": "\"complete\""
+        },
+        {
+          "key": "size",
+          "value": "373355827"
+        },
+        {
+          "key": "total_size",
+          "value": "373355827"
+        },
+        {
+          "key": "duration_ms",
+          "value": "11881"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:41:47.048976780Z",
+      "severity": "info",
+      "message": "image push",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        },
+        {
+          "key": "source",
+          "value": "\"railway.progress\""
+        },
+        {
+          "key": "status",
+          "value": "\"in-progress\""
+        },
+        {
+          "key": "size",
+          "value": "373356387"
+        },
+        {
+          "key": "total_size",
+          "value": "373357231"
+        },
+        {
+          "key": "duration_ms",
+          "value": "11881"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.023279375Z",
+      "severity": "info",
+      "message": "",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.023288973Z",
+      "severity": "info",
+      "message": "\u001b[35m====================\nStarting Healthcheck\n====================\n\u001b[0m",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.023291412Z",
+      "severity": "info",
+      "message": "\u001b[37mPath: /readyz\u001b[0m",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.023293469Z",
+      "severity": "info",
+      "message": "\u001b[37mRetry window: 1m0s\u001b[0m",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.023295452Z",
+      "severity": "info",
+      "message": "",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.164456150Z",
+      "severity": "info",
+      "message": "\u001b[92m[1/1] Healthcheck succeeded!\u001b[0m",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    }
+  ],
+  "deploy": [
+    {
+      "timestamp": "2026-10-16T18:42:06.779212645Z",
+      "severity": "info",
+      "message": "Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/9262aec6-2ccc-4243-8747-5c9a7f3eebf2/vol_a8p48m2jtp5oohy5",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:06.779301198Z",
+      "severity": "info",
+      "message": "Starting Container",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.567648786Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Starting recovery...",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.567651976Z",
+      "severity": "info",
+      "message": "[info] [FileBackedStreamStore] Recovery complete: 14 streams, 0 reconciled, 0 errors",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-10-16T18:42:07.567655166Z",
+      "severity": "info",
+      "message": "Electric Forest PUBLIC DISPOSABLE PREVIEW ready revision=1f9e06b87109a93c75107842d4c8aa65902f8622 port=8080 agents=off integrations=off",
+      "attributes": [
+        {
+          "key": "level",
+          "value": "\"info\""
+        }
+      ]
+    }
+  ]
+}

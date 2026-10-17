@@ -231,7 +231,9 @@ it("production operation recovery rejects mismatched offsets and extra envelope 
 
     const badOffsetStream = "e5-t07-recovery-bad-offset";
     await streams.create(badOffsetStream);
-    await streams.append(badOffsetStream, { ...stamped, offset: at(9) }, { sequence: at(0) });
+    await streams.append(badOffsetStream, Object.assign({}, stamped, { offset: at(9) }), {
+      sequence: at(0),
+    });
     await expect(
       writers.recover(operationId, badOffsetStream, planned),
       "E5_T07_RECOVERY_OFFSET_BOUNDARY",
@@ -239,7 +241,9 @@ it("production operation recovery rejects mismatched offsets and extra envelope 
 
     const extraFieldStream = "e5-t07-recovery-extra-field";
     await streams.create(extraFieldStream);
-    await streams.append(extraFieldStream, { ...stamped, debug: true }, { sequence: at(0) });
+    await streams.append(extraFieldStream, Object.assign({}, stamped, { debug: true }), {
+      sequence: at(0),
+    });
     await expect(
       writers.recover(operationId, extraFieldStream, planned),
       "E5_T07_RECOVERY_ENVELOPE_BOUNDARY",

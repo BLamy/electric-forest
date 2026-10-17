@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Badge } from "@brett_lamy/ui";
 import { RouteLink } from "../navigation.js";
 import { GITHUB_URL } from "./content.js";
 
@@ -11,6 +12,9 @@ export function SiteShell(props: {
   const homeHref = props.session ? "/home" : "/";
   return (
     <div className="site" data-testid="public-site" data-site-page={props.page}>
+      <a className="skip-link site-skip-link" href="#main-content">
+        Skip to content
+      </a>
       <header className="site-nav">
         <div className="site-wrap site-nav-in">
           <RouteLink href={homeHref} aria-label="Electric Forest home">
@@ -30,7 +34,10 @@ export function SiteShell(props: {
             {props.session ? (
               <RouteLink href="/">
                 <span className="site-btn">
-                  Open the forest <span className="site-arrow">→</span>
+                  Open the forest{" "}
+                  <span className="site-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </span>
               </RouteLink>
             ) : (
@@ -40,7 +47,10 @@ export function SiteShell(props: {
                 data-testid="site-login"
                 aria-label="Log in"
               >
-                Log in <span className="site-arrow">→</span>
+                Log in{" "}
+                <span className="site-arrow" aria-hidden="true">
+                  →
+                </span>
               </a>
             )}
           </nav>
@@ -82,8 +92,12 @@ export function StatusBadge(props: { readonly status: string }): React.JSX.Eleme
         ? "awaiting critic"
         : props.status;
   return (
-    <span className={`site-status site-status-${props.status}`} data-status={props.status}>
+    <Badge
+      variant="outline"
+      className={`site-status site-status-${props.status}`}
+      data-status={props.status}
+    >
       {label}
-    </span>
+    </Badge>
   );
 }

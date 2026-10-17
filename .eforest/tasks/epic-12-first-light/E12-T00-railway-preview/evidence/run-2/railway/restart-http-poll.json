@@ -1,0 +1,214 @@
+{
+  "observations": [
+    {
+      "at": "2026-10-16T18:53:04.889523+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:05.609461+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:06.318144+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:06.991037+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:07.713176+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:08.435453+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:09.183388+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:09.896205+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:10.662783+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:11.375976+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:12.077045+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:12.857520+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:13.551529+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:14.330580+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    },
+    {
+      "at": "2026-10-16T18:53:15.039143+00:00",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "auth": "fixture",
+        "revision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+        "agents": "off",
+        "integrations": "off",
+        "data": "public-disposable",
+        "artifactDigest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+        "ready": true
+      }
+    }
+  ]
+}

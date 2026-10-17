@@ -1,0 +1,10 @@
+{
+  "command": "make verify-E12-T00",
+  "worktree": "49b46a180cfebe2e368b5611e668e8ed9c41fd25 detached fresh worktree, lockfile store install, no main node_modules symlink",
+  "exitCode": 2,
+  "log": ".eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/exact-target-recheck.log",
+  "sha256": "68548be35e78d0507c957117f19a6afcc45edef709522ef385fc24fad75dbfc4",
+  "bytes": 4012,
+  "falsified": "AC1: task target requires an unbuilt @eforest/web-hooks workspace dist",
+  "recheck": "The exact make target repeated platform/CLI builds, then failed at the same web resolution error before any assertion; source remained unchanged."
+}

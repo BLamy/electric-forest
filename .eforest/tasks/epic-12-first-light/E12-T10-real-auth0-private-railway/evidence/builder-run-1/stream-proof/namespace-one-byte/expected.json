@@ -1,0 +1,45 @@
+{
+  "streams": {
+    "ns:root": {
+      "dump": "ns-root.jsonl",
+      "digest": "892166733b1871aaa31a0fb9029d07da2fc666bad17f1ffd449a0e9f5d1ef9a0"
+    },
+    "ns:org:alpha": {
+      "dump": "ns-org-alpha.jsonl",
+      "digest": "a38fbb3dd39ef01b76f93851cec9dea7aa775ae2549cbb3be1ed3c8c07458982"
+    },
+    "ns:org:beta": {
+      "dump": "ns-org-beta.jsonl",
+      "digest": "e76cf2e07dec2fdc31c8a995ea16e0afbb49c617814ef4933bd52dd2640f8309"
+    }
+  },
+  "viewDigest": "fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f",
+  "resolutions": {
+    "alpha": {
+      "org": "alpha",
+      "owner": "auth0|alice",
+      "projects": ["core"],
+      "repos": [{ "name": "forest", "project": "core", "visibility": "public" }]
+    },
+    "beta": {
+      "org": "beta",
+      "owner": "auth0|bob",
+      "projects": ["tools"],
+      "repos": [{ "name": "forest", "project": "tools", "visibility": "private" }]
+    },
+    "alpha/forest": {
+      "repoStreamPrefix": "fs:alpha/forest",
+      "visibility": "public",
+      "owner": "auth0|alice",
+      "project": "core"
+    },
+    "beta/forest": {
+      "repoStreamPrefix": "fs:beta/forest",
+      "visibility": "private",
+      "owner": "auth0|bob",
+      "project": "tools"
+    },
+    "alpha/forest/main": "fs:alpha/forest:main:meta",
+    "beta/forest/feature": "fs:beta/forest:feature:meta"
+  }
+}

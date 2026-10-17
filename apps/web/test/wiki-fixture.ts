@@ -92,12 +92,7 @@ export function expectedWikiRecords(): readonly StreamRecord[] {
     ),
     record(
       5,
-      fileWriteEvent(
-        encoder.encode(HOME_FULL_TARGET),
-        "home.md",
-        offsetForOrdinal(4),
-        WIKI_NOW,
-      ),
+      fileWriteEvent(encoder.encode(HOME_FULL_TARGET), "home.md", offsetForOrdinal(4), WIKI_NOW),
     ),
     record(6, fileRenameEvent("home.md", "guide.md", WIKI_NOW)),
     record(7, fileCreateEvent("disposable.md", DISPOSABLE_CONTENT_STREAM, WIKI_NOW)),

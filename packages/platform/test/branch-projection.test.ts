@@ -39,7 +39,7 @@ class MemoryAdapter implements StreamAdapter {
 
   async create(): Promise<void> {}
 
-  async append(): Promise<void> {}
+  async append(_streamId: string, _event: Event): Promise<void> {}
 
   async read(streamId: string): Promise<readonly unknown[]> {
     return this.values.get(streamId) ?? [];

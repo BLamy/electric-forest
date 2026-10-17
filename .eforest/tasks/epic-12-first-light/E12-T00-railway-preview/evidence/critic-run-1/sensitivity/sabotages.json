@@ -1,0 +1,110 @@
+[
+  {
+    "id": "S1",
+    "behavior": "public listener binding",
+    "source": "packages/platform/src/preview.ts",
+    "mutation": "listenPlatformServer(server, config.port, \"0.0.0.0\") -> listenPlatformServer(server, config.port, \"127.0.0.1\")",
+    "sourceBaselineSha256": "2da4f06f24fd6c5325c266ec6eafc5bb745251179a2f25c8a784a6975c0f7125",
+    "realNetworkAssertion": {
+      "name": "bind-mutant-real-network",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "network"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.872,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-real-network.log",
+      "bytes": 586,
+      "sha256": "117d4d5ab7377399d64371ea9d3b299b4582bf10a9bfc304dde53d81c6f45646"
+    },
+    "builderAssertion": {
+      "name": "bind-mutant-builder-http",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_preview.mjs",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/http-bind-mutant"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.608,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/bind-mutant-builder-http.log",
+      "bytes": 752,
+      "sha256": "cdfc31a90d2aa18de2ee6b9174cd17c5a59f3f98e4799a041ced21f8a5486392"
+    },
+    "detected": true
+  },
+  {
+    "id": "S2",
+    "behavior": "production preview-identity guard",
+    "source": "packages/platform/src/production.ts",
+    "mutation": "delete complete preview-refusal guard",
+    "sourceBaselineSha256": "6c722e7c89c7326240715f4c8469089f67c6bc4735f1a75d6221c2947f04986e",
+    "completeProductionShapeSensor": {
+      "name": "guard-mutant-complete-prod-fields",
+      "command": [
+        "node",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity-sensor.mjs",
+        "config"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 0.178,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-complete-prod-fields.log",
+      "bytes": 751,
+      "sha256": "73b2020fc635ebcdca3e79dac67e402248cb7886ddaeb43327c7732a99f59e2a"
+    },
+    "builderAssertion": {
+      "name": "guard-mutant-builder-tests",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=1",
+        "packages/platform/test/preview.test.ts",
+        "-t",
+        "keeps production entrypoint closed to preview identity"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 1.773,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/guard-mutant-builder-tests.log",
+      "bytes": 1410,
+      "sha256": "556bb8476b8514f29854fbfa07cbdeb96be9be62929fa21b6c334bc660f21a17"
+    },
+    "detected": true
+  },
+  {
+    "id": "S3",
+    "behavior": "DOM digest agrees with independent replay",
+    "source": "apps/web/src/chat/ChatChannelPage.tsx:108",
+    "mutation": "data-ef-digest={binding.projection.digest} -> data-ef-digest={\"0\".repeat(64)}",
+    "sourceBaselineSha256": "7c0845334a3a6d0b1de57bd980c71fd49d8c782b4fb4ebad0bb77a4afeccbfce",
+    "builderAssertion": {
+      "name": "digest-mutant-builder-browser",
+      "command": [
+        "node",
+        "tools/verify/e12_t00_browser.mjs",
+        "local",
+        "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo",
+      "exitCode": 1,
+      "expected": "nonzero",
+      "seconds": 46.385,
+      "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/digest-mutant-builder-browser.log",
+      "bytes": 688,
+      "sha256": "72e2a759abf4428a81cbc9bb24bcceee33ee175e14bc00b2b126e4d729e06536"
+    },
+    "failurePath": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/sensitivity/browser-digest-mutant/failure.json",
+    "failure": "page.waitForFunction: Timeout 30000ms exceeded.",
+    "gatewayAcceptedBeforeDetection": true,
+    "detected": true
+  }
+]

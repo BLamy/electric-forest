@@ -1,0 +1,161 @@
+{
+  "task": "E12-T10",
+  "parent": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+  "proof": "Config relocation and absence of automatic root discovery; immutable runtime/app source bytes",
+  "relocatedExample": {
+    "path": "docs/examples/railway-preview-config.toml",
+    "sha256": "0562aaff4ce72e4dc4a0407aa2c4e99b7c0ab16518c6a09d8188768a87abe2d7",
+    "bytes": 184,
+    "equalsParentRootConfig": true,
+    "tomlParses": true,
+    "officialSchemaValid": true
+  },
+  "absentRootConfigs": [
+    "railway.toml",
+    "railway.json",
+    "railway.production.toml"
+  ],
+  "schema": {
+    "url": "https://railway.com/railway.schema.json",
+    "sha256": "0302fd53109298d9c277dbaedae772630506d8da43636e69875268a8782dd68f"
+  },
+  "preservedSourceFiles": [
+    {
+      "path": "Dockerfile",
+      "sha256": "dd078a8d53b67ab36ec7523b8d46cd04d1262d7212f085b7a1bd0fe9e57b8d09",
+      "bytes": 1734
+    },
+    {
+      "path": "Dockerfile.production",
+      "sha256": "24bb13d797d2075ba0128ca21506178ad3bac167d04a700027ad219fc4ce8d00",
+      "bytes": 1596
+    },
+    {
+      "path": "Makefile",
+      "sha256": "2684373c7a08c55022954a320c3c9858ccd9a54b4ecd6824aaab8f42750a59e6",
+      "bytes": 45771
+    },
+    {
+      "path": "apps/web/src/components/shell/ForestShell.tsx",
+      "sha256": "9f4e5869c4c6ba8a37a59f710b1e4f01794d6c34f330fb3d360bff740a862d16",
+      "bytes": 28851
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "18fe44cf1fe886ed137a526ab2e90220d5cc4320df61ee8e839dcfae1cc5a112",
+      "bytes": 704
+    },
+    {
+      "path": "apps/web/src/members/MembersPage.tsx",
+      "sha256": "190ed27c1dbd9deb3f1d45b2b3a9b43a5bd3af02d71249169aaf8a842371a110",
+      "bytes": 20049
+    },
+    {
+      "path": "apps/web/src/preview.tsx",
+      "sha256": "192fcba9b14f6006ec3241b6a930e4baa45645b67106a13fdfb734a71cbf019d",
+      "bytes": 2367
+    },
+    {
+      "path": "apps/web/src/routes.tsx",
+      "sha256": "5f0e9ca35b8a7d83eed28a26e1678c46b68e46328e3c99c07a5f0fead074fff2",
+      "bytes": 5947
+    },
+    {
+      "path": "packages/platform/src/auth/grants.ts",
+      "sha256": "a581bd77dd9df32bac14a317c30609fd60578ac5fbea941013d6303ce403d451",
+      "bytes": 9201
+    },
+    {
+      "path": "packages/platform/src/auth/oidc.ts",
+      "sha256": "8d2820c58aaefcea567a216eff818ed4f6a77087dd56a78eac419269633866b7",
+      "bytes": 8815
+    },
+    {
+      "path": "packages/platform/src/auth/routes.ts",
+      "sha256": "a2f42d8b5fea5773f414c7cfd15bff1f8c19407549e529d002ca10c51b52c836",
+      "bytes": 36841
+    },
+    {
+      "path": "packages/platform/src/auth/session.ts",
+      "sha256": "02dc4f2391adb634253887c30605c12e8432c603976d462471d443327689816a",
+      "bytes": 2307
+    },
+    {
+      "path": "packages/platform/src/hosted-artifact.ts",
+      "sha256": "dd6b7f236339461ff4d75d0774c7e03ba002aa3b4d07211c2caf071dba2df147",
+      "bytes": 1338
+    },
+    {
+      "path": "packages/platform/src/hosted-bin.ts",
+      "sha256": "59859ef17cbda5df22f97d2b15dd4fe7592768fd6eccbb33dcfdb866f7a0603f",
+      "bytes": 1268
+    },
+    {
+      "path": "packages/platform/src/hosted-storage.ts",
+      "sha256": "7340836b9596f7b62fa7ec8e16d52674767905cda30cc82e4177572eddd6461e",
+      "bytes": 6266
+    },
+    {
+      "path": "packages/platform/src/hosted.ts",
+      "sha256": "381748ad34c984b72c6ec46a96844cad14473fcfd7c0fd5b290b192f692aed21",
+      "bytes": 13429
+    },
+    {
+      "path": "packages/platform/src/production.ts",
+      "sha256": "a0bfcc883f811b4c644351015f334ded6c6fcb812fd3470d3a255f5b67c56843",
+      "bytes": 12775
+    },
+    {
+      "path": "packages/platform/src/server.ts",
+      "sha256": "307fcd7b62cf371ecaf044e530634176eff09e2fe682c5f493f8cddd71ef88c8",
+      "bytes": 9414
+    },
+    {
+      "path": "packages/platform/src/web/spa.ts",
+      "sha256": "66371108a600e472e52a10029b3c2fc87b5f4b49fc2caa63bb10952af2e7d38c",
+      "bytes": 5337
+    },
+    {
+      "path": "packages/platform/test/hosted.test.ts",
+      "sha256": "b8944be4aa84379c35ef7303a84fe72dcbcad75aa3b3a0f0926614f5395995ae",
+      "bytes": 17156
+    },
+    {
+      "path": "tools/build_hosted_artifact.mjs",
+      "sha256": "9cd48f59405859e43d3998f15b6607a6675095f8e58be91e62de99567116ce55",
+      "bytes": 637
+    },
+    {
+      "path": "tools/verify/cold_clone_targets.txt",
+      "sha256": "89fc4107d872bf160684201df90d077f7425fcb77cc67fd10c9b831a2a10d4f1",
+      "bytes": 1414
+    },
+    {
+      "path": "tools/verify/e12_t10_browser.mjs",
+      "sha256": "0990146f5782f033fac0f414dbfc4e8103b79666a3640a8de138f7db4fe3c778",
+      "bytes": 17743
+    },
+    {
+      "path": "tools/verify/e12_t10_deadlines.mjs",
+      "sha256": "18cfa9e090406f0d709bcb9c9a7c4bab9ebcea6678d64d8743d5ba59acc92ce0",
+      "bytes": 8273
+    },
+    {
+      "path": "tools/verify/e12_t10_fixture.mjs",
+      "sha256": "a0c0a30d90dbbedd744c6aa8c08a2ab7ec181bcaad25cd72af846d1d71e06050",
+      "bytes": 14762
+    },
+    {
+      "path": "tools/verify/e12_t10_hosted.mjs",
+      "sha256": "78c8c01356a09809247ee976b2117a32a92b4500b7c4f14b8eea87af3a3343cb",
+      "bytes": 24433
+    },
+    {
+      "path": "tools/verify/e12_t10_identity_reducer.mjs",
+      "sha256": "0a4ecab912fbc9b7678b641010bb99a4dded44f9cf029e1ff6d0805e2bcee825",
+      "bytes": 268
+    }
+  ],
+  "validationBoundary": "No live Railway mutation or configuration selection assertion; parent owns external service settings and deployment.",
+  "source": "https://docs.railway.com/builds/dockerfiles#custom-dockerfile-path"
+}

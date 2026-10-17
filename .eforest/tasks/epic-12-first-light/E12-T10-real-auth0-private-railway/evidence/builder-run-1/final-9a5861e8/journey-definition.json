@@ -1,0 +1,65 @@
+{
+  "projectId": "proj-electric-forest-ms8w0nv1",
+  "name": "E12-T10 Auth0 login and private workspace",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "registrationState": "local definition prepared; no remote journey or test run created because Replay QA authentication is unavailable",
+  "setup": [
+    "Use the frozen candidate with its complete hosted runtime, loopback published patched Durable Streams provider, separate dedicated TLS fixture issuer and empty private fixture store.",
+    "Use Ada, Grace, and an independent Ada witness browser context. These are dedicated fixture identities; never use the actual production operator credentials.",
+    "Run locally behind the configured managed Replay QA tunnel when authenticated. Current availability receipt records CLI authentication required. The explicit fallback is captured Playwright MP4, pointer/keyboard timeline, console/page/network interrogation and independently replayed fixture dumps."
+  ],
+  "steps": [
+    {
+      "action": "Open the anonymous app and follow Sign in to the dedicated issuer; authenticate Ada with a local next=/settings/cli-tokens return.",
+      "expect": "S256 authorization-code callback returns to CLI settings; Auth0/private mode and exact full source identity are visible; initial identity DOM cursor/digest match the captured snapshot."
+    },
+    {
+      "action": "Return home, use Add workspace, enter browser-ada, and submit.",
+      "expect": "Empty initial store creates only Ada's organization; agents are off and no default agent is seeded."
+    },
+    {
+      "action": "In Grace's separate browser, sign in and create browser-grace.",
+      "expect": "A separate private workspace is available to Grace; owners and membership are distinct."
+    },
+    {
+      "action": "Ada creates welcome channel and posts acceptance text with pointer/send; Ada witness follows the channel independently.",
+      "expect": "Both pages show exact equal chat application offset and independently replayed digest, with the synthetic message."
+    },
+    {
+      "action": "Grace and an anonymous context request Ada's private chat.",
+      "expect": "401/403/404 refusal; no private response body; HTTP stream evidence separately proves read/write/follow refusal leaves heads unchanged."
+    },
+    {
+      "action": "Disconnect the witness, post a second synthetic message using Enter, reconnect.",
+      "expect": "Witness catches up with both messages; exact DOM offset/digest equals independently replayed event prefix."
+    },
+    {
+      "action": "Open Members and Add member.",
+      "expect": "Agents-off indication and human-member interaction are reachable; agent seed controls and agent creation form absent."
+    },
+    {
+      "action": "Use Account \u2192 CLI tokens. Hide secret output before capture, mint a dedicated fixture grant, then revoke it.",
+      "expect": "Grant format is opaque ef_cli_; secret value never retained in video/network evidence; listing and removal work; identity cursor/digest match complete independently replayed snapshots."
+    },
+    {
+      "action": "Submit native logout form, then try the previous session.",
+      "expect": "Returns to anonymous page; previous session receives401."
+    },
+    {
+      "action": "Disconnect active pages, perform a controlled fixture runtime/provider restart, retain contexts, reopen witness.",
+      "expect": "Active login and both synthetic messages survive; before/after identity and chat event bytes match; DOM offsets/digests match independent replay."
+    },
+    {
+      "action": "Sign Ada back in and return to welcome.",
+      "expect": "Existing organization/messages remain and both profiles converge; no local proof route is used; zero console errors, page errors or failed requests."
+    }
+  ],
+  "errorAndRemovalPaths": [
+    "HTTP companion exercises stolen/wrong/expired/reused browser-bound transactions; nonce/audience/signature/unverified-email failures; interrupted login after restart; exact canonical origin/redirect policy.",
+    "The journey exercises denied private reads, explicit grant revocation, logout, disconnection and reconnect. HTTP companion covers agent/integration refusal, missing/corrupt config/assets/key/authority store, oversize/deadline and raw/admin/fixture routes.",
+    "This fixture journey does not establish actual Auth0 operator login. That claim requires separate minimal redacted deployed-origin login/mutation/restart evidence."
+  ],
+  "recordingIds": [],
+  "testRunIds": [],
+  "epicExploration": "N/A: T10 is not the final task in Epic12"
+}

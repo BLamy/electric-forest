@@ -1,0 +1,40 @@
+{
+  "name": "deadlines",
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "command": [
+    "node",
+    "tools/verify/e12_t10_deadlines.mjs",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/deadlines"
+  ],
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "startedAt": "2026-10-17T00:16:32.500754+00:00",
+  "endedAt": "2026-10-17T00:16:37.520967+00:00",
+  "elapsedSeconds": 5.019721,
+  "exitCode": 0,
+  "before": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "after": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "candidateUnchanged": true,
+  "environmentScrubbed": [
+    "NODE_OPTIONS",
+    "NODE_ENV",
+    "npm_config_*"
+  ],
+  "stdout": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/deadlines.stdout.log",
+    "bytes": 65,
+    "sha256": "bc57f36b266447be578e1eb98c84800cfa3c2dde50c0229ed716feb8e1720eb5"
+  },
+  "stderr": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/deadlines.stderr.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

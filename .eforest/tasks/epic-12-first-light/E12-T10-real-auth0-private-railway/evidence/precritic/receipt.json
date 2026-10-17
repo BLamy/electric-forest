@@ -1,0 +1,16 @@
+{
+  "reportMarkdown": {
+    "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/precritic/report.md",
+    "sha256": "14253dee7eb1a6106b76c51bccaeb1e2d158fa09a2bd7e297f175ebb4c2cb1ad",
+    "bytes": 25935
+  },
+  "reportJson": {
+    "path": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/precritic/report.json",
+    "sha256": "0415a3e374a9fda80e91d81ed4aa825ef6f8197052e80e015fc591cd4541267f",
+    "bytes": 24859
+  },
+  "specSha256": "4e269bb9d4a94072a777bc3ef739736888578b9c99d83697911b1a3604ac4dc9",
+  "commit": "75faffee26b9f8e791fea38cf30ef41120df457e",
+  "criteria": 8,
+  "attacks": 6
+}

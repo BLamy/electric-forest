@@ -240,7 +240,8 @@ async function registerBranchProjection(
   if (parts.length !== 2) return;
   const [org, repo] = parts;
   const response = await remote.fetcher(
-    `${remote.serverUrl}/api/repos/${encodeURIComponent(org!)}/${encodeURIComponent(repo!)}/${encodeURIComponent(branch)}/home/branches`,
+    // The registration route is repo-scoped; the branch travels in the body.
+    `${remote.serverUrl}/api/repos/${encodeURIComponent(org!)}/${encodeURIComponent(repo!)}/home/branches`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },

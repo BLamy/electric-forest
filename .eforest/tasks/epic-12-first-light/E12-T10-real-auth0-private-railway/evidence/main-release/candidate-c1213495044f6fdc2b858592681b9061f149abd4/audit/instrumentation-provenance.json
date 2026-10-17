@@ -1,0 +1,31 @@
+{
+  "candidateManifestSha256": "f69f546d2825e62c89bb4f41d5daf2b6fc0fa0cc4e337e5888ff46d2fba720d2",
+  "expectedCommit": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "expectedSoleParent": "1eda083c1ab66bb89125734610063e14cdd448e8",
+  "expectedTree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+  "kind": "instrumentation reuse only; no prior gate results reused",
+  "scripts": [
+    {
+      "newScript": "source-freeze.py",
+      "newScriptSha256": "276609e0b41ca0b42c0b3f8dc80305111acfd2b8991009c30f97cfa0a62613e1",
+      "originalScript": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-1eda083c/source-freeze.py",
+      "originalScriptSha256": "caff0f557714bee2a544afe82316fadf3765509f64bf6b7d2f2b83bc8f710c4e"
+    },
+    {
+      "newScript": "run-gate.py",
+      "newScriptSha256": "16be71791cea84167bf6ab5852fcf4bb22faf8a31c2bc91c1d164d0a1e65fb0c",
+      "originalScript": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-1eda083c/run-gate.py",
+      "originalScriptSha256": "a82a84c111f0fe1674cb5f521ef1746f7c1c1e091199f0348bb5c09150872bc4"
+    },
+    {
+      "additionalAdaptation": "Before first execution, clarify that this audit makes no CI claim and include exact Vitest summary lines from the raw test output.",
+      "additionalAdaptationUtc": "2026-10-17T00:08:46.183433+00:00",
+      "initialAdaptedScriptSha256": "a1e54e8250e1d905f6608c68d2c273a0e99e27e97876f971f3c6ad6d920622da",
+      "newScript": "finalize-audit.py",
+      "newScriptSha256": "3661f03a21617d452aeccacbaa2fbc08bdbfa179cc16c50873bf76cfd8843e5a",
+      "originalScript": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/audit-1eda083c/finalize-audit.py",
+      "originalScriptSha256": "e827025ab258136a54e98e8d0aedcdbc6f8432737f67f27d7094c505b3e90fc0"
+    }
+  ],
+  "utc": "2026-10-17T00:00:51.119360+00:00"
+}

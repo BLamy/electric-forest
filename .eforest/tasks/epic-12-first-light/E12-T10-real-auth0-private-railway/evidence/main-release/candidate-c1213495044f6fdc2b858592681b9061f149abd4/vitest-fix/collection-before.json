@@ -1,0 +1,194 @@
+{
+  "phase": "collection-before",
+  "root": "/Users/blamy/Documents/Codex/electric-forest",
+  "head": "1eda083c1ab66bb89125734610063e14cdd448e8",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "list",
+    "--json=.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/vitest-fix/collection-before-tests.json",
+    "--no-color"
+  ],
+  "workingConfigSha256": "b119da37383c41bd21fca97f74cc42e7b40467e657407c0fdc562bc86d5a1f0d",
+  "maskedBuildOutputs": {
+    "apps/web/dist": {
+      "entries": 618,
+      "sha256": "6e293cf7197610c30d4ea6d9c2feb1c9df0ec3739ab5dfceafc2303352ab23f5"
+    },
+    "packages/browser-verify/dist": {
+      "entries": 5,
+      "sha256": "db98d0156400d6a75e4e5e028d3ab3702afab4b0b8cb050feabb9811321dd1f0"
+    },
+    "packages/cli/dist": {
+      "entries": 149,
+      "sha256": "dc125e45f155f0a01ce1d4ed3cbea52b8c47103adb3265c87e92b4340f2eef2d"
+    },
+    "packages/client/dist": {
+      "entries": 9,
+      "sha256": "e7b96272ac57a78264505efdac25b4aa64642b65b3c0b6546a3cf9b5d7953011"
+    },
+    "packages/evidence/dist": {
+      "entries": 21,
+      "sha256": "39df7b2a898cd8b85ee1202829725c03db304dc5a9c34ccc24ff8e314175448d"
+    },
+    "packages/identity/dist": {
+      "entries": 29,
+      "sha256": "ddef7a329758e141e557bae989099ac8f36518805a26bcfaea69dd0b3e39f7b6"
+    },
+    "packages/issues/dist": {
+      "entries": 25,
+      "sha256": "b87d3f7a7219d04b7c859d5eaf9c3a3be7b3385928bf192ff55a9e8b6eb21cd9"
+    },
+    "packages/loop/dist": {
+      "entries": 29,
+      "sha256": "86d69d9d9ec9aa2848498567b2c9d1146991113e16b8c93b86299f63ff7b31aa"
+    },
+    "packages/meadow/dist": {
+      "entries": 33,
+      "sha256": "4fb4dd07665d7eb330d95542f5296309d68e6beadb45105928380e8a62ea7c3a"
+    },
+    "packages/platform/dist": {
+      "entries": 277,
+      "sha256": "eaeb6e01e67d541c8e36ea6e6918c360951eae3cd84bef38422346bed4fbb0a8"
+    },
+    "packages/pr/dist": {
+      "entries": 29,
+      "sha256": "59d351bdd9492156256315bf333d77ed49c28f1990d67c3fe2a54da96dce8a8e"
+    },
+    "packages/protocol/dist": {
+      "entries": 41,
+      "sha256": "570aec831ed5dea7b3ffa3aecba3b97baafe969919da40fbc0eb8aa3dae271a9"
+    },
+    "packages/reducers/dist": {
+      "entries": 41,
+      "sha256": "b1e5d60ba7035b294b38fdfca9a65dbaa309a776b148168f100be88952ec1554"
+    },
+    "packages/seed/dist": {
+      "entries": 5,
+      "sha256": "698040ad7d18bc61b006035c04b32f66c100eb69c5c562b87e9208ec631c6353"
+    },
+    "packages/server/dist": {
+      "entries": 13,
+      "sha256": "c1bcd8994d038235fa5226f122070363c5d77c43791a9ddd2047d8eab32f5840"
+    },
+    "packages/streamfs/dist": {
+      "entries": 85,
+      "sha256": "887d470450189692916a2fff25e0e41386f6cf1b096c7e7df09033b5c512c4e2"
+    },
+    "packages/sync-harness/dist": {
+      "entries": 5,
+      "sha256": "de25a0b2423119ef7e98987f89915deb4e6099b1cd498a9c9155e71c802646cc"
+    },
+    "packages/tasks/dist": {
+      "entries": 101,
+      "sha256": "e31f5182d6e6a9243f8c03bd40079e0d4cbba4e5dca3c9c173b6be94330de57e"
+    },
+    "packages/web-hooks/dist": {
+      "entries": 13,
+      "sha256": "335ff97a2771ea0933610ef739f5db54a3db6f28f594c07740f105bedf338b7e"
+    },
+    "packages/workspace/dist": {
+      "entries": 5,
+      "sha256": "51578863661603d161772fbc28451727eda99acda2d64eb12ec0886f4d3ed55b"
+    }
+  },
+  "environmentScrubbed": [
+    "NODE_OPTIONS",
+    "NODE_ENV",
+    "npm_config_*"
+  ],
+  "environmentForced": {
+    "EFOREST_TEST_PREBUILT": "1",
+    "NO_COLOR": "1"
+  },
+  "remainingWorkspaceDistBeforeCommand": [],
+  "elapsedSeconds": 40.599963042000006,
+  "exitCode": 1,
+  "workspaceDistCreatedByCommand": [],
+  "restoredBuildOutputs": {
+    "apps/web/dist": {
+      "entries": 618,
+      "sha256": "6e293cf7197610c30d4ea6d9c2feb1c9df0ec3739ab5dfceafc2303352ab23f5"
+    },
+    "packages/browser-verify/dist": {
+      "entries": 5,
+      "sha256": "db98d0156400d6a75e4e5e028d3ab3702afab4b0b8cb050feabb9811321dd1f0"
+    },
+    "packages/cli/dist": {
+      "entries": 149,
+      "sha256": "dc125e45f155f0a01ce1d4ed3cbea52b8c47103adb3265c87e92b4340f2eef2d"
+    },
+    "packages/client/dist": {
+      "entries": 9,
+      "sha256": "e7b96272ac57a78264505efdac25b4aa64642b65b3c0b6546a3cf9b5d7953011"
+    },
+    "packages/evidence/dist": {
+      "entries": 21,
+      "sha256": "39df7b2a898cd8b85ee1202829725c03db304dc5a9c34ccc24ff8e314175448d"
+    },
+    "packages/identity/dist": {
+      "entries": 29,
+      "sha256": "ddef7a329758e141e557bae989099ac8f36518805a26bcfaea69dd0b3e39f7b6"
+    },
+    "packages/issues/dist": {
+      "entries": 25,
+      "sha256": "b87d3f7a7219d04b7c859d5eaf9c3a3be7b3385928bf192ff55a9e8b6eb21cd9"
+    },
+    "packages/loop/dist": {
+      "entries": 29,
+      "sha256": "86d69d9d9ec9aa2848498567b2c9d1146991113e16b8c93b86299f63ff7b31aa"
+    },
+    "packages/meadow/dist": {
+      "entries": 33,
+      "sha256": "4fb4dd07665d7eb330d95542f5296309d68e6beadb45105928380e8a62ea7c3a"
+    },
+    "packages/platform/dist": {
+      "entries": 277,
+      "sha256": "eaeb6e01e67d541c8e36ea6e6918c360951eae3cd84bef38422346bed4fbb0a8"
+    },
+    "packages/pr/dist": {
+      "entries": 29,
+      "sha256": "59d351bdd9492156256315bf333d77ed49c28f1990d67c3fe2a54da96dce8a8e"
+    },
+    "packages/protocol/dist": {
+      "entries": 41,
+      "sha256": "570aec831ed5dea7b3ffa3aecba3b97baafe969919da40fbc0eb8aa3dae271a9"
+    },
+    "packages/reducers/dist": {
+      "entries": 41,
+      "sha256": "b1e5d60ba7035b294b38fdfca9a65dbaa309a776b148168f100be88952ec1554"
+    },
+    "packages/seed/dist": {
+      "entries": 5,
+      "sha256": "698040ad7d18bc61b006035c04b32f66c100eb69c5c562b87e9208ec631c6353"
+    },
+    "packages/server/dist": {
+      "entries": 13,
+      "sha256": "c1bcd8994d038235fa5226f122070363c5d77c43791a9ddd2047d8eab32f5840"
+    },
+    "packages/streamfs/dist": {
+      "entries": 85,
+      "sha256": "887d470450189692916a2fff25e0e41386f6cf1b096c7e7df09033b5c512c4e2"
+    },
+    "packages/sync-harness/dist": {
+      "entries": 5,
+      "sha256": "de25a0b2423119ef7e98987f89915deb4e6099b1cd498a9c9155e71c802646cc"
+    },
+    "packages/tasks/dist": {
+      "entries": 101,
+      "sha256": "e31f5182d6e6a9243f8c03bd40079e0d4cbba4e5dca3c9c173b6be94330de57e"
+    },
+    "packages/web-hooks/dist": {
+      "entries": 13,
+      "sha256": "335ff97a2771ea0933610ef739f5db54a3db6f28f594c07740f105bedf338b7e"
+    },
+    "packages/workspace/dist": {
+      "entries": 5,
+      "sha256": "51578863661603d161772fbc28451727eda99acda2d64eb12ec0886f4d3ed55b"
+    }
+  },
+  "buildOutputsRestoredByteExact": true,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "97d07a3ae88d44337a69066f7f927eb5c94edc5dc70555949c8c8b4a9f6206f5"
+}

@@ -1,0 +1,290 @@
+[
+  {
+    "id": "H01",
+    "file": ".dockerignore",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 35,
+    "context": ""
+  },
+  {
+    "id": "H02",
+    "file": "Dockerfile",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 20,
+    "context": ""
+  },
+  {
+    "id": "H03",
+    "file": "Makefile",
+    "oldStart": 788,
+    "oldCount": 3,
+    "newStart": 788,
+    "newCount": 12,
+    "context": " verify-task-board:"
+  },
+  {
+    "id": "H04",
+    "file": "apps/web/src/components/shell/ForestShell.tsx",
+    "oldStart": 396,
+    "oldCount": 7,
+    "newStart": 396,
+    "newCount": 7,
+    "context": " function AccountMenu(props: {"
+  },
+  {
+    "id": "H05",
+    "file": "apps/web/src/main.tsx",
+    "oldStart": 1,
+    "oldCount": 5,
+    "newStart": 1,
+    "newCount": 6,
+    "context": ""
+  },
+  {
+    "id": "H06",
+    "file": "apps/web/src/main.tsx",
+    "oldStart": 8,
+    "oldCount": 4,
+    "newStart": 9,
+    "newCount": 11,
+    "context": " import \"./styles/app.css\";"
+  },
+  {
+    "id": "H07",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 10,
+    "oldCount": 6,
+    "newStart": 10,
+    "newCount": 7,
+    "context": " import { ChatAvatar } from \"../blocks/chat/components/chat-avatar.js\";"
+  },
+  {
+    "id": "H08",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 308,
+    "oldCount": 6,
+    "newStart": 309,
+    "newCount": 7,
+    "context": " function InviteForm(props: {"
+  },
+  {
+    "id": "H09",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 334,
+    "oldCount": 7,
+    "newStart": 336,
+    "newCount": 7,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element"
+  },
+  {
+    "id": "H10",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 352,
+    "oldCount": 6,
+    "newStart": 354,
+    "newCount": 12,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element"
+  },
+  {
+    "id": "H11",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 426,
+    "oldCount": 8,
+    "newStart": 434,
+    "newCount": 9,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element"
+  },
+  {
+    "id": "H12",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 455,
+    "oldCount": 7,
+    "newStart": 464,
+    "newCount": 7,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element"
+  },
+  {
+    "id": "H13",
+    "file": "apps/web/src/members/MembersPage.tsx",
+    "oldStart": 478,
+    "oldCount": 10,
+    "newStart": 487,
+    "newCount": 10,
+    "context": " export function MembersPage(props: { readonly org: string }): React.JSX.Element"
+  },
+  {
+    "id": "H14",
+    "file": "apps/web/src/preview.tsx",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 25,
+    "context": ""
+  },
+  {
+    "id": "H15",
+    "file": "apps/web/src/routes.tsx",
+    "oldStart": 4,
+    "oldCount": 6,
+    "newStart": 4,
+    "newCount": 7,
+    "context": " import { ForestShell } from \"./components/shell/ForestShell.js\";"
+  },
+  {
+    "id": "H16",
+    "file": "apps/web/src/routes.tsx",
+    "oldStart": 40,
+    "oldCount": 6,
+    "newStart": 41,
+    "newCount": 7,
+    "context": " function isProofReceipt(value: unknown): value is ProofReceiptValue {"
+  },
+  {
+    "id": "H17",
+    "file": "apps/web/src/site/site.test.ts",
+    "oldStart": 62,
+    "oldCount": 7,
+    "newStart": 62,
+    "newCount": 9,
+    "context": " describe(\"public site: task board index\", () => {"
+  },
+  {
+    "id": "H18",
+    "file": "apps/web/src/site/site.test.ts",
+    "oldStart": 85,
+    "oldCount": 12,
+    "newStart": 87,
+    "newCount": 20,
+    "context": " describe(\"public site: roadmap ladder\", () => {"
+  },
+  {
+    "id": "H19",
+    "file": "docs/guides/railway-hosting.md",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 96,
+    "context": ""
+  },
+  {
+    "id": "H20",
+    "file": "package.json",
+    "oldStart": 16,
+    "oldCount": 6,
+    "newStart": 16,
+    "newCount": 7,
+    "context": ""
+  },
+  {
+    "id": "H21",
+    "file": "packages/platform/fixtures/preview/README.md",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 5,
+    "context": ""
+  },
+  {
+    "id": "H22",
+    "file": "packages/platform/src/preview-artifact.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 44,
+    "context": ""
+  },
+  {
+    "id": "H23",
+    "file": "packages/platform/src/preview-bin.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 23,
+    "context": ""
+  },
+  {
+    "id": "H24",
+    "file": "packages/platform/src/preview.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 430,
+    "context": ""
+  },
+  {
+    "id": "H25",
+    "file": "packages/platform/src/production.ts",
+    "oldStart": 125,
+    "oldCount": 6,
+    "newStart": 125,
+    "newCount": 13,
+    "context": " function optionalAbsolutePath(value: string | undefined, name: string): string |"
+  },
+  {
+    "id": "H26",
+    "file": "packages/platform/test/preview.test.ts",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 66,
+    "context": ""
+  },
+  {
+    "id": "H27",
+    "file": "packages/platform/tsconfig.build.json",
+    "oldStart": 8,
+    "oldCount": 6,
+    "newStart": 8,
+    "newCount": 7,
+    "context": ""
+  },
+  {
+    "id": "H28",
+    "file": "railway.toml",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 9,
+    "context": ""
+  },
+  {
+    "id": "H29",
+    "file": "tools/verify/cold_clone_targets.txt",
+    "oldStart": 74,
+    "oldCount": 3,
+    "newStart": 74,
+    "newCount": 4,
+    "context": " verify-E4-T12-browser"
+  },
+  {
+    "id": "H30",
+    "file": "tools/verify/e12_t00_browser.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 369,
+    "context": ""
+  },
+  {
+    "id": "H31",
+    "file": "tools/verify/e12_t00_chat_reducer.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 6,
+    "context": ""
+  },
+  {
+    "id": "H32",
+    "file": "tools/verify/e12_t00_preview.mjs",
+    "oldStart": 0,
+    "oldCount": 0,
+    "newStart": 1,
+    "newCount": 281,
+    "context": ""
+  }
+]

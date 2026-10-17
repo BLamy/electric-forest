@@ -3,7 +3,7 @@ id: E6-T05
 epic: 6
 title: "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
 priority: 605
-status: implemented
+status: pending
 depends_on: [E6-T01, E6-T02, E6-T04]
 estimate: L
 capstone: false
@@ -31,6 +31,36 @@ fields validate. Raw frontmatter status edits are requests, not authority, and a
 rejected unless backed by the legal event/actor. Evidence files become E5 attachment
 content streams before their references append to the task. Projected writes carry a
 sync origin and may not re-dispatch themselves.
+
+### Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
+
+### Human-directed release deferral — 2026-10-16
+
+The human prioritized merging the current hosted application into main and automatic
+Railway deployment under E12-T10. This unfinished task is administratively deferred
+from `implemented` to `pending`; its implementation, original claim, every finding
+and checkpoint below remain historical evidence. This does not close a finding, grant
+a verification run, or reset its ledger. Before any future activation, the imported
+legacy ledger needs an explicitly authorized exact-digest compatibility migration;
+the current strict parser's zero count is not zero historical runs.
 
 ## Deliverables
 

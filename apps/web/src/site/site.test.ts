@@ -62,7 +62,9 @@ describe("public site: task board index", () => {
     }
     const priorities = index.tasks.map((task) => task.priority);
     expect(priorities).toEqual([...priorities].sort((left, right) => left - right));
-    expect(index.epics.map((epic) => epic.number)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(index.epics.map((epic) => epic.number)).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    ]);
   });
 
   it("agrees with the generated QUEUE.md about the verified count", async () => {
@@ -85,12 +87,20 @@ describe("public site: roadmap ladder", () => {
       "E3",
       "E4",
       "E5",
+      "E12",
+      "E13",
+      "E15",
+      "E14",
       "E6",
       "E7",
       "E8",
+      "E9",
+      "E10",
+      "E11",
     ]);
     expect(ladder[0]).toMatchObject({ name: "the-seed", milestone: "two-terminals-one-log" });
-    expect(ladder.at(-1)?.name).toBe("the-mirror");
+    expect(ladder.find((row) => row.epic === "E8")?.name).toBe("the-mirror");
+    expect(ladder.at(-1)?.name).toBe("the-wildwood");
   });
 });
 

@@ -1,0 +1,15 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+initial-frozen-value-valid {"digest":"c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19","eventCount":1}
+real-write-accepted-and-witness-visible {"seed":"13d7ecbe468704ce","acceptedDigest":"3f20648b7e04ce97b3dc5bd66fa9a24af11e427f96062765e8adee847eafa634","offset":"0000000000000000_0000000000000001","dispatchStatuses":[202],"domDigests":["c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19","c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19"]}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: Timeout 5000ms exceeded.
+    at /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/fresh-browser-sensor.mjs:29:32 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.20.0

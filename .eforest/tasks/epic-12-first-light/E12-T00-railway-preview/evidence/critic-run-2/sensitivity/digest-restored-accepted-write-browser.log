@@ -1,0 +1,6 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+initial-frozen-value-valid {"digest":"c7e483ecf4d927730b99ef540724204b6816c09555c33b4650f86787f2ab3b19","eventCount":1}
+real-write-accepted-and-witness-visible {"seed":"516b530c839af195","acceptedDigest":"724ee93644ffdb0399caaa3cf195dbb33e1644275441fc001a64e895e619a2bb","offset":"0000000000000000_0000000000000001","dispatchStatuses":[202],"domDigests":["724ee93644ffdb0399caaa3cf195dbb33e1644275441fc001a64e895e619a2bb","724ee93644ffdb0399caaa3cf195dbb33e1644275441fc001a64e895e619a2bb"]}
+reconnected-canonical-convergence {"digest":"0ed3cf7a2460c4e73f044fce0b27f91010393e5871c64276f99d4a19d0c14717","offset":"0000000000000000_0000000000000002","eventCount":3,"errors":[]}
+FRESH_BROWSER_SENSOR_OK

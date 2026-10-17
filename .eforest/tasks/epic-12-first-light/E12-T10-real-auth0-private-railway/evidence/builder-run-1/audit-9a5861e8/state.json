@@ -1,0 +1,293 @@
+{
+  "task": "E12-T10",
+  "role": "fresh-read-only-immutable-candidate-gate-auditor",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "parentRevision": "b19e7bce1cdcb06b2d11ba21d16de299402675f6",
+  "branch": "codex/railway-hosting",
+  "startedAt": "2026-10-16T20:50:08.674180+00:00",
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "versions": {
+    "node": {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "startedAt": "2026-10-16T20:50:09.146231+00:00",
+      "endedAt": "2026-10-16T20:50:09.160676+00:00",
+      "exitCode": 0,
+      "stdout": "v24.20.0",
+      "stderr": ""
+    },
+    "pnpm": {
+      "argv": [
+        "pnpm",
+        "--version"
+      ],
+      "startedAt": "2026-10-16T20:50:09.160725+00:00",
+      "endedAt": "2026-10-16T20:50:09.320401+00:00",
+      "exitCode": 0,
+      "stdout": "10.15.0",
+      "stderr": ""
+    },
+    "python3": {
+      "argv": [
+        "python3",
+        "--version"
+      ],
+      "startedAt": "2026-10-16T20:50:09.320437+00:00",
+      "endedAt": "2026-10-16T20:50:09.335105+00:00",
+      "exitCode": 0,
+      "stdout": "Python 3.9.6",
+      "stderr": ""
+    },
+    "git": {
+      "argv": [
+        "git",
+        "--version"
+      ],
+      "startedAt": "2026-10-16T20:50:09.335145+00:00",
+      "endedAt": "2026-10-16T20:50:09.344919+00:00",
+      "exitCode": 0,
+      "stdout": "git version 2.54.0 (Apple Git-157)",
+      "stderr": ""
+    }
+  },
+  "lockfile": {
+    "path": "pnpm-lock.yaml",
+    "sha256": "ffd8b299ca115cfd2d0be9c8ba2833c2de791a071e77e90616c364b7afd9c54a",
+    "bytes": 373658
+  },
+  "freezeCheck": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/freeze-check.json",
+    "sha256": "95e3211243a3afa79c68ab96ae79e98b31ebaae2fffe9c6f02ec701c1524bd80",
+    "bytes": 65713
+  },
+  "initialSnapshot": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/initial.snapshot.json",
+    "sha256": "551ec3150072d44143f623a7302bdef83e3535e7e9e3fc428442995b433006ff",
+    "bytes": 3612
+  },
+  "sourceCatalog": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/source-catalog.json",
+    "sha256": "33ffba0402959da30ee14b96622978976dd4ddf889e656e0f35045a8a4344fe2",
+    "bytes": 2058
+  },
+  "gatePolicy": "Exact root commands once sequentially; stop at first failure; no inherited gate credit.",
+  "environmentPolicy": "Inherited environment unchanged; no credentials or environment values captured.",
+  "exclusions": "No implementation/index/lifecycle edits, Docker, Make task verifier, cold clone or browser run.",
+  "status": "passed",
+  "gates": [
+    {
+      "number": 1,
+      "name": "format-lint",
+      "command": "pnpm format:check && pnpm lint",
+      "argv": [
+        "/bin/zsh",
+        "-c",
+        "pnpm format:check && pnpm lint"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "invocationCount": 1,
+      "startedAt": "2026-10-16T20:50:13.688050+00:00",
+      "status": "passed",
+      "beforeSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-before.snapshot.json",
+        "sha256": "102d1e9c86752db028f6a53e40846fe39ebeedf23e6d61acd8904d2a2a14bf92",
+        "bytes": 3764
+      },
+      "pid": 74590,
+      "exitCode": 0,
+      "endedAt": "2026-10-16T20:50:26.523515+00:00",
+      "durationSeconds": 12.833301417,
+      "logs": {
+        "stdout": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.stdout.log",
+          "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427",
+          "bytes": 511
+        },
+        "stderr": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "raw": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.raw.log",
+          "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427",
+          "bytes": 511
+        }
+      },
+      "outputEvents": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint.output-events.jsonl",
+        "sha256": "1a95ff8ef610296b257ceb28e10ef2a05d9dcd35b618088f3418e6e1be2b0a93",
+        "bytes": 966
+      },
+      "outputChunks": 4,
+      "afterSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-01-format-lint-after.snapshot.json",
+        "sha256": "bf693f94de9ca37c0582934c02a450fd35d81216088c5910f7236f5e369cbcae",
+        "bytes": 3756
+      },
+      "sourceIntegrityPassed": true,
+      "allTrackedAndIndexUnchanged": true
+    },
+    {
+      "number": 2,
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "argv": [
+        "/bin/zsh",
+        "-c",
+        "pnpm typecheck"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "invocationCount": 1,
+      "startedAt": "2026-10-16T20:50:31.585552+00:00",
+      "status": "passed",
+      "beforeSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-before.snapshot.json",
+        "sha256": "32be7721f50df22e3789e984b6554057a93c8e6c41ab9da95f4d57a8427cb565",
+        "bytes": 3748
+      },
+      "pid": 74710,
+      "exitCode": 0,
+      "endedAt": "2026-10-16T20:50:40.798655+00:00",
+      "durationSeconds": 9.211631625,
+      "logs": {
+        "stdout": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.stdout.log",
+          "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d",
+          "bytes": 161
+        },
+        "stderr": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "raw": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.raw.log",
+          "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d",
+          "bytes": 161
+        }
+      },
+      "outputEvents": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck.output-events.jsonl",
+        "sha256": "f2422528dc4e4738804b9e8fe55d67ae1c6917102d5d92149a57149accd5d841",
+        "bytes": 247
+      },
+      "outputChunks": 1,
+      "afterSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-02-typecheck-after.snapshot.json",
+        "sha256": "50256ed4a7a148827ec2eca527d62bd02ceb6c595f6b612b5bbffc5767a121e9",
+        "bytes": 3740
+      },
+      "sourceIntegrityPassed": true,
+      "allTrackedAndIndexUnchanged": true
+    },
+    {
+      "number": 3,
+      "name": "test",
+      "command": "pnpm test",
+      "argv": [
+        "/bin/zsh",
+        "-c",
+        "pnpm test"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "invocationCount": 1,
+      "startedAt": "2026-10-16T20:50:45.413632+00:00",
+      "status": "passed",
+      "beforeSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-before.snapshot.json",
+        "sha256": "6dec2d078c7eedaa8ff8b8ec786c98e8074016cbf60885ad557a6252f43476ae",
+        "bytes": 3708
+      },
+      "pid": 74811,
+      "exitCode": 0,
+      "endedAt": "2026-10-16T21:02:02.301308+00:00",
+      "durationSeconds": 676.8767055,
+      "logs": {
+        "stdout": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.stdout.log",
+          "sha256": "aadb7028599a8fd9c952bfb961df6fb8a395b8219d0217a5053467748445a80b",
+          "bytes": 71642
+        },
+        "stderr": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.stderr.log",
+          "sha256": "e28308c2f6acc9b322a410d91566d30812ea22ccac292c4cb17a50b52c577161",
+          "bytes": 35731
+        },
+        "raw": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.raw.log",
+          "sha256": "f137cb55325f524b4298a1570c99a1b948ad6a85eaad8fdb9786f2b9d886c47f",
+          "bytes": 107373
+        }
+      },
+      "outputEvents": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test.output-events.jsonl",
+        "sha256": "27d595fbde906343eb68c3479cae5cfaab12f514f2cdbf3baad2a44a6d3e75fc",
+        "bytes": 51486
+      },
+      "outputChunks": 206,
+      "afterSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-03-test-after.snapshot.json",
+        "sha256": "1f05ac593966720757b5dad48f661d532eea75218cc3718000fc8c05eb6cc936",
+        "bytes": 3700
+      },
+      "sourceIntegrityPassed": true,
+      "allTrackedAndIndexUnchanged": true
+    },
+    {
+      "number": 4,
+      "name": "build",
+      "command": "pnpm build",
+      "argv": [
+        "/bin/zsh",
+        "-c",
+        "pnpm build"
+      ],
+      "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+      "invocationCount": 1,
+      "startedAt": "2026-10-16T21:02:12.330206+00:00",
+      "status": "passed",
+      "beforeSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-before.snapshot.json",
+        "sha256": "286c2110a3ec63b747d4218c2dbfe47455af5e153c03f4fe922379a61009b6f8",
+        "bytes": 3716
+      },
+      "pid": 82223,
+      "exitCode": 0,
+      "endedAt": "2026-10-16T21:02:31.347998+00:00",
+      "durationSeconds": 19.015614958999997,
+      "logs": {
+        "stdout": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.stdout.log",
+          "sha256": "22513e3b36f714335f91d41272bd95cab751f5ac7d2ef015751f1a31bb372be8",
+          "bytes": 70150
+        },
+        "stderr": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.stderr.log",
+          "sha256": "bc1ef00107eda404ea7eafeeb7425e1a595ec1de9cb7b77e4915b0ebf1511425",
+          "bytes": 35731
+        },
+        "raw": {
+          "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.raw.log",
+          "sha256": "f966bca6558041f4dada0ad1c30a478d41e90a4e788e461fd917eaaad11bea8f",
+          "bytes": 105881
+        }
+      },
+      "outputEvents": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build.output-events.jsonl",
+        "sha256": "2c171f0178f684ba861524f45373548a1df9f9d4b40fb6b38bd18e832aaa7a23",
+        "bytes": 47843
+      },
+      "outputChunks": 191,
+      "afterSnapshot": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/gate-04-build-after.snapshot.json",
+        "sha256": "d1740a37f04f895a0d627b4fb2f94c13a3a42050b6dac91d1f71a587ca12ad31",
+        "bytes": 3708
+      },
+      "sourceIntegrityPassed": true,
+      "allTrackedAndIndexUnchanged": true
+    }
+  ]
+}

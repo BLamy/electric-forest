@@ -1,0 +1,42 @@
+{
+  "repository": "/Users/blamy/Documents/Codex/electric-forest",
+  "revision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "files": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.files.json",
+    "sha256": "438e7445f5c41eb080a1e747a4a1df56fcf4ed344d4c0344982022459c0f814d",
+    "bytes": 733826
+  },
+  "treeRaw": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.tree.raw",
+    "sha256": "c424ad26b82b05d2f0353af0f91a39db98eb22a5020f28a83eaee9c43aeba757",
+    "bytes": 316647
+  },
+  "semanticSourceIndex": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.semantic-source-index.json",
+    "sha256": "ad3e7959881cd295253a4256d87af4459bd61fb4b36ded39280d2a299005e403",
+    "bytes": 484115
+  },
+  "children": [
+    {
+      "repository": "/Users/blamy/Documents/Codex/electric-forest/vendor/emulate",
+      "revision": "2d3e21005f10071869ee6f73e9ccc821edaab971",
+      "files": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.files.json",
+        "sha256": "d14b2c098776ed9d363b83767b4b0a6f7f41374c38cf22596fcce03e7a3d482f",
+        "bytes": 179139
+      },
+      "treeRaw": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.tree.raw",
+        "sha256": "f8b8b25dd0e85d79c62fdaa1b6e247e9d4431631f65d27f9ff57f9616cd79acd",
+        "bytes": 64386
+      },
+      "semanticSourceIndex": {
+        "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/audit-9a5861e8/committed-root.submodule-89c5c5d3409d.semantic-source-index.json",
+        "sha256": "59a1f67daf2d5741f2deb833edfe67c84160f2acadd2e8ac1fcc3645273bd292",
+        "bytes": 110481
+      },
+      "children": [],
+      "pathInParent": "vendor/emulate"
+    }
+  ]
+}

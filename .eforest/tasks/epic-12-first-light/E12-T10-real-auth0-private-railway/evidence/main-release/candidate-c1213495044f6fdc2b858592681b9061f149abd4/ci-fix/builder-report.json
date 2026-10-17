@@ -1,0 +1,149 @@
+{
+  "candidate": "1eda083c1ab66bb89125734610063e14cdd448e8",
+  "parent": "56fb7b0b3b9398c39c9baf8e93142fae7df74810",
+  "changedPaths": [
+    "tsconfig.base.json"
+  ],
+  "sourceVersions": {
+    "tsconfig.base.json": {
+      "beforeGitBlob": "be78d5fd0f5cd492a5b9955a517570bdbd469d39",
+      "afterGitBlob": "84a77ff39cb06503352adbde86b849777fc5fc6b",
+      "sha256": "2ac96a187d0cb0728bef3d446e9ebe2ddb42e01d7f0c06465c2473c10fd434f2"
+    }
+  },
+  "cause": "Two imported workspace specifiers lacked source paths, leaving typecheck dependent on warm generated dist declarations.",
+  "fix": {
+    "@eforest/meadow": "packages/meadow/src/index.ts",
+    "@eforest/tasks/sync-node": "packages/tasks/io/sync-node.ts"
+  },
+  "ciWorkflowChanged": false,
+  "allImportedWorkspaceSourceSpecifiersAudited": 20,
+  "failureReproduction": {
+    "githubRun": "38982064770",
+    "githubErrorCount": 41,
+    "maskedLocalErrorCount": 41,
+    "errorPayloadsByteEqual": true
+  },
+  "orderedNewCandidateChecks": [
+    {
+      "gate": "format",
+      "command": [
+        "pnpm",
+        "format:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 7.27149775,
+      "stdoutSha256": "0f00790fce2d9eeafd9ed321c254c81b998209b46288909109d32582754a0dd0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gate": "lint",
+      "command": [
+        "pnpm",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.9440835419999996,
+      "stdoutSha256": "ad5f1a564b0c097a301d1b6e86b593e123afc2619dfcefdc52970e93067b8084",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gate": "typecheck",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.399446082999999,
+      "all20WorkspaceDistDirectoriesHidden": true,
+      "generatedDistCreated": []
+    }
+  ],
+  "beforeFixExitCode": 2,
+  "allBuildOutputsRestoredByteExactBeforeAndAfter": true,
+  "beforeAndAfterWarmOutputDigestsEqual": true,
+  "trackedStatusAfterCommit": "",
+  "notClaimed": [
+    "Full root tests",
+    "Full root build",
+    "Fresh auditor success",
+    "Cold Ubuntu CI success after fix",
+    "Browser evidence",
+    "Task verification",
+    "Production deployment"
+  ],
+  "lifecycleAndControlsChanged": false,
+  "pushed": false,
+  "diagnosticFiles": [
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/after-fix.json",
+      "bytes": 6358,
+      "sha256": "df65dc45a1790cfbd0eef14ad77f2563fbac7d126bad1c5a3f64bbbd7a7c01c5"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/after-fix.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/after-fix.stdout.log",
+      "bytes": 161,
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/before-fix.json",
+      "bytes": 6352,
+      "sha256": "4fa42d5bcd7404ac5acf7df1a186e8b7e2b3a482ad7c66f55674736eed6eca9d"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/before-fix.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/before-fix.stdout.log",
+      "bytes": 4915,
+      "sha256": "1b2f2bfe5042e6cc806cb2b74e8a9a48173fc3de6401dba60c9b2e850d45b5fb"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/cheap-gates.json",
+      "bytes": 862,
+      "sha256": "9907272b17b8c5c9463f995753a9b466fa2c1602513b89ac1cc059330fba2ae9"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/failure-reproduction-comparison.json",
+      "bytes": 124,
+      "sha256": "1d2ecd8e2a0a95305e003f94800a1e945fee8363810c66cbd711f7336c16f2ac"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/format.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/format.stdout.log",
+      "bytes": 344,
+      "sha256": "0f00790fce2d9eeafd9ed321c254c81b998209b46288909109d32582754a0dd0"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/lint.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/lint.stdout.log",
+      "bytes": 167,
+      "sha256": "ad5f1a564b0c097a301d1b6e86b593e123afc2619dfcefdc52970e93067b8084"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/mask_dist_typecheck.py",
+      "bytes": 3412,
+      "sha256": "773af5d744879ed50c3be171b64ea78e125eebdb5281052c8eba318cc758ef8d"
+    },
+    {
+      "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/ci-fix/source-alias-audit.json",
+      "bytes": 37613,
+      "sha256": "c9aeab5f80d6b139de23b118171fcbddecdbd7892054a014d1eb4d36a7dfbb6b"
+    }
+  ]
+}

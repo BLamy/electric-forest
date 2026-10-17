@@ -1,0 +1,23 @@
+{
+  "source": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "names": [
+    "@eforest/browser-verify",
+    "@eforest/cli",
+    "@eforest/client",
+    "@eforest/evidence",
+    "@eforest/identity",
+    "@eforest/issues",
+    "@eforest/meadow",
+    "@eforest/platform",
+    "@eforest/pr",
+    "@eforest/protocol",
+    "@eforest/reducers",
+    "@eforest/server",
+    "@eforest/streamfs",
+    "@eforest/web",
+    "@eforest/web-hooks",
+    "@eforest/workspace"
+  ],
+  "allHaveBuildScripts": true,
+  "targetDryRun": "CI=true pnpm -r --filter '@eforest/web...' --filter '@eforest/cli...' run build\nCI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/preview.test.ts\nnode tools/verify/e12_t00_preview.mjs\nnode tools/verify/e12_t00_browser.mjs\necho \"verify-E12-T00: OK\"\n"
+}

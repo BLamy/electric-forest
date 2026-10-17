@@ -3,8 +3,8 @@ id: E6-T07
 epic: 6
 title: "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
 priority: 607
-status: implemented
-depends_on: [E6-T03, E6-T04]
+status: pending
+depends_on: [E6-T03, E6-T04, E15-T03]
 estimate: L
 capstone: false
 ---
@@ -30,6 +30,36 @@ and cited evidence, but no builder transcript, hidden workspace, or reusable pro
 Run streams are evidence metadata, not a database job table. Lease acquisition validates
 E6-T04 source heads and E6-T03 project state in the same fenced operation.
 
+### Roadmap alignment — 2026-10-16
+
+This task follows the public Railway launch (E12), hosted design (E13), pinned Electric
+evaluation (E15), and full-version changeset transition (E14). Use E15's selected AgentAdapter
+boundary; do not assume full Agents-server adoption or add relational authority. Claims and
+coverage artifacts reference changeset IDs, parent/head offsets, changed-file/version
+manifests and content hashes. Compute textual comparisons in memory; persist patch text only
+in redacted agent tool logs. Preserve the inherited E6-T12 record and its lifecycle
+obligations; this planning edit cannot reset its findings or run count.
+
+Browser claims use named Replay QA journeys in `proj-electric-forest-ms8w0nv1` through the
+configured managed tunnel; an epic capstone also requires the integrated exploration. Earlier
+recording references mean recordings attached to those runs, never a direct local browser
+recording substituted as final proof. Cite project/journey/test-run/exploration IDs and paired
+stream/object digests. Any fallback follows AGENTS.md and cannot waive a stricter task
+requirement.
+
+Generated comparison scenes follow E14-T05's recording masks; do not persist derived
+patch text in QA or Playwright evidence outside agent logs.
+
+### Human-directed release deferral — 2026-10-16
+
+The human prioritized merging the current hosted application into main and automatic
+Railway deployment under E12-T10. This unfinished task is administratively deferred
+from `implemented` to `pending`; its implementation, original claim, every finding
+and checkpoint below remain historical evidence. This does not close a finding, grant
+a verification run, or reset its ledger. Before any future activation, the imported
+legacy ledger needs an explicitly authorized exact-digest compatibility migration;
+the current strict parser's zero count is not zero historical runs.
+
 ## Deliverables
 
 - `packages/loop/src/run/events.ts`, `reducer.ts`, `adapter.ts`, `workspace.ts`,
@@ -52,7 +82,7 @@ E6-T04 source heads and E6-T03 project state in the same fenced operation.
       stream and validated verdict/evidence endpoints. All refused stream heads remain
       unchanged.
 - [ ] A critic workspace/process is fresh and receives only the committed task spec,
-      diff manifest, claim, and evidence manifest; a planted builder-only secret and
+      changeset/version manifest, claim, and evidence manifest; a planted builder-only secret and
       transcript are absent, proved by a scripted critic probe.
 - [ ] Pausing or invalidating the project, revoking capability, or advancing the lease
       fence aborts the run before its next mutation, appends one terminal run event, and

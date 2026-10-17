@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "task": "E12-T00",
+  "mode": "public-disposable-preview",
+  "productionQualified": false,
+  "origin": "https://electric-forest-preview-production.up.railway.app",
+  "candidateSourceRevision": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+  "projectId": "e0864588-a320-4ba3-96df-95ad0a07ee81",
+  "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+  "service": {
+    "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+    "name": "electric-forest-preview",
+    "state": "live"
+  },
+  "source": {
+    "repo": "BLamy/electric-forest",
+    "branch": "codex/railway-hosting",
+    "commitSha": "1f9e06b87109a93c75107842d4c8aa65902f8622"
+  },
+  "deployment": {
+    "id": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+    "status": "SUCCESS",
+    "createdAt": "2026-10-16T18:39:16.068Z",
+    "updatedAt": "2026-10-16T18:42:10.964Z",
+    "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+    "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "url": null,
+    "snapshotId": "df29e459-16f2-4916-bf67-90980bfba6cc",
+    "canRollback": true,
+    "canRedeploy": true,
+    "regions": [
+      "us-west2"
+    ],
+    "meta": {
+      "reason": "deploy",
+      "commitMessage": "Build full web and CLI dependency closures for preview verification",
+      "commitHash": "1f9e06b87109a93c75107842d4c8aa65902f8622",
+      "branch": "codex/railway-hosting"
+    }
+  },
+  "image": {
+    "imageDigest": "sha256:c694eed5e2d59f9b48dc3d89a6d5a79562fdc81ac89c9819fcc75039b480bf47",
+    "descriptorBase64": "eyJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQub2NpLmltYWdlLm1hbmlmZXN0LnYxK2pzb24iLCJkaWdlc3QiOiJzaGEyNTY6YzY5NGVlZDVlMmQ1OWY5YjQ4ZGMzZDg5YTZkNWE3OTU2MmZkYzgxYWM4OWM5ODE5ZmNjNzUwMzliNDgwYmY0NyIsInNpemUiOjE2MjUsImFubm90YXRpb25zIjp7Im9yZy5vcGVuY29udGFpbmVycy5pbWFnZS5jcmVhdGVkIjoiMjAyNi0xMC0xNlQxODo0MTozMVoifSwicGxhdGZvcm0iOnsiYXJjaGl0ZWN0dXJlIjoiYW1kNjQiLCJvcyI6ImxpbnV4In19",
+    "configDigest": "sha256:2ec6a536f14120dd9f93f1ba038010c41c13cc87f132fe8d93083a92b13c36ce",
+    "descriptor": {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:c694eed5e2d59f9b48dc3d89a6d5a79562fdc81ac89c9819fcc75039b480bf47",
+      "size": 1625,
+      "annotations": {
+        "org.opencontainers.image.created": "2026-10-16T18:41:31Z"
+      },
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    }
+  },
+  "applicationArtifact": {
+    "digest": "bb7762d242ad551e0b54c2f3811ae17238bb8777359b3509e900a2ffedd3816e",
+    "files": 734,
+    "manifestPaths": [
+      "../hosted-before/deployment.json",
+      "../hosted-after/deployment.json"
+    ]
+  },
+  "configuration": {
+    "source": {
+      "repo": "BLamy/electric-forest",
+      "branch": "codex/railway-hosting",
+      "commitSha": "1f9e06b87109a93c75107842d4c8aa65902f8622"
+    },
+    "networking": {
+      "serviceDomains": {
+        "electric-forest-preview-production.up.railway.app": {
+          "port": 8080
+        }
+      }
+    },
+    "build": {
+      "builder": "DOCKERFILE",
+      "buildEnvironment": "V3",
+      "dockerfilePath": "Dockerfile"
+    },
+    "deploy": {
+      "healthcheckPath": "/readyz",
+      "limitOverride": {
+        "containers": {
+          "cpu": 1,
+          "memoryBytes": 2000000000
+        }
+      },
+      "healthcheckTimeout": 60,
+      "restartPolicyMaxRetries": 3,
+      "useLegacyStacker": false,
+      "ipv6EgressEnabled": false,
+      "runtime": "V2",
+      "multiRegionConfig": {
+        "us-west2": {
+          "numReplicas": 1
+        }
+      },
+      "drainingSeconds": 15,
+      "overlapSeconds": 0
+    },
+    "volumeMounts": {
+      "10d2103d-2374-45cc-ab5f-c63dd5c063f4": {
+        "mountPath": "/data"
+      }
+    }
+  },
+  "variableNames": [
+    "EF_AGENT_RESPONDER",
+    "EF_BUILD_REVISION",
+    "EF_DEPLOYMENT_MODE",
+    "EF_PREVIEW_AUTH",
+    "EF_PREVIEW_DATA_DIR",
+    "EF_PUBLIC_ORIGIN",
+    "EF_WEB_ROOT",
+    "NODE_ENV",
+    "PORT"
+  ],
+  "volumes": [
+    {
+      "id": "10d2103d-2374-45cc-ab5f-c63dd5c063f4",
+      "name": "forest-preview-data",
+      "mountPath": "/data",
+      "sizeMB": 1000,
+      "region": "us-west2",
+      "state": "live"
+    }
+  ],
+  "health": {
+    "environment": {
+      "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+      "name": "production"
+    },
+    "services": [
+      {
+        "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+        "serviceName": "electric-forest-preview",
+        "state": "online",
+        "statusText": "Online",
+        "activeDeployments": [
+          {
+            "id": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+            "status": "SUCCESS",
+            "createdAt": "2026-10-16T18:39:16.068Z",
+            "statusUpdatedAt": "2026-10-16T18:53:04.368Z"
+          }
+        ],
+        "replicaStatus": {
+          "running": 1,
+          "crashed": 0,
+          "total": 1
+        },
+        "cronJob": null,
+        "issues": {
+          "warningCount": 0,
+          "criticalCount": 0
+        },
+        "recentFailures": 0,
+        "recentFailedDeployments": [],
+        "hasIssues": false,
+        "isCronJob": false,
+        "hasVolume": true
+      }
+    ],
+    "pendingWork": [],
+    "summary": {
+      "totalServices": 1,
+      "servicesWithIssues": 0,
+      "totalFailures": 0
+    }
+  },
+  "startupReadyAt": "2026-10-16T18:42:07.567655166Z",
+  "restart": {
+    "startedAt": "2026-10-16T18:53:01.869Z",
+    "returnedAt": "2026-10-16T18:53:04.561Z",
+    "response": {
+      "deploymentId": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+      "service": {
+        "id": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+        "name": "electric-forest-preview"
+      },
+      "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448"
+    },
+    "newProcessReadyAt": "2026-10-16T18:53:12.844959718Z",
+    "requestToNewProcessReadyMs": 10976,
+    "httpObservationPath": "restart-http-poll.json"
+  },
+  "evidenceScope": "New deployed 1f9e06b8 image and final actual-origin browser/HTTP after the new immutable gate audit. Root local warm artifact has 41 extra outputs, explicitly separate; every one of the 734 deployed files is byte-identical in the local comparison. No full local/deployed inventory equality is claimed."
+}

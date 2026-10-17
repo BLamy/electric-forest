@@ -1,0 +1,28 @@
+{
+  "attempts": 1,
+  "command": [
+    "bash",
+    "tools/verify/cold_clone.sh",
+    "--keep",
+    "verify-E12-T00"
+  ],
+  "head": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "TMPDIR": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/official-cold-tmp/",
+  "startedUTC": "2026-10-16T19:07:01.918621+00:00",
+  "cheapBlockingFindings": [],
+  "allThreeSabotagesRestoredGreen": true,
+  "status": "passed",
+  "exit": 0,
+  "seconds": 109.248,
+  "endedUTC": "2026-10-16T19:08:51.173140+00:00",
+  "originalCloneDirectory": "/var/folders/nr/cyvk1qc14jj5c081vj1xts000000gn/T/tmp.gFmsjEDpgz",
+  "retainedCloneDirectory": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/official-cold-tmp/registered-clone",
+  "cloneHeadAfterRelocation": "a7e861d023651925a16e9103c0f50fce9c368a4e",
+  "trackedStatusAfterRelocation": "",
+  "dependencyIntegrity": "DEPENDENCY_INTEGRITY_OK",
+  "registeredMarker": "verify-E12-T00: OK",
+  "originalTMPDIRHonored": false,
+  "tempPlacementNote": "Caller explicitly supplied the task-owned TMPDIR shown above. The unchanged harness mktemp selected the system temp directory. One and only one attempt was made; after completion, the kept clone was relocated into the authorized task-owned TMPDIR without rerunning any command or modifying source.",
+  "relocatedUTC": "2026-10-16T19:09:45.217311+00:00",
+  "logSha256": "f647963c7f5e8322f4df618c22efd0f8f84c196bcb8e2c4b75b3a8a2dc991263"
+}

@@ -5,7 +5,6 @@ import { attachmentInitialStateForStream, type AttachmentListState } from "@efor
 import {
   fsInitialState,
   ThreeWayMergeError,
-  treeDigest,
   type FastForwardMergeReceipt,
   type FsTree,
   type ThreeWayMergePlan,
@@ -27,6 +26,11 @@ import {
   type PrMergeHooks,
   type PrMergeOperations,
 } from "../src/index.js";
+
+/** A persisted record: the event as the stream stores it, stamped with its application offset. */
+function recordAt(event: Event, offset: Offset): Event {
+  return Object.assign({}, event, { offset });
+}
 
 const PR_STREAM = "pr:maple/reading-room/42";
 const TARGET_STREAM = "fs:maple/reading-room:main:meta";
@@ -289,36 +293,42 @@ describe("PR merge event and reducer contracts", () => {
   });
 
   it("makes merged terminal and requires a fresh approval after conflict", () => {
-    const conflicted = meadowPrReducer(approvedState(), {
-      ...event("pr.merge-conflicted", {
-        v: 1,
-        targetMergeOffset: offsetForOrdinal(3),
-        conflicts: [{ path: "README.md", kind: "edit-edit" }],
-      }),
-      offset: offsetForOrdinal(11),
-    });
+    const conflicted = meadowPrReducer(
+      approvedState(),
+      recordAt(
+        event("pr.merge-conflicted", {
+          v: 1,
+          targetMergeOffset: offsetForOrdinal(3),
+          conflicts: [{ path: "README.md", kind: "edit-edit" }],
+        }),
+        offsetForOrdinal(11),
+      ),
+    );
     expect(conflicted.status).toBe("conflicted");
     expect(conflicted.approvals).toEqual([]);
-    const reapproved = meadowPrReducer(conflicted, {
-      ...event("pr.approved", { v: 1, reviewer: "reviewer" }),
-      offset: offsetForOrdinal(12),
-    });
+    const reapproved = meadowPrReducer(
+      conflicted,
+      recordAt(event("pr.approved", { v: 1, reviewer: "reviewer" }), offsetForOrdinal(12)),
+    );
     expect(reapproved.status).toBe("approved");
-    const merged = meadowPrReducer(reapproved, {
-      ...event("pr.merged", {
-        v: 1,
-        targetMergeOffset: offsetForOrdinal(4),
-        kind: "three-way",
-        resultTreeDigest: RESULT_DIGEST,
-      }),
-      offset: offsetForOrdinal(13),
-    });
+    const merged = meadowPrReducer(
+      reapproved,
+      recordAt(
+        event("pr.merged", {
+          v: 1,
+          targetMergeOffset: offsetForOrdinal(4),
+          kind: "three-way",
+          resultTreeDigest: RESULT_DIGEST,
+        }),
+        offsetForOrdinal(13),
+      ),
+    );
     expect(merged.status).toBe("merged");
     expect(
-      meadowPrReducer(merged, {
-        ...event("pr.approved", { v: 1, reviewer: "other" }),
-        offset: offsetForOrdinal(14),
-      }),
+      meadowPrReducer(
+        merged,
+        recordAt(event("pr.approved", { v: 1, reviewer: "other" }), offsetForOrdinal(14)),
+      ),
     ).toEqual(merged);
   });
 
@@ -466,13 +476,15 @@ describe("executeMerge", () => {
     await expect(executeMerge(blocked, PR_STREAM)).rejects.toBe(conflicted);
 
     const operations = threeWayOperations();
-    operations.applyThreeWayMerge.mockImplementationOnce(async (target, _source, plan) => {
-      const actual = (await target.rawDump()).at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
-      if (actual !== plan.target.offset) {
-        throw new ThreeWayMergeError("merge/target-advanced", "target changed after planning");
-      }
-      throw new Error("unreachable");
-    });
+    vi.mocked(operations.applyThreeWayMerge).mockImplementationOnce(
+      async (target, _source, plan) => {
+        const actual = (await target.rawDump()).at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
+        if (actual !== plan.target.offset) {
+          throw new ThreeWayMergeError("merge/target-advanced", "target changed after planning");
+        }
+        throw new Error("unreachable");
+      },
+    );
     const raced = new MemoryContext(operations);
     raced.target.append("fs.file.write", { v: 2, path: "a", content: "target" });
     raced.hooks = {
@@ -504,7 +516,7 @@ describe("executeMerge", () => {
     expect(context.target.records.filter(({ type }) => type === "fs.branch.merge")).toHaveLength(1);
     expect(context.prRecords).toHaveLength(0);
 
-    context.hooks = undefined;
+    delete context.hooks;
     const recovered = await executeMerge(context, PR_STREAM);
     expect(recovered.recovered).toBe(true);
     expect(recovered.prOutcomeOffset).toBe(context.prRecords.at(-1)!.offset);

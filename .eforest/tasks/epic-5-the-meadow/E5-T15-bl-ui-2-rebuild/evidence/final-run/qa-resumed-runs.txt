@@ -1,0 +1,28 @@
+run-muoq1810-bdux in-progress Explore public homepage sections and docs page before signing in
+run-muoq17of-px3a in-progress Electric Forest final Replay QA bug closure
+run-muoq17c3-ol0u in-progress Electric Forest shell accessibility and route regression
+run-muoq16z1-dw8t in-progress E3-T06 live StreamFS tree navigation
+run-muoq16nb-9g6l in-progress E3-T06 spaced paths and nested live rename
+run-muoq16bk-3x7p in-progress E3-T06 live StreamFS tree
+run-muoq15zm-knxr in-progress E3-T05 live projections and typed refusal
+run-muoq15nn-1rw3 in-progress E3-T05 repository home exact regions
+run-muoq15c2-huqk in-progress E3-T05 repository home projections
+run-muoq150e-oabq in-progress Verify 404 error page rendering and recovery navigation back to valid content
+run-muoq14np-sjgz in-progress Hierarchical drill-down from repository list through organization to repository to stream inspector
+run-muoq14aa-dz7e in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/lost/deep/trail)
+run-muoq13xv-kicb in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/inspect/maple/reading-room/main)
+run-muoq13m6-ei6y in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/maple/reading-room)
+run-muoq13a2-9mjr in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/organizations/maple)
+run-muoq12yj-fvwy in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/repositories)
+run-muoq12m4-hvo4 in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61787/)
+run-muoq12aa-vztd in-progress Detail: Page sizing and scroll behavior (http://127.0.0.1:61788/authorize?response_type=code&client_id=eforest-e3-t02-browser&redirect_uri=http%3A%2F%2F127.0.0.1%3A61787%2Fauth%2Fcallback&scope=openid+profile+email&state=doeYqbrL3O3-DyAxQlNkdYaXqLnK2-z9&nonce=laa3yNnq-wwdLj9QYXKDlKW2x9jp-gsc&code_challenge=RUFcIaRGqsG5IqSyKh63S5XyQU9J7arQJZCLDPGCb4U&code_challenge_method=S256)
+run-muoq11w7-opvr in-progress Detail: Primary navigation destinations (nav)
+run-muoq11jo-lc6k in-progress Detail: Primary navigation destinations (nav.emu-bar-links)
+run-muoq1177-qg4c in-progress Navigate via context nav shortcuts from Maple organization to Reading Room repository to Stream Inspector
+run-muoq10vf-514f in-progress Mobile Page Sweep
+run-muoq10hx-fs5k in-progress Complete session lifecycle: login, browse repositories, and log out
+run-muoq105e-nrq3 in-progress Navigate to Stream Inspector and Missing Trail pages to verify stream diagnostic content renders
+run-muoq0ztk-ps47 in-progress Open a repository detail page from the list and verify stream checkpoints and digests render
+run-muoq0zhq-bjsq in-progress Navigate through Repositories and Stream Inspector to verify core content sections
+run-muoq0z5r-8qht in-progress Login via test identity and verify repository list loads
+run-muoq0yrr-07zx in-progress Load the main page

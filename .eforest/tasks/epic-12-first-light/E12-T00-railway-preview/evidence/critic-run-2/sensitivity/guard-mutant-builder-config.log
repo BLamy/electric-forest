@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-2/repo
+
+ ❯ packages/platform/test/preview.test.ts (18 tests | 1 failed) 8ms
+     × keeps production entrypoint closed to preview identity 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/platform/test/preview.test.ts > explicit public preview configuration boundary > keeps production entrypoint closed to preview identity
+AssertionError: expected [Function] to throw error including 'preview configuration requires' but got 'EF_OIDC_ISSUER is required'
+
+Expected: "preview configuration requires"
+Received: "EF_OIDC_ISSUER is required"
+
+ ❯ packages/platform/test/preview.test.ts:61:56
+     59|   });
+     60|   it("keeps production entrypoint closed to preview identity", () => {
+     61|     expect(() => readPlatformEnvironment(environment)).toThrow("previe…
+       |                                                        ^
+     62|     expect(() => readPlatformEnvironment({ EF_PREVIEW_AUTH: "fixture" …
+     63|       "preview configuration requires",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  15:03:56
+   Duration  1.16s (transform 629ms, setup 0ms, import 817ms, tests 8ms, environment 0ms)
+

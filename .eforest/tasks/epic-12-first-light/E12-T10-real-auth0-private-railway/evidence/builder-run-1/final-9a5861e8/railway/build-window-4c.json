@@ -1,0 +1,323 @@
+{
+  "query": {
+    "startDate": "2026-10-16T21:03:55.000Z",
+    "endDate": "2026-10-16T21:04:10.000Z",
+    "limit": 500
+  },
+  "result": {
+    "scope": "deployment",
+    "deploymentId": "2a57586c-4613-4fed-b538-09ca3adc0145",
+    "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+    "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "status": "SUCCESS",
+    "build": [
+      {
+        "timestamp": "2026-10-16T21:03:55.397674675Z",
+        "severity": "info",
+        "message": "[build 7/9] RUN pnpm build",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:e6e075380349a9703a6e1c7067bb7efd3bb4727d90c5f2373bf49d03cb6f9791\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:03:15.165285817Z\""
+          },
+          {
+            "key": "completed",
+            "value": "\"2026-10-16T21:03:55.397082236Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:55.450309227Z",
+        "severity": "info",
+        "message": "[build 8/9] RUN node tools/build_hosted_artifact.mjs \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\" && node -e 'require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\"",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:03:55.449734915Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:56.206460138Z",
+        "severity": "info",
+        "message": "hosted artifact revision=9a5861e82ec99ab2f275181a527aab5c2bfb0622 digest=b22287783bcaa4c93dd49ee1c9d43422b1e6c5ab96d0a793dc349aa67e737f15 files=740\n",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"log\""
+          },
+          {
+            "key": "vertex",
+            "value": "\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\""
+          },
+          {
+            "key": "stream",
+            "value": "1"
+          },
+          {
+            "key": "data",
+            "value": "\"aG9zdGVkIGFydGlmYWN0IHJldmlzaW9uPTlhNTg2MWU4MmVjOTlhYjJmMjc1MTgxYTUyN2FhYjVjMmJmYjA2MjIgZGlnZXN0PWIyMjI4Nzc4M2JjYWE0YzkzZGQ0OWVlMWM5ZDQzNDIyYjFlNmM1YWI5NmQwYTc5M2RjMzQ5YWE2N2U3MzdmMTUgZmlsZXM9NzQwCg==\""
+          },
+          {
+            "key": "timestamp",
+            "value": "\"2026-10-16T21:03:56.205845856Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:56.357583234Z",
+        "severity": "info",
+        "message": "[build 8/9] RUN node tools/build_hosted_artifact.mjs \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\" && node -e 'require(\"node:fs\").writeFileSync(\"build-revision\",process.argv[1]+\"\\n\")' \"9a5861e82ec99ab2f275181a527aab5c2bfb0622\"",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:f423516a48c02e96cf72b780e88a5d312613208505f2089c1b7175badb12369a\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:03:55.449734915Z\""
+          },
+          {
+            "key": "completed",
+            "value": "\"2026-10-16T21:03:56.357043273Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:56.409340639Z",
+        "severity": "info",
+        "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:a3c31ec454ec1dbcd51abde5afac93e0bdb0882c89bec206c732e40704b1d170\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:03:56.408885576Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:03:57.070219416Z",
+        "severity": "info",
+        "message": "[build 9/9] RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:a3c31ec454ec1dbcd51abde5afac93e0bdb0882c89bec206c732e40704b1d170\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:6617490dcfd18e0190c58bb9888e73cc12e406f63553a12ec3aaad3e2152dab3\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:03:56.408885576Z\""
+          },
+          {
+            "key": "completed",
+            "value": "\"2026-10-16T21:03:57.069364642Z\""
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:04:04.327705413Z",
+        "severity": "info",
+        "message": "[build 2/9] WORKDIR /app",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:04:04.326895998Z\""
+          },
+          {
+            "key": "cached",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:04:04.327744552Z",
+        "severity": "info",
+        "message": "[build 2/9] WORKDIR /app",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:3538f3e9b0acae7abcf898976e82280b24eff7c0e8e9aff9b01755b7a6c7a034\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:04:04.326895998Z\""
+          },
+          {
+            "key": "completed",
+            "value": "\"2026-10-16T21:04:04.327059934Z\""
+          },
+          {
+            "key": "cached",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-10-16T21:04:04.329213036Z",
+        "severity": "info",
+        "message": "[production 3/3] COPY --from=build /app /app",
+        "attributes": [
+          {
+            "key": "level",
+            "value": "\"info\""
+          },
+          {
+            "key": "source",
+            "value": "\"buildkit\""
+          },
+          {
+            "key": "type",
+            "value": "\"vertex\""
+          },
+          {
+            "key": "digest",
+            "value": "\"sha256:176a696363c0d0121e3ac3c06a888d3c6c96e0dd09c1df446e76d35ee5df69e7\""
+          },
+          {
+            "key": "inputs",
+            "value": "[\"sha256:6497f3ad9d7d1da4f4672a2953113b98e9b8958c63c13e69f670533d1411c4cb\",\"sha256:a3c31ec454ec1dbcd51abde5afac93e0bdb0882c89bec206c732e40704b1d170\"]"
+          },
+          {
+            "key": "started",
+            "value": "\"2026-10-16T21:04:04.328414127Z\""
+          }
+        ]
+      }
+    ]
+  }
+}

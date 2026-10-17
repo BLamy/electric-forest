@@ -103,7 +103,7 @@ export interface EvidenceEntityRef {
   readonly entityId: string;
 }
 
-export interface EvidenceStreamIdentity extends EvidenceEntityRef {}
+export type EvidenceStreamIdentity = EvidenceEntityRef;
 
 /** Repo-scoped syntax used before semantic entity-type validation. */
 export interface LooseEvidenceStreamIdentity {
@@ -390,12 +390,21 @@ export function isEvidenceContentStreamId(streamId: string): boolean {
   return parseEvidenceContentStreamId(streamId) !== undefined;
 }
 
+/** True when any UTF-16 code unit is a C0 control (U+0000–U+001F) or DEL (U+007F). */
+function hasControlCodeUnit(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const unit = value.charCodeAt(index);
+    if (unit <= 0x1f || unit === 0x7f) return true;
+  }
+  return false;
+}
+
 export function isReplayRecordingUrl(value: unknown): value is string {
   if (
     typeof value !== "string" ||
     value.length === 0 ||
     value.length > MAX_REFERENCE_URL_LENGTH ||
-    /[\u0000-\u001f\u007f]/.test(value)
+    hasControlCodeUnit(value)
   ) {
     return false;
   }

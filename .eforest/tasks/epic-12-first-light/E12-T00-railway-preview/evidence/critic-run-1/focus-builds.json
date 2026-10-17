@@ -1,0 +1,35 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/platform",
+      "build"
+    ],
+    "rc": 0,
+    "seconds": 3.97,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-1.log"
+  },
+  {
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/cli",
+      "build"
+    ],
+    "rc": 0,
+    "seconds": 1.668,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-2.log"
+  },
+  {
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/web",
+      "build"
+    ],
+    "rc": 1,
+    "seconds": 3.044,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/focus-build-3.log"
+  }
+]

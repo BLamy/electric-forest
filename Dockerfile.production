@@ -1,0 +1,19 @@
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS build
+WORKDIR /app
+RUN npm install --global pnpm@10.15.0
+COPY . .
+RUN pnpm install --frozen-lockfile
+# Exercise the actual Linux native modules shipped in this image.
+RUN node --input-type=module -e 'import {createRequire} from "node:module"; const serverRequire=createRequire(new URL("./packages/server/package.json",import.meta.url)); const lmdb=createRequire(serverRequire.resolve("@durable-streams/server"))("lmdb"); const db=lmdb.open({path:"/tmp/forest-native-check"}); db.putSync("native","linux"); if(db.get("native")!=="linux") process.exit(1); db.close(); const webRequire=createRequire(new URL("./apps/web/package.json",import.meta.url)); const esbuild=createRequire(webRequire.resolve("vite"))("esbuild"); esbuild.transformSync("const value: number = 1",{loader:"ts"});'
+RUN pnpm build
+ARG RAILWAY_GIT_COMMIT_SHA
+ARG EF_BUILD_REVISION=${RAILWAY_GIT_COMMIT_SHA}
+RUN node tools/build_hosted_artifact.mjs "$EF_BUILD_REVISION" && node -e 'require("node:fs").writeFileSync("build-revision",process.argv[1]+"\n")' "$EF_BUILD_REVISION"
+RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src packages/*/test packages/*/fixtures
+
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS production
+WORKDIR /app
+COPY --from=build /app /app
+ENV NODE_ENV=production EF_DEPLOYMENT_MODE=production EF_AGENT_RESPONDER=off EF_DATA_DIR=/data/forest-private
+EXPOSE 8080
+CMD ["node", "packages/platform/dist/src/hosted-bin.js"]

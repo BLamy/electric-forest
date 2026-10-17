@@ -1,0 +1,42 @@
+{
+  "name": "sensitivity",
+  "sourceRevision": "c1213495044f6fdc2b858592681b9061f149abd4",
+  "command": [
+    "python3",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/check_replay_sensitivity.py",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/evidence/builder-run-1/stream-proof/replay_final.py",
+    ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity"
+  ],
+  "cwd": "/Users/blamy/Documents/Codex/electric-forest",
+  "startedAt": "2026-10-17T00:18:18.356566+00:00",
+  "endedAt": "2026-10-17T00:18:18.527068+00:00",
+  "elapsedSeconds": 0.170299,
+  "exitCode": 1,
+  "before": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "after": {
+    "head": "c1213495044f6fdc2b858592681b9061f149abd4",
+    "tree": "2d60f1ee091d33dcee4f7be33e19d47e4343da6d",
+    "semanticIndexSha256": "5cc387a0aa3f2faf9407be3ffdb5da4e5ef75b5d16513d7aeb6e07643f9875c8"
+  },
+  "candidateUnchanged": true,
+  "environmentScrubbed": [
+    "NODE_OPTIONS",
+    "NODE_ENV",
+    "npm_config_*"
+  ],
+  "stdout": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity.stdout.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/main-release/final-c1213495/sensitivity.stderr.log",
+    "bytes": 1062,
+    "sha256": "da8b911ccdec60d0f29ae0d86983bc8f5d756861c5b2866e500394f52fdc971f"
+  }
+}

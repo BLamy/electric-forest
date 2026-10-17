@@ -1,0 +1,43 @@
+{
+  "environment": {
+    "id": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+    "name": "production"
+  },
+  "services": [
+    {
+      "serviceId": "160db4ed-ee0c-4d40-941c-65015a2071bf",
+      "serviceName": "electric-forest-preview",
+      "state": "online",
+      "statusText": "Online",
+      "activeDeployments": [
+        {
+          "id": "3a846a49-8b7b-4299-b10c-ecee7d755fa8",
+          "status": "SUCCESS",
+          "createdAt": "2026-10-16T18:39:16.068Z",
+          "statusUpdatedAt": "2026-10-16T18:53:04.368Z"
+        }
+      ],
+      "replicaStatus": {
+        "running": 1,
+        "crashed": 0,
+        "total": 1
+      },
+      "cronJob": null,
+      "issues": {
+        "warningCount": 0,
+        "criticalCount": 0
+      },
+      "recentFailures": 0,
+      "recentFailedDeployments": [],
+      "hasIssues": false,
+      "isCronJob": false,
+      "hasVolume": true
+    }
+  ],
+  "pendingWork": [],
+  "summary": {
+    "totalServices": 1,
+    "servicesWithIssues": 0,
+    "totalFailures": 0
+  }
+}

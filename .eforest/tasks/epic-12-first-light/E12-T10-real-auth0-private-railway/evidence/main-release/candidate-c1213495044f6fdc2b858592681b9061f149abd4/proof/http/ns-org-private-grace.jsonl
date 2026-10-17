@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":{"sub":"auth0|e12-t10-fixture-grace"},"name":"notes","v":1},"ts":1800000000000,"type":"ns.project.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":{"sub":"auth0|e12-t10-fixture-grace"},"name":"notebook","project":"notes","v":1,"visibility":"private"},"ts":1800000000000,"type":"ns.repo.create"}

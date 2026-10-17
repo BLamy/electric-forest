@@ -1,0 +1,24 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/web-hooks",
+      "build"
+    ],
+    "exitCode": 0,
+    "seconds": 1.785,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-1.log"
+  },
+  {
+    "command": [
+      "pnpm",
+      "--filter",
+      "@eforest/web",
+      "build"
+    ],
+    "exitCode": 0,
+    "seconds": 24.456,
+    "log": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/scratch-browser-preparation-2.log"
+  }
+]

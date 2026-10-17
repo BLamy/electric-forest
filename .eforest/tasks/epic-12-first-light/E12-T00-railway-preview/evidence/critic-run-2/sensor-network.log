@@ -1,0 +1,4 @@
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+{"listener":"0.0.0.0","loopback":200,"ingressInterface":"192.168.68.55","port":54825}
+REAL_INGRESS_SENSOR_OK

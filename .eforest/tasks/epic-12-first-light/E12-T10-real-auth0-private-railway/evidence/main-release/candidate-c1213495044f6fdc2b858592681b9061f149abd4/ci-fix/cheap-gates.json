@@ -1,0 +1,28 @@
+{
+  "sourceHead": "56fb7b0b3b9398c39c9baf8e93142fae7df74810",
+  "workingTsconfigSha256": "2ac96a187d0cb0728bef3d446e9ebe2ddb42e01d7f0c06465c2473c10fd434f2",
+  "orderedResults": [
+    {
+      "gate": "format",
+      "command": [
+        "pnpm",
+        "format:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 7.27149775,
+      "stdoutSha256": "0f00790fce2d9eeafd9ed321c254c81b998209b46288909109d32582754a0dd0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "gate": "lint",
+      "command": [
+        "pnpm",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.9440835419999996,
+      "stdoutSha256": "ad5f1a564b0c097a301d1b6e86b593e123afc2619dfcefdc52970e93067b8084",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "dump": "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/golden-one-byte.jsonl",
+  "records": 4,
+  "offset": "0000000000000000_0000000000000003",
+  "dumpSha256": "a89c057f2d2e9bcbed9701a6fe425d8bbb34d0a0d0605929c4c9e0e03286c48e",
+  "digest": "40acda9871f8ab6d0d3b351895a2005188f09838a97f6f989ac1078559b555b0",
+  "eventTypeCounts": {
+    "identity.user.created": 1,
+    "identity.grant.issued": 2,
+    "identity.grant.revoked": 1
+  },
+  "viewCounts": {
+    "users": 1,
+    "orgs": 0,
+    "memberships": 0,
+    "grants": 2,
+    "sessions": 0
+  }
+}
+Traceback (most recent call last):
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/identity.py", line 95, in <module>
+    main()
+  File "/Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work/stream-proof/identity.py", line 91, in main
+    assert digest == args.expect, f'digest mismatch: observed {digest}, expected {args.expect}'
+AssertionError: digest mismatch: observed 40acda9871f8ab6d0d3b351895a2005188f09838a97f6f989ac1078559b555b0, expected eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7

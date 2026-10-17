@@ -42,9 +42,9 @@ export function RepositoryTree(props: {
     <PierrePathTree
       paths={paths}
       filePaths={files}
+      onOpen={props.onOpen}
       {...(props.title === undefined ? {} : { title: props.title })}
       {...(props.selectedPath === undefined ? {} : { selectedPath: props.selectedPath })}
-      onOpen={props.onOpen}
       {...(props.className === undefined ? {} : { className: props.className })}
     />
   );
@@ -91,7 +91,16 @@ export function PierrePathTree(props: {
 
   return (
     <div
-      className={`pierre-tree ${props.className ?? ""}`.trim()}
+      className={[
+        "pierre-tree overflow-hidden rounded-md border border-border bg-card text-foreground",
+        // Forest palette for @pierre/trees (its shadow root reads these overrides).
+        "[--trees-bg-override:var(--card)] [--trees-bg-muted-override:var(--muted)] [--trees-input-bg-override:var(--muted)]",
+        "[--trees-fg-override:var(--foreground)] [--trees-fg-muted-override:var(--muted-foreground)]",
+        "[--trees-selected-bg-override:var(--secondary-strong)] [--trees-border-color-override:var(--border)]",
+        props.className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       data-tree-adapter="@pierre/trees"
       data-tree-density={props.density ?? "default"}
       data-tree-icons="minimal"

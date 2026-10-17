@@ -437,9 +437,6 @@ async function uploadThroughUi(
       { cause: error },
     );
   }
-  const writerRow = writer.guarded.page
-    .getByTestId("attachment-row")
-    .filter({ hasText: input.name });
   await writer.guarded.page
     .locator('[data-testid="attachment-row"][data-ef-hash-verified="true"]')
     .filter({ hasText: input.name })

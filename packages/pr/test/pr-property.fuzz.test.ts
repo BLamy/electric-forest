@@ -198,6 +198,8 @@ function assertAcceptedLog(events: readonly Event[]): void {
 }
 
 describe("seeded PR workflow properties through the real HTTP door", () => {
+  // 300 s is a hang budget only (every sequence is asserted literally): 500 sequences through
+  // the real HTTP door take ~160 s on the builder host, identically at 4752fbeb.
   it("holds machine, neutrality, and replay invariants for at least 500 sequences", async () => {
     fixture = await startPrHttpFixture();
     const seeds = committedSeeds();
@@ -267,5 +269,5 @@ describe("seeded PR workflow properties through the real HTTP door", () => {
     console.info(
       `E5_T02_PROPERTY sequences=${seeds.length * SEQUENCES_PER_SEED} accepted=${acceptedCount} refused=${refusalCount} generated=${JSON.stringify(Object.fromEntries(generated))} acceptedEvents=${JSON.stringify(Object.fromEntries(accepted))} seeds=${seeds.map((seed) => `0x${seed.toString(16).padStart(8, "0")}`).join(",")}`,
     );
-  }, 120_000);
+  }, 300_000);
 });

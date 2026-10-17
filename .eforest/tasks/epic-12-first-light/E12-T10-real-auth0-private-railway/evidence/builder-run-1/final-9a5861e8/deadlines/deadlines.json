@@ -1,0 +1,293 @@
+{
+  "task": "E12-T10",
+  "sourceRevision": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+  "node": "v24.20.0",
+  "profile": {
+    "headersTimeout": 500,
+    "requestTimeout": 500,
+    "connectionsCheckingInterval": 50,
+    "keepAliveTimeout": 500
+  },
+  "productionProfile": {
+    "headersTimeout": 30000,
+    "requestTimeout": 30000,
+    "connectionsCheckingInterval": 1000,
+    "keepAliveTimeout": 5000
+  },
+  "phasePolicy": "Node parser-owned header/receive deadlines; independent idle timeout; admitted body+handler+finite-response deadline; established SSE cancelled by client/drain",
+  "records": [
+    {
+      "name": "slow-initial-header",
+      "deadlineMs": 500,
+      "handlerMs": 0,
+      "clientCloseAt": null,
+      "statuses": [
+        408
+      ],
+      "elapsedMs": 512,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 7,
+          "bytes": 33
+        }
+      ]
+    },
+    {
+      "name": "header-after-initial-idle-gets-own-window",
+      "deadlineMs": 500,
+      "handlerMs": 50,
+      "clientCloseAt": null,
+      "statuses": [
+        200
+      ],
+      "elapsedMs": 710,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 420,
+          "ms": 422,
+          "bytes": 33
+        },
+        {
+          "event": "write",
+          "at": 650,
+          "ms": 652,
+          "bytes": 23
+        },
+        {
+          "event": "admitted",
+          "path": "/slow",
+          "ms": 655
+        }
+      ]
+    },
+    {
+      "name": "partial-pipelined-next-header",
+      "deadlineMs": 500,
+      "handlerMs": 0,
+      "clientCloseAt": null,
+      "statuses": [
+        200,
+        408
+      ],
+      "elapsedMs": 510,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 2,
+          "bytes": 70
+        },
+        {
+          "event": "admitted",
+          "path": "/fast",
+          "ms": 2
+        }
+      ]
+    },
+    {
+      "name": "valid-pipelined-requests",
+      "deadlineMs": 500,
+      "handlerMs": 100,
+      "clientCloseAt": null,
+      "statuses": [
+        200,
+        200
+      ],
+      "elapsedMs": 109,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 2,
+          "bytes": 93
+        },
+        {
+          "event": "admitted",
+          "path": "/fast",
+          "ms": 3
+        },
+        {
+          "event": "admitted",
+          "path": "/slow",
+          "ms": 3
+        }
+      ]
+    },
+    {
+      "name": "trickled-header-is-not-rolling",
+      "deadlineMs": 500,
+      "handlerMs": 0,
+      "clientCloseAt": null,
+      "statuses": [
+        408
+      ],
+      "elapsedMs": 507,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 4,
+          "bytes": 1
+        },
+        {
+          "event": "write",
+          "at": 200,
+          "ms": 203,
+          "bytes": 1
+        },
+        {
+          "event": "write",
+          "at": 400,
+          "ms": 403,
+          "bytes": 1
+        }
+      ]
+    },
+    {
+      "name": "body-and-handler-share-admitted-request-budget",
+      "deadlineMs": 500,
+      "handlerMs": 300,
+      "clientCloseAt": null,
+      "statuses": [
+        504
+      ],
+      "elapsedMs": 503,
+      "error": null,
+      "established": false,
+      "requestDeadlineBody": true,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 2,
+          "bytes": 57
+        },
+        {
+          "event": "write",
+          "at": 350,
+          "ms": 351,
+          "bytes": 1
+        },
+        {
+          "event": "admitted",
+          "path": "/slow",
+          "ms": 351
+        }
+      ]
+    },
+    {
+      "name": "established-SSE-survives-header-deadline",
+      "deadlineMs": 500,
+      "handlerMs": 0,
+      "clientCloseAt": 750,
+      "statuses": [
+        200
+      ],
+      "elapsedMs": 751,
+      "error": null,
+      "established": true,
+      "requestDeadlineBody": false,
+      "marks": [
+        {
+          "event": "write",
+          "at": 0,
+          "ms": 2,
+          "bytes": 39
+        },
+        {
+          "event": "admitted",
+          "path": "/stream",
+          "ms": 2
+        }
+      ]
+    },
+    {
+      "name": "initial-idle-does-not-consume-request-budget",
+      "deadlineMs": 500,
+      "idleMs": 420,
+      "handlerMs": 150,
+      "statuses": [
+        200
+      ],
+      "elapsedMs": 575,
+      "marks": [
+        {
+          "event": "request-sent",
+          "path": "/slow",
+          "ms": 423
+        },
+        {
+          "event": "handler-admitted",
+          "path": "/slow",
+          "ms": 424
+        },
+        {
+          "event": "handler-completed",
+          "path": "/slow",
+          "ms": 574
+        }
+      ]
+    },
+    {
+      "name": "keepalive-idle-does-not-consume-request-budget",
+      "deadlineMs": 500,
+      "idleMs": 420,
+      "handlerMs": 150,
+      "statuses": [
+        200,
+        200
+      ],
+      "elapsedMs": 578,
+      "marks": [
+        {
+          "event": "request-sent",
+          "path": "/fast",
+          "ms": 1
+        },
+        {
+          "event": "handler-admitted",
+          "path": "/fast",
+          "ms": 1
+        },
+        {
+          "event": "handler-completed",
+          "path": "/fast",
+          "ms": 1
+        },
+        {
+          "event": "request-sent",
+          "path": "/slow",
+          "ms": 423
+        },
+        {
+          "event": "handler-admitted",
+          "path": "/slow",
+          "ms": 423
+        },
+        {
+          "event": "handler-completed",
+          "path": "/slow",
+          "ms": 573
+        }
+      ]
+    }
+  ]
+}

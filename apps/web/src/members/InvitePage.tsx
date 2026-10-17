@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { PillButton } from "@brett_lamy/ui";
-import { KFONT } from "../vendor/chatkit/index.js";
-import { navigate } from "../prs/RepoChrome.js";
+import { Button } from "@brett_lamy/ui";
+import { navigate } from "../navigation.js";
+import { Box, ghButton } from "../blocks/github/parts.js";
 import { useWhoami } from "../chat/useWhoami.js";
 
 /**
@@ -33,28 +33,29 @@ export function InvitePage(props: {
     navigate(`/members/${encodeURIComponent(props.org)}`);
   };
   return (
-    <section className="invite-page" data-testid="invite-page" style={{ fontFamily: KFONT }}>
-      <p className="site-kicker">Workspace invitation</p>
-      <h2>Join {props.org}</h2>
-      <p className="invite-page-sub">
+    <Box data-testid="invite-page" className="mx-auto grid max-w-xl gap-3 px-6 py-8">
+      <p className="m-0 text-muted-foreground">Workspace invitation</p>
+      <h1 className="m-0 text-[20px] font-semibold">Join {props.org}</h1>
+      <p className="m-0">
         {me === null ? "Replaying your identity…" : `You are signed in as ${me.email}.`} Accepting
         grants your account membership in <strong>{props.org}</strong> — an event on the identity
         stream — and records the acceptance on the workspace's member stream.
       </p>
       {state.startsWith("error:") ? (
-        <p role="alert" className="new-repository-error" data-testid="invite-error">
+        <p role="alert" className="m-0 text-destructive" data-testid="invite-error">
           {state.slice("error:".length) === "invite-email-mismatch"
             ? "This invitation was sent to a different email address than the one you signed in with."
             : `The invitation could not be accepted: ${state.slice("error:".length)}`}
         </p>
       ) : null}
-      <div className="invite-page-actions">
-        <PillButton
-          label={state === "busy" ? "Joining…" : state === "done" ? "Joined" : "Accept invitation"}
-          tone={state === "idle" || state.startsWith("error:") ? "tint" : "soft"}
+      <div>
+        <Button
+          className={ghButton(state === "idle" || state.startsWith("error:"))}
           onPress={() => void accept()}
-        />
+        >
+          {state === "busy" ? "Joining…" : state === "done" ? "Joined" : "Accept invitation"}
+        </Button>
       </div>
-    </section>
+    </Box>
   );
 }

@@ -1,0 +1,62 @@
+{
+  "originalManifest": "manifest.json",
+  "originalManifestSha256": "1bb29cb09962dd111f3fe59aea6c80d15d7a93a2f3d6eb04208410db8f1c4565",
+  "logs": [
+    {
+      "command": "pnpm format:check && pnpm lint",
+      "kind": "raw_log",
+      "path": "01-format-lint.raw.log",
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427",
+      "bytes": 511
+    },
+    {
+      "command": "pnpm format:check && pnpm lint",
+      "kind": "normalized_log",
+      "path": "01-format-lint.log",
+      "sha256": "31284954c66077b1d69381f0a0d75327aa36b42b4888844ea845100395b07427",
+      "bytes": 511
+    },
+    {
+      "command": "pnpm typecheck",
+      "kind": "raw_log",
+      "path": "02-typecheck.raw.log",
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d",
+      "bytes": 161
+    },
+    {
+      "command": "pnpm typecheck",
+      "kind": "normalized_log",
+      "path": "02-typecheck.log",
+      "sha256": "bae40f5dda78e5d96de7db4ce054351bc185ebd1f124bb806a8edcc63d89dd3d",
+      "bytes": 161
+    },
+    {
+      "command": "pnpm test",
+      "kind": "raw_log",
+      "path": "03-test.raw.log",
+      "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418",
+      "bytes": 107139
+    },
+    {
+      "command": "pnpm test",
+      "kind": "normalized_log",
+      "path": "03-test.log",
+      "sha256": "55d01e10b7bfff938553c086fd3f6dc3990b90615ba1a6be43e27fc9aac7f418",
+      "bytes": 107139
+    },
+    {
+      "command": "pnpm build",
+      "kind": "raw_log",
+      "path": "04-build.raw.log",
+      "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d",
+      "bytes": 105647
+    },
+    {
+      "command": "pnpm build",
+      "kind": "normalized_log",
+      "path": "04-build.log",
+      "sha256": "2ea22cac5d481bcc710b75059d8483b50674975ee48818215dc5e6fd015d3b5d",
+      "bytes": 105647
+    }
+  ]
+}

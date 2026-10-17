@@ -74,6 +74,10 @@ const world = await bootWorld({
   extraSubjects,
   fixtureLogin: true,
   proofReceiptPath,
+  // Long crawls (tools/verify/e5_t15_evidence_crawl.mjs) keep one session across both bundles.
+  ...(process.env.EF_PREVIEW_SESSION_TTL === undefined
+    ? {}
+    : { sessionTtlSeconds: Number(process.env.EF_PREVIEW_SESSION_TTL) }),
 });
 const streams = new OfficialStreamAdapter({ baseUrl: world.streamUrl });
 const homes = new RepositoryHomeStore(streams, () => 1_780_000_000_000);
@@ -85,6 +89,14 @@ world.appendApplication = async (streamId, event) => {
     knownStreams.add(streamId);
   }
   return rawAppendApplication(streamId, event);
+};
+const rawAppendApplicationAs = world.appendApplicationAs.bind(world);
+world.appendApplicationAs = async (streamId, event, actor) => {
+  if (!knownStreams.has(streamId)) {
+    await streams.create(streamId);
+    knownStreams.add(streamId);
+  }
+  return rawAppendApplicationAs(streamId, event, actor);
 };
 
 async function appendContent(streamId, event) {
@@ -321,6 +333,133 @@ for (const [index, [prId, title]] of prDefinitions.entries()) {
     ),
   );
 }
+
+// E5-T15: org chat with one finished agent run, so the chat frame (ChatShell, transcript,
+// composer) and the RunAccordion render seeded stream data. Written through the same
+// application writer as every other seed; the run log carries Claude Code stream-json lines.
+const agentHandle = "sol";
+const agentActor = `agent:${agentHandle}`;
+const runStream = `agent-run:${org}/run-seeded-1`;
+await world.appendApplication(
+  `agents:${org}`,
+  appEvent(
+    "agent.register",
+    {
+      v: 1,
+      handle: agentHandle,
+      config: {
+        name: "Sol",
+        harness: "sol",
+        model: "sol",
+        effort: "medium",
+        systemPrompt: "You are Sol, a workspace agent. Work on the branch you are given.",
+        tools: ["read", "edit", "bash"],
+        mcpServers: [],
+      },
+    },
+    190,
+  ),
+);
+await world.appendApplication(
+  `chat:${org}`,
+  appEvent("chat.channel.create", { v: 1, name: "general", topic: "Forest-wide chatter" }, 191),
+);
+await world.appendApplication(
+  `chat:${org}/general`,
+  appEvent(
+    "chat.message.post",
+    {
+      v: 1,
+      id: "welcome",
+      body: "Welcome to **#general**. Every message here is an event on `chat:maple/general`.\n\n@sol please summarize the reading-room README.",
+    },
+    192,
+  ),
+);
+await world.appendApplicationAs(
+  runStream,
+  appEvent(
+    "agent.run.started",
+    {
+      v: 1,
+      handle: agentHandle,
+      harness: "sol",
+      model: "sol",
+      trigger: { streamId: `chat:${org}/general`, messageId: "welcome" },
+      codebase: { org, repo, branch: "main" },
+    },
+    193,
+  ),
+  agentActor,
+);
+await world.appendApplicationAs(
+  runStream,
+  appEvent(
+    "agent.run.output",
+    {
+      v: 1,
+      seq: 0,
+      channel: "stdout",
+      lines: [
+        { type: "system", subtype: "init", cwd: "/work/reading-room", model: "sol" },
+        {
+          type: "assistant",
+          message: { content: [{ type: "text", text: "Reading the README on main." }] },
+        },
+        {
+          type: "assistant",
+          message: {
+            content: [
+              {
+                type: "tool_use",
+                id: "t1",
+                name: "Read",
+                input: { file_path: "/work/reading-room/README.md" },
+              },
+            ],
+          },
+        },
+        {
+          type: "user",
+          message: {
+            content: [
+              {
+                type: "tool_result",
+                tool_use_id: "t1",
+                content: "1\t# Electric Forest Reading Room",
+              },
+            ],
+          },
+        },
+        { type: "result", subtype: "success", duration_ms: 4200, result: "Summarized." },
+      ].map((line) => JSON.stringify(line)),
+    },
+    194,
+  ),
+  agentActor,
+);
+await world.appendApplicationAs(
+  runStream,
+  appEvent(
+    "agent.run.finished",
+    { v: 1, status: "succeeded", exitCode: 0, summary: "Summarized the README." },
+    195,
+  ),
+  agentActor,
+);
+await world.appendApplicationAs(
+  `chat:${org}/general`,
+  appEvent(
+    "chat.message.post",
+    {
+      v: 1,
+      id: "sol-reply-1",
+      body: `The reading room is a durable, replayable repository: issues, reviews and merges are events.\n\n[eforest-run]: eforest:${runStream}`,
+    },
+    196,
+  ),
+  agentActor,
+);
 
 let stop;
 const stopped = new Promise((resolveStop) => {

@@ -1,0 +1,8 @@
+dist/assets/index-BA1XtXq_.js                                 5,715.50 kB │ gzip: 1,771.47 kB │ map: 2,820.83 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.63s
+build EXIT=0

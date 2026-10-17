@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/blamy/Documents/Codex/electric-forest/.eforest/tasks/epic-12-first-light/E12-T00-railway-preview/work/critic-run-1/repo
+
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  14:24:51
+   Duration  713ms (transform 482ms, setup 0ms, import 605ms, tests 6ms, environment 0ms)
+

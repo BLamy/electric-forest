@@ -14,7 +14,9 @@ const issuesRoot = fileURLToPath(new URL("./packages/issues/src/index.ts", impor
 const evidenceRoot = fileURLToPath(new URL("./packages/evidence/src/index.ts", import.meta.url));
 const tasksRoot = fileURLToPath(new URL("./packages/tasks/src/index.ts", import.meta.url));
 const tasksSyncNode = fileURLToPath(new URL("./packages/tasks/io/sync-node.ts", import.meta.url));
+const loopRoot = fileURLToPath(new URL("./packages/loop/src/index.ts", import.meta.url));
 const prRoot = fileURLToPath(new URL("./packages/pr/src/index.ts", import.meta.url));
+const meadowRoot = fileURLToPath(new URL("./packages/meadow/src/index.ts", import.meta.url));
 const serverRoot = fileURLToPath(new URL("./packages/server/src/index.ts", import.meta.url));
 const platformRoot = fileURLToPath(new URL("./packages/platform/src/index.ts", import.meta.url));
 const streamFsRoot = fileURLToPath(new URL("./packages/streamfs/src/index.ts", import.meta.url));
@@ -23,6 +25,7 @@ const streamFsNodeWorktree = fileURLToPath(
 );
 const reducersRoot = fileURLToPath(new URL("./packages/reducers/src/index.ts", import.meta.url));
 const workspaceRoot = fileURLToPath(new URL("./packages/workspace/src/index.ts", import.meta.url));
+const webHooksRoot = fileURLToPath(new URL("./packages/web-hooks/src/index.ts", import.meta.url));
 
 export default defineConfig({
   resolve: {
@@ -36,17 +39,23 @@ export default defineConfig({
       { find: "@eforest/evidence", replacement: evidenceRoot },
       { find: "@eforest/tasks/sync-node", replacement: tasksSyncNode },
       { find: "@eforest/tasks", replacement: tasksRoot },
+      { find: "@eforest/loop", replacement: loopRoot },
       { find: "@eforest/pr", replacement: prRoot },
+      { find: "@eforest/meadow", replacement: meadowRoot },
       { find: "@eforest/server", replacement: serverRoot },
       { find: "@eforest/platform", replacement: platformRoot },
       { find: "@eforest/reducers", replacement: reducersRoot },
       { find: "@eforest/streamfs/worktree-node", replacement: streamFsNodeWorktree },
       { find: "@eforest/streamfs", replacement: streamFsRoot },
       { find: "@eforest/workspace", replacement: workspaceRoot },
+      { find: "@eforest/web-hooks", replacement: webHooksRoot },
     ],
   },
   test: {
     include: ["packages/**/*.test.ts", "apps/web/src/**/*.test.ts"],
+    // @brett_lamy/ui@2.0.0 and Docstream import their stylesheets from ESM; let Vite transform
+    // them (CSS becomes an empty module under test) instead of Node's loader rejecting `.css`.
+    server: { deps: { inline: [/@brett_lamy\/ui/, /@brett_lamy\/docstream/] } },
     environment: "node",
     fileParallelism: false,
     // Harness scheduling budgets, NOT product budgets: sized for a heavily

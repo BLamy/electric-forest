@@ -47,6 +47,13 @@ export interface ReducerModule {
   readonly initialStateForStream?: (streamId: string) => unknown;
 }
 
+export type DigestKind = "tree" | "worktree";
+
+const STREAMFS_REDUCER: ReducerModule = {
+  reducer: streamFsReducerDefinition.reduce,
+  initialState: streamFsReducerDefinition.initialState,
+};
+
 function registeredReducer(definition: ReducerDefinition): ReducerModule {
   return {
     reducer: definition.reduce,
@@ -56,13 +63,6 @@ function registeredReducer(definition: ReducerDefinition): ReducerModule {
       : { initialStateForStream: definition.initialStateForStream }),
   };
 }
-
-export type DigestKind = "tree" | "worktree";
-
-const STREAMFS_REDUCER: ReducerModule = {
-  reducer: streamFsReducerDefinition.reduce,
-  initialState: streamFsReducerDefinition.initialState,
-};
 
 export class ReplayCliError extends Error {
   readonly mergeRejection: boolean;

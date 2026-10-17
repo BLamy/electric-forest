@@ -89,7 +89,12 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import {
+  agentsInitialState,
+  agentsReducer,
   agentsStreamId,
+  agentRunStreamId,
+  isAgentRunActionType,
+  isAgentRunStreamId,
   chatCatalogStreamId,
   chatChannelStreamId,
   fileViewStreamId,
@@ -217,6 +222,7 @@ import {
   validateChatDispatch,
 } from "./chat/validators.js";
 import { isOrgRosterStreamId, validateOrgRosterDispatch } from "./org/validators.js";
+import { checkAgentRunPayload, validateAgentRunDispatch } from "./agents/run-validators.js";
 import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 import {
   ProjectRefusalError,
@@ -1663,7 +1669,9 @@ export class PlatformGateway {
       case "registry":
         return this.registryRoute(request, url);
       case "agent-runs":
-        return this.agentRunRoute(request, url);
+        return /^\/api\/agent-runs\/(?:leases|runs)(?:\/|$)/.test(url.pathname)
+          ? this.agentRunRoute(request, url)
+          : this.chatRoute(request, url);
       default:
         return failure(404, "invalid_request", "not_found");
     }
@@ -2244,6 +2252,70 @@ export class PlatformGateway {
     return this.readTarget(streamId);
   }
 
+  /**
+   * Dispatch an event authored by a registered workspace agent (`agent:<handle>`).
+   * In-process only: the agent runtime is the sole caller, and no HTTP route reaches
+   * it. The event still passes the ordinary dispatch door — authz (the narrow `agent`
+   * basis), validation, writer lanes, and append — exactly like a browser post. What an
+   * agent may write is closed: chat posts in its org, its own run logs, and — when the
+   * run owns one — `pr.opened`/`pr.review-comment` on that single pull request stream.
+   */
+  async dispatchAsAgent(
+    org: string,
+    handle: string,
+    streamId: string,
+    event: { readonly type: string; readonly payload: unknown; readonly ts: number },
+    scope: { readonly pullRequest?: string } = {},
+  ): Promise<Response> {
+    const chat = parseChatStreamId(streamId);
+    const chatPost =
+      event.type === "chat.message.post" &&
+      chat !== undefined &&
+      chat.org === org &&
+      chat.channel !== undefined;
+    const runLog = isAgentRunActionType(event.type) && streamId.startsWith(`agent-run:${org}/`);
+    const prEvent =
+      (event.type === "pr.opened" || event.type === "pr.review-comment") &&
+      scope.pullRequest === streamId &&
+      streamId.startsWith(`pr:${org}/`);
+    if (!chatPost && !runLog && !prEvent) return failure(404, "invalid_request", "not_found");
+    const roster = (await this.readTarget(agentsStreamId(org)))
+      .map((record) => record as Event)
+      .reduce(agentsReducer, agentsInitialState);
+    const agent = roster.agents[handle];
+    if (agent === undefined || agent.removed) {
+      return json(404, { error: { class: "authz-refused", reason: "agent/not-registered" } });
+    }
+    return this.dispatchRoute(
+      new Request("http://agent.internal/api/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-eforest-dispatch-receipt": "offset" },
+        body: JSON.stringify({ streamId, event }),
+      }),
+      {
+        principal: {
+          kind: "identified",
+          sub: `agent:${handle}`,
+          session: true,
+          agentOf: org,
+          ...(prEvent ? { agentPullRequest: streamId } : {}),
+        },
+        identity: emptyView(),
+        identityOffset: "-1",
+      },
+    );
+  }
+
+  /** @deprecated kept for callers of the chat-only door; see dispatchAsAgent. */
+  dispatchAgentChatPost(
+    org: string,
+    handle: string,
+    streamId: string,
+    event: { readonly type: "chat.message.post"; readonly payload: unknown; readonly ts: number },
+  ): Promise<Response> {
+    return this.dispatchAsAgent(org, handle, streamId, event);
+  }
+
   /** The namespace owner of an org, or undefined when the org does not exist. */
   async orgOwner(org: string): Promise<string | undefined> {
     const view = await this.namespaceViewFor(org);
@@ -2261,7 +2333,8 @@ export class PlatformGateway {
       !(
         url.pathname.startsWith("/api/chat/") ||
         url.pathname.startsWith("/api/members/") ||
-        url.pathname.startsWith("/api/agents/")
+        url.pathname.startsWith("/api/agents/") ||
+        url.pathname.startsWith("/api/agent-runs/")
       ) ||
       request.headers.has("authorization")
     ) {
@@ -2749,6 +2822,12 @@ export class PlatformGateway {
       if (isChatActionType(parsed.event.type) && !isChatStreamId(parsed.streamId)) {
         throw new ChatUnknownActionError();
       }
+      if (isAgentRunActionType(parsed.event.type) !== isAgentRunStreamId(parsed.streamId)) {
+        throw new ChatUnknownActionError();
+      }
+      if (isAgentRunStreamId(parsed.streamId)) {
+        checkAgentRunPayload(parsed.event.type, parsed.event.payload);
+      }
       if (
         (isMembersActionType(parsed.event.type) || isAgentsActionType(parsed.event.type)) &&
         !isOrgRosterStreamId(parsed.streamId)
@@ -2970,9 +3049,8 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
-          if (isProjectStreamId(parsed.streamId)) {
-            // E6-T03: the project stream is minted on its first event; an unwritten
-            // stream replays to the initial `building` state.
+          if (isAgentRunStreamId(parsed.streamId) || isProjectStreamId(parsed.streamId)) {
+            // Run logs and project state streams are minted on their first admitted event.
             try {
               await this.streams.create(parsed.streamId);
             } catch (error) {
@@ -3021,6 +3099,9 @@ export class PlatformGateway {
             }
             if (isChatStreamId(parsed.streamId)) {
               await validateChatDispatch(records, stamped, parsed.streamId, this.actionValidators);
+            }
+            if (isAgentRunStreamId(parsed.streamId)) {
+              validateAgentRunDispatch(records, stamped);
             }
             if (isOrgRosterStreamId(parsed.streamId)) {
               await validateOrgRosterDispatch(
@@ -3512,17 +3593,22 @@ export class PlatformGateway {
       return failure(400, "invalid_request", "invalid_path");
     }
     const family = url.pathname.split("/")[2];
-    if (family !== "chat" && decoded.length !== 1) {
+    // chat: <org>[/<channel>]; agent-runs: <org>/<runId>; members, agents: <org>.
+    if (
+      family === "agent-runs" ? decoded.length !== 2 : family !== "chat" && decoded.length !== 1
+    ) {
       return failure(404, "invalid_request", "not_found");
     }
     const streamId =
-      family === "members"
-        ? membersStreamId(decoded[0]!)
-        : family === "agents"
-          ? agentsStreamId(decoded[0]!)
-          : decoded.length === 1
-            ? chatCatalogStreamId(decoded[0]!)
-            : chatChannelStreamId(decoded[0]!, decoded[1]!);
+      family === "agent-runs"
+        ? agentRunStreamId(decoded[0]!, decoded[1]!)
+        : family === "members"
+          ? membersStreamId(decoded[0]!)
+          : family === "agents"
+            ? agentsStreamId(decoded[0]!)
+            : decoded.length === 1
+              ? chatCatalogStreamId(decoded[0]!)
+              : chatChannelStreamId(decoded[0]!, decoded[1]!);
     const target = classifyDispatchTarget(streamId, "application");
     const live = url.searchParams.get("live") === "1";
     const operation = live ? "follow" : "read";
@@ -4524,7 +4610,7 @@ export class PlatformGateway {
     };
     append("file.view.target", { v: 1, path }, 0);
 
-    for (const record of metadata) {
+    for (const [recordIndex, record] of metadata.entries()) {
       const payload = objectPayload(record.payload, record.offset);
       if (record.type === "fs.file.create") {
         const filePath = requiredString(payload.path, "path", record.offset);
@@ -4575,14 +4661,41 @@ export class PlatformGateway {
           size: requiredSize(payload.size, "size", record.offset),
         };
         const candidates = contentByStream.get(contentStreamId) ?? [];
-        const consumed = consumeFileContent(
-          candidates,
-          contentIndexes.get(contentStreamId) ?? 0,
-          expected,
-          filePath,
-          record.offset,
-        );
-        contentIndexes.set(contentStreamId, consumed.next);
+        let consumed: { readonly content: FileContentCandidate; readonly next: number };
+        try {
+          consumed = consumeFileContent(
+            candidates,
+            contentIndexes.get(contentStreamId) ?? 0,
+            expected,
+            filePath,
+            record.offset,
+          );
+          contentIndexes.set(contentStreamId, consumed.next);
+        } catch (error) {
+          // A branch edit of an inherited file (streamfs `writeFile`) records the write
+          // against the inherited file, then hands the path to a new branch-owned content
+          // stream with `fs.file.create`; the bytes live in that new stream. Read them
+          // from there without advancing its cursor — the handoff create consumes the
+          // same generation below.
+          const next = metadata[recordIndex + 1];
+          const nextPayload =
+            next?.type === "fs.file.create" ? objectPayload(next.payload, next.offset) : undefined;
+          const handoffStream =
+            nextPayload !== undefined &&
+            nextPayload.path === filePath &&
+            typeof nextPayload.contentStreamId === "string" &&
+            nextPayload.contentStreamId !== contentStreamId
+              ? nextPayload.contentStreamId
+              : undefined;
+          if (handoffStream === undefined) throw error;
+          consumed = consumeFileContent(
+            contentByStream.get(handoffStream) ?? [],
+            contentIndexes.get(handoffStream) ?? 0,
+            expected,
+            filePath,
+            record.offset,
+          );
+        }
         expectations.set(filePath, expected);
         contentBytes.set(filePath, Buffer.from(consumed.content.contentBase64, "base64"));
         append(

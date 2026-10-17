@@ -1,0 +1,44 @@
+{
+  "deployments": [
+    {
+      "id": "2a57586c-4613-4fed-b538-09ca3adc0145",
+      "status": "BUILDING",
+      "createdAt": "2026-10-16T21:02:53.265Z",
+      "updatedAt": "2026-10-16T21:02:55.664Z",
+      "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+      "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+      "url": null,
+      "snapshotId": "2acd0297-410e-42c2-a34e-18daf166bb36",
+      "canRollback": false,
+      "canRedeploy": false,
+      "regions": [],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix(hosting): use supported Railway service configuration",
+        "commitHash": "9a5861e82ec99ab2f275181a527aab5c2bfb0622",
+        "branch": "codex/railway-hosting"
+      }
+    },
+    {
+      "id": "fc67212d-6fa2-4e64-83fb-8b492e863f80",
+      "status": "FAILED",
+      "createdAt": "2026-10-16T20:27:47.955Z",
+      "updatedAt": "2026-10-16T20:30:09.321Z",
+      "serviceId": "8eb7aa86-e20f-46fe-8d42-1d97208b4c9f",
+      "environmentId": "c1cbbfc7-b8f7-4e3e-a4ee-a6260bea7448",
+      "url": null,
+      "snapshotId": "5aa85360-039f-4b5e-ac32-8896ef34b1a8",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "us-west2"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix(E12-T10): separate HTTP request deadlines from idle connections",
+        "commitHash": "6d3c801dd29dbcf9fc3dc9094a5fb63a94d06555",
+        "branch": "codex/railway-hosting"
+      }
+    }
+  ]
+}

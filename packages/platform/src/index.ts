@@ -261,3 +261,39 @@ export {
   type RegistryRebuildResult,
   type RegistryStoreSurface,
 } from "./registry/rebuild.js";
+export {
+  AgentResponder,
+  agentReplyId,
+  agentStatusReplyId,
+  mentionedHandles,
+  type AgentReplyResult,
+  type AgentReplyGenerator,
+  type AgentReplyRequest,
+  type AgentResponderPort,
+} from "./agents/responder.js";
+export { agentPrompt, createHarnessReplyGenerator, harnessRunner } from "./agents/harness.js";
+export {
+  AgentCapabilities,
+  withAgentCapabilities,
+  type AgentCapability,
+} from "./agents/capabilities.js";
+export {
+  agentBranchName,
+  referencedCodebases,
+  withAgentWorkspace,
+  type AgentWorkspace,
+  type AgentWorkspaceOptions,
+  type CodebaseRef,
+} from "./agents/workspace.js";
+export { AgentRunLog } from "./agents/run-log.js";
+export {
+  agentPullRequestId,
+  ensureAgentPullRequest,
+  linkedPullRequest,
+  linkedRun,
+  linkedThread,
+  mirrorSource,
+  pullRequestTitle,
+} from "./agents/pull-requests.js";
+export { prMirrorMessageId, syncThreadPullRequests } from "./agents/bridge.js";
+export { claudeStreamResult } from "./agents/harness.js";
