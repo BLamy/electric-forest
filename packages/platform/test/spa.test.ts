@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDurableStreamTestServer } from "@eforest/server";
+import { createPlatformServer, listenPlatformServer } from "../src/server.js";
 import {
   IdentityStore,
   OidcClient,
@@ -52,6 +53,32 @@ describe("E3 authenticated SPA and whoami door", () => {
   afterEach(async () => {
     await official.stop();
     await rm(webRoot, { recursive: true, force: true });
+  });
+
+  it("serves the exact Replay QA ownership nonce over HTTP without authentication or redirect", async () => {
+    const server = createPlatformServer((request) => app.handle(request), {
+      origin: "https://electric-forest-production.up.railway.app",
+    });
+    try {
+      const base = await listenPlatformServer(server);
+      const path = "/.well-known/replay-qa-security-nonce";
+      const expected = "loopqa-sec-ZRdIVfTFrUW2WBNOnTaJsdspE1UOcFnhV1uAJ2F1tpE";
+      const response = await fetch(`${base}${path}`, { redirect: "manual" });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+      expect(response.headers.get("location")).toBeNull();
+      expect(Buffer.from(await response.arrayBuffer())).toEqual(Buffer.from(expected));
+      const head = await fetch(`${base}${path}`, { method: "HEAD", redirect: "manual" });
+      expect(head.status).toBe(200);
+      expect(await head.text()).toBe("");
+      const other = await fetch(`${base}${path}-other`, { redirect: "manual" });
+      expect(other.status).toBe(302);
+    } finally {
+      await new Promise<void>((done) => {
+        server.close(() => done());
+        server.closeAllConnections();
+      });
+    }
   });
 
   it("keeps app routes behind the replayed session gate and serves the public site without one", async () => {
