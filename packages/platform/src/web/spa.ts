@@ -14,7 +14,7 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
 
 const FAVICON_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f1010"/><path d="M16 6c-4.5 0-8 3.8-8 8.5 0 4.1 2.5 7.3 6 8.2V27h4v-4.3c3.5-.9 6-4.1 6-8.2C24 9.8 20.5 6 16 6Z" fill="#48b979"/><circle cx="13" cy="14" r="1.5" fill="#0f1010"/><circle cx="19" cy="14" r="1.5" fill="#0f1010"/></svg>';
-const REPLAY_QA_SECURITY_NONCE = "loopqa-sec-ZRdIVfTFrUW2WBNOnTaJsdspE1UOcFnhV1uAJ2F1tpE";
+const REPLAY_QA_SECURITY_NONCE = "loopqa-sec-1TOLLVrqSC11nfIyd7tVP7CfyO7d6mJhPdW8KMvCPTQ";
 
 function redirectToLogin(): Response {
   return new Response(null, { status: 302, headers: { location: "/auth/login" } });
