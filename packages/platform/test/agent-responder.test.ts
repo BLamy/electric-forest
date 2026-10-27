@@ -1,12 +1,16 @@
 import { emptyView } from "@eforest/identity";
 import { DEFAULT_AGENTS } from "@eforest/reducers";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { restrictedClaudeProcess } from "../src/agents/harness.js";
 import {
   AgentCapabilities,
   AgentResponder,
   agentBranchName,
   referencedCodebases,
   withAgentCapabilities,
+  withAgentWorkspace,
   agentReplyId,
   harnessRunner,
   linkedRun,
@@ -68,6 +72,31 @@ describe("agent authorization basis", () => {
 });
 
 describe("mention parsing", () => {
+  it("runs hosted Claude with restricted file tools and no inherited app credentials", () => {
+    const token = `synthetic-${"x".repeat(40)}`;
+    const child = restrictedClaudeProcess(token, "/tmp/isolated-claude");
+    expect(child.command).toBe("/usr/local/bin/claude");
+    expect(child.args).toContain("--restricted");
+    expect(child.args).toContain("--safe-mode");
+    expect(child.args).toContain("--strict-mcp-config");
+    expect(child.args).toContain("mcp__*");
+    expect(child.args).toContain("none");
+    expect(child.env.CLAUDE_CODE_OAUTH_TOKEN).toBe(token);
+    expect(child.env.CLAUDE_CONFIG_DIR).toBe("/tmp/isolated-claude/.claude");
+    expect(Object.keys(child.env).sort()).toEqual(
+      [
+        "CLAUDE_CODE_OAUTH_TOKEN",
+        "CLAUDE_CONFIG_DIR",
+        "DISABLE_AUTOUPDATER",
+        "HOME",
+        "NO_COLOR",
+        "PATH",
+        "TMPDIR",
+        "XDG_CONFIG_HOME",
+      ].sort(),
+    );
+    expect(JSON.stringify(child.args)).not.toContain(token);
+  });
   it("finds handles at word boundaries, first-mention order, no duplicates", () => {
     expect(mentionedHandles("@luna hey @sol and @luna again")).toEqual(["luna", "sol"]);
     expect(mentionedHandles("mail me@luna.dev or @@luna")).toEqual([]);
@@ -121,6 +150,7 @@ class FakePort implements AgentResponderPort {
       v: 1,
       id,
       body,
+      serverReceivedAt: 2,
       ...(threadOf === undefined ? {} : { threadOf }),
       actor,
     });
@@ -152,6 +182,60 @@ class FakePort implements AgentResponderPort {
 }
 
 describe("AgentResponder", () => {
+  it("aborts an active run and drains without posting a shutdown reply", async () => {
+    const port = new FakePort();
+    port.post("active", "@sol wait for shutdown");
+    let started!: () => void;
+    const running = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const responder = new AgentResponder({
+      gateway: port,
+      generate: (request) =>
+        new Promise<string>((resolve) => {
+          request.signal?.addEventListener("abort", () => resolve("too late"), { once: true });
+          started();
+        }),
+      pollMs: 10,
+      log: () => {},
+    });
+    responder.start();
+    await running;
+    responder.stop();
+    expect(await responder.drain(1_000)).toBe(true);
+    expect(port.posts).toEqual([]);
+  });
+
+  it("does not answer pre-registration or legacy mentions with forged future timestamps", async () => {
+    const port = new FakePort();
+    port.post("historical", "@sol from before registration");
+    const channel = port.streams.get("chat:asdf/test")!;
+    channel[0] = {
+      ...(channel[0] as object),
+      ts: Number.MAX_SAFE_INTEGER,
+      payload: {
+        ...(channel[0] as { payload: Record<string, unknown> }).payload,
+        serverReceivedAt: 0,
+      },
+    };
+    port.post("legacy", "@sol legacy future timestamp");
+    const legacy = channel[1] as { payload: Record<string, unknown> };
+    const { serverReceivedAt: _serverReceivedAt, ...oldPayload } = legacy.payload;
+    channel[1] = { ...legacy, ts: Number.MAX_SAFE_INTEGER, payload: oldPayload };
+    port.post("fresh", "@sol after registration");
+    const seen: string[] = [];
+    const responder = new AgentResponder({
+      gateway: port,
+      generate: (request) => {
+        seen.push(request.mention.id);
+        return Promise.resolve("ready");
+      },
+      log: () => {},
+    });
+    await responder.tick();
+    expect(seen).toEqual(["fresh"]);
+  });
+
   it("answers a root mention once, in that message's thread", async () => {
     const port = new FakePort();
     const seen: AgentReplyRequest[] = [];
@@ -251,12 +335,101 @@ describe("AgentResponder", () => {
 });
 
 describe("agent codebase runs", () => {
+  it("stops and flushes the watcher after a run is aborted", async () => {
+    const workshop = resolve(
+      ".eforest/tasks/epic-12-first-light/E12-T10-real-auth0-private-railway/work",
+    );
+    await mkdir(workshop, { recursive: true });
+    const fixture = await mkdtemp(resolve(workshop, "agent-cleanup-"));
+    const logPath = resolve(fixture, "cli.log");
+    const cliBin = resolve(fixture, "cli.mjs");
+    await writeFile(
+      cliBin,
+      `import { appendFileSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+const args = process.argv.slice(2);
+appendFileSync(${JSON.stringify(logPath)}, args.join(" ") + "\\n");
+if (args[0] === "clone") {
+  mkdirSync(resolve(args[3], ".ef"), { recursive: true });
+}
+if (args[0] === "watch" && args[1] === "start") {
+  await new Promise((done) => setTimeout(done, 250));
+}
+`,
+    );
+    const capabilities = new AgentCapabilities();
+    const abort = new AbortController();
+    try {
+      await expect(
+        withAgentWorkspace(
+          {
+            capabilities,
+            platformUrl: () => "http://127.0.0.1:9999",
+            streamUrl: "http://127.0.0.1:9998",
+            cliBin,
+          },
+          {
+            codebase: { org: "maple", repo: "notes" },
+            handle: "luna",
+            branch: "agent-luna-1234abcd",
+          },
+          async ({ dir }) => {
+            await writeFile(resolve(dir, "README.md"), "saved before shutdown\n");
+            abort.abort();
+            throw new Error("run stopped");
+          },
+          abort.signal,
+        ),
+      ).rejects.toThrow("run stopped");
+      const commands = await readFile(logPath, "utf8");
+      expect(commands).toContain("watch start --dir");
+      expect(commands).toContain("watch stop --dir");
+      expect(commands).toContain("watch --up --quiesce");
+      const startupAbort = new AbortController();
+      let workRan = false;
+      const startup = withAgentWorkspace(
+        {
+          capabilities,
+          platformUrl: () => "http://127.0.0.1:9999",
+          streamUrl: "http://127.0.0.1:9998",
+          cliBin,
+        },
+        {
+          codebase: { org: "maple", repo: "notes" },
+          handle: "luna",
+          branch: "agent-luna-1234abcd",
+        },
+        () => {
+          workRan = true;
+          return Promise.resolve();
+        },
+        startupAbort.signal,
+      );
+      const deadline = Date.now() + 5_000;
+      while (!(await readFile(logPath, "utf8")).slice(commands.length).includes("watch start")) {
+        if (Date.now() > deadline) throw new Error("watch start was not attempted");
+        await new Promise((done) => setTimeout(done, 10));
+      }
+      startupAbort.abort();
+      await expect(startup).rejects.toThrow("agent run aborted before workspace became ready");
+      expect(workRan).toBe(false);
+      const startupCommands = (await readFile(logPath, "utf8")).slice(commands.length);
+      expect(startupCommands).toContain("watch stop --dir");
+      expect(startupCommands).toContain("watch --up --quiesce");
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
+  });
+
   const repoNamespace: NamespaceView = {
     orgs: {
       maple: {
         owner: OWNER,
         projects: {},
-        repos: { "docstream-demo": { owner: OWNER, visibility: "private" } },
+        repos: {
+          "docstream-demo": { owner: OWNER, visibility: "private" },
+          ledger: { owner: OWNER, visibility: "private" },
+        },
       },
       willow: {
         owner: OWNER,
@@ -275,6 +448,7 @@ describe("agent codebase runs", () => {
         sub: "agent:luna",
         session: true,
         agentOf: "maple",
+        agentRepo: "docstream-demo",
         agentBranch: "agent-luna-1234abcd",
       },
       ...(operation === "dispatch" ? { eventKind: "application" as const } : {}),
@@ -306,6 +480,14 @@ describe("agent codebase runs", () => {
       allowed: false,
       refusal: "authz/not-found",
     });
+    expect(repoDecision("fs:maple/ledger:main:meta", "read")).toMatchObject({
+      allowed: false,
+      refusal: "authz/not-found",
+    });
+    expect(repoDecision("fs:maple/ledger:agent-luna-1234abcd:meta", "dispatch")).toMatchObject({
+      allowed: false,
+      refusal: "authz/not-found",
+    });
   });
 
   it("finds $codebase chips, mention first, and names branches deterministically", () => {
@@ -328,11 +510,21 @@ describe("agent codebase runs", () => {
       verifyAuthorization: () => Promise.reject(new Error("not a user token")),
     };
     const verifier = withAgentCapabilities(base, capabilities);
-    const issued = capabilities.issue({ org: "maple", handle: "luna", branch: "agent-luna-1" });
+    const issued = capabilities.issue({
+      org: "maple",
+      repo: "docstream-demo",
+      handle: "luna",
+      branch: "agent-luna-1",
+    });
     const header = `Bearer ${issued.token}`;
     await expect(verifier.verifyAuthorization(header)).resolves.toEqual({ sub: "agent:luna" });
     await expect(verifier.authorizationContext!(header)).resolves.toMatchObject({
-      principal: { sub: "agent:luna", agentOf: "maple", agentBranch: "agent-luna-1" },
+      principal: {
+        sub: "agent:luna",
+        agentOf: "maple",
+        agentRepo: "docstream-demo",
+        agentBranch: "agent-luna-1",
+      },
     });
     issued.revoke();
     await expect(verifier.verifyAuthorization(header)).rejects.toThrow("not a user token");

@@ -72,6 +72,7 @@ describe("explicit private Auth0 hosted profile", () => {
       origin: "https://forest.example.test",
       port: 8080,
       sessionTtlSeconds: 86400,
+      agents: "off",
     });
     expect(HOSTED_LIMITS).toEqual({
       maxBodyBytes: 8388608,
@@ -99,6 +100,7 @@ describe("explicit private Auth0 hosted profile", () => {
     "OPENAI_API_KEY",
     "CODEX_HOME",
     "CLAUDE_CONFIG_DIR",
+    "CLAUDE_CODE_OAUTH_TOKEN",
     "AWS_ACCESS_KEY_ID",
     "NODE_OPTIONS",
   ])("refuses inherited %s without echoing its value", (name) => {
@@ -108,6 +110,25 @@ describe("explicit private Auth0 hosted profile", () => {
       readHostedEnvironment({ ...configuration, [name]: value });
     } catch (error) {
       expect(String(error)).not.toContain(value);
+    }
+  });
+  it("accepts a setup token only for restricted hosted Claude without exposing it in config", () => {
+    const token = `synthetic-${"x".repeat(40)}`;
+    const config = readHostedEnvironment({
+      ...configuration,
+      EF_AGENT_RESPONDER: "restricted-claude",
+      CLAUDE_CODE_OAUTH_TOKEN: token,
+    });
+    expect(config.agents).toBe("restricted-claude");
+    expect(JSON.stringify(config)).not.toContain(token);
+    for (const invalid of [undefined, "short", "contains whitespace"]) {
+      expect(() =>
+        readHostedEnvironment({
+          ...configuration,
+          EF_AGENT_RESPONDER: "restricted-claude",
+          CLAUDE_CODE_OAUTH_TOKEN: invalid,
+        }),
+      ).toThrow("CLAUDE_CODE_OAUTH_TOKEN");
     }
   });
   it.each([

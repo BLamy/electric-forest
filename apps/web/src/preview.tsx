@@ -13,19 +13,24 @@ export function agentsDisabled(doc: Document = document): boolean {
 export function HostedNotice(): React.JSX.Element | null {
   if (document.querySelector('meta[name="ef-mode"][content="production"]') === null) return null;
   const revision = document.querySelector('meta[name="ef-build"]')?.getAttribute("content");
+  const agents = document.querySelector('meta[name="ef-agents"]')?.getAttribute("content") ?? "off";
   return (
     <aside
       role="note"
       data-testid="hosted-banner"
       data-ef-mode="production"
       data-ef-auth="auth0"
-      data-ef-agents="off"
+      data-ef-agents={agents}
       data-ef-integrations="off"
       data-ef-build={revision}
       className="flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-border bg-muted px-3 py-2 text-center text-xs"
     >
       <strong>Auth0 sign-in · Private data</strong>
-      <span>Agents and external integrations are off.</span>
+      <span>
+        {agents === "restricted-claude"
+          ? "Claude agents can reply and edit referenced codebases; shell and external integrations are off."
+          : "Agents and external integrations are off."}
+      </span>
       <a className="underline" href="/settings/cli-tokens">
         CLI tokens
       </a>

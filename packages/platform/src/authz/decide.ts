@@ -56,6 +56,7 @@ export type AuthzPrincipal =
        * exactly one capability: reading and posting in that org's chat channels.
        */
       readonly agentOf?: string;
+      readonly agentRepo?: string;
       /**
        * The one branch an agent run may write (`fs:` streams of any repo in `agentOf`).
        * Absent: the agent may only read repositories. Never `main`.
@@ -331,6 +332,15 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
     return refuse("authz/unauthenticated");
   }
 
+  if (
+    principal.kind === "identified" &&
+    principal.agentOf !== undefined &&
+    target.kind !== "org" &&
+    target.kind !== "repo"
+  ) {
+    return refuse("authz/not-found");
+  }
+
   // 4. Non-repo targets.
   if (target.kind === "internal") return refuse("authz/not-found");
   if (target.kind === "control") {
@@ -389,6 +399,8 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
   //     in its own org; write only the `fs:` streams of its single run branch.
   if (principal.kind === "identified" && principal.agentOf !== undefined) {
     if (principal.agentOf !== target.org) return refuse("authz/not-found");
+    if (principal.agentRepo !== undefined && principal.agentRepo !== target.repo)
+      return refuse("authz/not-found");
     if (operation !== "dispatch") return allow("agent", target.streamId);
     const writable =
       (principal.agentBranch !== undefined &&

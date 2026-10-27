@@ -2,10 +2,12 @@ import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import type { Event } from "@eforest/protocol";
 import { describe, expect, it } from "vitest";
 import {
+  AgentCapabilities,
   BearerVerifier,
   createPlatformHandler,
   OfficialStreamAdapter,
   PlatformGateway,
+  withAgentCapabilities,
   type StreamAdapter,
 } from "../src/index.js";
 
@@ -123,6 +125,41 @@ async function body(response: Response): Promise<unknown> {
 }
 
 describe("platform gateway authentication boundary", () => {
+  it("refuses live agent capabilities on namespace and sandbox dispatches", async () => {
+    const fixture = signingFixture();
+    const capabilities = new AgentCapabilities();
+    const issued = capabilities.issue({
+      org: "maple",
+      repo: "notes",
+      handle: "luna",
+      branch: "agent-luna-1234abcd",
+    });
+    for (const [streamId, event] of [
+      ["ns:root", { type: "ns.org.create", payload: { v: 1, name: "evil" }, ts: 1 }],
+      ["sandbox-target", { type: "test.created", payload: { value: 1 }, ts: 1 }],
+    ] as const) {
+      const streams = new CountingAdapter();
+      const gateway = new PlatformGateway({
+        verifier: withAgentCapabilities(verifier(fixture), capabilities),
+        streams,
+      });
+      const response = await gateway.handle(
+        new Request("https://platform.example.test/api/dispatch", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${issued.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ streamId, event }),
+        }),
+      );
+      expect(response.status).toBe(404);
+      expect(await body(response)).toMatchObject({ error: { reason: "authz/not-found" } });
+      expect(streams.calls.append).toBe(0);
+    }
+    issued.revoke();
+  });
+
   it("injects the verified subject and only then appends", async () => {
     const fixture = signingFixture();
     const streams = new CountingAdapter();

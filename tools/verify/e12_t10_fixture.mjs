@@ -247,7 +247,10 @@ export async function createHostedFixture(output, options = {}) {
     EF_DATA_DIR: dataDir,
     EF_WEB_ROOT: resolve(root, "apps/web/dist"),
     EF_BUILD_REVISION: revision,
-    EF_AGENT_RESPONDER: "off",
+    EF_AGENT_RESPONDER: options.agentResponder ?? "off",
+    ...(options.agentResponder === "restricted-claude"
+      ? { CLAUDE_CODE_OAUTH_TOKEN: options.claudeToken ?? `synthetic-${"x".repeat(40)}` }
+      : {}),
     PORT: "0",
   };
   const oidcFetch = (input, init) => {
@@ -273,6 +276,7 @@ export async function createHostedFixture(output, options = {}) {
       ...(options.transactionTtlMs === undefined
         ? {}
         : { transactionTtlMs: options.transactionTtlMs }),
+      ...(options.claudeCommand === undefined ? {} : { claudeCommand: options.claudeCommand }),
     });
     backend = (await runtime.start()).replace("0.0.0.0", "127.0.0.1");
     const elapsedMs = Math.round(performance.now() - started);

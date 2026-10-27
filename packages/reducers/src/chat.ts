@@ -92,6 +92,7 @@ export interface ChatMessage {
   readonly actor: string;
   readonly body: string;
   readonly ts: number;
+  readonly serverReceivedAt?: number;
   /** Application offset of the posting event; "" while an event has no offset. */
   readonly offset: string;
   /** Root message id when this message is a thread reply. */
@@ -190,7 +191,18 @@ export function isChatEvent(event: Event): boolean {
   if (event.payload === null || typeof event.payload !== "object" || Array.isArray(event.payload)) {
     return false;
   }
-  const { actor, ...rest } = withoutWriter(event.payload as Record<string, unknown>);
+  const { actor, serverReceivedAt, ...rest } = withoutWriter(
+    event.payload as Record<string, unknown>,
+  );
+  if (
+    serverReceivedAt !== undefined &&
+    (event.type !== "chat.message.post" ||
+      typeof serverReceivedAt !== "number" ||
+      !Number.isSafeInteger(serverReceivedAt) ||
+      serverReceivedAt < 0)
+  ) {
+    return false;
+  }
   return typeof actor === "string" && actor.length > 0 && isChatDispatchPayload(event.type, rest);
 }
 
@@ -234,6 +246,9 @@ export function chatChannelReducer(state: ChatChannelState, event: Event): ChatC
           actor: payload.actor,
           body: payload.body as string,
           ts: event.ts,
+          ...(typeof payload.serverReceivedAt === "number"
+            ? { serverReceivedAt: payload.serverReceivedAt }
+            : {}),
           offset: typeof offset === "string" ? offset : "",
           threadOf,
           revision: 1,

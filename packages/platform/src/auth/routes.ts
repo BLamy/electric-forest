@@ -45,6 +45,7 @@ export interface PlatformWebAppOptions {
   readonly resend?: ResendConfig;
   /** Explicit hosted policy; legacy local emulators retain their existing contract. */
   readonly hosted?: { readonly origin: string; readonly transactionTtlMs: number };
+  readonly hostedAgentCapability?: (authorization: string | null) => boolean;
   /** Optional same-origin bridge for a local OIDC emulator behind a managed tunnel. */
   readonly oidcProxyTarget?: string;
   /** Public origin to use when an upstream wrapper terminates or rewrites Host. */
@@ -255,6 +256,7 @@ export class PlatformWebApp {
   private readonly publicOrigin: string | undefined;
   private testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
   private readonly hosted: PlatformWebAppOptions["hosted"];
+  private readonly hostedAgentCapability: PlatformWebAppOptions["hostedAgentCapability"];
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -308,6 +310,7 @@ export class PlatformWebApp {
     }
     this.testProofReceipt = options.testProofReceipt;
     this.hosted = options.hosted;
+    this.hostedAgentCapability = options.hostedAgentCapability;
   }
 
   installTestProofReceiptForHarness(receipt: () => Promise<unknown | undefined>): void {
@@ -325,10 +328,18 @@ export class PlatformWebApp {
       if (!["GET", "HEAD"].includes(request.method)) {
         const bearerDispatch =
           url.pathname === "/api/dispatch" && request.headers.has("authorization");
-        if (!bearerDispatch && request.headers.get("origin") !== this.hosted.origin) {
+        const agentBranchRegistration =
+          request.method === "POST" &&
+          /^\/api\/repos\/[a-z0-9-]+\/[a-z0-9-]+\/home\/branches$/.test(url.pathname) &&
+          this.hostedAgentCapability?.(request.headers.get("authorization")) === true;
+        if (
+          !bearerDispatch &&
+          !agentBranchRegistration &&
+          request.headers.get("origin") !== this.hosted.origin
+        ) {
           return json(403, { error: { class: "origin-refused" } });
         }
-        if (!bearerDispatch && request.headers.has("authorization")) {
+        if (!bearerDispatch && !agentBranchRegistration && request.headers.has("authorization")) {
           return json(401, { error: { class: "web-session-required" } });
         }
       }

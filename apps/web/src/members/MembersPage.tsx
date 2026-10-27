@@ -42,6 +42,7 @@ const EMPTY_AGENT: AgentConfig = {
 
 function AgentForm(props: {
   readonly initial?: AgentEntry;
+  readonly hostedClaude?: boolean;
   readonly onSubmit: (handle: string, config: AgentConfig) => Promise<void>;
   readonly onDone: () => void;
 }): React.JSX.Element {
@@ -90,11 +91,13 @@ function AgentForm(props: {
         ...config,
         name: config.name.trim(),
         model: config.model.trim(),
-        tools: tools
-          .split(",")
-          .map((tool) => tool.trim())
-          .filter((tool) => tool.length > 0),
-        mcpServers,
+        tools: props.hostedClaude
+          ? ["read", "edit"]
+          : tools
+              .split(",")
+              .map((tool) => tool.trim())
+              .filter((tool) => tool.length > 0),
+        mcpServers: props.hostedClaude ? [] : mcpServers,
       });
       props.onDone();
     } catch (cause) {
@@ -143,8 +146,14 @@ function AgentForm(props: {
             onChange={(event) => set("harness", event.currentTarget.value)}
           >
             {[
-              ...AGENT_HARNESSES,
-              ...(AGENT_HARNESSES.includes(config.harness as never) ? [] : [config.harness]),
+              ...(props.hostedClaude ? ["claude-code"] : AGENT_HARNESSES),
+              ...((
+                props.hostedClaude
+                  ? config.harness === "claude-code"
+                  : AGENT_HARNESSES.includes(config.harness as never)
+              )
+                ? []
+                : [config.harness]),
             ].map((harness) => (
               <option key={harness} value={harness}>
                 {harness}
@@ -181,24 +190,32 @@ function AgentForm(props: {
           placeholder="Who this agent is and how it should work."
         />
       </label>
-      <label className="grid gap-1 text-[13px] font-semibold">
-        <span>Tools (comma separated)</span>
-        <input
-          className={ghField}
-          value={tools}
-          onChange={(event) => setTools(event.currentTarget.value)}
-        />
-      </label>
-      <label className="grid gap-1 text-[13px] font-semibold">
-        <span>MCP servers (one per line: name url)</span>
-        <textarea
-          className={ghTextarea}
-          rows={3}
-          value={mcp}
-          onChange={(event) => setMcp(event.currentTarget.value)}
-          placeholder="replay https://mcp.replay.io"
-        />
-      </label>
+      {props.hostedClaude ? (
+        <small>
+          Hosted Claude uses restricted file tools only; shell, web and MCP tools are unavailable.
+        </small>
+      ) : (
+        <>
+          <label className="grid gap-1 text-[13px] font-semibold">
+            <span>Tools (comma separated)</span>
+            <input
+              className={ghField}
+              value={tools}
+              onChange={(event) => setTools(event.currentTarget.value)}
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold">
+            <span>MCP servers (one per line: name url)</span>
+            <textarea
+              className={ghTextarea}
+              rows={3}
+              value={mcp}
+              onChange={(event) => setMcp(event.currentTarget.value)}
+              placeholder="replay https://mcp.replay.io"
+            />
+          </label>
+        </>
+      )}
       {error === undefined ? null : (
         <p role="alert" className="m-0 text-destructive">
           {error}
@@ -311,6 +328,8 @@ function InviteForm(props: {
 export function MembersPage(props: { readonly org: string }): React.JSX.Element {
   const preview = isPreview();
   const disabled = agentsDisabled();
+  const hostedClaude =
+    document.querySelector('meta[name="ef-agents"][content="restricted-claude"]') !== null;
   const humans = useHumanRoster(props.org);
   const agents = useAgentRoster(props.org);
   const [sheet, setSheet] = useState<"none" | "add" | "edit">("none");
@@ -459,8 +478,10 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
                   <code className="font-normal text-muted-foreground">@{agent.handle}</code>
                 </strong>
                 <div className="text-[12px] text-muted-foreground">
-                  {agent.harness} · {agent.model} · effort {agent.effort} · {agent.tools.length}{" "}
-                  tools · {agent.mcpServers.length} MCP
+                  {agent.harness} · {agent.model} · effort {agent.effort} ·{" "}
+                  {hostedClaude
+                    ? "restricted file tools"
+                    : `${agent.tools.length} tools · ${agent.mcpServers.length} MCP`}
                 </div>
               </div>
               <span className="rounded-full border border-border px-2 text-[12px] text-muted-foreground">
@@ -502,6 +523,7 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
             />
           ) : (
             <AgentForm
+              hostedClaude={hostedClaude}
               onSubmit={async (handle, config) => {
                 await agents.dispatch(registerAgentEvent(handle, config));
               }}
@@ -519,6 +541,7 @@ export function MembersPage(props: { readonly org: string }): React.JSX.Element 
           <div className="grid gap-3">
             <AgentForm
               initial={editing}
+              hostedClaude={hostedClaude}
               onSubmit={async (handle, config) => {
                 await agents.dispatch({
                   type: "agent.update",
