@@ -160,6 +160,78 @@ describe("platform gateway authentication boundary", () => {
     issued.revoke();
   });
 
+  it("limits live agent namespace lookup to its assigned repository", async () => {
+    const fixture = signingFixture();
+    const capabilities = new AgentCapabilities();
+    const issued = capabilities.issue({
+      org: "maple",
+      repo: "notes",
+      handle: "luna",
+      branch: "agent-luna-1234abcd",
+    });
+    const streams = new CountingAdapter();
+    const gateway = new PlatformGateway({
+      verifier: withAgentCapabilities(verifier(fixture), capabilities),
+      streams,
+    });
+    try {
+      for (const path of ["willow/garden", "maple/ledger", "maple", "maple/notes/extra"]) {
+        const response = await gateway.handle(
+          new Request(`https://platform.example.test/api/namespaces/${path}`, {
+            headers: { authorization: `Bearer ${issued.token}` },
+          }),
+        );
+        expect(response.status).toBe(404);
+        expect(await body(response)).toMatchObject({ error: { code: "authz_refused" } });
+        expect(streams.calls.read).toBe(0);
+      }
+      const allowed = await gateway.handle(
+        new Request("https://platform.example.test/api/namespaces/maple/notes", {
+          headers: { authorization: `Bearer ${issued.token}` },
+        }),
+      );
+      expect(allowed.status).toBe(200);
+      expect(streams.calls.read).toBeGreaterThan(0);
+    } finally {
+      issued.revoke();
+    }
+  });
+
+  it("refuses out-of-scope agent application reads before namespace replay", async () => {
+    const fixture = signingFixture();
+    const capabilities = new AgentCapabilities();
+    const issued = capabilities.issue({
+      org: "maple",
+      repo: "notes",
+      handle: "luna",
+      branch: "agent-luna-1234abcd",
+    });
+    const streams = new CountingAdapter();
+    const gateway = new PlatformGateway({
+      verifier: withAgentCapabilities(verifier(fixture), capabilities),
+      streams,
+    });
+    try {
+      for (const path of [
+        "/api/chat/willow/test",
+        "/api/agents/maple",
+        "/api/agent-runs/maple/luna-run1",
+        "/api/repos/maple/ledger/main/events",
+      ]) {
+        const response = await gateway.handle(
+          new Request(`https://platform.example.test${path}`, {
+            headers: { authorization: `Bearer ${issued.token}` },
+          }),
+        );
+        expect(response.status).toBe(404);
+        expect(await body(response)).toMatchObject({ error: { code: "authz_refused" } });
+        expect(streams.calls.read).toBe(0);
+      }
+    } finally {
+      issued.revoke();
+    }
+  });
+
   it("injects the verified subject and only then appends", async () => {
     const fixture = signingFixture();
     const streams = new CountingAdapter();

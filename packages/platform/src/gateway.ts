@@ -2474,6 +2474,19 @@ export class PlatformGateway {
     }
     const org = path.split("/")[0] ?? "";
     if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
+    if (
+      context.principal.kind === "identified" &&
+      context.principal.agentOf !== undefined &&
+      (context.principal.agentRepo === undefined ||
+        path !== `${context.principal.agentOf}/${context.principal.agentRepo}`)
+    ) {
+      return authzRefusalResponse({
+        allowed: false,
+        operation: "read",
+        identityOffset: context.identityOffset,
+        refusal: "authz/not-found",
+      });
+    }
 
     try {
       const tenantRefusal = this.tenantRefusal(context, org, "read");
@@ -2527,6 +2540,21 @@ export class PlatformGateway {
         identityOffset: context.identityOffset,
         namespace: { orgs: {} },
       });
+    }
+    if (
+      context.principal.kind === "identified" &&
+      context.principal.agentOf !== undefined &&
+      context.principal.agentRepo !== undefined &&
+      (target.kind !== "repo" ||
+        target.org !== context.principal.agentOf ||
+        target.repo !== context.principal.agentRepo)
+    ) {
+      return {
+        allowed: false,
+        operation,
+        identityOffset: context.identityOffset,
+        refusal: "authz/not-found",
+      };
     }
     if (target.kind === "repo" || target.kind === "org") {
       const tenantRefusal = this.tenantRefusal(context, target.org, operation);

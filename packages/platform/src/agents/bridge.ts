@@ -36,12 +36,22 @@ export function prMirrorMessageId(prStreamId: string, offset: string): string {
   return `mirror-${hash(`${prStreamId}@${offset}`)}`;
 }
 
+export function isPrMirrorMessage(id: string, source: string | undefined, org: string): boolean {
+  if (source === undefined) return false;
+  const separator = source.lastIndexOf("@");
+  if (separator < 0) return false;
+  const prStreamId = source.slice(0, separator);
+  const offset = source.slice(separator + 1);
+  const pr = parsePrStreamId(prStreamId);
+  return pr !== undefined && pr.org === org && id === prMirrorMessageId(prStreamId, offset);
+}
+
 function display(actor: string): string {
   if (actor.startsWith("agent:")) return `@${actor.slice("agent:".length)}`;
   return actor.replace(/^auth0\|/, "").split("@")[0] ?? actor;
 }
 
-function withoutMarkers(body: string): string {
+export function withoutMarkers(body: string): string {
   return body.replace(/^\[eforest-[a-z]+\]: eforest:\S+$/gm, "").trim();
 }
 

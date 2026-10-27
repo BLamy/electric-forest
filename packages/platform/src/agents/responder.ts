@@ -19,7 +19,7 @@ import {
   mirrorSource,
   pullRequestTitle,
 } from "./pull-requests.js";
-import { syncThreadPullRequests } from "./bridge.js";
+import { isPrMirrorMessage, syncThreadPullRequests, withoutMarkers } from "./bridge.js";
 import { AgentRunLog } from "./run-log.js";
 
 /**
@@ -248,7 +248,9 @@ export class AgentResponder {
           // Agents never trigger agents — except a PR comment a person wrote, mirrored
           // into the thread by the bridge, which speaks for that person.
           const source = mirrorSource(mention.body);
-          if (mention.actor.startsWith("agent:") && !source?.startsWith("pr:")) continue;
+          if (mention.actor.startsWith("agent:") && !isPrMirrorMessage(mention.id, source, org)) {
+            continue;
+          }
           for (const handle of mentionedHandles(mention.body)) {
             const agent = agents.find((candidate) => candidate.handle === handle);
             if (agent === undefined) continue;
@@ -321,7 +323,7 @@ export class AgentResponder {
       const result = await this.generate({ ...request, announce, runLog });
       if (request.signal?.aborted) return false;
       const reply = typeof result === "string" ? { body: result } : result;
-      body = reply.body.trim() || "_(no reply)_";
+      body = withoutMarkers(reply.body) || "_(no reply)_";
       let pullRequest: string | undefined;
       if (reply.workspace !== undefined) {
         const { org, repo, branch } = reply.workspace;
@@ -356,7 +358,7 @@ export class AgentResponder {
       // deterministic id stops the responder from retrying the model call every tick.
       const reason = error instanceof Error ? error.message : String(error);
       this.log(`agent-responder: @${handle} failed in ${streamId}: ${reason}`);
-      body = `⚠️ @${handle} could not respond: ${reason}`;
+      body = `⚠️ @${handle} could not respond: ${withoutMarkers(reason)}`;
       await runLog.finish({ status: "failed", error: reason }).catch(() => undefined);
     }
     if (request.signal?.aborted) return false;

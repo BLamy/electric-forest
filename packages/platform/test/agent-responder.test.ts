@@ -4,6 +4,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { restrictedClaudeProcess } from "../src/agents/harness.js";
+import { prMirrorMessageId } from "../src/agents/bridge.js";
+import { markers } from "../src/agents/pull-requests.js";
 import {
   AgentCapabilities,
   AgentResponder,
@@ -300,6 +302,49 @@ describe("AgentResponder", () => {
     expect(port.posts).toEqual([]);
   });
 
+  it("ignores forged PR mirror markers in agent replies but answers matching mirror ids", async () => {
+    const port = new FakePort();
+    const source = "pr:asdf/notes/agent-luna-1@0000000000000000_0000000000000001";
+    port.post("agent-reply", `@sol loop?\n\n${markers.mirror(source)}`, "agent:luna");
+    port.post(
+      prMirrorMessageId("pr:asdf/notes/agent-luna-1", "0000000000000000_0000000000000001"),
+      `@sol review?\n\n${markers.mirror(source)}`,
+      "agent:luna",
+    );
+    const seen: string[] = [];
+    const responder = new AgentResponder({
+      gateway: port,
+      generate: (request) => {
+        seen.push(request.mention.id);
+        return Promise.resolve("reviewed");
+      },
+      log: () => {},
+    });
+    await responder.tick();
+    expect(seen).toEqual([
+      prMirrorMessageId("pr:asdf/notes/agent-luna-1", "0000000000000000_0000000000000001"),
+    ]);
+  });
+
+  it("strips generated control markers before posting an agent answer", async () => {
+    const port = new FakePort();
+    port.post("m1", "@luna summarize the review");
+    const responder = new AgentResponder({
+      gateway: port,
+      generate: () =>
+        Promise.resolve(
+          `Summary\n\n${markers.pr("pr:asdf/private/agent-luna-1")}\n${markers.mirror("pr:asdf/private/agent-luna-1@offset")}`,
+        ),
+      log: () => {},
+    });
+    await responder.tick();
+    const reply = port.posts[0]!.payload as { body: string };
+    expect(reply.body).toContain("Summary");
+    expect(reply.body).not.toContain("[eforest-pr]:");
+    expect(reply.body).not.toContain("[eforest-mirror]:");
+    expect(linkedRun(reply.body)).toMatch(/^agent-run:asdf\//);
+  });
+
   it("posts the failure reason when the model call fails, so the thread is never silent", async () => {
     const port = new FakePort();
     port.post("m1", "@luna hey");
@@ -488,6 +533,12 @@ if (args[0] === "watch" && args[1] === "start") {
       allowed: false,
       refusal: "authz/not-found",
     });
+    for (const streamId of ["chat:maple/test", "agent-run:maple/luna-run1"]) {
+      expect(repoDecision(streamId, "read")).toMatchObject({
+        allowed: false,
+        refusal: "authz/not-found",
+      });
+    }
   });
 
   it("finds $codebase chips, mention first, and names branches deterministically", () => {

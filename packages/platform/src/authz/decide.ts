@@ -364,6 +364,7 @@ export function decideStreamAuthorization(input: AuthzInput): AuthzDecision {
     const orgView = ownEntry(namespace.orgs, target.org);
     if (orgView === undefined) return refuse("authz/not-found");
     if (principal.kind === "identified" && principal.agentOf !== undefined) {
+      if (principal.agentRepo !== undefined) return refuse("authz/not-found");
       // Chat channels to converse in; run logs (`agent-run:`) to record itself in.
       const agentStream =
         principal.agentOf === target.org &&
