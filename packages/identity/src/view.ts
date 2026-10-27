@@ -7,6 +7,7 @@ export type SessionStatus = "active" | "ended";
 
 export interface IdentityUserView {
   readonly email: string;
+  readonly restricted?: true;
 }
 
 export interface IdentityOrgView {

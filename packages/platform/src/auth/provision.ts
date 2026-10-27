@@ -23,6 +23,7 @@ import {
 import { replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { NamespaceRefusalError } from "../ns/dispatch.js";
+import { sessionIsValid } from "./session.js";
 
 export interface IdentitySnapshot {
   readonly events: readonly StreamRecord[];
@@ -210,7 +211,57 @@ export class IdentityStore {
         }
       }
     }
-    return this.snapshot();
+    return this.reverifyKnownUser(sub, email);
+  }
+
+  async reverifyKnownUser(sub: string, email: string): Promise<IdentitySnapshot> {
+    for (;;) {
+      const before = await this.snapshot();
+      const user = userForSub(before.view, sub);
+      if (user === null || (user.email === email && user.restricted !== true)) return before;
+      try {
+        return await this.dispatch({
+          type: "identity.user.email.changed",
+          payload: { v: 2, sub, email },
+          ts: this.now(),
+        });
+      } catch (error) {
+        if (!(error instanceof IdentityDispatchRefusedError)) throw error;
+        if (error.code === "identity/email-unchanged") return this.snapshot();
+        if (error.code !== "identity/grant-in-use") throw error;
+        const snapshot = await this.snapshot();
+        const operations = Object.entries(snapshot.view.grantOperations ?? {}).filter(
+          ([, operation]) =>
+            operation.status === "active" && snapshot.view.grants[operation.grantId]?.sub === sub,
+        );
+        await Promise.all(
+          operations.map(([operationId, operation]) =>
+            this.recoverGrantOperation(operationId, operation),
+          ),
+        );
+      }
+    }
+  }
+
+  async restrictKnownUserEmail(sub: string, email: string): Promise<IdentitySnapshot> {
+    const before = await this.snapshot();
+    const user = userForSub(before.view, sub);
+    if (user === null || (user.email === email && user.restricted === true)) return before;
+    try {
+      return await this.dispatch({
+        type: "identity.user.email.restricted",
+        payload: { v: 2, sub, email },
+        ts: this.now(),
+      });
+    } catch (error) {
+      if (
+        error instanceof IdentityDispatchRefusedError &&
+        error.code === "identity/email-unchanged"
+      ) {
+        return this.snapshot();
+      }
+      throw error;
+    }
   }
 
   async issueCliGrant(input: {
@@ -220,23 +271,38 @@ export class IdentityStore {
     readonly tokenHash: string;
     readonly scopes: readonly string[];
     readonly name?: string;
+    readonly originatingSession?: { readonly id: string; readonly ttlMs: number };
   }): Promise<IdentitySnapshot> {
     const issuedAt = this.now();
-    return this.dispatch({
-      type: "identity.grant.issued",
-      payload: {
-        v: 2,
-        grantId: input.grantId,
-        sub: input.sub,
-        kind: input.tokenKind === "device" ? "cli-token" : "web-session-mint",
-        tokenKind: input.tokenKind,
-        tokenHash: input.tokenHash,
-        scopes: input.scopes,
-        ...(input.name === undefined ? {} : { name: input.name }),
-        issuedAt,
+    const originatingSession = input.originatingSession;
+    return this.dispatch(
+      {
+        type: "identity.grant.issued",
+        payload: {
+          v: 2,
+          grantId: input.grantId,
+          sub: input.sub,
+          kind: input.tokenKind === "device" ? "cli-token" : "web-session-mint",
+          tokenKind: input.tokenKind,
+          tokenHash: input.tokenHash,
+          scopes: input.scopes,
+          ...(input.name === undefined ? {} : { name: input.name }),
+          issuedAt,
+        },
+        ts: issuedAt,
       },
-      ts: issuedAt,
-    });
+      originatingSession === undefined
+        ? undefined
+        : (snapshot) => {
+            const session = snapshot.view.sessions[originatingSession.id];
+            if (
+              session?.sub !== input.sub ||
+              !sessionIsValid(snapshot, originatingSession.id, this.now(), originatingSession.ttlMs)
+            ) {
+              throw new IdentityReducerError("identity/session-ended", "web session is inactive");
+            }
+          },
+    );
   }
 
   /** E2-T07: record an organization in the identity view (the role join key). */
@@ -344,7 +410,13 @@ export class IdentityStore {
 
   async assertGrantOperationActive(operationId: string): Promise<void> {
     const snapshot = await this.snapshot();
-    if (snapshot.view.grantOperations?.[operationId]?.status !== "active") {
+    const operation = snapshot.view.grantOperations?.[operationId];
+    const grant = operation === undefined ? undefined : snapshot.view.grants[operation.grantId];
+    if (
+      operation?.status !== "active" ||
+      grant === undefined ||
+      snapshot.view.users[grant.sub]?.restricted === true
+    ) {
       throw new GrantOperationAbortedError(operationId, snapshot.offset);
     }
   }
@@ -460,7 +532,10 @@ export class IdentityStore {
     }
   }
 
-  private async dispatch(event: Event): Promise<IdentitySnapshot> {
+  private async dispatch(
+    event: Event,
+    precondition?: (snapshot: IdentitySnapshot) => void,
+  ): Promise<IdentitySnapshot> {
     for (let attempt = 0; attempt < 16; attempt += 1) {
       const before = await this.snapshot();
       const record: StreamRecord = {
@@ -468,6 +543,7 @@ export class IdentityStore {
         ...event,
       };
       try {
+        precondition?.(before);
         identityReducer(before.view, eventOf(record));
       } catch (error) {
         if (error instanceof IdentityReducerError) {

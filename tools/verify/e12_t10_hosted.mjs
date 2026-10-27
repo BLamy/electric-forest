@@ -280,6 +280,19 @@ try {
       status,
     );
   }
+  const deniedLogin = await world.begin();
+  const denied = await neutral(
+    "verified-email-outside-early-access-domains",
+    async () =>
+      (await world.callback(deniedLogin, "ada", { claims: { email: "outside@example.com" } }))
+        .response,
+    302,
+  );
+  assert.equal(denied.headers.get("location"), "/coming-soon");
+  assert.ok(denied.headers.getSetCookie().some((value) => value.startsWith("ef_session=;")));
+  const comingSoon = await request("/coming-soon");
+  assert.equal(comingSoon.status, 200);
+  assert.match(await comingSoon.text(), /Electric Forest is coming soon/);
   const ada = await world.login("ada", "/settings/cli-tokens");
   assert.equal(ada.response.headers.get("referrer-policy"), "no-referrer");
   assert.equal(ada.response.headers.get("location"), "/settings/cli-tokens");
@@ -588,6 +601,53 @@ try {
   );
   const relogin = await world.login("grace");
   assert.equal((await request("/api/whoami", { headers: { cookie: relogin.cookie } })).status, 200);
+  const transitionGrant = await readJson(
+    await request("/api/cli-tokens", {
+      method: "POST",
+      headers: { cookie: ada.cookie, origin: world.origin, "content-type": "application/json" },
+      body: JSON.stringify({ name: "email-transition", scopes: ["repo:read"] }),
+    }),
+    201,
+  );
+  const transition = await world.begin();
+  const excluded = await world.callback(transition, "ada", {
+    claims: { email: "outside@example.com" },
+  });
+  assert.equal(excluded.response.status, 302);
+  assert.equal(excluded.response.headers.get("location"), "/coming-soon");
+  assert.ok(
+    (await world.events("__identity__")).some(
+      (event) => event.type === "identity.user.email.restricted",
+    ),
+  );
+  await world.restart();
+  await neutral(
+    "restricted-email-ends-prior-session-after-restart",
+    () => request("/api/whoami", { headers: { cookie: ada.cookie } }),
+    401,
+  );
+  await neutral(
+    "restricted-email-blocks-prior-grant-after-restart",
+    () => request(chatPath, { headers: { authorization: `Bearer ${transitionGrant.token}` } }),
+    [401, 403],
+  );
+  const readmitted = await world.login("ada");
+  assert.equal(
+    (await request("/api/whoami", { headers: { cookie: readmitted.cookie } })).status,
+    200,
+  );
+  await neutral(
+    "readmission-does-not-reactivate-old-grant",
+    () => request(chatPath, { headers: { authorization: `Bearer ${transitionGrant.token}` } }),
+    [401, 403],
+  );
+  records.push({
+    name: "same-subject-email-transition",
+    excluded: "coming-soon",
+    priorSession: "ended",
+    priorGrant: "blocked-then-revoked",
+    readmitted: true,
+  });
   dumps.push(await world.dumpIdentity("identity-final"));
   const headsBeforeBodies = await world.heads(authority);
   const full = Buffer.alloc(HOSTED_LIMITS.maxBodyBytes, 32);

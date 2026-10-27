@@ -31,6 +31,61 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
         users: { ...state.users, [event.payload.sub]: { email: event.payload.email } },
       };
     }
+    case "identity.user.email.changed":
+    case "identity.user.email.restricted": {
+      const existing = ownEntry(state.users, event.payload.sub);
+      if (existing === undefined) {
+        reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
+      }
+      if (
+        existing.email === event.payload.email &&
+        (event.type === "identity.user.email.restricted"
+          ? existing.restricted === true
+          : existing.restricted !== true)
+      ) {
+        reject("identity/email-unchanged", `user ${event.payload.sub} already has that email`);
+      }
+      if (
+        event.type === "identity.user.email.changed" &&
+        Object.values(state.grantOperations ?? {}).some(
+          (operation) =>
+            operation.status === "active" &&
+            ownEntry(state.grants, operation.grantId)?.sub === event.payload.sub,
+        )
+      ) {
+        reject("identity/grant-in-use", `user ${event.payload.sub} has an active operation`);
+      }
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [event.payload.sub]: {
+            email: event.payload.email,
+            ...(event.type === "identity.user.email.restricted"
+              ? { restricted: true as const }
+              : {}),
+          },
+        },
+        grants: Object.fromEntries(
+          Object.entries(state.grants).map(([grantId, grant]) => [
+            grantId,
+            event.type === "identity.user.email.changed" &&
+            grant.sub === event.payload.sub &&
+            grant.status === "active"
+              ? { ...grant, status: "revoked" as const, revokedAt: event.ts }
+              : grant,
+          ]),
+        ),
+        sessions: Object.fromEntries(
+          Object.entries(state.sessions).map(([sessionId, session]) => [
+            sessionId,
+            session.sub === event.payload.sub && session.status === "active"
+              ? { ...session, status: "ended" as const }
+              : session,
+          ]),
+        ),
+      };
+    }
     case "identity.org.created": {
       if (ownEntry(state.orgs, event.payload.orgId) !== undefined) {
         reject("identity/duplicate-org", `org ${event.payload.orgId} already exists`);
@@ -108,8 +163,12 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.grant.issued": {
-      if (ownEntry(state.users, event.payload.sub) === undefined) {
+      const user = ownEntry(state.users, event.payload.sub);
+      if (user === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
+      }
+      if (user.restricted === true) {
+        reject("identity/user-restricted", `user ${event.payload.sub} is restricted`);
       }
       if (ownEntry(state.grants, event.payload.grantId) !== undefined) {
         reject("identity/duplicate-grant", `grant ${event.payload.grantId} already exists`);
@@ -172,7 +231,11 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
     }
     case "identity.grant.operation.started": {
       const grant = ownEntry(state.grants, event.payload.grantId);
-      if (grant === undefined || grant.status !== "active") {
+      if (
+        grant === undefined ||
+        grant.status !== "active" ||
+        ownEntry(state.users, grant.sub)?.restricted === true
+      ) {
         reject("identity/grant-revoked", `grant ${event.payload.grantId} is not active`);
       }
       if (ownEntry(state.grantOperations ?? {}, event.payload.operationId) !== undefined) {
@@ -237,8 +300,12 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.session.started": {
-      if (ownEntry(state.users, event.payload.sub) === undefined) {
+      const user = ownEntry(state.users, event.payload.sub);
+      if (user === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
+      }
+      if (user.restricted === true) {
+        reject("identity/user-restricted", `user ${event.payload.sub} is restricted`);
       }
       if (ownEntry(state.sessions, event.payload.sessionId) !== undefined) {
         reject("identity/duplicate-session", `session ${event.payload.sessionId} already exists`);

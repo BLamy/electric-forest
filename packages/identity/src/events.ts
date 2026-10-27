@@ -1,6 +1,10 @@
 import { isEvent, type Event } from "@eforest/protocol";
 import { ownEntry } from "./records.js";
-import { CLI_GRANT_EVENT_VERSION, IDENTITY_EVENT_VERSION } from "./version.js";
+import {
+  CLI_GRANT_EVENT_VERSION,
+  IDENTITY_EMAIL_EVENT_VERSION,
+  IDENTITY_EVENT_VERSION,
+} from "./version.js";
 
 export type MembershipGrantRole = "admin" | "member";
 export type GrantKind = "cli-token" | "web-session-mint";
@@ -8,6 +12,18 @@ export type CliTokenKind = "device" | "web-mint";
 
 export interface IdentityUserCreatedPayload {
   readonly v: typeof IDENTITY_EVENT_VERSION;
+  readonly sub: string;
+  readonly email: string;
+}
+
+export interface IdentityUserEmailChangedPayload {
+  readonly v: typeof IDENTITY_EMAIL_EVENT_VERSION;
+  readonly sub: string;
+  readonly email: string;
+}
+
+export interface IdentityUserEmailRestrictedPayload {
+  readonly v: typeof IDENTITY_EMAIL_EVENT_VERSION;
   readonly sub: string;
   readonly email: string;
 }
@@ -92,6 +108,16 @@ export interface IdentityUserCreatedEvent extends Event {
   readonly payload: IdentityUserCreatedPayload;
 }
 
+export interface IdentityUserEmailChangedEvent extends Event {
+  readonly type: "identity.user.email.changed";
+  readonly payload: IdentityUserEmailChangedPayload;
+}
+
+export interface IdentityUserEmailRestrictedEvent extends Event {
+  readonly type: "identity.user.email.restricted";
+  readonly payload: IdentityUserEmailRestrictedPayload;
+}
+
 export interface IdentityOrgCreatedEvent extends Event {
   readonly type: "identity.org.created";
   readonly payload: IdentityOrgCreatedPayload;
@@ -144,6 +170,8 @@ export interface IdentitySessionEndedEvent extends Event {
 
 export type IdentityEvent =
   | IdentityUserCreatedEvent
+  | IdentityUserEmailChangedEvent
+  | IdentityUserEmailRestrictedEvent
   | IdentityOrgCreatedEvent
   | IdentityMembershipGrantedEvent
   | IdentityMembershipRevokedEvent
@@ -225,6 +253,32 @@ export function isIdentityUserCreatedEvent(value: unknown): value is IdentityUse
   return (
     exactObject(payload, ["v", "sub", "email"]) &&
     payload.v === IDENTITY_EVENT_VERSION &&
+    validSub(payload.sub) &&
+    canonicalText(payload.email, 320)
+  );
+}
+
+export function isIdentityUserEmailChangedEvent(
+  value: unknown,
+): value is IdentityUserEmailChangedEvent {
+  if (!eventWithPayload(value, "identity.user.email.changed")) return false;
+  const payload = value.payload;
+  return (
+    exactObject(payload, ["v", "sub", "email"]) &&
+    payload.v === IDENTITY_EMAIL_EVENT_VERSION &&
+    validSub(payload.sub) &&
+    canonicalText(payload.email, 320)
+  );
+}
+
+export function isIdentityUserEmailRestrictedEvent(
+  value: unknown,
+): value is IdentityUserEmailRestrictedEvent {
+  if (!eventWithPayload(value, "identity.user.email.restricted")) return false;
+  const payload = value.payload;
+  return (
+    exactObject(payload, ["v", "sub", "email"]) &&
+    payload.v === IDENTITY_EMAIL_EVENT_VERSION &&
     validSub(payload.sub) &&
     canonicalText(payload.email, 320)
   );
@@ -408,6 +462,8 @@ export function isIdentitySessionEndedEvent(value: unknown): value is IdentitySe
 
 const validators: Readonly<Record<IdentityEventType, (value: unknown) => boolean>> = {
   "identity.user.created": isIdentityUserCreatedEvent,
+  "identity.user.email.changed": isIdentityUserEmailChangedEvent,
+  "identity.user.email.restricted": isIdentityUserEmailRestrictedEvent,
   "identity.org.created": isIdentityOrgCreatedEvent,
   "identity.membership.granted": isIdentityMembershipGrantedEvent,
   "identity.membership.revoked": isIdentityMembershipRevokedEvent,

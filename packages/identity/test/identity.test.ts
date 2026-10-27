@@ -27,7 +27,7 @@ import {
   viewDigest,
   type AuthorizationView,
 } from "../src/index.js";
-import { grant, grantRevoke, oracleFold, user } from "./helpers.js";
+import { grant, grantRevoke, oracleFold, session, user } from "./helpers.js";
 
 const root = resolve(import.meta.dirname, "../../..");
 const evidence = resolve(
@@ -142,6 +142,122 @@ function mutatedByte(value: number): number {
 }
 
 describe("frozen identity event model", () => {
+  test("reverified email atomically replaces identity and retires prior sessions and grants", () => {
+    const sub = "auth0|email-change";
+    const before = replay(
+      [
+        user(sub, "person@replay.io"),
+        grant("prior-grant", sub, "a".repeat(64)),
+        session("prior-session", sub),
+        user("auth0|other", "other@replay.io"),
+        grant("other-grant", "auth0|other", "b".repeat(64)),
+        session("other-session", "auth0|other"),
+      ],
+      identityReducer,
+      emptyView(),
+    );
+    const changed = {
+      type: "identity.user.email.changed",
+      payload: { v: 2, sub, email: "person@example.com" },
+      ts: 42,
+    } satisfies Event;
+    expect(() => assertIdentityEvent(changed)).not.toThrow();
+    const after = identityReducer(before, changed);
+    expect(userForSub(after, sub)?.email).toBe("person@example.com");
+    expect(after.sessions["prior-session"]?.status).toBe("ended");
+    expect(after.grants["prior-grant"]).toMatchObject({ status: "revoked", revokedAt: 42 });
+    expect(after.sessions["other-session"]?.status).toBe("active");
+    expect(after.grants["other-grant"]?.status).toBe("active");
+    expect(before.sessions["prior-session"]?.status).toBe("active");
+    expect(before.grants["prior-grant"]?.status).toBe("active");
+    expect(() => identityReducer(after, changed)).toThrow(/identity\/email-unchanged/);
+    expect(() => identityReducer(emptyView(), changed)).toThrow(/identity\/unknown-user/);
+    for (const payload of [
+      { ...changed.payload, v: 1 },
+      { ...changed.payload, extra: true },
+      { ...changed.payload, email: "" },
+    ]) {
+      expect(() => assertIdentityEvent({ ...changed, payload })).toThrowError(
+        IdentityEventValidationError,
+      );
+    }
+  });
+
+  test("email change refuses an active grant operation", () => {
+    const sub = "auth0|operation";
+    const before = replay(
+      [
+        user(sub, "person@replay.io"),
+        grant("busy-grant", sub, "a".repeat(64)),
+        {
+          type: "identity.grant.operation.started",
+          payload: {
+            v: 2,
+            operationId: "busy-operation",
+            grantId: "busy-grant",
+            startedAt: 1,
+            streamId: "target",
+            event: { type: "test.created", payload: { value: 1 }, ts: 1 },
+          },
+          ts: 1,
+        },
+      ],
+      identityReducer,
+      emptyView(),
+    );
+    expect(() =>
+      identityReducer(before, {
+        type: "identity.user.email.changed",
+        payload: { v: 2, sub, email: "person@example.com" },
+        ts: 2,
+      }),
+    ).toThrow(/identity\/grant-in-use/);
+    const restricted = identityReducer(before, {
+      type: "identity.user.email.restricted",
+      payload: { v: 2, sub, email: "person@example.com" },
+      ts: 2,
+    });
+    for (const payload of [
+      { v: 1, sub, email: "person@example.com" },
+      { v: 2, sub, email: "person@example.com", extra: true },
+      { v: 2, sub, email: "" },
+    ]) {
+      expect(() =>
+        assertIdentityEvent({ type: "identity.user.email.restricted", payload, ts: 2 }),
+      ).toThrowError(IdentityEventValidationError);
+    }
+    expect(restricted.users[sub]).toEqual({ email: "person@example.com", restricted: true });
+    expect(restricted.grants["busy-grant"]?.status).toBe("active");
+    expect(restricted.grantOperations?.["busy-operation"]?.status).toBe("active");
+    expect(() =>
+      identityReducer(restricted, {
+        type: "identity.grant.operation.started",
+        payload: {
+          v: 2,
+          operationId: "another-operation",
+          grantId: "busy-grant",
+          startedAt: 3,
+          streamId: "target",
+          event: { type: "test.created", payload: { value: 2 }, ts: 3 },
+        },
+        ts: 3,
+      }),
+    ).toThrow(/identity\/grant-revoked/);
+    const legacyExcluded = identityReducer(before, {
+      type: "identity.user.email.restricted",
+      payload: { v: 2, sub, email: "person@replay.io" },
+      ts: 2,
+    });
+    expect(legacyExcluded.users[sub]?.restricted).toBe(true);
+    expect(() =>
+      identityReducer(legacyExcluded, {
+        type: "identity.user.email.restricted",
+        payload: { v: 2, sub, email: "person@replay.io" },
+        ts: 3,
+      }),
+    ).toThrow(/identity\/email-unchanged/);
+  });
+
   test("rejects incomplete or extended durable operation recovery plans", () => {
     const base = {
       type: "identity.grant.operation.started",

@@ -208,6 +208,10 @@ Sign in through `/auth/login`, verify the Auth0/private-data build indicator, th
 **Add workspace** to create your own organization. **Account → CLI tokens** (also linked
 in the hosted banner) reaches the existing token page. Mint a dedicated local credential
 and supply it through T11's secure local setup; never put it in chat or shell arguments.
+During private early access, only verified Auth0 identities whose email domain is exactly
+`replay.io` or `reloulexei.resend.app` can enter the hosted app. Other successful Auth0
+logins return to a public `/coming-soon` page without creating a local identity or
+session. Existing sessions and CLI grants for other domains are refused server-side.
 This milestone accepts opaque web-minted `ef_cli_` grants at the gateway and refuses
 Auth0 ID/access JWTs as API credentials. Hosted device registration is disabled until
 its API/native client audience is separately qualified. Token scopes must still match
