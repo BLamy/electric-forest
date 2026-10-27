@@ -1,0 +1,12 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada-fixture@replay.io","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"aKtfwqNKBKLco7JRZteLh0d4CyoKmp57","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000002","payload":{"email":"grace-fixture@reloulexei.resend.app","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"sessionId":"kb7Pwe9d0ozSP257BWxUZ8K6LJiVrLa4","sub":"auth0|e12-t10-fixture-grace","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000004","payload":{"sessionId":"NQgjqhyl_Rde0ZVbFJWILEuikqgcQ9Cz","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000005","payload":{"grantId":"grant_kDMhthWU74kXfumfO1Pua2bE","issuedAt":1800000000000,"kind":"web-session-mint","name":"browser-fixture-grant","scopes":["repo:write"],"sub":"auth0|e12-t10-fixture-ada","tokenHash":"0e831929b1435f868cf41a525989e1d6c33374e3a61747c5deb0c004004e42e0","tokenKind":"web-mint","v":2},"ts":1800000000000,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000006","payload":{"grantId":"grant_kDMhthWU74kXfumfO1Pua2bE","revokedAt":1800000000000,"v":2},"ts":1800000000000,"type":"identity.grant.revoked"}
+{"offset":"0000000000000000_0000000000000007","payload":{"sessionId":"aKtfwqNKBKLco7JRZteLh0d4CyoKmp57","v":1},"ts":1800000000000,"type":"identity.session.ended"}
+{"offset":"0000000000000000_0000000000000008","payload":{"sessionId":"C9xmqlPnFtaxzvDPr3dvsKC9YkXMCYFC","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000009","payload":{"email":"outside@example.com","sub":"auth0|e12-t10-fixture-ada","v":2},"ts":1800000000000,"type":"identity.user.email.restricted"}
+{"offset":"0000000000000000_0000000000000010","payload":{"email":"ada-fixture@replay.io","sub":"auth0|e12-t10-fixture-ada","v":2},"ts":1800000000000,"type":"identity.user.email.changed"}
+{"offset":"0000000000000000_0000000000000011","payload":{"sessionId":"fWfrIIagfhdlfzncuvVGYFwRDNJhZgAI","sub":"auth0|e12-t10-fixture-ada","v":1},"ts":1800000000000,"type":"identity.session.started"}
