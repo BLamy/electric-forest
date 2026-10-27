@@ -19,7 +19,7 @@ import {
   mirrorSource,
   pullRequestTitle,
 } from "./pull-requests.js";
-import { syncThreadPullRequests } from "./bridge.js";
+import { isPrMirrorMessage, syncThreadPullRequests, withoutMarkers } from "./bridge.js";
 import { AgentRunLog } from "./run-log.js";
 
 /**
@@ -39,6 +39,7 @@ export interface AgentReplyRequest {
   /** The thread (root first) up to and including the mentioning message. */
   readonly thread: readonly ChatMessage[];
   readonly mention: ChatMessage;
+  readonly signal?: AbortSignal;
   /**
    * Post an interim reply in the thread (e.g. "working on branch …") before the final
    * answer. Idempotent per mention: a repeat announcement is refused as a duplicate.
@@ -74,6 +75,7 @@ export interface AgentResponderOptions {
   readonly generate: AgentReplyGenerator;
   readonly now?: () => number;
   readonly pollMs?: number;
+  readonly maxConcurrent?: number;
   readonly log?: (line: string) => void;
 }
 
@@ -131,8 +133,12 @@ export class AgentResponder {
   private readonly generate: AgentReplyGenerator;
   private readonly now: () => number;
   private readonly pollMs: number;
+  private readonly maxConcurrent: number;
   private readonly log: (line: string) => void;
   private readonly inFlight = new Set<string>();
+  private readonly active = new Set<Promise<void>>();
+  private runAbort = new AbortController();
+  private scanInProgress: Promise<void> | undefined;
   /** Rate guard only (not state): a refused post is not retried until this time. */
   private readonly retryAfter = new Map<string, number>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -143,21 +149,27 @@ export class AgentResponder {
     this.generate = options.generate;
     this.now = options.now ?? Date.now;
     this.pollMs = options.pollMs ?? 1_500;
+    this.maxConcurrent = options.maxConcurrent ?? Number.MAX_SAFE_INTEGER;
+    if (this.maxConcurrent <= 0 || !Number.isSafeInteger(this.maxConcurrent))
+      throw new TypeError("maxConcurrent must be a positive integer");
     this.log = options.log ?? ((line) => process.stderr.write(`${line}\n`));
   }
 
   start(): void {
     if (!this.stopped) return;
+    if (this.runAbort.signal.aborted) this.runAbort = new AbortController();
     this.stopped = false;
     const loop = async (): Promise<void> => {
       try {
         // Runs are scheduled, not awaited: a long agent run never stalls the loop.
-        await this.scan();
+        this.scanInProgress = this.scan().then(() => undefined);
+        await this.scanInProgress;
       } catch (error) {
         this.log(
           `agent-responder: tick failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+      this.scanInProgress = undefined;
       if (!this.stopped) this.timer = setTimeout(() => void loop(), this.pollMs);
     };
     void loop();
@@ -166,6 +178,25 @@ export class AgentResponder {
   stop(): void {
     this.stopped = true;
     if (this.timer !== undefined) clearTimeout(this.timer);
+    this.runAbort.abort();
+  }
+
+  async drain(timeoutMs: number): Promise<boolean> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        (async () => {
+          await this.scanInProgress?.catch(() => undefined);
+          await Promise.allSettled([...this.active]);
+          return true;
+        })(),
+        new Promise<boolean>((resolve) => {
+          timer = setTimeout(() => resolve(false), timeoutMs);
+        }),
+      ]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
   }
 
   /** One replay pass that also waits for every run it started (for tests). */
@@ -179,7 +210,9 @@ export class AgentResponder {
    */
   async scan(): Promise<Promise<void>[]> {
     const pending: Promise<void>[] = [];
+    if (this.runAbort.signal.aborted) return pending;
     for (const org of orgsFromNamespace(await this.gateway.readOrgStream("ns:root"))) {
+      if (this.runAbort.signal.aborted) break;
       const roster = records(await this.gateway.readOrgStream(agentsStreamId(org))).reduce(
         agentsReducer,
         agentsInitialState,
@@ -188,11 +221,13 @@ export class AgentResponder {
       if (agents.length === 0) continue;
       const catalog = reduceChatCatalog(await this.gateway.readOrgStream(chatCatalogStreamId(org)));
       for (const channel of Object.keys(catalog.channels).sort()) {
+        if (this.runAbort.signal.aborted) break;
         const streamId = chatChannelStreamId(org, channel);
         const state = records(await this.gateway.readOrgStream(streamId)).reduce(
           chatChannelReducer,
           chatChannelInitialState,
         );
+        if (this.runAbort.signal.aborted) break;
         const ids = new Set(state.messages.map((message) => message.id));
         try {
           await syncThreadPullRequests(this.gateway, {
@@ -208,18 +243,28 @@ export class AgentResponder {
           );
         }
         for (const mention of state.messages) {
+          if (this.runAbort.signal.aborted) break;
           if (mention.deleted) continue;
           // Agents never trigger agents — except a PR comment a person wrote, mirrored
           // into the thread by the bridge, which speaks for that person.
           const source = mirrorSource(mention.body);
-          if (mention.actor.startsWith("agent:") && !source?.startsWith("pr:")) continue;
+          if (mention.actor.startsWith("agent:") && !isPrMirrorMessage(mention.id, source, org)) {
+            continue;
+          }
           for (const handle of mentionedHandles(mention.body)) {
             const agent = agents.find((candidate) => candidate.handle === handle);
             if (agent === undefined) continue;
+            if (
+              mention.serverReceivedAt === undefined ||
+              mention.serverReceivedAt < agent.registeredAt
+            ) {
+              continue;
+            }
             const replyId = agentReplyId(mention.id, handle);
             const key = `${streamId}#${replyId}`;
             if (ids.has(replyId) || this.inFlight.has(key)) continue;
             if ((this.retryAfter.get(key) ?? 0) > Date.now()) continue;
+            if (this.inFlight.size >= this.maxConcurrent) continue;
             this.inFlight.add(key);
             const rootId = mention.threadOf ?? mention.id;
             const thread = state.messages.filter(
@@ -228,18 +273,22 @@ export class AgentResponder {
                 (message.id === rootId || message.threadOf === rootId) &&
                 message.offset <= mention.offset,
             );
-            pending.push(
-              this.answer(
-                { org, channel, streamId, agent, thread, mention },
-                streamId,
-                replyId,
-                rootId,
-              )
-                .then((posted) => {
-                  if (!posted) this.retryAfter.set(key, Date.now() + 60_000);
-                })
-                .finally(() => this.inFlight.delete(key)),
+            const answer = this.answer(
+              { org, channel, streamId, agent, thread, mention, signal: this.runAbort.signal },
+              streamId,
+              replyId,
+              rootId,
+            )
+              .then((posted) => {
+                if (!posted) this.retryAfter.set(key, Date.now() + 60_000);
+              })
+              .finally(() => this.inFlight.delete(key));
+            this.active.add(answer);
+            void answer.then(
+              () => this.active.delete(answer),
+              () => this.active.delete(answer),
             );
+            pending.push(answer);
           }
         }
       }
@@ -272,8 +321,9 @@ export class AgentResponder {
     let body: string;
     try {
       const result = await this.generate({ ...request, announce, runLog });
+      if (request.signal?.aborted) return false;
       const reply = typeof result === "string" ? { body: result } : result;
-      body = reply.body.trim() || "_(no reply)_";
+      body = withoutMarkers(reply.body) || "_(no reply)_";
       let pullRequest: string | undefined;
       if (reply.workspace !== undefined) {
         const { org, repo, branch } = reply.workspace;
@@ -303,13 +353,15 @@ export class AgentResponder {
         ...(pullRequest === undefined ? {} : { pullRequest }),
       });
     } catch (error) {
+      if (request.signal?.aborted) return false;
       // A failed run still answers, so the thread shows why instead of silence, and the
       // deterministic id stops the responder from retrying the model call every tick.
       const reason = error instanceof Error ? error.message : String(error);
       this.log(`agent-responder: @${handle} failed in ${streamId}: ${reason}`);
-      body = `⚠️ @${handle} could not respond: ${reason}`;
+      body = `⚠️ @${handle} could not respond: ${withoutMarkers(reason)}`;
       await runLog.finish({ status: "failed", error: reason }).catch(() => undefined);
     }
+    if (request.signal?.aborted) return false;
     // Every answer points at its complete run log (invisible link definition).
     body = `${clampBody(body).slice(0, CHAT_BODY_MAX_CODE_UNITS - 200)}\n\n${markers.run(runLog.streamId)}`;
     const response = await this.gateway.dispatchAsAgent(request.org, handle, streamId, {

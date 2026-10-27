@@ -76,6 +76,8 @@ export interface PlatformProductionRuntimeOptions {
   readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
   /** Answer @mentions of registered agents with this generator (overrides the env switch). */
   readonly agentReplyGenerator?: AgentReplyGenerator;
+  readonly agentPlatformUrl?: () => string | undefined;
+  readonly agentClaudeCommand?: string;
   /** Dedicated hosted composition; local emulator/device contracts remain defaults. */
   readonly hosted?: PlatformWebAppOptions["hosted"];
 }
@@ -87,9 +89,19 @@ export interface PlatformProductionRuntimeOptions {
 function agentReplyGeneratorFor(
   environment: NodeJS.ProcessEnv,
   workspace: AgentWorkspaceOptions,
+  hosted: boolean,
+  claudeCommand?: string,
 ): AgentReplyGenerator | undefined {
   const mode = environment.EF_AGENT_RESPONDER;
   if (mode === undefined || mode === "" || mode === "off") return undefined;
+  if (mode === "restricted-claude") {
+    if (!hosted || environment.CLAUDE_CODE_OAUTH_TOKEN === undefined)
+      throw new Error("restricted Claude requires hosted mode and a setup token");
+    return createHarnessReplyGenerator(workspace, {
+      restrictedClaudeToken: environment.CLAUDE_CODE_OAUTH_TOKEN,
+      ...(claudeCommand === undefined ? {} : { command: claudeCommand }),
+    });
+  }
   if (mode !== "harness") throw new Error("EF_AGENT_RESPONDER must be harness or off");
   return createHarnessReplyGenerator(workspace);
 }
@@ -295,6 +307,12 @@ export async function createPlatformProductionRuntime(
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
     gateway,
     ...(options.hosted === undefined ? { deviceVerifier: bearer } : { hosted: options.hosted }),
+    ...(options.hosted === undefined
+      ? {}
+      : {
+          hostedAgentCapability: (authorization: string | null) =>
+            agentCapabilities.resolve(authorization) !== undefined,
+        }),
     rateLimiter,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
@@ -316,19 +334,32 @@ export async function createPlatformProductionRuntime(
   const server = createPlatformServer((request) => app.handle(request));
   const generate =
     options.agentReplyGenerator ??
-    agentReplyGeneratorFor(environment, {
-      capabilities: agentCapabilities,
-      streamUrl: config.EFOREST_SERVER_URL,
-      platformUrl: () => {
-        const address = server.address();
-        return address !== null && typeof address === "object"
-          ? `http://127.0.0.1:${String(address.port)}`
-          : undefined;
+    agentReplyGeneratorFor(
+      environment,
+      {
+        capabilities: agentCapabilities,
+        streamUrl: config.EFOREST_SERVER_URL,
+        platformUrl:
+          options.agentPlatformUrl ??
+          (() => {
+            const address = server.address();
+            return address !== null && typeof address === "object"
+              ? `http://127.0.0.1:${String(address.port)}`
+              : undefined;
+          }),
       },
-    });
+      options.hosted !== undefined,
+      options.agentClaudeCommand,
+    );
   const agentResponder =
-    generate === undefined ? undefined : new AgentResponder({ gateway, generate });
-  agentResponder?.start();
+    generate === undefined
+      ? undefined
+      : new AgentResponder({
+          gateway,
+          generate,
+          ...(options.hosted === undefined ? {} : { maxConcurrent: 2 }),
+        });
+  if (options.hosted === undefined) agentResponder?.start();
   server.once("close", () => agentResponder?.stop());
   return {
     oidc,

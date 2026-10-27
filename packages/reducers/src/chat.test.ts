@@ -63,6 +63,20 @@ describe("chat streams", () => {
     // The committed shape needs the gateway-stamped actor.
     expect(isChatEvent(post("m1", "hi"))).toBe(true);
     expect(
+      isChatEvent({
+        ...post("m1", "hi"),
+        payload: { ...post("m1", "hi").payload, serverReceivedAt: 2 },
+      }),
+    ).toBe(true);
+    expect(
+      isChatDispatchPayload("chat.message.post", {
+        v: 1,
+        id: "m1",
+        body: "hi",
+        serverReceivedAt: 2,
+      }),
+    ).toBe(false);
+    expect(
       isChatEvent({ type: "chat.message.post", payload: { v: 1, id: "m1", body: "hi" }, ts: 1 }),
     ).toBe(false);
   });

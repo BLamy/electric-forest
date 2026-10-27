@@ -21,8 +21,7 @@ import {
  * When the thread references a `$codebase`, the run gets a live workspace (see
  * workspace.ts): the repo checked out on an agent branch with file-editing tools, every
  * save synced to the branch as it happens. Otherwise the agent answers chat-only: no
- * tools, an empty scratch directory. No sandbox yet beyond that: file tools only, no
- * shell, and Codex in its workspace-write sandbox.
+ * tools, an empty scratch directory.
  */
 
 const RUN_TIMEOUT_MS = 15 * 60_000;
@@ -71,6 +70,47 @@ interface RunResult {
   readonly stderr: string;
 }
 
+export interface RestrictedClaudeOptions {
+  readonly restrictedClaudeToken: string;
+  readonly command?: string;
+}
+
+export function restrictedClaudeProcess(
+  token: string,
+  home: string,
+): {
+  readonly command: string;
+  readonly args: readonly string[];
+  readonly env: NodeJS.ProcessEnv;
+} {
+  if (token.length < 20 || token.length > 4_096 || /\s/.test(token))
+    throw new Error("restricted Claude setup token is invalid");
+  return {
+    command: "/usr/local/bin/claude",
+    args: [
+      "--restricted",
+      "--safe-mode",
+      "--permission-prompts",
+      "none",
+      "--strict-mcp-config",
+      "--disallowedTools",
+      "mcp__*",
+      "--max-turns",
+      "24",
+    ],
+    env: {
+      PATH: "/usr/local/bin:/usr/bin:/bin",
+      HOME: home,
+      TMPDIR: home,
+      XDG_CONFIG_HOME: home,
+      CLAUDE_CONFIG_DIR: join(home, ".claude"),
+      CLAUDE_CODE_OAUTH_TOKEN: token,
+      DISABLE_AUTOUPDATER: "1",
+      NO_COLOR: "1",
+    },
+  };
+}
+
 /** Spawn a harness; every output chunk is teed into the run log as it arrives. */
 function run(
   command: string,
@@ -79,29 +119,56 @@ function run(
   cwd: string,
   env: NodeJS.ProcessEnv,
   runLog: AgentRunLog | undefined,
+  maxOutputBytes?: number,
+  signal?: AbortSignal,
 ): Promise<RunResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, env, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    let outputBytes = 0;
+    let exceeded = false;
+    let abortTimer: ReturnType<typeof setTimeout> | undefined;
+    const abort = (): void => {
+      child.kill("SIGTERM");
+      abortTimer = setTimeout(() => child.kill("SIGKILL"), 2_000);
+    };
+    if (signal?.aborted) abort();
+    else signal?.addEventListener("abort", abort, { once: true });
     const timer = setTimeout(() => child.kill("SIGTERM"), RUN_TIMEOUT_MS);
     child.stdout.on("data", (chunk: Buffer) => {
+      outputBytes += chunk.byteLength;
+      if (maxOutputBytes !== undefined && outputBytes > maxOutputBytes) {
+        exceeded = true;
+        child.kill("SIGTERM");
+        return;
+      }
       const text = chunk.toString();
       stdout += text;
       runLog?.write("stdout", text);
     });
     child.stderr.on("data", (chunk: Buffer) => {
+      outputBytes += chunk.byteLength;
+      if (maxOutputBytes !== undefined && outputBytes > maxOutputBytes) {
+        exceeded = true;
+        child.kill("SIGTERM");
+        return;
+      }
       const text = chunk.toString();
       stderr += text;
       runLog?.write("stderr", text);
     });
     child.once("error", (error) => {
       clearTimeout(timer);
+      if (abortTimer !== undefined) clearTimeout(abortTimer);
+      signal?.removeEventListener("abort", abort);
       reject(error);
     });
     child.once("close", (code) => {
       clearTimeout(timer);
-      resolve({ code, stdout, stderr });
+      if (abortTimer !== undefined) clearTimeout(abortTimer);
+      signal?.removeEventListener("abort", abort);
+      resolve({ code, stdout, stderr: exceeded ? `${stderr}\noutput limit exceeded` : stderr });
     });
     child.stdin.end(input);
   });
@@ -151,49 +218,71 @@ async function runClaudeCode(
   request: AgentReplyRequest,
   cwd: string,
   workspace?: AgentWorkspace,
+  restricted?: RestrictedClaudeOptions,
 ): Promise<string> {
   const { system, user } = agentPrompt(request, workspace);
   const model = claudeModel(request);
-  // Claude Code prefers an API key / bearer token over its OAuth login when either is in
-  // the environment; strip them so the subscription token (or local login) is used.
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([name]) => name !== "ANTHROPIC_API_KEY" && name !== "ANTHROPIC_AUTH_TOKEN",
-    ),
-  );
-  const result = await run(
-    "claude",
-    [
-      "-p",
-      // The full event stream (every assistant turn, tool call, and tool result) — the
-      // run log records it verbatim; the closing `result` event is the reply.
-      "--output-format",
-      "stream-json",
-      "--verbose",
-      "--tools",
-      // File tools only in a workspace (no shell: there is no sandbox yet); none in chat.
-      workspace === undefined ? "" : "Read,Edit,Write,Glob,Grep",
-      ...(workspace === undefined ? [] : ["--permission-mode", "acceptEdits"]),
-      "--no-session-persistence",
-      "--effort",
-      request.agent.effort,
-      "--append-system-prompt",
-      system,
-      ...(model === undefined ? [] : ["--model", model]),
-    ],
-    user,
-    cwd,
-    env,
-    request.runLog,
-  );
-  const final = claudeStreamResult(result.stdout);
-  if (final === undefined) {
-    throw new Error(
-      `claude exited ${String(result.code)}: ${lastLines(result.stderr || result.stdout)}`,
+  const home =
+    restricted === undefined ? undefined : await mkdtemp(join(tmpdir(), "eforest-claude-"));
+  try {
+    const process =
+      restricted === undefined
+        ? {
+            command: "claude",
+            args: [] as readonly string[],
+            env: Object.fromEntries(
+              Object.entries(globalThis.process.env).filter(
+                ([name]) => name !== "ANTHROPIC_API_KEY" && name !== "ANTHROPIC_AUTH_TOKEN",
+              ),
+            ),
+          }
+        : restrictedClaudeProcess(restricted.restrictedClaudeToken, home!);
+    const result = await run(
+      restricted?.command ?? process.command,
+      [
+        ...process.args,
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--tools",
+        workspace === undefined ? "" : "Read,Edit,Write,Glob,Grep",
+        ...(workspace === undefined ? [] : ["--permission-mode", "acceptEdits"]),
+        "--no-session-persistence",
+        "--effort",
+        request.agent.effort,
+        "--append-system-prompt",
+        system,
+        ...(model === undefined ? [] : ["--model", model]),
+      ],
+      user,
+      cwd,
+      process.env,
+      restricted === undefined ? request.runLog : undefined,
+      restricted === undefined ? undefined : 16 * 1024 * 1024,
+      request.signal,
     );
+    const stdout =
+      restricted === undefined
+        ? result.stdout
+        : result.stdout.replaceAll(restricted.restrictedClaudeToken, "[redacted]");
+    const stderr =
+      restricted === undefined
+        ? result.stderr
+        : result.stderr.replaceAll(restricted.restrictedClaudeToken, "[redacted]");
+    if (restricted !== undefined) {
+      request.runLog?.write("stdout", stdout);
+      request.runLog?.write("stderr", stderr);
+    }
+    const final = claudeStreamResult(stdout);
+    if (final === undefined) {
+      throw new Error(`claude exited ${String(result.code)}: ${lastLines(stderr || stdout)}`);
+    }
+    if (final.isError) throw new Error(`claude ${final.subtype}: ${final.result}`);
+    return final.result;
+  } finally {
+    if (home !== undefined) await rm(home, { recursive: true, force: true });
   }
-  if (final.isError) throw new Error(`claude ${final.subtype}: ${final.result}`);
-  return final.result;
 }
 
 async function runCodex(
@@ -249,9 +338,15 @@ function branchLink(workspace: AgentWorkspace): string {
  */
 export function createHarnessReplyGenerator(
   workspace?: AgentWorkspaceOptions,
+  restricted?: RestrictedClaudeOptions,
 ): AgentReplyGenerator {
   return async (request) => {
     const runner = harnessRunner(request.agent.harness);
+    if (
+      restricted !== undefined &&
+      !["claude-code", "sol", "terra", "luna"].includes(request.agent.harness)
+    )
+      throw new Error("this hosted deployment supports only Claude Code agents");
     if (runner === undefined) {
       throw new Error(`the ${request.agent.harness} harness is not supported yet`);
     }
@@ -259,7 +354,9 @@ export function createHarnessReplyGenerator(
       (runner === "codex" ? codexModel(request) : claudeModel(request)) ?? "harness-default";
     const trigger = { streamId: request.streamId, messageId: request.mention.id };
     const harnessRun = (cwd: string, checkout?: AgentWorkspace) =>
-      runner === "codex" ? runCodex(request, cwd, checkout) : runClaudeCode(request, cwd, checkout);
+      runner === "codex"
+        ? runCodex(request, cwd, checkout)
+        : runClaudeCode(request, cwd, checkout, restricted);
     // The mention's own $codebase wins; otherwise the latest one earlier in the thread.
     const codebase =
       referencedCodebases([request.mention.body], request.org)[0] ??
@@ -302,6 +399,7 @@ export function createHarnessReplyGenerator(
           workspace: { org: codebase.org, repo: codebase.repo, branch },
         };
       },
+      request.signal,
     );
   };
 }

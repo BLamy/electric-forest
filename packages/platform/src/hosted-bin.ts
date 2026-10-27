@@ -9,7 +9,7 @@ try {
   await runtime.start();
   clearTimeout(startup);
   process.stdout.write(
-    `Electric Forest ready mode=production auth=auth0 revision=${runtime.config.revision} port=${String(runtime.config.port)} agents=off integrations=off\n`,
+    `Electric Forest ready mode=production auth=auth0 revision=${runtime.config.revision} port=${String(runtime.config.port)} agents=${runtime.config.agents} integrations=off\n`,
   );
   const stop = (): void => {
     const deadline = setTimeout(() => {

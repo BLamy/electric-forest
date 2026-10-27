@@ -1625,6 +1625,7 @@ export class PlatformGateway {
   private readonly prMerge: PlatformPrMergeOptions | undefined;
   private readonly agentRuns: AgentRunCoordinator;
   private readonly prMergeTails = new Map<string, Promise<void>>();
+  private lastTrustedAgentTimestamp = 0;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
     | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
@@ -2406,6 +2407,11 @@ export class PlatformGateway {
     };
   }
 
+  private trustedAgentTimestamp(): number {
+    this.lastTrustedAgentTimestamp = Math.max(Date.now(), this.lastTrustedAgentTimestamp + 1);
+    return this.lastTrustedAgentTimestamp;
+  }
+
   private async namespaceViewFor(org: string): Promise<NamespaceView> {
     this.views ??= new NamespaceViewReader(this.streams);
     return this.views.viewFor(org);
@@ -2468,6 +2474,19 @@ export class PlatformGateway {
     }
     const org = path.split("/")[0] ?? "";
     if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
+    if (
+      context.principal.kind === "identified" &&
+      context.principal.agentOf !== undefined &&
+      (context.principal.agentRepo === undefined ||
+        path !== `${context.principal.agentOf}/${context.principal.agentRepo}`)
+    ) {
+      return authzRefusalResponse({
+        allowed: false,
+        operation: "read",
+        identityOffset: context.identityOffset,
+        refusal: "authz/not-found",
+      });
+    }
 
     try {
       const tenantRefusal = this.tenantRefusal(context, org, "read");
@@ -2521,6 +2540,21 @@ export class PlatformGateway {
         identityOffset: context.identityOffset,
         namespace: { orgs: {} },
       });
+    }
+    if (
+      context.principal.kind === "identified" &&
+      context.principal.agentOf !== undefined &&
+      context.principal.agentRepo !== undefined &&
+      (target.kind !== "repo" ||
+        target.org !== context.principal.agentOf ||
+        target.repo !== context.principal.agentRepo)
+    ) {
+      return {
+        allowed: false,
+        operation,
+        identityOffset: context.identityOffset,
+        refusal: "authz/not-found",
+      };
     }
     if (target.kind === "repo" || target.kind === "org") {
       const tenantRefusal = this.tenantRefusal(context, target.org, operation);
@@ -2596,7 +2630,7 @@ export class PlatformGateway {
       }
     }
 
-    let parsed;
+    let parsed: ReturnType<typeof parseDispatch> & { readonly issueSource: IssueEnvelopeSource };
     try {
       const body = await request.arrayBuffer();
       let bodySource: string;
@@ -2756,10 +2790,10 @@ export class PlatformGateway {
         );
         if (!repoDecision.allowed) return authzRefusalResponse(repoDecision);
       } else {
+        const context =
+          trustedContext ?? (await this.authzContext(request.headers.get("authorization")));
         const tenant = target.kind === "control" ? namespaceTenant(parsed.streamId) : target.kind;
         if (target.kind === "control" && tenant !== "control") {
-          const context =
-            trustedContext ?? (await this.authzContext(request.headers.get("authorization")));
           const tenantRefusal = this.tenantRefusal(context, tenant, "dispatch");
           if (tenantRefusal !== undefined) return authzRefusalResponse(tenantRefusal);
         }
@@ -2767,7 +2801,10 @@ export class PlatformGateway {
         const decision = decideStreamAuthorization({
           operation: "dispatch",
           target,
-          principal: { kind: "identified", sub: preliminaryIdentity!.sub },
+          principal:
+            context.principal.kind === "identified" && context.principal.agentOf !== undefined
+              ? context.principal
+              : { kind: "identified", sub: preliminaryIdentity!.sub },
           eventKind: namespaceEvent ? "namespace" : "application",
           identity: trustedContext?.identity ?? emptyView(),
           identityOffset: trustedContext?.identityOffset ?? "-1",
@@ -2873,6 +2910,21 @@ export class PlatformGateway {
       }
       if (evidenceContentStream && !isEvidenceContentActionType(parsed.event.type)) {
         throw new EvidenceUnknownActionError();
+      }
+
+      if (parsed.event.type === "agent.register") {
+        parsed = { ...parsed, event: { ...parsed.event, ts: this.trustedAgentTimestamp() } };
+      } else if (parsed.event.type === "chat.message.post") {
+        parsed = {
+          ...parsed,
+          event: {
+            ...parsed.event,
+            payload: {
+              ...(parsed.event.payload as Record<string, unknown>),
+              serverReceivedAt: this.trustedAgentTimestamp(),
+            },
+          },
+        };
       }
 
       const eventFor = async (
@@ -4848,6 +4900,17 @@ export class PlatformGateway {
 
     if (request.method === "POST") {
       try {
+        const namespace = await this.namespaceViewFor(org);
+        const project = namespace.orgs[org]?.repos[repo]?.project;
+        if (project === undefined) {
+          return authzRefusalResponse({
+            allowed: false,
+            operation,
+            identityOffset: decision.identityOffset,
+            refusal: "authz/not-found",
+          });
+        }
+        await this.repositoryHomes.ensureRepository(org, repo, project);
         await this.repositoryHomes.registerNativeBranch(org, repo, branch);
         return json(202, { ok: true, branch, identityOffset: decision.identityOffset });
       } catch (error) {

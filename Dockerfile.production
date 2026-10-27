@@ -13,6 +13,7 @@ RUN rm -rf .eforest tools docs apps/web/src apps/web/test packages/*/src package
 
 FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS production
 WORKDIR /app
+RUN npm install --global @anthropic-ai/claude-code@2.1.312 && claude --version | grep -F '2.1.312'
 COPY --from=build /app /app
 ENV NODE_ENV=production EF_DEPLOYMENT_MODE=production EF_AGENT_RESPONDER=off EF_DATA_DIR=/data/forest-private
 EXPOSE 8080

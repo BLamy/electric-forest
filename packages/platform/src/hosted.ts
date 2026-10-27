@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import { isAbsolute, resolve } from "node:path";
 import type { Server } from "node:http";
+import { promisify } from "node:util";
 import { createDurableStreamTestServer } from "@eforest/server";
 import { createPlatformProductionRuntime } from "./production.js";
 import { OfficialStreamAdapter } from "./official.js";
@@ -27,12 +29,42 @@ export interface HostedConfig {
   readonly webRoot: string;
   readonly revision: string;
   readonly sessionTtlSeconds: number;
+  readonly agents: "off" | "restricted-claude";
 }
 
-/** This entrypoint has no provider/model/harness/email credentials or fixture mode. */
+const execFileAsync = promisify(execFile);
+const HOSTED_CLAUDE_BIN = "/usr/local/bin/claude";
+
+async function assertRestrictedClaudeAvailable(command: string): Promise<void> {
+  const { stdout } = await execFileAsync(command, ["--version"], { timeout: 5_000 });
+  const match = /^(\d+)\.(\d+)\.(\d+)/.exec(stdout.trim());
+  if (
+    match === null ||
+    Number(match[1]) < 2 ||
+    (Number(match[1]) === 2 &&
+      (Number(match[2]) < 1 || (Number(match[2]) === 1 && Number(match[3]) < 259)))
+  )
+    throw new Error("hosted Claude requires restricted CLI version 2.1.259 or newer");
+}
+
 export function readHostedEnvironment(environment: NodeJS.ProcessEnv): HostedConfig {
   if (environment.EF_DEPLOYMENT_MODE !== "production")
     throw new Error("hosted runtime requires production mode");
+  const agents = environment.EF_AGENT_RESPONDER ?? "off";
+  if (agents !== "off" && agents !== "restricted-claude")
+    throw new Error("hosted agent execution must be off or restricted-claude");
+  const oauthToken = environment.CLAUDE_CODE_OAUTH_TOKEN;
+  if (agents === "restricted-claude") {
+    if (
+      oauthToken === undefined ||
+      oauthToken.length < 20 ||
+      oauthToken.length > 4_096 ||
+      /\s/.test(oauthToken)
+    )
+      throw new Error("restricted hosted Claude requires a valid CLAUDE_CODE_OAUTH_TOKEN");
+  } else if (oauthToken !== undefined) {
+    throw new Error("CLAUDE_CODE_OAUTH_TOKEN requires restricted hosted Claude");
+  }
   const allowed = new Set([
     "EF_DEPLOYMENT_MODE",
     "EF_PUBLIC_ORIGIN",
@@ -46,6 +78,7 @@ export function readHostedEnvironment(environment: NodeJS.ProcessEnv): HostedCon
   ]);
   for (const [name, value] of Object.entries(environment)) {
     if (value === undefined) continue;
+    if (name === "CLAUDE_CODE_OAUTH_TOKEN" && agents === "restricted-claude") continue;
     if (
       (name.startsWith("EF_") && !allowed.has(name)) ||
       name.startsWith("EFOREST_") ||
@@ -56,8 +89,6 @@ export function readHostedEnvironment(environment: NodeJS.ProcessEnv): HostedCon
       throw new Error(`hosted runtime forbids inherited credentials or integrations: ${name}`);
     }
   }
-  if (environment.EF_AGENT_RESPONDER !== undefined && environment.EF_AGENT_RESPONDER !== "off")
-    throw new Error("hosted agent execution must be off");
   const publicUrl = new URL(environment.EF_PUBLIC_ORIGIN ?? "");
   if (
     publicUrl.protocol !== "https:" ||
@@ -107,6 +138,7 @@ export function readHostedEnvironment(environment: NodeJS.ProcessEnv): HostedCon
     dataDir,
     webRoot,
     sessionTtlSeconds: Number(sessionTtl),
+    agents,
   };
 }
 
@@ -117,6 +149,7 @@ export interface HostedRuntimeOptions {
   readonly now?: () => number;
   readonly requestDeadlineMs?: number;
   readonly transactionTtlMs?: number;
+  readonly claudeCommand?: string;
 }
 export interface HostedRuntime {
   readonly config: HostedConfig;
@@ -176,6 +209,8 @@ export async function createHostedRuntime(
     ...environment,
     ...(baked.revision === undefined ? {} : { EF_BUILD_REVISION: baked.revision }),
   });
+  const claudeCommand = options.claudeCommand ?? HOSTED_CLAUDE_BIN;
+  if (config.agents === "restricted-claude") await assertRestrictedClaudeAvailable(claudeCommand);
   const artifact = await verifyHostedArtifact(root, config.webRoot, config.revision, artifactPath);
   const state = await prepareHostedStorage(config.dataDir, config.issuer, config.clientId);
   const provider = createDurableStreamTestServer({
@@ -187,6 +222,7 @@ export async function createHostedRuntime(
   const streamUrl = await provider.start();
   const streams = new OfficialStreamAdapter({ baseUrl: streamUrl });
   let platform: Awaited<ReturnType<typeof createPlatformProductionRuntime>> | undefined;
+  let platformUrl: string | undefined;
   try {
     if (!state.initializing) {
       for (const stream of ["__identity__", "ns:root", "__registry__"]) {
@@ -202,13 +238,18 @@ export async function createHostedRuntime(
         EF_SESSION_TTL: String(config.sessionTtlSeconds),
         EFOREST_SERVER_URL: streamUrl,
         EF_WEB_ROOT: config.webRoot,
-        EF_AGENT_RESPONDER: "off",
+        EF_AGENT_RESPONDER: config.agents,
+        ...(config.agents === "restricted-claude"
+          ? { CLAUDE_CODE_OAUTH_TOKEN: environment.CLAUDE_CODE_OAUTH_TOKEN }
+          : {}),
       },
       {
         hosted: {
           origin: config.origin,
           transactionTtlMs: options.transactionTtlMs ?? HOSTED_LIMITS.transactionTtlMs,
         },
+        agentPlatformUrl: () => platformUrl,
+        ...(config.agents === "restricted-claude" ? { agentClaudeCommand: claudeCommand } : {}),
         ...(options.oidcFetch === undefined ? {} : { oidcFetch: options.oidcFetch }),
         ...(options.now === undefined ? {} : { now: options.now }),
       },
@@ -244,7 +285,7 @@ export async function createHostedRuntime(
     mode: "production",
     auth: "auth0",
     revision: config.revision,
-    agents: "off",
+    agents: config.agents,
     integrations: "off",
     data: "private",
     artifactDigest: artifact.digest,
@@ -276,7 +317,10 @@ export async function createHostedRuntime(
         const type = (value as { event?: { type?: unknown } } | undefined)?.event?.type;
         if (
           typeof type === "string" &&
-          /^(?:agent\.|integration\.|webhook\.|email\.|harness\.|mcp\.)/.test(type)
+          (/^(?:integration\.|webhook\.|email\.|harness\.|mcp\.)/.test(type) ||
+            (type.startsWith("agent.") &&
+              (config.agents === "off" ||
+                !["agent.register", "agent.update", "agent.remove"].includes(type))))
         )
           return json(403, { error: "hosted-integrations-disabled" });
       }
@@ -300,7 +344,7 @@ export async function createHostedRuntime(
       return new Response(
         html.replace(
           /<head>/i,
-          `<head><meta name="ef-mode" content="production"><meta name="ef-auth" content="auth0"><meta name="ef-agents" content="off"><meta name="ef-integrations" content="off"><meta name="ef-build" content="${config.revision}">`,
+          `<head><meta name="ef-mode" content="production"><meta name="ef-auth" content="auth0"><meta name="ef-agents" content="${config.agents}"><meta name="ef-integrations" content="off"><meta name="ef-build" content="${config.revision}">`,
         ),
         { status: response.status, headers: response.headers },
       );
@@ -329,11 +373,23 @@ export async function createHostedRuntime(
     server,
     streamUrl,
     identity: app.identity,
-    start: () => listenPlatformServer(server, config.port, "0.0.0.0"),
+    start: async () => {
+      const url = await listenPlatformServer(server, config.port, "0.0.0.0");
+      const address = server.address();
+      if (address === null || typeof address === "string")
+        throw new Error("hosted platform address is unavailable");
+      platformUrl = `http://127.0.0.1:${String(address.port)}`;
+      app.agentResponder?.start();
+      return url;
+    },
     close: () =>
       (closePromise ??= (async () => {
         closing = true;
         const deadline = Date.now() + HOSTED_LIMITS.drainMs;
+        app.agentResponder?.stop();
+        const agentsDrained =
+          (await app.agentResponder?.drain(Math.min(10_000, deadline - Date.now()))) ?? true;
+        platformUrl = undefined;
         if (server.listening)
           await new Promise<void>((done) => {
             server.close(() => done());
@@ -348,6 +404,7 @@ export async function createHostedRuntime(
         // The pinned provider's bounded in-flight reads settle before LMDB closes.
         await new Promise((done) => setTimeout(done, 500));
         await provider.stop();
+        if (!agentsDrained) throw new Error("hosted agent runs exceeded the drain deadline");
       })()),
   };
 }

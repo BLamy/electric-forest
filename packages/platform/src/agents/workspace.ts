@@ -73,11 +73,13 @@ function ef(
   args: readonly string[],
   cwd: string,
   env: NodeJS.ProcessEnv,
+  signal?: AbortSignal,
 ): Promise<EfResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [cliBin, ...args], {
       cwd,
       env,
+      signal,
       stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
@@ -114,12 +116,18 @@ export async function withAgentWorkspace<T>(
   options: AgentWorkspaceOptions,
   run: { readonly codebase: CodebaseRef; readonly handle: string; readonly branch: string },
   work: (workspace: AgentWorkspace) => Promise<T>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const platformUrl = options.platformUrl();
   if (platformUrl === undefined) throw new Error("the platform is not listening yet");
   const cliBin = options.cliBin ?? defaultCliBin();
   const { codebase, handle, branch } = run;
-  const capability = options.capabilities.issue({ org: codebase.org, handle, branch });
+  const capability = options.capabilities.issue({
+    org: codebase.org,
+    repo: codebase.repo,
+    handle,
+    branch,
+  });
   const scratch = await mkdtemp(join(tmpdir(), `eforest-agent-${handle}-`));
   const home = join(scratch, "ef-home");
   const dir = join(scratch, codebase.repo);
@@ -129,7 +137,18 @@ export async function withAgentWorkspace<T>(
     EF_SERVER_URL: platformUrl,
     EF_STREAM_SERVER_URL: options.streamUrl,
   };
+  for (const name of [
+    "CLAUDE_CODE_OAUTH_TOKEN",
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_AUTH_TOKEN",
+    "OPENAI_API_KEY",
+  ]) {
+    delete env[name];
+  }
+  let watcherStartAttempted = false;
   let watching = false;
+  let outcome:
+    { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: unknown };
   try {
     await mkdir(home, { recursive: true, mode: 0o700 });
     await writeFile(
@@ -146,34 +165,49 @@ export async function withAgentWorkspace<T>(
     const slug = `${codebase.org}/${codebase.repo}`;
     // The platform (EF_SERVER_URL) resolves and authorizes the repo; the branch bytes come
     // from the stream server (EF_STREAM_SERVER_URL).
-    const cloned = await ef(cliBin, ["clone", slug, "main", dir], scratch, env);
+    const cloned = await ef(cliBin, ["clone", slug, "main", dir], scratch, env, signal);
     if (cloned.code !== 0) throw new Error(`could not check out $${slug}: ${tail(cloned.output)}`);
-    const forked = await ef(cliBin, ["branch", branch], dir, env);
+    const forked = await ef(cliBin, ["branch", branch], dir, env, signal);
     if (forked.code !== 0 && !forked.output.includes("branch-exists")) {
       throw new Error(`could not create branch ${branch}: ${tail(forked.output)}`);
     }
-    const switched = await ef(cliBin, ["checkout", branch], dir, env);
+    const switched = await ef(cliBin, ["checkout", branch], dir, env, signal);
     if (switched.code !== 0) {
       throw new Error(`could not switch to branch ${branch}: ${tail(switched.output)}`);
     }
+    watcherStartAttempted = true;
     const started = await ef(cliBin, ["watch", "start", "--dir", dir], dir, env);
     if (started.code !== 0) throw new Error(`could not start live sync: ${tail(started.output)}`);
     watching = true;
-    const result = await work({ dir, branch, codebase });
-    // Stop the live watcher, then a final quiesced upload proves nothing is left behind.
-    const stopped = await ef(cliBin, ["watch", "stop", "--dir", dir], dir, env);
-    watching = false;
-    if (stopped.code !== 0)
-      throw new Error(`live sync did not stop cleanly: ${tail(stopped.output)}`);
-    const flushed = await ef(cliBin, ["watch", "--up", "--quiesce"], dir, env);
-    if (flushed.code !== 0) {
-      throw new Error(`some edits did not sync to ${branch}: ${tail(flushed.output)}`);
-    }
-    return result;
-  } finally {
-    if (watching)
-      await ef(cliBin, ["watch", "stop", "--dir", dir], dir, env).catch(() => undefined);
-    capability.revoke();
-    await rm(scratch, { recursive: true, force: true });
+    if (signal?.aborted) throw new Error("agent run aborted before workspace became ready");
+    outcome = { ok: true, value: await work({ dir, branch, codebase }) };
+  } catch (error) {
+    outcome = { ok: false, error };
   }
+  let cleanupError: unknown;
+  if (watcherStartAttempted) {
+    try {
+      const stopped = await ef(cliBin, ["watch", "stop", "--dir", dir], dir, env);
+      if (stopped.code !== 0 && (watching || !stopped.output.includes("cli/watch-not-running"))) {
+        throw new Error(`live sync did not stop cleanly: ${tail(stopped.output)}`);
+      }
+    } catch (error) {
+      cleanupError = error;
+    }
+  }
+  if (watching) {
+    try {
+      const flushed = await ef(cliBin, ["watch", "--up", "--quiesce"], dir, env);
+      if (flushed.code !== 0) {
+        throw new Error(`some edits did not sync to ${branch}: ${tail(flushed.output)}`);
+      }
+    } catch (error) {
+      cleanupError ??= error;
+    }
+  }
+  capability.revoke();
+  if (cleanupError === undefined) await rm(scratch, { recursive: true, force: true });
+  else throw cleanupError;
+  if (!outcome.ok) throw outcome.error;
+  return outcome.value;
 }

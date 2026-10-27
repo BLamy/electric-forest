@@ -11,14 +11,15 @@ import {
  *
  * An agent run gets a bearer token that exists only in this process's table and dies
  * with the run. The token resolves to the `agent:<handle>` principal with `agentOf` and
- * `agentBranch`, so the pure authz decision lets it read the org's repositories and
- * write exactly one branch. The token is JWT-shaped only so the `ef` CLI can derive its
+ * `agentRepo` and `agentBranch`, so the pure authz decision confines reads to one
+ * repository and writes to one branch. The token is JWT-shaped so `ef` can derive its
  * writer id from `sub`; the platform never trusts its contents — lookup is by exact
  * string, and nothing about it is persisted.
  */
 
 export interface AgentCapability {
   readonly org: string;
+  readonly repo: string;
   readonly handle: string;
   readonly branch: string;
 }
@@ -57,6 +58,7 @@ function contextFor(capability: AgentCapability): AuthorizationContext {
       kind: "identified",
       sub: `agent:${capability.handle}`,
       agentOf: capability.org,
+      agentRepo: capability.repo,
       agentBranch: capability.branch,
     },
     identity: emptyView(),

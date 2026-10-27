@@ -186,16 +186,25 @@ EF_OIDC_ISSUER=https://dev-8qqftel4x1s5wed3.us.auth0.com/
 EF_OIDC_CLIENT_ID=H9LGwHMzwWHgamCot9KTAmOFJCmDIlOk
 EF_DATA_DIR=/data/forest-private
 EF_WEB_ROOT=/app/apps/web/dist
-EF_AGENT_RESPONDER=off
+EF_AGENT_RESPONDER=restricted-claude
 PORT=8080
 ```
+
+Set `CLAUDE_CODE_OAUTH_TOKEN` as a Railway service secret in the same staged change as
+`EF_AGENT_RESPONDER=restricted-claude`; never put the token in Git, build arguments,
+or a CLI command. The runtime refuses either half of that configuration on its own.
+The production image pins Claude Code 2.1.312 and checks its restricted-mode support
+before opening the listener. Hosted Claude can answer chat and edit a referenced
+`$codebase` on a scoped agent branch. It gets only file tools within that checkout;
+shell, web and MCP tools, external integrations and other harness processes remain off.
+`EF_AGENT_RESPONDER=off` remains the rollback switch (remove the token at the same time).
 
 The runtime generates one private session-signing key in `session.key` (0600) inside
 its data directory (0700). A synced initialization journal is resumable only before the
 first listener; the ready marker binds the key hash and issuer/client. A ready store
 with a missing key or required authority stream stops. Never replace the key, remove
 markers, or initialize production from the public preview volume. Do not set
-`EF_SESSION_SECRET`, `EFOREST_SERVER_URL`, preview flags, model/harness credentials or
+`EF_SESSION_SECRET`, `EFOREST_SERVER_URL`, preview flags, other model/harness credentials or
 email integration keys on this service.
 
 Register exactly the following public application values in Auth0:
