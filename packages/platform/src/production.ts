@@ -15,6 +15,7 @@ import { OfficialStreamAdapter } from "./official.js";
 import { RegistryProjector } from "./registry/projector.js";
 import { AgentResponder, type AgentReplyGenerator } from "./agents/responder.js";
 import { createHarnessReplyGenerator } from "./agents/harness.js";
+import { hasHostedAccess } from "./hosted-access.js";
 import { AgentCapabilities, withAgentCapabilities } from "./agents/capabilities.js";
 import type { AgentWorkspaceOptions } from "./agents/workspace.js";
 import { createPlatformServer } from "./server.js";
@@ -250,7 +251,9 @@ export async function createPlatformProductionRuntime(
           bearer,
           identity,
           ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
-          ...(options.hosted === undefined ? {} : { opaqueOnly: true }),
+          ...(options.hosted === undefined
+            ? {}
+            : { opaqueOnly: true, allowedEmail: hasHostedAccess }),
         }),
       agentCapabilities,
     ),

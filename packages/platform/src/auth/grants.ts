@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { findGrantByTokenHash, type AuthorizationView } from "@eforest/identity";
+import { findGrantByTokenHash, userForSub, type AuthorizationView } from "@eforest/identity";
 import { BearerVerifier, UnauthorizedError, type RequestIdentity } from "../auth.js";
 import type { AuthzPrincipal } from "../authz/decide.js";
 import {
@@ -92,17 +92,20 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
   private readonly identity: IdentityStore;
   private readonly operationId: () => string;
   private readonly opaqueOnly: boolean;
+  private readonly allowedEmail: ((email: string) => boolean) | undefined;
 
   constructor(options: {
     readonly bearer: BearerVerifier;
     readonly identity: IdentityStore;
     readonly operationId?: () => string;
     readonly opaqueOnly?: boolean;
+    readonly allowedEmail?: (email: string) => boolean;
   }) {
     this.bearer = options.bearer;
     this.identity = options.identity;
     this.operationId = options.operationId ?? randomUUID;
     this.opaqueOnly = options.opaqueOnly ?? false;
+    this.allowedEmail = options.allowedEmail;
   }
 
   async verifyAuthorization(header: string | null): Promise<RequestIdentity> {
@@ -139,7 +142,14 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       identity: snapshot.view,
       identityOffset: snapshot.offset,
     };
-    if (grant === null || grant.status !== "active") return revoked;
+    if (
+      grant === null ||
+      grant.status !== "active" ||
+      (this.allowedEmail !== undefined &&
+        (userForSub(snapshot.view, grant.sub)?.restricted === true ||
+          !this.allowedEmail(userForSub(snapshot.view, grant.sub)?.email ?? "")))
+    )
+      return revoked;
     if (grant.tokenKind === "web-mint" || grant.kind === "web-session-mint") {
       if (jwtShaped) return revoked;
       return {
@@ -232,6 +242,12 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     const snapshot = await this.identity.snapshot();
     const grant = findGrantByTokenHash(snapshot.view, tokenHash(token));
     if (grant?.status !== "active") throw new TokenRevokedError(snapshot.offset);
+    if (
+      this.allowedEmail !== undefined &&
+      (userForSub(snapshot.view, grant.sub)?.restricted === true ||
+        !this.allowedEmail(userForSub(snapshot.view, grant.sub)?.email ?? ""))
+    )
+      throw new TokenRevokedError(snapshot.offset);
 
     if (grant.tokenKind === "web-mint" || grant.kind === "web-session-mint") {
       if (jwtShaped) throw new TokenRevokedError(snapshot.offset);

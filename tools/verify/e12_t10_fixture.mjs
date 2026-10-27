@@ -23,8 +23,9 @@ export const task = resolve(
 );
 export const CLIENT_ID = "e12-t10-dedicated-web-fixture";
 export const PEOPLE = Object.freeze({
-  ada: { sub: "auth0|e12-t10-fixture-ada", email: "ada@e12-t10.fixture.invalid" },
-  grace: { sub: "auth0|e12-t10-fixture-grace", email: "grace@e12-t10.fixture.invalid" },
+  ada: { sub: "auth0|e12-t10-fixture-ada", email: "ada-fixture@replay.io" },
+  grace: { sub: "auth0|e12-t10-fixture-grace", email: "grace-fixture@reloulexei.resend.app" },
+  outsider: { sub: "auth0|e12-t10-fixture-outsider", email: "outsider@example.com" },
 });
 const sha = (value) => createHash("sha256").update(value).digest("hex");
 const challenge = (value) => createHash("sha256").update(value).digest("base64url");
@@ -162,20 +163,26 @@ export async function createHostedFixture(output, options = {}) {
         )
         .join("");
       return new Response(
-        `<!doctype html><html><head><title>Dedicated issuer fixture</title><meta name="viewport" content="width=device-width"></head><body><h1>Dedicated Auth0-shaped issuer fixture</h1><p>Synthetic identities only. This is not the real Auth0 service.</p><form method="post" action="/authorize">${hidden}<button name="role" value="ada">Continue as Ada fixture</button><button name="role" value="grace">Continue as Grace fixture</button></form></body></html>`,
+        `<!doctype html><html><head><title>Dedicated issuer fixture</title><meta name="viewport" content="width=device-width"></head><body><h1>Dedicated Auth0-shaped issuer fixture</h1><p>Synthetic identities only. This is not the real Auth0 service.</p><form method="post" action="/authorize">${hidden}<button name="role" value="ada">Continue as Ada fixture</button><button name="role" value="ada-outside">Continue as Ada outside fixture</button><button name="role" value="grace">Continue as Grace fixture</button><button name="role" value="outsider">Continue as Outsider fixture</button></form></body></html>`,
         { headers: { "content-type": "text/html" } },
       );
     }
     if (url.pathname === "/authorize" && request.method === "POST") {
       const form = await request.formData();
       const role = form.get("role");
-      if (!(role in PEOPLE)) return new Response("unknown fixture", { status: 400 });
+      if (role !== "ada-outside" && !(role in PEOPLE))
+        return new Response("unknown fixture", { status: 400 });
       const authorization = new URL(`${issuerOrigin}/authorize`);
       for (const [name, value] of form)
         if (name !== "role") authorization.searchParams.set(name, String(value));
       const callback = new URL(authorization.searchParams.get("redirect_uri"));
       callback.searchParams.set("state", authorization.searchParams.get("state"));
-      callback.searchParams.set("code", issue(authorization, role));
+      callback.searchParams.set(
+        "code",
+        role === "ada-outside"
+          ? issue(authorization, "ada", { claims: { email: "outside@example.com" } })
+          : issue(authorization, role),
+      );
       return new Response(null, { status: 302, headers: { location: callback.href } });
     }
     if (url.pathname === "/oauth/token" && request.method === "POST") {

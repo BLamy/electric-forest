@@ -9,6 +9,7 @@ import { safeLocalReturn } from "../src/auth/routes.js";
 import { signedSessionCookie, clearedSessionCookie } from "../src/auth/session.js";
 import { prepareHostedStorage } from "../src/hosted-storage.js";
 import { HOSTED_LIMITS, readHostedEnvironment } from "../src/hosted.js";
+import { hasHostedAccess } from "../src/hosted-access.js";
 import { createPlatformServer, listenPlatformServer, platformTimeouts } from "../src/server.js";
 
 const workshop = resolve(
@@ -54,6 +55,18 @@ async function socket(base: string, data: string): Promise<string> {
 }
 
 describe("explicit private Auth0 hosted profile", () => {
+  it.each([
+    ["person@replay.io", true],
+    ["person@REPLAY.IO", true],
+    ["person@reloulexei.resend.app", true],
+    ["person@example.com", false],
+    ["person@sub.replay.io", false],
+    ["person@replay.io.evil.test", false],
+    ["person@@replay.io", false],
+    [" person@replay.io", false],
+  ])("gates early access for %s", (email, expected) => {
+    expect(hasHostedAccess(email)).toBe(expected);
+  });
   it("freezes numeric defaults and accepts the assigned port without inherited integrations", () => {
     expect(readHostedEnvironment(configuration)).toMatchObject({
       origin: "https://forest.example.test",

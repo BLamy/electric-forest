@@ -209,10 +209,23 @@ async function chatProof(context, viewers, name) {
 try {
   const adaContext = await context(),
     graceContext = await context(),
+    outsiderContext = await context(),
     witnessContext = await context();
   const ada = await open(adaContext, "ada"),
-    grace = await open(graceContext, "grace");
+    grace = await open(graceContext, "grace"),
+    outsider = await open(outsiderContext, "outsider");
   assert.equal((await world.runtime.identity.snapshot()).events.length, 0);
+  await outsider.goto(`${world.origin}/settings/cli-tokens`);
+  await outsider.getByRole("button", { name: "Continue as Outsider fixture" }).click();
+  await outsider.waitForURL(`${world.origin}/coming-soon`);
+  await outsider.getByRole("heading", { name: "Electric Forest is coming soon" }).waitFor();
+  assert.equal(
+    (await outsiderContext.cookies()).some((cookie) => cookie.name === "ef_session"),
+    false,
+  );
+  assert.equal((await world.runtime.identity.snapshot()).events.length, 0);
+  await screenshot(outsider, "outside-domain-coming-soon");
+  step("outside-domain-login-shows-coming-soon-without-session-or-identity-write");
   await signIn(ada, "ada", "/settings/cli-tokens");
   await ada.getByRole("heading", { name: "CLI tokens" }).waitFor();
   await identityProof(ada, "ada-login-deep-return", true);
@@ -354,6 +367,21 @@ try {
   await signIn(ada, "ada", "/chat/browser-ada/welcome");
   await ada.getByTestId("chat-message").filter({ hasText: second }).waitFor();
   await chatProof(adaContext, [ada, witness], "relogin-preserves-state");
+  await witness.close();
+  await ada.goto(`${world.origin}/auth/login`);
+  await ada.getByRole("button", { name: "Continue as Ada outside fixture" }).click();
+  await ada.waitForURL(`${world.origin}/coming-soon`);
+  await ada.getByRole("heading", { name: "Electric Forest is coming soon" }).waitFor();
+  assert.equal((await witnessContext.request.get(`${world.origin}/api/whoami`)).status(), 401);
+  const excludedIdentity = await world.dumpIdentity("browser-identity-email-excluded");
+  dumps.push({ ...excludedIdentity, name: "identity-email-excluded", layer: "identity" });
+  step("same-subject-excluded-email-shows-coming-soon-and-ends-old-session");
+  await screenshot(ada, "changed-email-coming-soon");
+  await signIn(ada, "ada", "/chat/browser-ada/welcome");
+  await ada.getByTestId("chat-message").filter({ hasText: second }).waitFor();
+  await identityProof(ada, "same-subject-readmitted");
+  assert.equal((await witnessContext.request.get(`${world.origin}/api/whoami`)).status(), 401);
+  step("same-subject-allowed-email-readmitted-without-reviving-old-session");
   const finalIdentity = await world.dumpIdentity("browser-identity-final");
   dumps.push({ ...finalIdentity, name: "identity-final", layer: "identity" });
   for (const streamId of ["ns:root", "ns:org:browser-ada", "ns:org:browser-grace"]) {

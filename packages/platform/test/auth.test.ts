@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { mkdir, mkdtemp, readFile, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { createDurableJsonStream, readDurableJsonSnapshot } from "@eforest/client";
 import { createDurableStreamTestServer } from "@eforest/server";
 import { emptyView, identityReducer, viewDigest } from "@eforest/identity";
 import { replay, type Event } from "@eforest/protocol";
@@ -20,6 +21,9 @@ import {
   sessionIsValid,
   signedSessionCookie,
 } from "../src/index.js";
+import { BearerVerifier } from "../src/auth.js";
+import { GrantAwareVerifier, tokenHash } from "../src/auth/grants.js";
+import { hasHostedAccess } from "../src/hosted-access.js";
 
 const ISSUER = "https://issuer.example.test/";
 const CLIENT_ID = "eforest-web";
@@ -361,6 +365,365 @@ async function triple(identity: IdentityStore): Promise<{
 }
 
 describe("event-backed web login and sessions", () => {
+  it("reverifies a hosted subject across both access boundaries without reviving old credentials", async () => {
+    const { officialUrl, identity, fixture } = await setup();
+    const sub = "auth0|email-transition";
+    const oldSessionId = "email-transition-session";
+    await identity.login(sub, "person@replay.io", oldSessionId);
+    const oldCookie = signedSessionCookie(SECRET, oldSessionId, 60, true).split(";", 1)[0]!;
+    const token = `ef_cli_${"b".repeat(43)}`;
+    await identity.issueCliGrant({
+      grantId: "email-transition-grant",
+      sub,
+      tokenKind: "web-mint",
+      tokenHash: tokenHash(token),
+      scopes: ["repo:read"],
+    });
+    const blockedTarget = { url: `${officialUrl}/streams/email-transition-target` };
+    await createDurableJsonStream(blockedTarget);
+    expect(
+      (
+        await fetch(blockedTarget.url, {
+          method: "POST",
+          headers: { "Stream-Closed": "true" },
+        })
+      ).status,
+    ).toBe(204);
+    await identity.beginGrantOperation("email-transition-grant", "email-transition-operation", {
+      streamId: "email-transition-target",
+      event: { type: "test.created", payload: { value: 1 }, ts: NOW },
+    });
+    const app = new PlatformWebApp({
+      oidc: new OidcClient({
+        issuer: ISSUER,
+        clientId: CLIENT_ID,
+        fetch: fixture.fetch,
+        now: () => NOW,
+        requireVerifiedEmail: true,
+      }),
+      transactions: new OidcTransactions(deterministicRandom()),
+      identity,
+      sessionSecret: SECRET,
+      sessionTtlMs: 60_000,
+      now: () => NOW,
+      random: deterministicRandom(),
+      hosted: { origin: "https://forest.example.test", transactionTtlMs: 600_000 },
+    });
+    const callback = async (code: string, email: string): Promise<Response> => {
+      const login = await app.handle(new Request("https://forest.example.test/auth/login"));
+      const authorization = new URL(login.headers.get("location")!);
+      const binding = login.headers
+        .getSetCookie()
+        .find((value) => value.startsWith("ef_login="))!
+        .split(";", 1)[0]!;
+      fixture.issue(code, authorization, { sub, email, claims: { email_verified: true } });
+      return app.handle(
+        new Request(
+          `https://forest.example.test/auth/callback?code=${code}&state=${authorization.searchParams.get("state")}`,
+          { headers: { cookie: binding } },
+        ),
+      );
+    };
+    let resumeMint!: () => void;
+    const mintBlocked = new Promise<void>((resolveMint) => {
+      resumeMint = resolveMint;
+    });
+    let bodyRead!: () => void;
+    const bodyStarted = new Promise<void>((resolveBody) => {
+      bodyRead = resolveBody;
+    });
+    const pendingMint = app.handle(
+      new Request("https://forest.example.test/api/cli-tokens", {
+        method: "POST",
+        headers: {
+          cookie: oldCookie,
+          origin: "https://forest.example.test",
+          "content-type": "application/json",
+        },
+        body: new ReadableStream(
+          {
+            async pull(controller) {
+              bodyRead();
+              await mintBlocked;
+              controller.enqueue(
+                new TextEncoder().encode(JSON.stringify({ scopes: ["repo:read"] })),
+              );
+              controller.close();
+            },
+          },
+          { highWaterMark: 0 },
+        ),
+        duplex: "half",
+      } as RequestInit & { duplex: "half" }),
+    );
+    await bodyStarted;
+    const denied = await callback("email-denied", "person@example.com");
+    expect(denied.status).toBe(302);
+    expect(denied.headers.get("location")).toBe("/coming-soon");
+    let snapshot = await identity.snapshot();
+    expect(snapshot.view.users[sub]?.email).toBe("person@example.com");
+    expect(snapshot.view.sessions[oldSessionId]?.status).toBe("ended");
+    expect(snapshot.view.grants["email-transition-grant"]?.status).toBe("active");
+    expect(snapshot.view.grantOperations?.["email-transition-operation"]?.status).toBe("active");
+    expect(snapshot.view.users[sub]?.restricted).toBe(true);
+    await expect(identity.assertGrantOperationActive("email-transition-operation")).rejects.toThrow(
+      "not active",
+    );
+    expect(
+      snapshot.events.filter((event) => event.type === "identity.user.email.restricted"),
+    ).toHaveLength(1);
+    const oldWhoami = await app.handle(
+      new Request("https://forest.example.test/api/whoami", { headers: { cookie: oldCookie } }),
+    );
+    expect(oldWhoami.status).toBe(401);
+    const verifier = new GrantAwareVerifier({
+      bearer: new BearerVerifier({ issuer: ISSUER, audience: CLIENT_ID, fetch: fixture.fetch }),
+      identity,
+      opaqueOnly: true,
+      allowedEmail: hasHostedAccess,
+    });
+    await expect(verifier.verifyAuthorization(`Bearer ${token}`)).rejects.toThrow("token-revoked");
+
+    expect((await fetch(blockedTarget.url, { method: "DELETE" })).status).toBe(204);
+    await createDurableJsonStream(blockedTarget);
+
+    const accepted = await callback("email-accepted", "person@reloulexei.resend.app");
+    expect(accepted.status).toBe(302);
+    expect(accepted.headers.get("location")).toBe("/");
+    const newCookie = accepted.headers
+      .getSetCookie()
+      .find((value) => value.startsWith("ef_session="))!
+      .split(";", 1)[0]!;
+    const home = await app.handle(
+      new Request("https://forest.example.test/", { headers: { cookie: newCookie } }),
+    );
+    expect(home.status).toBe(200);
+    expect(await home.text()).toContain("person@reloulexei.resend.app");
+    snapshot = await identity.snapshot();
+    expect(snapshot.view.users[sub]?.email).toBe("person@reloulexei.resend.app");
+    expect(snapshot.view.sessions[oldSessionId]?.status).toBe("ended");
+    expect(snapshot.view.grants["email-transition-grant"]?.status).toBe("revoked");
+    expect(snapshot.view.grantOperations?.["email-transition-operation"]?.status).toBe("completed");
+    expect(snapshot.view.users[sub]?.restricted).toBeUndefined();
+    expect((await readDurableJsonSnapshot(blockedTarget)).items).toMatchObject([
+      { type: "test.created", payload: { value: 1 } },
+    ]);
+    expect(
+      snapshot.events.filter((event) => event.type === "identity.user.email.changed"),
+    ).toHaveLength(1);
+    resumeMint();
+    const staleMint = await pendingMint;
+    expect(staleMint.status).toBe(401);
+    expect(
+      (await identity.snapshot()).events.filter((event) => event.type === "identity.grant.issued"),
+    ).toHaveLength(1);
+    await expect(verifier.verifyAuthorization(`Bearer ${token}`)).rejects.toThrow("token-revoked");
+  });
+
+  it("settles an active grant operation before changing a verified email", async () => {
+    const { officialUrl, identity } = await setup();
+    const sub = "auth0|busy-email-change";
+    await identity.login(sub, "busy@replay.io", "busy-session");
+    await identity.issueCliGrant({
+      grantId: "busy-grant",
+      sub,
+      tokenKind: "web-mint",
+      tokenHash: "a".repeat(64),
+      scopes: ["repo:write"],
+    });
+    const target = { url: `${officialUrl}/streams/busy-target` };
+    await createDurableJsonStream(target);
+    await identity.beginGrantOperation("busy-grant", "busy-operation", {
+      streamId: "busy-target",
+      event: { type: "test.created", payload: { value: 1 }, ts: NOW },
+    });
+    const after = await identity.reverifyKnownUser(sub, "busy@example.com");
+    expect(after.view.users[sub]?.email).toBe("busy@example.com");
+    expect(after.view.sessions["busy-session"]?.status).toBe("ended");
+    expect(after.view.grants["busy-grant"]?.status).toBe("revoked");
+    expect(after.view.grantOperations?.["busy-operation"]?.status).toBe("completed");
+    expect(after.events.slice(-2).map((event) => event.type)).toEqual([
+      "identity.grant.operation.completed",
+      "identity.user.email.changed",
+    ]);
+    expect((await readDurableJsonSnapshot(target)).items).toMatchObject([
+      { type: "test.created", payload: { value: 1 } },
+    ]);
+  });
+
+  it("denies an excluded callback without attempting unavailable grant recovery", async () => {
+    const { officialUrl, identity: seededIdentity, fixture } = await setup();
+    const sub = "auth0|unavailable-recovery";
+    const sessionId = "unavailable-recovery-session";
+    const token = `ef_cli_${"c".repeat(43)}`;
+    await seededIdentity.login(sub, "person@replay.io", sessionId);
+    await seededIdentity.issueCliGrant({
+      grantId: "unavailable-recovery-grant",
+      sub,
+      tokenKind: "web-mint",
+      tokenHash: tokenHash(token),
+      scopes: ["repo:read"],
+    });
+    await seededIdentity.beginGrantOperation(
+      "unavailable-recovery-grant",
+      "unavailable-recovery-operation",
+      {
+        streamId: "unavailable-recovery-target",
+        event: { type: "test.created", payload: { value: 1 }, ts: NOW },
+      },
+    );
+    let recoveryCalls = 0;
+    const identity = new IdentityStore({
+      baseUrl: officialUrl,
+      now: () => NOW,
+      recoverGrantOperation: async () => {
+        recoveryCalls += 1;
+        throw new Error("target unavailable");
+      },
+    });
+    const app = new PlatformWebApp({
+      oidc: new OidcClient({
+        issuer: ISSUER,
+        clientId: CLIENT_ID,
+        fetch: fixture.fetch,
+        now: () => NOW,
+        requireVerifiedEmail: true,
+      }),
+      transactions: new OidcTransactions(deterministicRandom()),
+      identity,
+      sessionSecret: SECRET,
+      sessionTtlMs: 60_000,
+      now: () => NOW,
+      hosted: { origin: "https://forest.example.test", transactionTtlMs: 600_000 },
+    });
+    const login = await app.handle(new Request("https://forest.example.test/auth/login"));
+    const authorization = new URL(login.headers.get("location")!);
+    const binding = login.headers
+      .getSetCookie()
+      .find((value) => value.startsWith("ef_login="))!
+      .split(";", 1)[0]!;
+    fixture.issue("unavailable-recovery", authorization, {
+      sub,
+      email: "person@example.com",
+      claims: { email_verified: true },
+    });
+    const denied = await app.handle(
+      new Request(
+        `https://forest.example.test/auth/callback?code=unavailable-recovery&state=${authorization.searchParams.get("state")}`,
+        { headers: { cookie: binding } },
+      ),
+    );
+    expect(denied.status).toBe(302);
+    expect(denied.headers.get("location")).toBe("/coming-soon");
+    expect(recoveryCalls).toBe(0);
+    const snapshot = await identity.snapshot();
+    expect(snapshot.view.users[sub]).toEqual({ email: "person@example.com", restricted: true });
+    expect(snapshot.view.sessions[sessionId]?.status).toBe("ended");
+    expect(snapshot.view.grantOperations?.["unavailable-recovery-operation"]?.status).toBe(
+      "active",
+    );
+    const cookie = signedSessionCookie(SECRET, sessionId, 60, true).split(";", 1)[0]!;
+    expect(
+      (
+        await app.handle(
+          new Request("https://forest.example.test/api/whoami", { headers: { cookie } }),
+        )
+      ).status,
+    ).toBe(401);
+    const verifier = new GrantAwareVerifier({
+      bearer: new BearerVerifier({ issuer: ISSUER, audience: CLIENT_ID, fetch: fixture.fetch }),
+      identity,
+      opaqueOnly: true,
+      allowedEmail: hasHostedAccess,
+    });
+    await expect(verifier.verifyAuthorization(`Bearer ${token}`)).rejects.toThrow("token-revoked");
+  });
+
+  it("routes excluded hosted sessions to coming soon and revokes their bearer access", async () => {
+    const { identity, fixture } = await setup();
+    const sessionId = "legacy-session";
+    const sub = "auth0|legacy";
+    await identity.login(sub, "outside@example.com", sessionId);
+    const token = `ef_cli_${"a".repeat(43)}`;
+    await identity.issueCliGrant({
+      grantId: "legacy-grant",
+      sub,
+      tokenKind: "web-mint",
+      tokenHash: tokenHash(token),
+      scopes: ["repo:read"],
+    });
+    const app = new PlatformWebApp({
+      oidc: new OidcClient({
+        issuer: ISSUER,
+        clientId: CLIENT_ID,
+        fetch: fixture.fetch,
+        now: () => NOW,
+        requireVerifiedEmail: true,
+      }),
+      transactions: new OidcTransactions(deterministicRandom()),
+      identity,
+      sessionSecret: SECRET,
+      sessionTtlMs: 60_000,
+      now: () => NOW,
+      hosted: { origin: "https://forest.example.test", transactionTtlMs: 600_000 },
+    });
+    const cookie = signedSessionCookie(SECRET, sessionId, 60, true).split(";", 1)[0]!;
+    const before = await triple(identity);
+    const page = await app.handle(
+      new Request("https://forest.example.test/", { headers: { cookie } }),
+    );
+    expect(page.status).toBe(302);
+    expect(page.headers.get("location")).toBe("/coming-soon");
+    expect(page.headers.get("set-cookie")).toContain("ef_session=;");
+    const api = await app.handle(
+      new Request("https://forest.example.test/api/whoami", { headers: { cookie } }),
+    );
+    expect(api.status).toBe(403);
+    expect(await api.json()).toEqual({ error: { class: "early-access-required" } });
+    const comingSoon = await app.handle(new Request("https://forest.example.test/coming-soon"));
+    expect(comingSoon.status).toBe(200);
+    expect(await comingSoon.text()).toContain("Electric Forest is coming soon");
+    const verifier = new GrantAwareVerifier({
+      bearer: new BearerVerifier({ issuer: ISSUER, audience: CLIENT_ID, fetch: fixture.fetch }),
+      identity,
+      opaqueOnly: true,
+      allowedEmail: hasHostedAccess,
+    });
+    await expect(verifier.verifyAuthorization(`Bearer ${token}`)).rejects.toThrow("token-revoked");
+    expect((await verifier.authorizationContext(`Bearer ${token}`)).principal).toEqual({
+      kind: "identified",
+      sub: "",
+      grantId: "",
+    });
+    expect(await triple(identity)).toEqual(before);
+    const login = await app.handle(new Request("https://forest.example.test/auth/login"));
+    const authorization = new URL(login.headers.get("location")!);
+    const binding = login.headers
+      .getSetCookie()
+      .find((value) => value.startsWith("ef_login="))!
+      .split(";", 1)[0]!;
+    fixture.issue("legacy-excluded", authorization, {
+      sub,
+      email: "outside@example.com",
+      claims: { email_verified: true },
+    });
+    const denied = await app.handle(
+      new Request(
+        `https://forest.example.test/auth/callback?code=legacy-excluded&state=${authorization.searchParams.get("state")}`,
+        { headers: { cookie: binding } },
+      ),
+    );
+    expect(denied.status).toBe(302);
+    expect(denied.headers.get("location")).toBe("/coming-soon");
+    const snapshot = await identity.snapshot();
+    expect(snapshot.view.users[sub]).toEqual({ email: "outside@example.com", restricted: true });
+    expect(snapshot.view.sessions[sessionId]?.status).toBe("ended");
+    expect(snapshot.view.grants["legacy-grant"]?.status).toBe("active");
+    expect(
+      snapshot.events.filter((event) => event.type === "identity.user.email.restricted"),
+    ).toHaveLength(1);
+    await expect(verifier.verifyAuthorization(`Bearer ${token}`)).rejects.toThrow("token-revoked");
+  });
   it("bridges an explicitly configured local OIDC emulator through a same-origin path", async () => {
     const upstream = createServer((_request, response) => {
       response.writeHead(302, {

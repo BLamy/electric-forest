@@ -23,6 +23,7 @@ import {
 } from "../rate-limit.js";
 import { resolveSessionBackedIdentity, whoamiResponse } from "../api/whoami.js";
 import { spaResponse } from "../web/spa.js";
+import { hasHostedAccess } from "../hosted-access.js";
 
 export interface PlatformWebAppOptions {
   readonly oidc: OidcClient;
@@ -331,6 +332,21 @@ export class PlatformWebApp {
           return json(401, { error: { class: "web-session-required" } });
         }
       }
+      if (
+        !url.pathname.startsWith("/auth/") &&
+        url.pathname !== "/coming-soon" &&
+        !url.pathname.startsWith("/assets/") &&
+        url.pathname !== "/favicon.ico" &&
+        url.pathname !== "/.well-known/replay-qa-security-nonce" &&
+        (await this.restrictedHostedSession(request))
+      ) {
+        const response =
+          url.pathname.startsWith("/api/") || url.pathname.startsWith("/registry/")
+            ? json(403, { error: { class: "early-access-required" } })
+            : redirect("/coming-soon");
+        response.headers.append("set-cookie", clearedSessionCookie(true));
+        return response;
+      }
     }
     try {
       const proxySuffix = oidcProxySuffix(url.pathname);
@@ -419,6 +435,8 @@ export class PlatformWebApp {
           return await this.callback(request, url);
         case "auth-logout":
           return await this.logout(request);
+        case "coming-soon":
+          return this.comingSoon(request);
         case "whoami":
           return await whoamiResponse(request, {
             identity: this.identity,
@@ -560,6 +578,14 @@ export class PlatformWebApp {
       `${this.publicOrigin ?? url.origin}/auth/callback`,
       transaction,
     );
+    if (this.hosted !== undefined && !hasHostedAccess(claims.email)) {
+      await this.identity.restrictKnownUserEmail(claims.sub, claims.email);
+      return redirect("/coming-soon", [
+        clearedSessionCookie(true),
+        loginCookie("", 0),
+        "ef_next=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0",
+      ]);
+    }
     const sessionId = Buffer.from(this.random(24)).toString("base64url");
     await this.identity.login(claims.sub, claims.email, sessionId);
     if (this.hosted !== undefined) {
@@ -573,6 +599,33 @@ export class PlatformWebApp {
     return redirect(
       next ?? "/",
       signedSessionCookie(this.sessionSecret, sessionId, this.sessionTtlMs / 1_000),
+    );
+  }
+
+  private comingSoon(request: Request): Response {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return json(405, { error: { class: "method-not-allowed" } });
+    }
+    const body = shell(
+      '<main data-testid="coming-soon"><h1>Electric Forest is coming soon</h1><p>We are opening access gradually. Please check back soon.</p></main>',
+    );
+    return new Response(request.method === "HEAD" ? null : body, {
+      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+
+  private async restrictedHostedSession(request: Request): Promise<boolean> {
+    if (this.hosted === undefined || !request.headers.has("cookie")) return false;
+    const identity = await resolveSessionBackedIdentity(request, {
+      identity: this.identity,
+      sessionSecret: this.sessionSecret,
+      sessionTtlMs: this.sessionTtlMs,
+      now: this.now,
+    });
+    return (
+      identity !== null &&
+      (identity.snapshot.view.users[identity.sub]?.restricted === true ||
+        !hasHostedAccess(identity.email))
     );
   }
 
@@ -757,7 +810,10 @@ export class PlatformWebApp {
 
   private async webSession(
     request: Request,
-  ): Promise<{ readonly snapshot: IdentitySnapshot; readonly sub: string } | Response> {
+  ): Promise<
+    | { readonly snapshot: IdentitySnapshot; readonly sub: string; readonly sessionId: string }
+    | Response
+  > {
     if (request.headers.has("authorization")) {
       return json(401, { error: { class: "web-session-required" } });
     }
@@ -767,7 +823,11 @@ export class PlatformWebApp {
     if (!sessionIsValid(snapshot, parsed.sessionId, this.now(), this.sessionTtlMs)) {
       return refusal("bad-token", request);
     }
-    return { snapshot, sub: snapshot.view.sessions[parsed.sessionId]!.sub };
+    return {
+      snapshot,
+      sub: snapshot.view.sessions[parsed.sessionId]!.sub,
+      sessionId: parsed.sessionId,
+    };
   }
 
   private async cliTokens(request: Request): Promise<Response> {
@@ -783,14 +843,26 @@ export class PlatformWebApp {
     if (input instanceof Response) return input;
     const secret = `ef_cli_${Buffer.from(this.random(32)).toString("base64url")}`;
     const grantId = `grant_${Buffer.from(this.random(18)).toString("base64url")}`;
-    const snapshot = await this.identity.issueCliGrant({
-      grantId,
-      sub: session.sub,
-      tokenKind: "web-mint",
-      tokenHash: tokenHash(secret),
-      scopes: input.scopes,
-      ...(input.name === undefined ? {} : { name: input.name }),
-    });
+    let snapshot: IdentitySnapshot;
+    try {
+      snapshot = await this.identity.issueCliGrant({
+        grantId,
+        sub: session.sub,
+        tokenKind: "web-mint",
+        tokenHash: tokenHash(secret),
+        scopes: input.scopes,
+        originatingSession: { id: session.sessionId, ttlMs: this.sessionTtlMs },
+        ...(input.name === undefined ? {} : { name: input.name }),
+      });
+    } catch (error) {
+      if (
+        error instanceof IdentityDispatchRefusedError &&
+        error.code === "identity/session-ended"
+      ) {
+        return refusal("bad-token", request);
+      }
+      throw error;
+    }
     const grant = snapshot.view.grants[grantId]!;
     return json(201, {
       grantId,

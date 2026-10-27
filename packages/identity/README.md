@@ -12,6 +12,8 @@ stream is ground truth; replaying it from offset `-1` rebuilds the complete view
 | Type                                 | Exact payload                                                                                                                                         |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `identity.user.created`              | `{ v: 1, sub, email }`                                                                                                                                |
+| `identity.user.email.changed`        | `{ v: 2, sub, email }`                                                                                                                                |
+| `identity.user.email.restricted`     | `{ v: 2, sub, email }`                                                                                                                                |
 | `identity.org.created`               | `{ v: 1, orgId, name, ownerSub }`                                                                                                                     |
 | `identity.membership.granted`        | `{ v: 1, orgId, sub, role: "admin" or "member" }`                                                                                                     |
 | `identity.membership.revoked`        | `{ v: 1, orgId, sub }`                                                                                                                                |
@@ -45,6 +47,19 @@ Opaque ids reserve no JavaScript property names: values such as `__proto__`,
 `constructor`, and `toString` are ordinary identities. Reducer and query membership
 checks therefore use own entries only; inherited properties are never authorization
 state.
+
+The version-2 verified-email change updates an existing subject only. At the same stream
+offset it ends active sessions and revokes active CLI grants. An in-flight grant operation
+must first settle through the existing recovery path. A restricted-email event instead
+ends sessions and marks the user restricted immediately, even if recovery is unavailable;
+hosted bearer verification and new operation/credential admission then refuse access.
+An already-started operation is not cancelled retroactively, but its runtime must refuse
+the next pre-append activity check while the subject is restricted.
+Existing operations remain recoverable, and readmission settles them before revoking old
+grants and clearing the restriction. Recovery can append an already-authorized frozen
+event after restriction; it cannot authorize a new operation. The original version-1
+event schema and its
+committed goldens remain unchanged.
 
 ## Replay invariants
 
