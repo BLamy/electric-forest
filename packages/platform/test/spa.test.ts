@@ -62,7 +62,7 @@ describe("E3 authenticated SPA and whoami door", () => {
     try {
       const base = await listenPlatformServer(server);
       const path = "/.well-known/replay-qa-security-nonce";
-      const expected = "loopqa-sec-1TOLLVrqSC11nfIyd7tVP7CfyO7d6mJhPdW8KMvCPTQ";
+      const expected = "loopqa-sec-B8d0Id7JTfLs8fpGaigJo84qzanKqMKrhK_XKWjdnQ8";
       const response = await fetch(`${base}${path}`, { redirect: "manual" });
       expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
